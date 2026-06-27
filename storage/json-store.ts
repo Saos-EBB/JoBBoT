@@ -7,15 +7,17 @@ import type { Storage } from './index.ts';
 import { config } from '../config.ts';
 
 export class JsonStore implements Storage {
-  private path(id: string) { return join(config.dataDir, `${id}.json`); }
+  constructor(private dir: string = config.dataDir) {}
+
+  private path(id: string) { return join(this.dir, `${id}.json`); }
 
   async exists(id: string): Promise<boolean> {
     return existsSync(this.path(id));
   }
 
   async save(job: Job): Promise<void> {
-    await mkdir(config.dataDir, { recursive: true });
-    const tmp = join(config.dataDir, `.tmp-${randomBytes(6).toString('hex')}.json`);
+    await mkdir(this.dir, { recursive: true });
+    const tmp = join(this.dir, `.tmp-${randomBytes(6).toString('hex')}.json`);
     await writeFile(tmp, JSON.stringify(job, null, 2), 'utf8');
     await rename(tmp, this.path(job.id));
   }
@@ -29,12 +31,13 @@ export class JsonStore implements Storage {
   }
 
   async list(filter?: { status?: JobStatus }): Promise<Job[]> {
-    await mkdir(config.dataDir, { recursive: true });
-    const files = (await readdir(config.dataDir)).filter(f => f.endsWith('.json'));
+    await mkdir(this.dir, { recursive: true });
+    // ponytail: !startsWith('.') skips .tmp-* and .gitkeep, avoiding corrupt-file warnings
+    const files = (await readdir(this.dir)).filter(f => f.endsWith('.json') && !f.startsWith('.'));
     const jobs: Job[] = [];
     for (const f of files) {
       try {
-        const job = JSON.parse(await readFile(join(config.dataDir, f), 'utf8')) as Job;
+        const job = JSON.parse(await readFile(join(this.dir, f), 'utf8')) as Job;
         if (!filter?.status || job.status === filter.status) jobs.push(job);
       } catch {
         console.warn(`[storage] skipping corrupt file: ${f}`);

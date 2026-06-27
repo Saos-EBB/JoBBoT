@@ -10,6 +10,6 @@ export interface Storage {
   updateStatus(id: string, status: JobStatus): Promise<Job>;
 }
 
-export function createStorage(): Storage {
-  return new JsonStore();
+export function createStorage(baseDir?: string): Storage {
+  return new JsonStore(baseDir);
 }
