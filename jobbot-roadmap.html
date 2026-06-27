@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JobBot — Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:#14151b; --surface:#1c1e27; --surface-2:#232631; --raised:#2a2e3b;
+    --border:#2e3240; --border-lo:#262a36; --text:#e9e7e1; --dim:#9396a4; --faint:#686c7a;
+    --amber:#efa94a; --green:#54c98a; --cyan:#5fb6d4; --violet:#9b8cf0; --rose:#e07a8a;
+    --shadow:0 1px 0 rgba(255,255,255,.02), 0 12px 32px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0;
+    background:
+      radial-gradient(900px 500px at 12% -8%, #1d2030 0%, transparent 60%),
+      radial-gradient(800px 420px at 100% 0%, #1a1c28 0%, transparent 55%),
+      var(--bg);
+    color:var(--text); font-family:"Inter",system-ui,sans-serif; font-size:15px; line-height:1.5;
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:1080px; margin:0 auto; padding:40px 24px 80px; }
+
+  /* Konsole */
+  .console { border:1px solid var(--border); background:linear-gradient(180deg,var(--surface),#191b23);
+    border-radius:16px; padding:26px 28px 22px; box-shadow:var(--shadow); position:relative; overflow:hidden; }
+  .console::before { content:""; position:absolute; inset:0 0 auto 0; height:2px;
+    background:linear-gradient(90deg,var(--amber),var(--green),var(--cyan),var(--violet)); opacity:.8; }
+  .brandrow { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+  .brand { display:flex; align-items:center; gap:14px; }
+  .glyph { width:42px; height:42px; border-radius:11px; background:var(--surface-2); border:1px solid var(--border);
+    display:grid; place-items:center; flex:none; box-shadow:inset 0 0 0 1px rgba(239,169,74,.06); }
+  .glyph span { font-family:"Space Grotesk"; font-weight:700; font-size:22px; color:var(--amber); }
+  h1 { font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:30px; letter-spacing:-.5px; margin:0; line-height:1; }
+  .subtitle { color:var(--dim); font-size:13px; margin-top:5px; }
+  .subtitle b { color:var(--text); font-weight:500; }
+  .meter { text-align:right; }
+  .meter .big { font-family:"Space Grotesk"; font-weight:700; font-size:30px; line-height:1; }
+  .meter .big em { color:var(--faint); font-style:normal; font-weight:500; font-size:18px; }
+  .meter .lbl { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin-top:6px; }
+  .totalbar { height:6px; border-radius:99px; background:var(--border-lo); margin-top:18px; overflow:hidden; }
+  .totalbar > i { display:block; height:100%; width:0; background:linear-gradient(90deg,var(--amber),var(--green));
+    border-radius:99px; transition:width .5s cubic-bezier(.4,0,.2,1); }
+
+  /* Pipeline */
+  .pipe-label { font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint); margin:22px 0 11px; }
+  .pipeline { display:flex; align-items:stretch; flex-wrap:wrap; }
+  .stage { display:flex; align-items:center; gap:9px; font-family:"IBM Plex Mono"; font-size:12.5px; color:var(--dim);
+    padding:7px 13px 7px 11px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; margin:3px; }
+  .stage .dot { width:7px; height:7px; border-radius:99px; background:var(--c,var(--faint)); flex:none;
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--c,var(--faint)) 18%, transparent); }
+  .stage.fork { background:transparent; border-style:dashed; color:var(--faint); }
+  .arrow { align-self:center; color:var(--faint); padding:0 4px; font-size:13px; }
+
+  /* Blöcke */
+  .weeks { margin-top:30px; display:flex; flex-direction:column; gap:16px; }
+  .week { border:1px solid var(--border); border-radius:14px; background:var(--surface); overflow:hidden; transition:border-color .25s; }
+  .week.active { border-color:color-mix(in srgb, var(--accent) 55%, var(--border)); }
+  .week.done { border-color:color-mix(in srgb, var(--green) 40%, var(--border)); }
+  .whead { display:grid; grid-template-columns:auto 1fr auto auto auto; align-items:center; gap:14px;
+    padding:17px 20px; cursor:pointer; user-select:none; background:linear-gradient(180deg,rgba(255,255,255,.018),transparent); }
+  .whead:hover { background:rgba(255,255,255,.03); }
+  .wnum { font-family:"Space Grotesk"; font-weight:700; font-size:15px; width:38px; height:38px; border-radius:10px; flex:none;
+    display:grid; place-items:center; color:var(--accent); background:color-mix(in srgb,var(--accent) 12%,var(--surface-2));
+    border:1px solid color-mix(in srgb,var(--accent) 30%,var(--border)); }
+  .wtitle { font-family:"Space Grotesk"; font-weight:600; font-size:17px; letter-spacing:-.2px; }
+  .wstat { font-family:"IBM Plex Mono"; font-size:12px; color:var(--dim); white-space:nowrap; }
+  .wstat b { color:var(--text); font-weight:600; }
+  .donut { width:34px; height:34px; transform:rotate(-90deg); flex:none; }
+  .donut .bg { stroke:var(--border); }
+  .donut .fg { stroke:var(--accent); stroke-linecap:round; transition:stroke-dashoffset .5s cubic-bezier(.4,0,.2,1); }
+  .chev { color:var(--faint); transition:transform .25s; font-size:13px; }
+  .week.open .chev { transform:rotate(90deg); }
+  .wbody { display:grid; grid-template-rows:0fr; transition:grid-template-rows .3s ease; }
+  .week.open .wbody { grid-template-rows:1fr; }
+  .wbody > div { overflow:hidden; }
+  .wbodyinner { padding:4px 20px 20px; }
+
+  /* Punkte (spine) */
+  .days { position:relative; padding-left:26px; }
+  .days::before { content:""; position:absolute; left:6px; top:8px; bottom:46px; width:2px; background:var(--border); border-radius:2px; }
+  .day { position:relative; padding:12px 0; }
+  .day + .day { border-top:1px solid var(--border-lo); }
+  .node { position:absolute; left:-26px; top:16px; width:14px; height:14px; border-radius:99px;
+    background:var(--surface); border:2px solid var(--border); transition:all .3s; z-index:1; }
+  .day.full .node { background:var(--green); border-color:var(--green); box-shadow:0 0 0 4px color-mix(in srgb,var(--green) 25%,transparent); }
+  .day.partial .node { border-color:var(--accent); }
+  .dhead { display:flex; align-items:baseline; gap:10px; margin-bottom:9px; flex-wrap:wrap; }
+  .dtag { font-family:"IBM Plex Mono"; font-size:11px; font-weight:600; color:var(--accent);
+    background:color-mix(in srgb,var(--accent) 12%,transparent); border:1px solid color-mix(in srgb,var(--accent) 28%,transparent);
+    padding:1px 7px; border-radius:5px; flex:none; }
+  .dtitle { font-family:"Space Grotesk"; font-weight:600; font-size:14.5px; }
+  .dtitle.flagtitle { color:var(--rose); }
+
+  ul.tasks { list-style:none; margin:0; padding:0; }
+  li.task { display:flex; align-items:flex-start; gap:10px; padding:4px 0; cursor:pointer; position:relative; }
+  .box { width:17px; height:17px; border-radius:5px; flex:none; margin-top:1px; border:1.5px solid var(--faint);
+    background:var(--surface-2); display:grid; place-items:center; transition:all .18s; }
+  .box svg { width:11px; height:11px; stroke:var(--bg); stroke-width:3.2; fill:none; stroke-dasharray:16; stroke-dashoffset:16; transition:stroke-dashoffset .2s; }
+  li.task:hover .box { border-color:var(--accent); }
+  li.task.on .box { background:var(--green); border-color:var(--green); }
+  li.task.on .box svg { stroke-dashoffset:0; }
+  .ttext { font-size:13.5px; color:var(--text); transition:color .18s; }
+  li.task.on .ttext { color:var(--faint); text-decoration:line-through; text-decoration-color:var(--border); }
+  li.task.editing { cursor:text; }
+
+  .output { margin-top:10px; display:inline-flex; align-items:center; gap:8px; font-family:"IBM Plex Mono"; font-size:11.5px;
+    color:var(--dim); background:var(--surface-2); border:1px solid var(--border-lo); border-radius:7px; padding:5px 10px; }
+  .output b { color:var(--green); font-weight:600; }
+  .output.flag b { color:var(--rose); }
+
+  /* Inputs + Add/Delete */
+  .editinput { background:transparent; border:none; border-bottom:1.5px solid var(--accent); color:var(--text);
+    font-family:"Inter"; font-size:13.5px; padding:2px 1px; min-width:180px; outline:none; }
+  .editinput.titleinput { font-family:"Space Grotesk"; font-weight:600; font-size:15px; }
+  .editinput::placeholder { color:var(--faint); }
+  .addbtn { font-family:"IBM Plex Mono"; font-size:12px; color:var(--faint); background:transparent;
+    border:1px dashed var(--border); border-radius:7px; padding:4px 10px; cursor:pointer; margin-top:8px; transition:all .15s; }
+  .addbtn:hover { color:var(--accent); border-color:color-mix(in srgb,var(--accent) 45%,var(--border)); }
+  .additem { margin-top:14px; }
+  .addpart { width:100%; padding:13px; font-family:"IBM Plex Mono"; font-size:13px; color:var(--faint);
+    background:transparent; border:1px dashed var(--border); border-radius:12px; cursor:pointer; transition:all .15s; }
+  .addpart:hover { color:var(--text); border-color:var(--faint); background:rgba(255,255,255,.02); }
+  .del { opacity:0; flex:none; margin-left:auto; background:none; border:none; color:var(--faint); cursor:pointer;
+    font-size:15px; line-height:1; padding:0 4px; transition:opacity .15s,color .15s; }
+  li.task:hover .del, .dhead:hover .del, .whead:hover .del { opacity:.55; }
+  .del:hover { opacity:1 !important; color:var(--rose); }
+
+  /* Regeln */
+  .rules { margin-top:30px; border:1px solid var(--border); border-radius:14px; background:var(--surface); padding:22px 24px; }
+  .rules h3 { font-family:"Space Grotesk"; font-size:13px; letter-spacing:.04em; text-transform:uppercase; color:var(--faint); margin:0 0 14px; font-weight:600; }
+  .rulelist { display:grid; grid-template-columns:1fr 1fr; gap:10px 26px; }
+  .rule { display:flex; gap:11px; align-items:flex-start; font-size:13.5px; color:var(--dim); }
+  .rule b { color:var(--text); font-weight:500; }
+  .rnum { font-family:"IBM Plex Mono"; font-size:12px; color:var(--amber); font-weight:600; flex:none; margin-top:1px; }
+
+  .foot { text-align:center; color:var(--faint); font-size:12px; font-family:"IBM Plex Mono"; margin-top:26px; }
+  .reset { color:var(--faint); background:none; border:none; cursor:pointer; font:inherit; text-decoration:underline; text-underline-offset:3px; }
+  .reset:hover { color:var(--dim); }
+  :focus-visible { outline:2px solid var(--amber); outline-offset:2px; border-radius:4px; }
+
+  @media (max-width:680px) {
+    .wrap { padding:24px 14px 60px; }
+    h1 { font-size:25px; }
+    .meter { text-align:left; }
+    .brandrow { align-items:flex-start; }
+    .rulelist { grid-template-columns:1fr; }
+    .whead { grid-template-columns:auto 1fr auto auto; }
+    .wstat { display:none; }
+    .stage { font-size:11.5px; }
+  }
+  @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="console">
+    <div class="brandrow">
+      <div class="brand">
+        <div class="glyph"><span>&gt;_</span></div>
+        <div>
+          <h1>JobBot</h1>
+          <div class="subtitle">Scraper · LLM-Anschreiben · Review-UI &nbsp;·&nbsp; <b>Schritt für Schritt, in deinem Tempo</b></div>
+        </div>
+      </div>
+      <div class="meter">
+        <div class="big" id="totNum">0<em> / 0</em></div>
+        <div class="lbl">Aufgaben erledigt</div>
+      </div>
+    </div>
+    <div class="totalbar"><i id="totBar"></i></div>
+    <div class="pipe-label">Das Ding das gebaut wird — Job-Pipeline</div>
+    <div class="pipeline" id="pipeline"></div>
+  </header>
+
+  <main class="weeks" id="weeks"></main>
+
+  <section class="rules">
+    <h3>Wichtigste Regeln</h3>
+    <div class="rulelist" id="rules"></div>
+  </section>
+
+  <div class="foot">Fortschritt wird lokal gespeichert · <button class="reset" id="reset">alles zurücksetzen</button></div>
+</div>
+
+<script>
+/* ---------- statische Inhalte ---------- */
+const PIPELINE = [
+  {t:"new",c:"#9396a4"},{t:"filtered_out",c:"#e07a8a",fork:true},{t:"matched",c:"#5fb6d4"},
+  {t:"generated",c:"#9b8cf0"},{t:"reviewed",c:"#efa94a"},{t:"drafted",c:"#efa94a"},{t:"sent",c:"#54c98a"},
+];
+const RULES = [
+  ["Nie auto-senden.","Immer Draft → du reviewst → du klickst."],
+  ["Neuer Scraper = neue Datei.","Interface bleibt stabil."],
+  ["Dedup ist heilig.","Dieselbe Stelle nie zweimal durch den LLM."],
+  ["Output muss sitzen.","Sitzt der 7b-Text nicht, bringt der Rest nichts."],
+  ["Kleinhalten.","Features off-roadmap kommen nach dem ersten echten Job."],
+];
+const ACCENTS = ["#5fb6d4","#9b8cf0","#54c98a","#efa94a","#e07a8a","#5f8fd4"];
+
+const SEED = [
+  { title:"Foundation & Scraper", accent:"#5fb6d4", items:[
+    { title:"Projektstruktur", outputs:["Leeres Projekt: laufende DB + Ollama-Check"], tasks:[
+      "Repo anlegen, Ordnerstruktur festlegen",
+      "SQLite-Schema: jobs-Tabelle mit allen Stati & Feldern",
+      "Job-Interface definieren (das jeder Adapter zurückgibt)",
+      "Ollama prüfen: Test-Ping auf 3b + 7b" ]},
+    { title:"Erster Scraper: karriere.at", outputs:["karriere.at-Adapter läuft, DB füllt sich"], tasks:[
+      "Adapter karriere.at (Such-URL mit Keywords + Ort)",
+      "HTML parsen → Job normalisieren → in DB schreiben",
+      "Dedup: Hash aus Titel + Firma, skip wenn vorhanden" ]},
+    { title:"Zweiter Scraper: devjobs.at + AMS", outputs:["3 Plattformen laufen, alles in einer DB"], tasks:[
+      "devjobs.at-Adapter (IT-spezifisch, Österreich)",
+      "AMS prüfen: API / RSS? Wenn ja, bevorzugen",
+      "Beide Adapter in den gemeinsamen Runner einbinden" ]},
+    { title:"Runner + Startup-Script", outputs:["node run.js zieht alles, läuft automatisch"], tasks:[
+      "Runner-Script: alle Adapter nacheinander → DB",
+      "Cron-Job / systemd-Timer: täglich 08:00 autostart",
+      "Logging: neu / Dupes / Fehler" ]},
+    { title:"Puffer + Review", outputs:["Format geprüft, Keywords angepasst"], tasks:[
+      "Bugfixing was aufgelaufen ist",
+      "Scraper-Output manuell durchschauen: Format ok?",
+      "Erste Keywords-Anpassung wenn nötig",
+      "Evtl. weiteren Scraper vorbereiten (LinkedIn, willhaben)" ]},
+  ]},
+  { title:"LLM: Filter + Anschreiben", accent:"#9b8cf0", items:[
+    { title:"Profil-Kontext aufbauen", outputs:["profile.txt + examples/anschreiben_1.txt …"], tasks:[
+      "CV als Textdatei (wird bei jedem Anschreiben mitgegeben)",
+      "2–3 Beispiel-Anschreiben schreiben (Stil, Ton, Länge)",
+      "Kern des 7b-Prompts — hier Zeit investieren!" ]},
+    { title:"Qwen 3b: Filter-Prompt", outputs:["3b filtert sauber, Fehler dokumentiert"], tasks:[
+      "Prompt: Job-Description → {match: bool, reason: string}",
+      "Kriterien: Einsteiger, Linz/Remote, keine 5J XP, kein C++ …",
+      "Gegen 10–15 echte Jobs aus der DB testen" ]},
+    { title:"3b finetunen + Eval", outputs:["Filter läuft automatisch nach Scrape"], tasks:[
+      "Falsch-Negative / Falsch-Positive durchgehen",
+      "Prompt anpassen bis Accuracy ~85 %+",
+      "Filter in den Runner einbauen" ]},
+    { title:"Qwen 7b: Anschreiben-Prompt", outputs:["Job + CV + Beispiele → fertiger Text"], tasks:[
+      "Prompt entwickeln aus Profil + Stil-Referenz + Stelle",
+      "Ton: motiviert aber ehrlich, keine Floskeln",
+      "Länge ~200–250 Wörter, spezifisch auf die Stelle" ]},
+    { title:"7b Eval — der wichtigste Punkt", flag:true, outputs:["Erst weiter wenn: \"das würd ich abschicken\""], tasks:[
+      "5–10 echte Stellen durchgenerieren",
+      "Selber lesen & bewerten: Ton? Inhalt? Fakten?",
+      "Prompt anpassen bis der Output wirklich sitzt" ]},
+  ]},
+  { title:"UI + Mail", accent:"#54c98a", items:[
+    { title:"Next.js Projekt aufsetzen", outputs:["Lokales UI auf localhost:3000"], tasks:[
+      "Kleines lokales Web-UI",
+      "Job-Liste: gefilterte + generierte Jobs mit Status",
+      "Felder: Firma, Titel, Plattform, Datum, Status, Link" ]},
+    { title:"Review-Seite", outputs:["Anschreiben editierbar + freigebbar"], tasks:[
+      "Einzel-Ansicht: Job-Description links, Anschreiben rechts",
+      "Anschreiben editierbar (Textarea)",
+      "Buttons: Freigeben / Ablehnen / Neu generieren" ]},
+    { title:"Gmail Draft Integration", outputs:["Draft landet in Gmail, du schickst manuell"], tasks:[
+      "Gmail MCP / googleapis: Freigabe → Draft anlegen",
+      "Subject-Template: Bewerbung als [Titel] – [Name]",
+      "Fallback: .eml-Datei wenn Gmail nicht klappt" ]},
+    { title:"End-to-End Test", outputs:["Scrape → Filter → Generate → UI → Draft"], tasks:[
+      "Komplett durchlaufen mit echten Stellen",
+      "Echte Anschreiben, echte Drafts",
+      "Timing messen: wie lange ein Durchlauf?" ]},
+    { title:"Puffer + Bugfixing", outputs:["UI poliert"], tasks:[
+      "Was auch immer aufgelaufen ist",
+      "UI polishen",
+      "Evtl. Dark Mode weil du das eh willst" ]},
+  ]},
+  { title:"Polish & Launch", accent:"#efa94a", items:[
+    { title:"Weitere Scraper", outputs:["Mehr Quellen angebunden"], tasks:[
+      "LinkedIn (wenn möglich, oft geblockt)",
+      "willhaben Jobs",
+      "Direkte Firmen-Seiten die du im Kopf hast" ]},
+    { title:"Error Handling + Robustheit", outputs:["System übersteht Ausfälle"], tasks:[
+      "Was wenn eine Seite down ist?",
+      "Was wenn 7b Mist antwortet (kein JSON, halluziniert)?",
+      "Retry-Logik, Fehler-Logging" ]},
+    { title:"Notifications (optional)", outputs:["Überblick über neue Matches"], tasks:[
+      "Desktop-Notification bei neuen gematchten Jobs",
+      "Oder tägliche Zusammenfassung in der UI" ]},
+    { title:"Dokumentation", outputs:["README + kommentierte Prompts"], tasks:[
+      "README: starten, neuen Scraper hinzufügen",
+      "Prompt-Files kommentieren (Future-You dankt)" ]},
+    { title:"Done. Erste Bewerbungen raus.", outputs:["Launch 🚀"], tasks:[
+      "Letzter Durchlauf, echte Bewerbungen abschicken" ]},
+  ]},
+];
+
+/* ---------- State + Storage ---------- */
+const KEY = "jobbot-tree-v2";
+let tree = null;
+const uid = () => Math.random().toString(36).slice(2,9);
+const CHECK = '<svg viewBox="0 0 12 12"><path d="M2 6.2 L4.6 9 L10 3"/></svg>';
+
+function seed() {
+  return SEED.map((p,pi) => ({
+    id:uid(), title:p.title, accent:p.accent, open:false,
+    items:p.items.map(it => ({
+      id:uid(), title:it.title, flag:!!it.flag, outputs:(it.outputs||[]).slice(),
+      tasks:it.tasks.map(t => ({ id:uid(), text:t, done:false }))
+    }))
+  }));
+}
+function clean(t){
+  return t.map(p=>({
+    id:p.id, title:p.title, accent:p.accent, open:p.open,
+    items:p.items.filter(it=>it.title||it.tasks.some(x=>x.text)).map(it=>({
+      id:it.id, title:it.title, flag:!!it.flag, outputs:it.outputs||[],
+      tasks:it.tasks.filter(tk=>tk.text&&tk.text.trim()).map(tk=>({id:tk.id,text:tk.text,done:!!tk.done}))
+    }))
+  })).filter(p=>p.title||p.items.length);
+}
+async function load(){
+  try { if(window.storage){ const r=await window.storage.get(KEY); if(r&&r.value) tree=JSON.parse(r.value); } } catch(e){ tree=null; }
+  if(!tree){ tree=seed(); openActiveInitial(); }
+}
+async function save(){ try{ if(window.storage) await window.storage.set(KEY, JSON.stringify(clean(tree))); }catch(e){} }
+function commit(){ save(); render(); }
+function openActiveInitial(){
+  const a = tree.find(p=>p.items.some(it=>it.tasks.some(t=>!t.done))) || tree[0];
+  tree.forEach(p=>p.open=false); if(a) a.open=true;
+}
+
+/* ---------- DOM helpers ---------- */
+function el(tag,cls,html){ const n=document.createElement(tag); if(cls)n.className=cls; if(html!=null)n.innerHTML=html; return n; }
+function elt(tag,cls,text){ const n=document.createElement(tag); if(cls)n.className=cls; if(text!=null)n.textContent=text; return n; }
+function delBtn(onClick){ const b=el("button","del","×"); b.title="löschen"; b.addEventListener("click",e=>{e.stopPropagation(); onClick();}); return b; }
+function donutSVG(pct){
+  const C=2*Math.PI*15, off=C*(1-pct);
+  const w=document.createElement("div");
+  w.innerHTML=`<svg class="donut" viewBox="0 0 36 36"><circle class="bg" cx="18" cy="18" r="15" fill="none" stroke-width="3.5"/><circle class="fg" cx="18" cy="18" r="15" fill="none" stroke-width="3.5" stroke-dasharray="${C}" stroke-dashoffset="${off}" style="stroke:${pct===1?'var(--green)':'var(--accent)'}"/></svg>`;
+  return w.firstElementChild;
+}
+function input(val, ph, titleCls){
+  const i=document.createElement("input"); i.type="text"; i.className="editinput focusme"+(titleCls?" titleinput":"");
+  i.value=val||""; i.placeholder=ph||""; return i;
+}
+
+/* ---------- mutations ---------- */
+function addTask(it){ it.tasks.push({id:uid(),text:"",done:false,editing:true}); commit(); }
+function addItem(part){ part.items.push({id:uid(),title:"",outputs:[],tasks:[],editing:true}); part.open=true; commit(); }
+function addPart(){ tree.push({id:uid(),title:"",accent:ACCENTS[tree.length%ACCENTS.length],open:true,items:[],editing:true}); commit(); }
+function removeTask(it,tk){ it.tasks=it.tasks.filter(x=>x!==tk); commit(); }
+function removeItem(part,it){ part.items=part.items.filter(x=>x!==it); commit(); }
+function removePart(part){ tree=tree.filter(p=>p!==part); commit(); }
+
+function taskInput(it,tk){
+  let committed=false; const i=input(tk.text,"Aufgabe…");
+  const finish=(more)=>{ committed=true; const v=i.value.trim();
+    if(!v){ it.tasks=it.tasks.filter(x=>x!==tk); }
+    else { tk.text=v; tk.editing=false; if(more) it.tasks.push({id:uid(),text:"",done:false,editing:true}); }
+    commit(); };
+  i.addEventListener("keydown",e=>{
+    if(e.key==="Enter"){e.preventDefault(); finish(true);}
+    else if(e.key==="Escape"){e.preventDefault(); committed=true; it.tasks=it.tasks.filter(x=>x!==tk); commit();}
+  });
+  i.addEventListener("blur",()=>{ if(!committed) finish(false); });
+  return i;
+}
+function titleInput(node, ph, remove){
+  let committed=false; const empty=()=> node.items? node.items.length===0 : node.tasks.filter(t=>t.text).length===0;
+  const i=input(node.title,ph,true);
+  const finish=()=>{ committed=true; const v=i.value.trim();
+    if(!v && empty()){ remove(); return; }
+    node.title=v; node.editing=false; commit(); };
+  i.addEventListener("keydown",e=>{
+    if(e.key==="Enter"){e.preventDefault(); finish();}
+    else if(e.key==="Escape"){e.preventDefault(); committed=true; if(!node.title&&empty()) remove(); else {node.editing=false; commit();}}
+  });
+  i.addEventListener("blur",()=>{ if(!committed) finish(); });
+  return i;
+}
+
+/* ---------- render ---------- */
+function renderStatic(){
+  const p=document.getElementById("pipeline");
+  PIPELINE.forEach((s,i)=>{ if(i>0) p.appendChild(el("span","arrow",s.fork?"↘":"→"));
+    const st=el("span","stage"+(s.fork?" fork":"")); st.style.setProperty("--c",s.c);
+    st.innerHTML=`<span class="dot"></span>${s.t}`; p.appendChild(st); });
+  const r=document.getElementById("rules");
+  RULES.forEach((x,i)=>{ const row=el("div","rule");
+    row.innerHTML=`<span class="rnum">${String(i+1).padStart(2,"0")}</span><span></span>`;
+    const s=row.lastChild; s.appendChild(elt("b",null,x[0])); s.appendChild(document.createTextNode(" "+x[1]));
+    r.appendChild(row); });
+}
+
+function render(){
+  const root=document.getElementById("weeks"); root.innerHTML="";
+  let total=0, done=0;
+  const active=(tree.find(p=>p.items.some(it=>it.tasks.some(t=>!t.done)))||{}).id;
+
+  tree.forEach((part,pi)=>{
+    let pt=0,pd=0; part.items.forEach(it=>{ pt+=it.tasks.length; pd+=it.tasks.filter(t=>t.done).length; });
+    total+=pt; done+=pd; const pct=pt?pd/pt:0;
+
+    const sec=el("section","week"+(part.open?" open":"")+(pct===1&&pt>0?" done":"")+(part.id===active?" active":""));
+    sec.style.setProperty("--accent",part.accent);
+
+    // header
+    const head=el("div","whead"); head.setAttribute("role","button"); head.tabIndex=0;
+    head.appendChild(elt("div","wnum",String(pi+1)));
+    const mid=el("div");
+    if(part.editing) mid.appendChild(titleInput(part,"Block-Name…",()=>removePart(part)));
+    else mid.appendChild(elt("div","wtitle",part.title||"(ohne Titel)"));
+    head.appendChild(mid);
+    const stat=el("div","wstat"); stat.innerHTML=`<b>${pd}</b> / ${pt}`; head.appendChild(stat);
+    head.appendChild(donutSVG(pct));
+    head.appendChild(delBtn(()=>{ if(confirm('Block "'+(part.title||"")+'" wirklich löschen?')) removePart(part); }));
+    head.appendChild(el("span","chev","▶"));
+    head.addEventListener("click",e=>{ if(e.target.closest(".del")||e.target.closest("input")) return; part.open=!part.open; commit(); });
+    head.addEventListener("keydown",e=>{ if((e.key===" "||e.key==="Enter")&&!e.target.closest("input")){e.preventDefault(); part.open=!part.open; commit();}});
+    sec.appendChild(head);
+
+    // body
+    const body=el("div","wbody"); const bi=el("div"); const inner=el("div","wbodyinner"); const days=el("div","days");
+
+    part.items.forEach((it,ii)=>{
+      const day=el("div","day");
+      const oc=it.tasks.filter(t=>t.done).length;
+      if(it.tasks.length>0 && oc===it.tasks.length) day.classList.add("full"); else if(oc>0) day.classList.add("partial");
+      day.appendChild(el("div","node"));
+
+      const dh=el("div","dhead");
+      dh.appendChild(elt("span","dtag",`${pi+1}.${ii+1}`));
+      if(it.editing) dh.appendChild(titleInput(it,"Punkt-Name…",()=>removeItem(part,it)));
+      else dh.appendChild(elt("span","dtitle"+(it.flag?" flagtitle":""),it.title||"(ohne Titel)"));
+      dh.appendChild(delBtn(()=>removeItem(part,it)));
+      day.appendChild(dh);
+
+      const ul=el("ul","tasks");
+      it.tasks.forEach(tk=>{
+        const li=el("li","task"+(tk.done?" on":"")+(tk.editing?" editing":""));
+        li.setAttribute("role","checkbox"); li.tabIndex=0; li.setAttribute("aria-checked",tk.done?"true":"false");
+        li.appendChild(el("span","box",CHECK));
+        if(tk.editing){ li.appendChild(taskInput(it,tk)); }
+        else {
+          li.appendChild(elt("span","ttext",tk.text));
+          li.appendChild(delBtn(()=>removeTask(it,tk)));
+          li.addEventListener("click",e=>{ if(e.target.closest(".del")) return; tk.done=!tk.done; commit(); });
+          li.addEventListener("keydown",e=>{ if(e.key===" "||e.key==="Enter"){e.preventDefault(); tk.done=!tk.done; commit();}});
+        }
+        ul.appendChild(li);
+      });
+      day.appendChild(ul);
+
+      const addT=el("button","addbtn","+ Aufgabe"); addT.addEventListener("click",()=>addTask(it)); day.appendChild(addT);
+      (it.outputs||[]).forEach(o=>{ const ob=el("div","output"+(it.flag?" flag":"")); ob.innerHTML=`<b>${it.flag?"⚠":"✓"}</b> `; ob.appendChild(document.createTextNode(o)); day.appendChild(ob); });
+
+      days.appendChild(day);
+    });
+
+    const addI=el("button","addbtn additem","+ Punkt"); addI.addEventListener("click",()=>addItem(part)); days.appendChild(addI);
+    inner.appendChild(days); bi.appendChild(inner); body.appendChild(bi); sec.appendChild(body);
+    root.appendChild(sec);
+  });
+
+  const addP=el("button","addpart","+ Neuer Block"); addP.addEventListener("click",addPart); root.appendChild(addP);
+
+  document.getElementById("totNum").innerHTML=`${done}<em> / ${total}</em>`;
+  document.getElementById("totBar").style.width=(total?done/total*100:0)+"%";
+
+  requestAnimationFrame(()=>{ const f=document.querySelector(".focusme"); if(f){ f.classList.remove("focusme"); f.focus();
+    if(f.setSelectionRange){ const v=f.value; f.setSelectionRange(v.length,v.length); } } });
+}
+
+document.getElementById("reset").addEventListener("click", async ()=>{
+  if(!confirm("Wirklich alles zurücksetzen? Eigene Punkte gehen verloren.")) return;
+  tree=seed(); openActiveInitial(); await save(); render();
+});
+
+(async function(){ renderStatic(); await load(); render(); })();
+</script>
+</body>
+</html>
