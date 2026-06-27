@@ -1,7 +1,6 @@
 import { mkdir, readdir, readFile, rename, writeFile, unlink } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { randomBytes } from 'node:crypto';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 import type { Storage } from './index.ts';
@@ -16,7 +15,7 @@ export class JsonStore implements Storage {
 
   async save(job: Job): Promise<void> {
     await mkdir(config.dataDir, { recursive: true });
-    const tmp = join(tmpdir(), `jobbot-${randomBytes(6).toString('hex')}.json`);
+    const tmp = join(config.dataDir, `.tmp-${randomBytes(6).toString('hex')}.json`);
     await writeFile(tmp, JSON.stringify(job, null, 2), 'utf8');
     await rename(tmp, this.path(job.id));
   }
