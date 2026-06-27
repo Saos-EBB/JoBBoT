@@ -19,6 +19,15 @@ npm run dev     # Health-Summary
 npm run typecheck
 ```
 
+## Tests
+
+```bash
+npm test           # 40 Tests, node:test + node:assert/strict, kein extra Package
+npm run test:watch # watch mode
+```
+
+Alle Tests laufen gegen Temp-Verzeichnisse und einen lokalen Mock-Server — kein echtes Ollama, kein echtes `data/jobs/`.
+
 ## Storage
 
 Ein JSON-File pro Job unter `data/jobs/<id>.json`. Kein globales Sammel-JSON. Dedup via Datei-Existenz.

@@ -67,7 +67,7 @@ test('server not reachable → ok:false, no throw', async (t) => {
   const srv = createServer(() => {});
   await new Promise<void>(r => srv.listen(0, '127.0.0.1', r));
   const { port } = srv.address() as AddressInfo;
-  await new Promise<void>(r => srv.close(r));
+  await new Promise<void>(resolve => srv.close(() => resolve()));
 
   const result = await checkOllama(`http://127.0.0.1:${port}`);
   assert.equal(result.ok, false);
