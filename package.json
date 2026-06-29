@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test --test-reporter spec",
     "test:watch": "node --import tsx --test --watch --test-reporter spec",
-    "recon:karriere": "tsx scripts/recon-karriere.ts"
+    "recon:karriere": "tsx scripts/recon-karriere.ts",
+    "filter": "tsx scripts/run-filter.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
