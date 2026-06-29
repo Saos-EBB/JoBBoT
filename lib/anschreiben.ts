@@ -1,5 +1,8 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import type { Job } from '../scrapers/interface.ts';
 import type { Storage } from '../storage/index.ts';
+import { jobBasename } from './slugify.ts';
 import { config } from '../config.ts';
 
 const SYSTEM = `Du bist ein Karriereberater der hilft, überzeugende aber authentische Bewerbungsanschreiben zu schreiben.`;
@@ -20,10 +23,22 @@ export function parseAnschreibenResponse(raw: string): string | null {
   return trimmed.length >= 50 ? trimmed : null;
 }
 
-export async function generateAnschreiben(job: Job, storage: Storage, ollama = config.ollamaHost): Promise<void> {
+export async function saveAnschreiben(job: Job, text: string, dir = config.anschreibenDir): Promise<string> {
+  await mkdir(dir, { recursive: true });
+  const path = join(dir, `${jobBasename(job)}.md`);
+  await writeFile(path, text, 'utf8');
+  return path;
+}
+
+export async function generateAnschreiben(
+  job: Job,
+  storage: Storage,
+  ollama = config.ollamaHost,
+  anschreibenDir?: string,
+): Promise<string | null> {
   if (job.status !== 'matched') {
     console.warn(`[anschreiben] job ${job.id} hat status "${job.status}", erwartet "matched"`);
-    return;
+    return null;
   }
 
   let raw = '';
@@ -42,23 +57,24 @@ export async function generateAnschreiben(job: Job, storage: Storage, ollama = c
     });
     if (!res.ok) {
       console.warn(`[anschreiben] ollama ${res.status} für job ${job.id}`);
-      return;
+      return null;
     }
     const data = await res.json() as { message?: { content?: string } };
     raw = data?.message?.content ?? '';
   } catch (err) {
     console.warn(`[anschreiben] netzwerk-fehler für job ${job.id}:`, err);
-    return;
+    return null;
   }
 
   const result = parseAnschreibenResponse(raw);
   if (!result) {
     console.warn(`[anschreiben] Parse-Fehler bei ${job.id}`);
-    return;
+    return null;
   }
 
-  job.coverLetter = result;  // ponytail: Job hat bereits coverLetter, kein neues anschreiben-Feld nötig
+  const path = await saveAnschreiben(job, result, anschreibenDir);
   job.status = 'generated';
   job.updatedAt = new Date().toISOString();
   await storage.save(job);
+  return path;
 }

@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
 import type { AddressInfo } from 'node:net';
 import { buildAnschreibenPrompt, parseAnschreibenResponse, generateAnschreiben } from '../lib/anschreiben.ts';
 import { createStorage } from '../storage/index.ts';
@@ -70,9 +71,10 @@ test('parseAnschreibenResponse: trimmt whitespace', () => {
 
 const VALID_LETTER = 'Sehr geehrte Damen und Herren, ich bin begeistert von Ihrer Stelle als Junior Softwareentwickler und möchte mich vorstellen.';
 
-test('generateAnschreiben: gültiger Response → status "generated", coverLetter gesetzt', async (t) => {
+test('generateAnschreiben: gültiger Response → status "generated", .md geschrieben', async (t) => {
   const dir = await tmpDir();
-  t.after(() => rmTmp(dir));
+  const anschreibenDir = await tmpDir();
+  t.after(() => { rmTmp(dir); rmTmp(anschreibenDir); });
   const storage = createStorage(dir);
   const job = { ...sample(), status: 'matched' as const };
   await storage.save(job);
@@ -80,13 +82,15 @@ test('generateAnschreiben: gültiger Response → status "generated", coverLette
   const { url, close } = await mockChat(VALID_LETTER);
   t.after(close);
 
-  await generateAnschreiben(job, storage, url);
+  const path = await generateAnschreiben(job, storage, url, anschreibenDir);
   assert.strictEqual(job.status, 'generated');
-  assert.ok(job.coverLetter && job.coverLetter.length >= 50);
+  assert.ok(path !== null, 'expected path to be returned');
   assert.strictEqual((await storage.get(job.id))?.status, 'generated');
+  const content = await readFile(path!, 'utf8');
+  assert.ok(content.length >= 50);
 });
 
-test('generateAnschreiben: leerer Response → status bleibt "matched"', async (t) => {
+test('generateAnschreiben: leerer Response → status bleibt "matched", path null', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const storage = createStorage(dir);
@@ -96,8 +100,9 @@ test('generateAnschreiben: leerer Response → status bleibt "matched"', async (
   const { url, close } = await mockChat('');
   t.after(close);
 
-  await generateAnschreiben(job, storage, url);
+  const path = await generateAnschreiben(job, storage, url);
   assert.strictEqual(job.status, 'matched');
+  assert.strictEqual(path, null);
 });
 
 test('generateAnschreiben: status !== "matched" → kein Ollama-Call', async (t) => {
@@ -111,7 +116,8 @@ test('generateAnschreiben: status !== "matched" → kein Ollama-Call', async (t)
   const { url, close } = await mockChat(VALID_LETTER, () => { called = true; });
   t.after(close);
 
-  await generateAnschreiben(job, storage, url);
+  const path = await generateAnschreiben(job, storage, url);
   assert.strictEqual(called, false);
   assert.strictEqual(job.status, 'new');
+  assert.strictEqual(path, null);
 });

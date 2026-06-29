@@ -18,7 +18,6 @@ export interface Job extends ScrapedJob {
   scrapedAt: string;
   updatedAt: string;
   match?: { ok: boolean; reason: string } | null;
-  coverLetter?: string | null;
 }
 
 export interface ScraperAdapter {
