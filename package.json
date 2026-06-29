@@ -11,7 +11,9 @@
     "test": "node --import tsx --test --test-reporter spec",
     "test:watch": "node --import tsx --test --watch --test-reporter spec",
     "recon:karriere": "tsx scripts/recon-karriere.ts",
-    "filter": "tsx scripts/run-filter.ts"
+    "filter": "tsx scripts/run-filter.ts",
+    "scrape": "tsx scripts/run-scrape.ts",
+    "anschreiben": "tsx scripts/run-anschreiben.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
