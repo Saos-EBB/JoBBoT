@@ -1,0 +1,8 @@
+{
+  "name": "Max Mustermann",
+  "ausbildung": "HTL Informatik, Matura 2023",
+  "skills": ["TypeScript", "Python", "Node.js", "SQL", "Git"],
+  "sprachen": ["Deutsch (Muttersprache)", "Englisch (B2)"],
+  "erfahrung": "Praktikum bei XYZ GmbH (3 Monate), diverse Eigenprojekte",
+  "ueber_mich": "Ich lerne schnell, arbeite gerne im Team und bin motiviert, in einem echten Entwicklerumfeld zu wachsen."
+}

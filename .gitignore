@@ -1,5 +1,7 @@
 node_modules
 data/jobs/*.json
+data/anschreiben/*.md
+config/profile.json
 .env
 *.log
 dist
