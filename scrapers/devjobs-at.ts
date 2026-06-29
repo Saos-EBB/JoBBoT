@@ -1,0 +1,90 @@
+import { chromium } from 'playwright';
+import type { ScrapedJob, ScraperAdapter } from './interface.ts';
+
+const BASE = 'https://www.devjobs.at';
+const SEARCH_URL = `${BASE}/jobs/search?jobLevel=junior-job-level`;
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
+
+const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+
+export function parseSearchResults(context: unknown): ScrapedJob[] {
+  try {
+    const loaderData = (context as any)?.state?.loaderData;
+    const route = loaderData?.['routes/jobs/$canonical'];
+    const items: unknown[] = route?.activeJobs ?? [];
+    const results: ScrapedJob[] = [];
+    for (const item of items) {
+      try {
+        const model = (item as any).model;
+        const title: string = model.metaJobTitle?.title ?? '';
+        const company: string = model.company?.title ?? '';
+        const slug: string = model.slug ?? '';
+        if (!title || !company || !slug) continue;
+        const from: number = model.salaryYearRangeFrom ?? 0;
+        const to: number = model.salaryYearRangeTo ?? 0;
+        results.push({
+          source: 'devjobs.at',
+          url: `${BASE}/job/${slug}`,
+          title,
+          company,
+          location: model.metaOsmLocations?.[0]?.title ?? 'Österreich',
+          description: (model.responsibilitiesExcerpt as string | null) ?? '',
+          postedAt: (model.sortedAt ?? model.createdAt) as string | null,
+          salary: from && to ? `${from}–${to} €/Jahr` : null,
+        });
+      } catch { /* skip malformed item */ }
+    }
+    return results;
+  } catch {
+    return [];
+  }
+}
+
+export function parseDetailResult(context: unknown, baseJob: ScrapedJob): ScrapedJob {
+  try {
+    const job = (context as any)?.state?.loaderData?.['routes/job/$jobSlug']?.job;
+    if (!job) return baseJob;
+    const html: string | undefined = job.jobDescriptionHtml?.html;
+    const postedAt: string | undefined = job.sortedAt ?? job.createdAt;
+    return {
+      ...baseJob,
+      ...(html ? { description: html } : {}),
+      ...(postedAt ? { postedAt } : {}),
+    };
+  } catch {
+    return baseJob;
+  }
+}
+
+export async function fetchRemixContext(url: string): Promise<unknown> {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const ctx = await browser.newContext({ userAgent: UA });
+    const page = await ctx.newPage();
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
+    return await page.evaluate(() => (window as unknown as { __remixContext: unknown }).__remixContext);
+  } finally {
+    await browser.close();
+  }
+}
+
+export const devJobsAtAdapter: ScraperAdapter = {
+  name: 'devjobs.at',
+  async fetchJobs() {
+    console.log('[devjobs.at] keyword/location ignoriert — nutzt Junior-Filter (österreichweit)');
+    const searchCtx = await fetchRemixContext(SEARCH_URL);
+    const baseJobs = parseSearchResults(searchCtx);
+    const results: ScrapedJob[] = [];
+    for (const job of baseJobs) {
+      await delay(2000);
+      try {
+        const detailCtx = await fetchRemixContext(job.url);
+        results.push(parseDetailResult(detailCtx, job));
+      } catch (err) {
+        console.warn(`[devjobs.at] Detail-Fetch fehlgeschlagen: ${job.url}`, err);
+        results.push(job);
+      }
+    }
+    return results;
+  },
+};
