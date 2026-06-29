@@ -2,25 +2,58 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Job } from '../scrapers/interface.ts';
 import type { Storage } from '../storage/index.ts';
+import type { ProfileData } from './profile.ts';
 import { jobBasename } from './slugify.ts';
 import { config } from '../config.ts';
 
-const SYSTEM = `Du bist ein Karriereberater der hilft, überzeugende aber authentische Bewerbungsanschreiben zu schreiben.`;
+const SYSTEM = `Du bist ein erfahrener Karriereberater. Du schreibst präzise, authentische Bewerbungsanschreiben auf Deutsch.
+ABSOLUTE REGELN — niemals brechen:
+- KEINE Anrede (nicht "Sehr geehrte Damen und Herren", nicht "Hallo")
+- KEINE Grußformel (nicht "Mit freundlichen Grüßen", nicht "Hochachtungsvoll")
+- KEIN Name des Bewerbers im Text
+- KEINE Platzhalter wie [Name] oder [Datum]
+- KEINE Fragen als Einstieg
+- KEINE Floskeln: nicht "hiermit bewerbe ich mich", nicht "entzückt", nicht "fasziniert", nicht "auf den Weg begeben"
+- Genau 3 Absätze, maximal 180 Wörter gesamt
+- Nur Fließtext — keine Aufzählungen, keine Überschriften
+- Antwort enthält NUR den Anschreiben-Text, absolut nichts sonst`;
 
-export function buildAnschreibenPrompt(job: Job): string {
+export function buildAnschreibenPrompt(job: Job, profile: ProfileData): string {
   const desc = job.description.slice(0, 1200);
   return `Stelle: ${job.title}
-Firma: ${job.company}${job.location ? `\nOrt: ${job.location}` : ''}
-${desc ? `\nStellenbeschreibung:\n${desc}\n` : ''}
-Schreib ein deutsches Bewerbungsanschreiben für einen Junior-Bewerber.
-Ton: professionell aber nicht steif, keine Floskeln wie "hiermit bewerbe ich mich", kein "Mit freundlichen Grüßen" am Ende.
-Länge: 3 kurze Absätze, max 200 Wörter gesamt.
-Antworte NUR mit dem Anschreiben als Plaintext, kein JSON, keine Erklärungen, keine Markdown-Formatierung, kein Betreff.`;
+Firma: ${job.company}${job.location ? `, ${job.location}` : ''}
+Stellenbeschreibung:
+${desc}
+
+Bewerber-Profil:
+Ausbildung: ${profile.ausbildung}
+Skills: ${profile.skills.join(', ')}
+Sprachen: ${profile.sprachen.join(', ')}
+Erfahrung: ${profile.erfahrung}
+Über mich: ${profile.ueber_mich}
+
+Struktur:
+Absatz 1: Warum genau diese Stelle bei genau dieser Firma — konkret und spezifisch, nicht generisch.
+Absatz 2: Was der Bewerber konkret mitbringt — passend zu den Anforderungen der Stelle.
+Absatz 3: Kurzer, direkter Abschluss mit Gesprächswunsch.`;
 }
 
 export function parseAnschreibenResponse(raw: string): string | null {
   const trimmed = raw.trim();
-  return trimmed.length >= 50 ? trimmed : null;
+  if (trimmed.length < 50) return null;
+  if (trimmed.includes('[') || trimmed.includes(']')) {
+    console.warn('[anschreiben] Platzhalter nicht ersetzt:', trimmed.slice(0, 100));
+    return null;
+  }
+  if (trimmed.includes('Sehr geehrte')) {
+    console.warn('[anschreiben] Floskel gefunden: "Sehr geehrte"');
+    return null;
+  }
+  if (trimmed.includes('Mit freundlichen')) {
+    console.warn('[anschreiben] Grußformel gefunden: "Mit freundlichen"');
+    return null;
+  }
+  return trimmed;
 }
 
 export async function saveAnschreiben(job: Job, text: string, dir = config.anschreibenDir): Promise<string> {
@@ -33,6 +66,7 @@ export async function saveAnschreiben(job: Job, text: string, dir = config.ansch
 export async function generateAnschreiben(
   job: Job,
   storage: Storage,
+  profile: ProfileData,
   ollama = config.ollamaHost,
   anschreibenDir?: string,
 ): Promise<string | null> {
@@ -50,7 +84,7 @@ export async function generateAnschreiben(
         model: config.modelWriter,
         messages: [
           { role: 'system', content: SYSTEM },
-          { role: 'user', content: buildAnschreibenPrompt(job) },
+          { role: 'user', content: buildAnschreibenPrompt(job, profile) },
         ],
         stream: false,
       }),

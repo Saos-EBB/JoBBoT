@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import type { AddressInfo } from 'node:net';
 import { buildAnschreibenPrompt, parseAnschreibenResponse, generateAnschreiben } from '../lib/anschreiben.ts';
+import type { ProfileData } from '../lib/profile.ts';
 import { createStorage } from '../storage/index.ts';
 import { toJob } from '../lib/normalize.ts';
 import { tmpDir, rmTmp } from './helpers.ts';
@@ -16,6 +17,22 @@ const sample = () => toJob({
   location: 'Linz',
   description: 'Wir suchen einen Junior Developer für unser Team in Linz.',
 });
+
+const profile: ProfileData = {
+  name: 'Max Mustermann',
+  ausbildung: 'HTL Informatik, Matura 2023',
+  skills: ['TypeScript', 'Node.js', 'SQL'],
+  sprachen: ['Deutsch (Muttersprache)', 'Englisch (B2)'],
+  erfahrung: 'Praktikum bei XYZ GmbH (3 Monate)',
+  ueber_mich: 'Ich lerne schnell und arbeite gerne im Team.',
+};
+
+// kein "Sehr geehrte", kein "Mit freundlichen", keine Klammern, ≥ 50 Zeichen
+const VALID_LETTER = `Die Kombination aus autonomer Robotik und praxisnaher Softwareentwicklung bei Test GmbH ist genau das Umfeld, in dem ich meine Kenntnisse einbringen möchte. Systeme, die in realen Produktionsumgebungen agieren, interessieren mich seit meiner Ausbildung.
+
+Mit fundiertem Wissen in TypeScript und Node.js sowie SQL-Kenntnissen bringe ich die technische Basis mit, die für diese Junior-Stelle gefordert wird. Mein Praktikum hat gezeigt, dass ich Anforderungen strukturiert in lauffähigen Code umsetzen kann.
+
+Ich freue mich auf ein Gespräch, in dem wir gemeinsam prüfen können, ob wir gut zusammenpassen.`;
 
 function mockChat(content: string, onCall?: () => void): Promise<{ url: string; close: () => void }> {
   return new Promise(resolve => {
@@ -34,19 +51,28 @@ function mockChat(content: string, onCall?: () => void): Promise<{ url: string; 
 // ── pure ─────────────────────────────────────────────────────────────────────
 
 test('buildAnschreibenPrompt: enthält title', () => {
-  assert.ok(buildAnschreibenPrompt(sample()).includes('Junior Softwareentwickler'));
+  assert.ok(buildAnschreibenPrompt(sample(), profile).includes('Junior Softwareentwickler'));
 });
 
 test('buildAnschreibenPrompt: enthält Bewerbungs-Kontext', () => {
-  const p = buildAnschreibenPrompt(sample()).toLowerCase();
-  assert.ok(p.includes('anschreiben') || p.includes('bewerbung'));
+  const p = buildAnschreibenPrompt(sample(), profile).toLowerCase();
+  assert.ok(p.includes('anschreiben') || p.includes('bewerbung') || p.includes('absatz'));
 });
 
 test('buildAnschreibenPrompt: description wird auf 1200 Zeichen begrenzt', () => {
   const longJob = { ...sample(), description: 'x'.repeat(2000) };
-  const p = buildAnschreibenPrompt(longJob);
-  // 'x'.repeat(1201) should not appear in prompt
+  const p = buildAnschreibenPrompt(longJob, profile);
   assert.ok(!p.includes('x'.repeat(1201)));
+});
+
+test('buildAnschreibenPrompt: enthält profile.ausbildung', () => {
+  const p = buildAnschreibenPrompt(sample(), profile);
+  assert.ok(p.includes(profile.ausbildung));
+});
+
+test('buildAnschreibenPrompt: enthält Absatz-Strukturhinweis', () => {
+  const p = buildAnschreibenPrompt(sample(), profile);
+  assert.ok(p.includes('Absatz'));
 });
 
 test('parseAnschreibenResponse: "   " → null', () => {
@@ -67,9 +93,24 @@ test('parseAnschreibenResponse: trimmt whitespace', () => {
   assert.strictEqual(parseAnschreibenResponse(s), 'x'.repeat(50));
 });
 
-// ── generateAnschreiben mit mock ─────────────────────────────────────────────
+test('parseAnschreibenResponse: Platzhalter [Dein Name] → null', () => {
+  assert.strictEqual(parseAnschreibenResponse('[Dein Name] schreibt hier einen langen Text der mindestens fünfzig Zeichen hat'), null);
+});
 
-const VALID_LETTER = 'Sehr geehrte Damen und Herren, ich bin begeistert von Ihrer Stelle als Junior Softwareentwickler und möchte mich vorstellen.';
+test('parseAnschreibenResponse: "Sehr geehrte" → null', () => {
+  assert.strictEqual(parseAnschreibenResponse('Sehr geehrte Damen und Herren, ich bewerbe mich um die ausgeschriebene Stelle.'), null);
+});
+
+test('parseAnschreibenResponse: "Mit freundlichen" → null', () => {
+  assert.strictEqual(parseAnschreibenResponse('Mit freundlichen Grüßen, Max Mustermann — das ist ein langer Abschlusstext.'), null);
+});
+
+test('parseAnschreibenResponse: valider Text ohne Floskeln → string', () => {
+  const result = parseAnschreibenResponse(VALID_LETTER);
+  assert.ok(typeof result === 'string' && result.length >= 50);
+});
+
+// ── generateAnschreiben mit mock ─────────────────────────────────────────────
 
 test('generateAnschreiben: gültiger Response → status "generated", .md geschrieben', async (t) => {
   const dir = await tmpDir();
@@ -82,7 +123,7 @@ test('generateAnschreiben: gültiger Response → status "generated", .md geschr
   const { url, close } = await mockChat(VALID_LETTER);
   t.after(close);
 
-  const path = await generateAnschreiben(job, storage, url, anschreibenDir);
+  const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir);
   assert.strictEqual(job.status, 'generated');
   assert.ok(path !== null, 'expected path to be returned');
   assert.strictEqual((await storage.get(job.id))?.status, 'generated');
@@ -100,7 +141,7 @@ test('generateAnschreiben: leerer Response → status bleibt "matched", path nul
   const { url, close } = await mockChat('');
   t.after(close);
 
-  const path = await generateAnschreiben(job, storage, url);
+  const path = await generateAnschreiben(job, storage, profile, url);
   assert.strictEqual(job.status, 'matched');
   assert.strictEqual(path, null);
 });
@@ -116,7 +157,7 @@ test('generateAnschreiben: status !== "matched" → kein Ollama-Call', async (t)
   const { url, close } = await mockChat(VALID_LETTER, () => { called = true; });
   t.after(close);
 
-  const path = await generateAnschreiben(job, storage, url);
+  const path = await generateAnschreiben(job, storage, profile, url);
   assert.strictEqual(called, false);
   assert.strictEqual(job.status, 'new');
   assert.strictEqual(path, null);
