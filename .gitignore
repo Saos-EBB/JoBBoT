@@ -1,4 +1,5 @@
 node_modules
+.playwright/
 data/jobs/*.json
 data/anschreiben/*.md
 config/profile.json
