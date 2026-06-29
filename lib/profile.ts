@@ -2,10 +2,16 @@ import { readFileSync } from 'node:fs';
 
 export interface ProfileData {
   name: string;
-  ausbildung: string;
-  skills: string[];
+  job_title: string;
+  ausbildung: { abschluss: string; status: string };
+  programming_languages: string[];
+  frontend: string[];
+  backend: string[];
+  databases: string[];
+  tools: string[];
   sprachen: string[];
-  erfahrung: string;
+  links?: { portfolio?: string; github?: string };
+  projekte: Array<{ name: string; beschreibung: string }>;
   ueber_mich: string;
 }
 

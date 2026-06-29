@@ -20,16 +20,27 @@ ABSOLUTE REGELN — niemals brechen:
 
 export function buildAnschreibenPrompt(job: Job, profile: ProfileData): string {
   const desc = job.description.slice(0, 1200);
+  const alleSkills = [
+    ...profile.programming_languages,
+    ...profile.frontend,
+    ...profile.backend,
+    ...profile.databases,
+  ].join(', ');
+  const projekteText = profile.projekte
+    .slice(0, 2)
+    .map(p => `${p.name}: ${p.beschreibung}`)
+    .join('\n');
   return `Stelle: ${job.title}
 Firma: ${job.company}${job.location ? `, ${job.location}` : ''}
 Stellenbeschreibung:
 ${desc}
 
 Bewerber-Profil:
-Ausbildung: ${profile.ausbildung}
-Skills: ${profile.skills.join(', ')}
+Ausbildung: ${profile.ausbildung.abschluss}
+Skills: ${alleSkills}
 Sprachen: ${profile.sprachen.join(', ')}
-Erfahrung: ${profile.erfahrung}
+Projekte/Erfahrung:
+${projekteText}
 Über mich: ${profile.ueber_mich}
 
 Struktur:

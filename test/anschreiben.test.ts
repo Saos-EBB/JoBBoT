@@ -20,10 +20,15 @@ const sample = () => toJob({
 
 const profile: ProfileData = {
   name: 'Max Mustermann',
-  ausbildung: 'HTL Informatik, Matura 2023',
-  skills: ['TypeScript', 'Node.js', 'SQL'],
+  job_title: 'Junior Softwareentwickler',
+  ausbildung: { abschluss: 'HTL Informatik, Matura 2023', status: 'abgeschlossen' },
+  programming_languages: ['TypeScript', 'Python'],
+  frontend: ['React'],
+  backend: ['Node.js'],
+  databases: ['SQL'],
+  tools: ['Git'],
   sprachen: ['Deutsch (Muttersprache)', 'Englisch (B2)'],
-  erfahrung: 'Praktikum bei XYZ GmbH (3 Monate)',
+  projekte: [{ name: 'TestBot', beschreibung: 'Automatisierungs-Tool in TypeScript.' }],
   ueber_mich: 'Ich lerne schnell und arbeite gerne im Team.',
 };
 
@@ -65,9 +70,9 @@ test('buildAnschreibenPrompt: description wird auf 1200 Zeichen begrenzt', () =>
   assert.ok(!p.includes('x'.repeat(1201)));
 });
 
-test('buildAnschreibenPrompt: enthält profile.ausbildung', () => {
+test('buildAnschreibenPrompt: enthält profile.ausbildung.abschluss', () => {
   const p = buildAnschreibenPrompt(sample(), profile);
-  assert.ok(p.includes(profile.ausbildung));
+  assert.ok(p.includes(profile.ausbildung.abschluss));
 });
 
 test('buildAnschreibenPrompt: enthält Absatz-Strukturhinweis', () => {
