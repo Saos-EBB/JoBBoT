@@ -8,6 +8,7 @@ export interface Storage {
   list(filter?: { status?: JobStatus }): Promise<Job[]>;
   update(id: string, patch: Partial<Job>): Promise<Job>;
   updateStatus(id: string, status: JobStatus): Promise<Job>;
+  delete(id: string): Promise<void>;
 }
 
 export function createStorage(baseDir?: string): Storage {

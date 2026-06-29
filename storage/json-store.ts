@@ -1,30 +1,45 @@
 import { mkdir, readdir, readFile, rename, writeFile, unlink } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 import type { Storage } from './index.ts';
+import { jobBasename } from '../lib/slugify.ts';
 import { config } from '../config.ts';
 
 export class JsonStore implements Storage {
   constructor(private dir: string = config.dataDir) {}
 
-  private path(id: string) { return join(this.dir, `${id}.json`); }
+  private getFilename(job: Job): string {
+    return `${jobBasename(job)}.json`;
+  }
+
+  private async findFile(id: string): Promise<string | null> {
+    try {
+      const files = await readdir(this.dir);
+      const match = files.find(f => f.endsWith(`_${id.slice(0, 8)}.json`));
+      return match ? join(this.dir, match) : null;
+    } catch {
+      return null;
+    }
+  }
 
   async exists(id: string): Promise<boolean> {
-    return existsSync(this.path(id));
+    return (await this.findFile(id)) !== null;
   }
 
   async save(job: Job): Promise<void> {
     await mkdir(this.dir, { recursive: true });
+    const target = join(this.dir, this.getFilename(job));
     const tmp = join(this.dir, `.tmp-${randomBytes(6).toString('hex')}.json`);
     await writeFile(tmp, JSON.stringify(job, null, 2), 'utf8');
-    await rename(tmp, this.path(job.id));
+    await rename(tmp, target);
   }
 
   async get(id: string): Promise<Job | null> {
+    const path = await this.findFile(id);
+    if (!path) return null;
     try {
-      return JSON.parse(await readFile(this.path(id), 'utf8')) as Job;
+      return JSON.parse(await readFile(path, 'utf8')) as Job;
     } catch {
       return null;
     }
@@ -59,6 +74,7 @@ export class JsonStore implements Storage {
   }
 
   async delete(id: string): Promise<void> {
-    try { await unlink(this.path(id)); } catch { /* already gone */ }
+    const path = await this.findFile(id);
+    if (path) try { await unlink(path); } catch { /* already gone */ }
   }
 }

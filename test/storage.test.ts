@@ -7,6 +7,10 @@ import { toJob } from '../lib/normalize.ts';
 import { tmpDir, rmTmp } from './helpers.ts';
 import type { ScrapedJob } from '../scrapers/interface.ts';
 
+function jobFiles(files: string[]) {
+  return files.filter(f => f.endsWith('.json') && !f.startsWith('.'));
+}
+
 function fakeScraped(title = 'Test Dev', company = 'Testcorp'): ScrapedJob {
   return { source: 'smoke', url: 'https://example.com', title, company, description: 'desc' };
 }
@@ -91,7 +95,7 @@ test('save same id twice → exactly one file', async (t) => {
   await store.save(job);
 
   const files = await readdir(dir);
-  assert.equal(files.filter(f => f === `${job.id}.json`).length, 1);
+  assert.equal(jobFiles(files).length, 1);
 });
 
 test('no .tmp- leftovers after save', async (t) => {
@@ -174,9 +178,9 @@ test('concurrent saves of same id → 1 file, valid JSON', async (t) => {
 
   await Promise.all(Array.from({ length: 8 }, () => store.save(job)));
 
-  const files = (await readdir(dir)).filter(f => f === `${job.id}.json`);
+  const files = jobFiles(await readdir(dir));
   assert.equal(files.length, 1);
-  const content = await readFile(join(dir, `${job.id}.json`), 'utf8');
+  const content = await readFile(join(dir, files[0]), 'utf8');
   assert.doesNotThrow(() => JSON.parse(content));
 });
 
@@ -194,4 +198,56 @@ test('get() returns independent copy — mutation does not affect stored data', 
 
   const again = await store.get(job.id);
   assert.equal(again!.status, 'new'); // file unchanged
+});
+
+// ── Neues Naming ─────────────────────────────────────────────────────────────
+
+test('save(job) → filename enthält slugified title + company', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const store = createStorage(dir);
+  const job = toJob(fakeScraped('Junior Developer', 'Test GmbH'));
+  await store.save(job);
+
+  const files = jobFiles(await readdir(dir));
+  assert.ok(files[0]?.includes('junior-developer'), `filename: ${files[0]}`);
+  assert.ok(files[0]?.includes('test-gmbh'), `filename: ${files[0]}`);
+});
+
+test('save(job) → filename endet auf _${id.slice(0,8)}.json', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const store = createStorage(dir);
+  const job = toJob(fakeScraped());
+  await store.save(job);
+
+  const files = jobFiles(await readdir(dir));
+  assert.ok(files[0]?.endsWith(`_${job.id.slice(0, 8)}.json`), `filename: ${files[0]}`);
+});
+
+test('exists(id) → true nach save', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const store = createStorage(dir);
+  const job = toJob(fakeScraped());
+  await store.save(job);
+  assert.equal(await store.exists(job.id), true);
+});
+
+test('delete(id) → Datei weg danach', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const store = createStorage(dir);
+  const job = toJob(fakeScraped());
+  await store.save(job);
+  await store.delete(job.id);
+  assert.equal(await store.exists(job.id), false);
+  assert.equal(jobFiles(await readdir(dir)).length, 0);
+});
+
+test('delete(nichtExistente id) → kein throw', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const store = createStorage(dir);
+  await assert.doesNotReject(() => store.delete('000000000000dead'));
 });
