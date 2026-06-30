@@ -13,5 +13,12 @@
   "devjobs.at": {
     "enabled": true,
     "queries": [ { "params": "jobLevel=junior-job-level" } ]
+  },
+  "linkedin": {
+    "enabled": true,
+    "queries": [
+      { "keyword": "junior software developer", "location": "Oberösterreich, Österreich" },
+      { "keyword": "junior softwareentwickler", "location": "Oberösterreich, Österreich" }
+    ]
   }
 }
