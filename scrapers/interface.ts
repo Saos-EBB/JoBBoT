@@ -24,5 +24,9 @@ export type SourceQuery = Record<string, string>;
 
 export interface ScraperAdapter {
   name: string;
-  scrape(queries: SourceQuery[], onProgress?: (msg: string) => void): Promise<ScrapedJob[]>;
+  scrape(
+    queries: SourceQuery[],
+    keep?: (job: ScrapedJob) => boolean,
+    onProgress?: (msg: string) => void,
+  ): Promise<ScrapedJob[]>;
 }

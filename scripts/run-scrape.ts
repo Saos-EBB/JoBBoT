@@ -6,7 +6,7 @@ import { jobId } from '../lib/hash.ts';
 import { loadSources } from '../lib/sources.ts';
 import { loadLocationConfig, isInRange } from '../lib/location.ts';
 import { createProgress } from '../lib/progress.ts';
-import type { ScraperAdapter } from '../scrapers/interface.ts';
+import type { ScraperAdapter, ScrapedJob } from '../scrapers/interface.ts';
 
 const registry: Record<string, ScraperAdapter> = {
   'karriere.at': karriereAtAdapter,
@@ -30,28 +30,28 @@ if (sourceArg) {
 
 const sources = loadSources();
 const locCfg = loadLocationConfig();
+const keep = (job: ScrapedJob) => isInRange(job.location ?? '', locCfg);
 const storage = createStorage();
-let newTotal = 0, skipTotal = 0, outsideTotal = 0;
+let newTotal = 0, skipTotal = 0;
 
 for (const name of selectedKeys) {
   const src = sources[name];
   if (!src?.enabled) { console.log(`[${name}] deaktiviert — übersprungen`); continue; }
 
   const prog = createProgress(`${name} — starte...`);
-  let newSrc = 0, skipSrc = 0, outsideSrc = 0;
+  let newSrc = 0, skipSrc = 0;
   try {
-    const jobs = await registry[name].scrape(src.queries, msg => prog.update(msg));
+    const jobs = await registry[name].scrape(src.queries, keep, msg => prog.update(msg));
     for (const scraped of jobs) {
-      if (!isInRange(scraped.location ?? '', locCfg)) { outsideSrc++; continue; }
       const id = jobId(scraped);
       if (await storage.exists(id)) { skipSrc++; }
       else { await storage.save(toJob(scraped)); newSrc++; }
     }
-    prog.succeed(`${name}: ${newSrc} neu, ${skipSrc} dedup, ${outsideSrc} außerhalb`);
+    prog.succeed(`${name}: ${newSrc} neu, ${skipSrc} dedup`);
   } catch (err) {
     prog.fail(`${name}: Fehler — ${err}`);
   }
-  newTotal += newSrc; skipTotal += skipSrc; outsideTotal += outsideSrc;
+  newTotal += newSrc; skipTotal += skipSrc;
 }
 
-console.log(`\nGesamt: ${newTotal} neu, ${skipTotal} dedup, ${outsideTotal} außerhalb Region.`);
+console.log(`\nGesamt: ${newTotal} neu, ${skipTotal} dedup.`);

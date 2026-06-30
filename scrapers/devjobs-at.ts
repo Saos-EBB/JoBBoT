@@ -73,7 +73,7 @@ export async function fetchRemixContext(url: string): Promise<unknown> {
   try {
     const ctx = await browser.newContext({ userAgent: UA });
     const page = await ctx.newPage();
-    await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
     return await waitForState(page);
   } finally {
     await browser.close();
@@ -82,7 +82,7 @@ export async function fetchRemixContext(url: string): Promise<unknown> {
 
 export const devJobsAtAdapter: ScraperAdapter = {
   name: 'devjobs.at',
-  async scrape(queries: SourceQuery[], onProgress?: (msg: string) => void) {
+  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (msg: string) => void) {
     const baseJobs: ScrapedJob[] = [];
     for (const query of queries) {
       const qstring = query.params ?? 'jobLevel=junior-job-level';
@@ -100,10 +100,12 @@ export const devJobsAtAdapter: ScraperAdapter = {
         baseJobs.push(...parseSearchResults(await fetchRemixContext(`${baseUrl}&page=${page}`)));
       }
     }
-    const total = baseJobs.length;
+    const candidates = keep ? baseJobs.filter(keep) : baseJobs;
+    console.log(`[devjobs.at] ${baseJobs.length} Treffer, ${candidates.length} nach Location-Gate`);
+    const total = candidates.length;
     const results: ScrapedJob[] = [];
     for (let i = 0; i < total; i++) {
-      const job = baseJobs[i];
+      const job = candidates[i];
       await delay(2000);
       onProgress?.(`devjobs.at — Detail ${i + 1}/${total}: ${job.title.slice(0, 40)}`);
       try {
