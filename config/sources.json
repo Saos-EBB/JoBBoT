@@ -1,0 +1,17 @@
+{
+  "karriere.at": {
+    "enabled": true,
+    "queries": [
+      { "keyword": "junior-software-developer" },
+      { "keyword": "junior-entwickler" },
+      { "keyword": "softwareentwickler" },
+      { "keyword": "webentwickler" },
+      { "keyword": "java-junior" },
+      { "keyword": "fullstack-junior" }
+    ]
+  },
+  "devjobs.at": {
+    "enabled": true,
+    "queries": [ { "params": "jobLevel=junior-job-level" } ]
+  }
+}

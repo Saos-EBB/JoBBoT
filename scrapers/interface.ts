@@ -20,7 +20,9 @@ export interface Job extends ScrapedJob {
   match?: { ok: boolean; reason: string } | null;
 }
 
+export type SourceQuery = Record<string, string>;
+
 export interface ScraperAdapter {
   name: string;
-  fetchJobs(): Promise<ScrapedJob[]>;
+  scrape(queries: SourceQuery[]): Promise<ScrapedJob[]>;
 }
