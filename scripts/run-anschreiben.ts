@@ -2,6 +2,7 @@ import { createStorage } from '../storage/index.ts';
 import { generateAnschreiben } from '../lib/anschreiben.ts';
 import { loadProfile } from '../lib/profile.ts';
 import { sleep } from '../lib/fetch-page.ts';
+import { createProgress } from '../lib/progress.ts';
 
 const profile = loadProfile();
 const storage = createStorage();
@@ -12,19 +13,15 @@ if (jobs.length === 0) {
   process.exit(0);
 }
 
-console.log(`Generiere Anschreiben für ${jobs.length} Job(s)...\n`);
-
+const prog = createProgress(`Anschreiben — 0/${jobs.length}...`);
 let generated = 0;
 
-for (const job of jobs) {
+for (let i = 0; i < jobs.length; i++) {
+  const job = jobs[i];
+  prog.update(`Anschreiben — ${i + 1}/${jobs.length}: ${job.title.slice(0, 40)}`);
   const path = await generateAnschreiben(job, storage, profile);
-  if (path) {
-    console.log(`[generated] ${path}`);
-    generated++;
-  } else {
-    console.log(`[fehler]    ${job.title} — ${job.company}`);
-  }
-  if (jobs.indexOf(job) < jobs.length - 1) await sleep(1000);
+  if (path) generated++;
+  if (i < jobs.length - 1) await sleep(1000);
 }
 
-console.log(`\n${generated} Anschreiben generiert.`);
+prog.succeed(`${generated} Anschreiben generiert, ${jobs.length - generated} übersprungen`);

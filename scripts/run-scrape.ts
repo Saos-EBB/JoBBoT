@@ -5,6 +5,7 @@ import { toJob } from '../lib/normalize.ts';
 import { jobId } from '../lib/hash.ts';
 import { loadSources } from '../lib/sources.ts';
 import { loadLocationConfig, isInRange } from '../lib/location.ts';
+import { createProgress } from '../lib/progress.ts';
 import type { ScraperAdapter } from '../scrapers/interface.ts';
 
 const registry: Record<string, ScraperAdapter> = {
@@ -12,7 +13,6 @@ const registry: Record<string, ScraperAdapter> = {
   'devjobs.at': devJobsAtAdapter,
 };
 
-// --source=karriere → karriere.at, --source=devjobs → devjobs.at
 const sourceArg = process.argv.find(a => a.startsWith('--source='))?.split('=')[1];
 const ALIASES: Record<string, string> = { karriere: 'karriere.at', devjobs: 'devjobs.at' };
 
@@ -35,30 +35,23 @@ let newTotal = 0, skipTotal = 0, outsideTotal = 0;
 
 for (const name of selectedKeys) {
   const src = sources[name];
-  if (!src?.enabled) { console.log(`\n[${name}] deaktiviert — übersprungen`); continue; }
+  if (!src?.enabled) { console.log(`[${name}] deaktiviert — übersprungen`); continue; }
 
-  console.log(`\nScraping ${name}...\n`);
+  const prog = createProgress(`${name} — starte...`);
+  let newSrc = 0, skipSrc = 0, outsideSrc = 0;
   try {
-    const jobs = await registry[name].scrape(src.queries);
+    const jobs = await registry[name].scrape(src.queries, msg => prog.update(msg));
     for (const scraped of jobs) {
-      if (!isInRange(scraped.location ?? '', locCfg)) {
-        console.log(`[außerhalb] ${scraped.title} — ${scraped.location}`);
-        outsideTotal++;
-        continue;
-      }
+      if (!isInRange(scraped.location ?? '', locCfg)) { outsideSrc++; continue; }
       const id = jobId(scraped);
-      if (await storage.exists(id)) {
-        console.log(`[skip] ${scraped.title}`);
-        skipTotal++;
-      } else {
-        await storage.save(toJob(scraped));
-        console.log(`[new]  ${scraped.title} — ${scraped.company}`);
-        newTotal++;
-      }
+      if (await storage.exists(id)) { skipSrc++; }
+      else { await storage.save(toJob(scraped)); newSrc++; }
     }
+    prog.succeed(`${name}: ${newSrc} neu, ${skipSrc} dedup, ${outsideSrc} außerhalb`);
   } catch (err) {
-    console.error(`[${name}] Fehler:`, err);
+    prog.fail(`${name}: Fehler — ${err}`);
   }
+  newTotal += newSrc; skipTotal += skipSrc; outsideTotal += outsideSrc;
 }
 
-console.log(`\n${newTotal} neu, ${skipTotal} übersprungen (dedup), ${outsideTotal} außerhalb Region.`);
+console.log(`\nGesamt: ${newTotal} neu, ${skipTotal} dedup, ${outsideTotal} außerhalb Region.`);
