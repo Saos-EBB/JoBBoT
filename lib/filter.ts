@@ -5,6 +5,12 @@ import { config } from '../config.ts';
 const SYSTEM = `Du bist ein Jobsuche-Assistent. Entscheide ob eine Stellenanzeige für einen Junior-Entwickler oder Berufseinsteiger geeignet ist.
 Antworte NUR mit einem JSON-Objekt, sonst nichts: {"match": true|false, "reason": "kurze Begründung (max 20 Wörter)"}`;
 
+export interface FilterDecision {
+  job: Job;
+  outcome: 'matched' | 'filtered_out' | 'skipped';
+  reason: string;
+}
+
 export function buildFilterPrompt(job: Job): string {
   const desc = job.description.slice(0, 800);
   return `Titel: ${job.title}
@@ -24,7 +30,7 @@ export function parseFilterResponse(raw: string): { match: boolean; reason: stri
   }
 }
 
-export async function filterJob(job: Job, storage: Storage, ollama = config.ollamaHost): Promise<void> {
+export async function filterJob(job: Job, storage: Storage, ollama = config.ollamaHost): Promise<FilterDecision> {
   let raw = '';
   try {
     const res = await fetch(`${ollama}/api/chat`, {
@@ -40,24 +46,29 @@ export async function filterJob(job: Job, storage: Storage, ollama = config.olla
       }),
     });
     if (!res.ok) {
-      console.warn(`[filter] ollama ${res.status} für job ${job.id}`);
-      return;
+      return { job, outcome: 'skipped', reason: `Ollama HTTP ${res.status}` };
     }
     const data = await res.json() as { message?: { content?: string } };
     raw = data?.message?.content ?? '';
   } catch (err) {
-    console.warn(`[filter] netzwerk-fehler für job ${job.id}:`, err);
-    return;
+    return { job, outcome: 'skipped', reason: `Netzwerkfehler: ${String(err)}` };
   }
 
   const parsed = parseFilterResponse(raw);
   if (!parsed) {
-    console.warn(`[filter] kein valides JSON für job ${job.id}: ${raw.slice(0, 100)}`);
-    return;
+    return { job, outcome: 'skipped', reason: 'LLM-Antwort nicht parsebar' };
   }
 
-  job.status = parsed.match ? 'matched' : 'filtered_out';
   job.match = { ok: parsed.match, reason: parsed.reason };
   job.updatedAt = new Date().toISOString();
-  await storage.save(job);
+
+  if (parsed.match) {
+    job.status = 'matched';
+    await storage.save(job);
+    return { job, outcome: 'matched', reason: parsed.reason };
+  } else {
+    job.status = 'filtered_out';
+    await storage.delete(job.id);
+    return { job, outcome: 'filtered_out', reason: parsed.reason };
+  }
 }
