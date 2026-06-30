@@ -1,5 +1,5 @@
 import { fetchPage, sleep } from '../lib/fetch-page.ts';
-import type { ScrapedJob, ScraperAdapter } from './interface.ts';
+import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 
 const BASE = 'https://www.karriere.at';
 
@@ -55,10 +55,10 @@ export function parseDetailPage(html: string, baseJob: ScrapedJob): ScrapedJob {
   return baseJob;
 }
 
-async function fetchSearchPage(keyword: string, location: string): Promise<string> {
+async function fetchSearchPage(keyword: string): Promise<string> {
   const slug = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
-  const r = await fetchPage(`${BASE}/jobs/${slug(keyword)}/${slug(location)}`);
-  if (!r.ok) throw new Error(`karriere.at search ${r.status}: ${keyword} / ${location}`);
+  const r = await fetchPage(`${BASE}/jobs/${slug(keyword)}`);
+  if (!r.ok) throw new Error(`karriere.at search ${r.status}: ${keyword}`);
   return r.html;
 }
 
@@ -69,18 +69,33 @@ async function fetchDetailPage(url: string): Promise<string> {
   return r.html;
 }
 
-export function createKarriereAtAdapter(keyword: string, location: string): ScraperAdapter {
-  return {
-    name: 'karriere.at',
-    async fetchJobs() {
-      const searchHtml = await fetchSearchPage(keyword, location);
-      const baseJobs = parseSearchPage(searchHtml);
-      const results: ScrapedJob[] = [];
-      for (const job of baseJobs) {
+export const karriereAtAdapter: ScraperAdapter = {
+  name: 'karriere.at',
+  async scrape(queries: SourceQuery[]) {
+    // Dedup by URL across all keywords
+    const byUrl = new Map<string, ScrapedJob>();
+    for (const query of queries) {
+      const keyword = query.keyword ?? '';
+      if (!keyword) continue;
+      try {
+        const searchHtml = await fetchSearchPage(keyword);
+        for (const job of parseSearchPage(searchHtml)) {
+          if (!byUrl.has(job.url)) byUrl.set(job.url, job);
+        }
+      } catch (err) {
+        console.warn(`[karriere.at] search fehlgeschlagen: ${keyword}`, err);
+      }
+    }
+    const results: ScrapedJob[] = [];
+    for (const job of byUrl.values()) {
+      try {
         const detailHtml = await fetchDetailPage(job.url);
         results.push(parseDetailPage(detailHtml, job));
+      } catch (err) {
+        console.warn(`[karriere.at] detail fehlgeschlagen: ${job.url}`, err);
+        results.push(job);
       }
-      return results;
-    },
-  };
-}
+    }
+    return results;
+  },
+};

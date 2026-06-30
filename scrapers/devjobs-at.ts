@@ -1,9 +1,9 @@
 import { chromium, type Page } from 'playwright';
-import type { ScrapedJob, ScraperAdapter } from './interface.ts';
+import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 
 const BASE = 'https://www.devjobs.at';
-const SEARCH_URL = `${BASE}/jobs/search?jobLevel=junior-job-level`;
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
+const MAX_PAGES = 20;
 
 const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
@@ -82,18 +82,29 @@ export async function fetchRemixContext(url: string): Promise<unknown> {
 
 export const devJobsAtAdapter: ScraperAdapter = {
   name: 'devjobs.at',
-  async fetchJobs() {
-    console.log('[devjobs.at] keyword/location ignoriert — nutzt Junior-Filter (österreichweit)');
-    const searchCtx = await fetchRemixContext(SEARCH_URL);
-    const baseJobs = parseSearchResults(searchCtx);
+  async scrape(queries: SourceQuery[]) {
+    const baseJobs: ScrapedJob[] = [];
+    for (const query of queries) {
+      const qstring = query.params ?? 'jobLevel=junior-job-level';
+      const baseUrl = `${BASE}/jobs/search?${qstring}`;
+      const firstCtx = await fetchRemixContext(baseUrl);
+      const totalPages = Math.min(
+        (firstCtx as any)?.state?.loaderData?.['routes/jobs/$canonical']?.totalPages ?? 1,
+        MAX_PAGES
+      );
+      baseJobs.push(...parseSearchResults(firstCtx));
+      for (let page = 2; page <= totalPages; page++) {
+        await delay(2000);
+        baseJobs.push(...parseSearchResults(await fetchRemixContext(`${baseUrl}&page=${page}`)));
+      }
+    }
     const results: ScrapedJob[] = [];
     for (const job of baseJobs) {
       await delay(2000);
       try {
-        const detailCtx = await fetchRemixContext(job.url);
-        results.push(parseDetailResult(detailCtx, job));
+        results.push(parseDetailResult(await fetchRemixContext(job.url), job));
       } catch (err) {
-        console.warn(`[devjobs.at] Detail-Fetch fehlgeschlagen: ${job.url}`, err);
+        console.warn(`[devjobs.at] detail fehlgeschlagen: ${job.url}`, err);
         results.push(job);
       }
     }
