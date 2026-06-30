@@ -1,0 +1,8 @@
+{
+  "cities": ["Linz","Leonding","Traun","Ansfelden","Wels","Steyr",
+    "Ottensheim","Enns","Gallneukirchen","Pasching","Marchtrenk",
+    "Hörsching","Engerwitzdorf"],
+  "regions": ["Oberösterreich","Oberoesterreich","Upper Austria","OÖ"],
+  "remote": ["remote","homeoffice","home office","home-office",
+    "remote work","teleworking"]
+}
