@@ -5,8 +5,8 @@ import { parseSearchResults, parseDetailResult } from '../scrapers/devjobs-at.ts
 import type { ScrapedJob } from '../scrapers/interface.ts';
 
 const FIXTURES = 'test/fixtures/devjobs-at';
-const searchCtx = JSON.parse(readFileSync(`${FIXTURES}/search-remix-context.json`, 'utf8')) as unknown;
-const detailCtx = JSON.parse(readFileSync(`${FIXTURES}/detail-remix-context.json`, 'utf8')) as unknown;
+const searchCtx = JSON.parse(readFileSync(`${FIXTURES}/api-sample.json`, 'utf8')) as unknown;
+const detailCtx = JSON.parse(readFileSync(`${FIXTURES}/api-detail-sample.json`, 'utf8')) as unknown;
 
 const baseJob: ScrapedJob = {
   source: 'devjobs.at',

@@ -1,0 +1,2004 @@
+{
+  "state": {
+    "loaderData": {
+      "routes/jobs/$canonical": {
+        "sorting": [],
+        "generatedSearchTitle": {
+          "searchHeadlineString": "Junior IT & Entwickler Jobs in Österreich",
+          "searchHeadlineObjects": [
+            {
+              "lpiJob": {
+                "canonical": "junior-job-level"
+              },
+              "lpiTeam": null,
+              "titleDE": "Junior",
+              "titleEN": "Junior",
+              "type": "jobLevel"
+            },
+            {
+              "lpiJob": null,
+              "lpiTeam": null,
+              "titleDE": " ",
+              "titleEN": " ",
+              "type": "punctuation"
+            },
+            {
+              "lpiJob": null,
+              "lpiTeam": null,
+              "titleDE": "IT & Entwickler Jobs",
+              "titleEN": "IT & Developer Jobs",
+              "type": "type"
+            },
+            {
+              "lpiJob": null,
+              "lpiTeam": null,
+              "titleDE": " ",
+              "titleEN": " ",
+              "type": "punctuation"
+            },
+            {
+              "lpiJob": null,
+              "lpiTeam": null,
+              "titleDE": "in",
+              "titleEN": "in",
+              "type": "word"
+            },
+            {
+              "lpiJob": null,
+              "lpiTeam": null,
+              "titleDE": " ",
+              "titleEN": " ",
+              "type": "punctuation"
+            },
+            {
+              "lpiJob": null,
+              "lpiTeam": null,
+              "titleDE": "Österreich",
+              "titleEN": "Austria",
+              "type": "word"
+            }
+          ],
+          "searchHeadlineStringDev": "Junior IT & Entwickler IT & Entwickler in Österreich"
+        },
+        "structuredData": [
+          {
+            "script:ld+json": {
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "Wie viel kann ich als Junior IT & Entwickler IT & Entwickler in Österreich verdienen?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Das tatsächliche Gehalt kann variieren, aber in unseren gelisteten Junior IT & Entwickler Jobs in Österreich liegt das ausgeschriebene Mindestgehalt bei 13.000 Euro brutto pro Jahr, während das höchste ausgeschriebene Gehalt bei 70.000 Euro brutto pro Jahr liegt. Das durchschnittliche ausgeschriebene Jahresgehalt beträgt 44.000 Euro brutto."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Wie viele Junior IT & Entwickler Jobs in Österreich gibt es aktuell auf dem Markt?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Zurzeit listen wir 215 offene Stellen für Junior IT & Entwickler IT & Entwickler in Österreich auf unserer Plattform. Überprüfen Sie regelmäßig unsere Jobangebote, um keine neuen Möglichkeiten in diesem Bereich zu verpassen."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Welche Jobtitel sind üblicherweise in Junior IT & Entwickler Jobs in Österreich zu finden?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Typische Jobtitel für Junior IT & Entwickler Jobs in Österreich sind IT Techniker, System Techniker und Software Developer. Die Anforderungen und Verantwortlichkeiten können je nach Unternehmen und spezifischer Rolle variieren, bieten jedoch insgesamt attraktive Karrieremöglichkeiten für Junior IT & Entwickler IT & Entwickler in Österreich."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Welche Schlüsseltechnologien werden für Junior IT & Entwickler Jobs in Österreich häufig gefordert?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Für Junior IT & Entwickler Jobs in Österreich sind Kenntnisse in Technologien wie SQL, C#, Python, Java und JIRA besonders wichtig. Durch das Erlernen dieser Technologien können Sie Ihre Chancen erhöhen, eine passende Stelle als Junior IT & Entwickler IT & Entwickler in Österreich zu finden."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Welche Top-Unternehmen stellen derzeit Junior IT & Entwickler IT & Entwickler in Österreich ein?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Führende Unternehmen, die aktuell Junior IT & Entwickler Jobs in Österreich anbieten, sind ANEXIA Internetdienstleistungs GmbH, Accenture GmbH und Knapp AG. Sie suchen nach talentierten Junior IT & Entwickler IT & Entwickler in Österreich, um ihre Teams zu erweitern und innovative Projekte umzusetzen."
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "salaryData": {
+          "avg": 44000,
+          "max": 70000,
+          "min": 13000
+        },
+        "lpiFaqData": [],
+        "lpiSearchIsPossible": true,
+        "redirectedJobInfo": null,
+        "totalPages": 15,
+        "facetDistribution": {
+          "jobLevel": [
+            {
+              "model": {
+                "id": "cl2iyi83187921zi7njo38ibs",
+                "title": "Erfahren",
+                "slug": "erfahren-job-level"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi85z89301zi7y3kejx32",
+                "title": "Senior",
+                "slug": "senior-job-level"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi85t89041zi7z318dope",
+                "title": "Junior",
+                "slug": "junior-job-level"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi8gc96721zi71925u6u6",
+                "title": "Lead",
+                "slug": "lead-job-level"
+              }
+            }
+          ],
+          "employmentType": [
+            {
+              "model": {
+                "id": "cl2iyny527810041zi720x77mvg",
+                "title": "Vollzeit",
+                "slug": "vollzeit"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyny5e2410791zmnhzqm1vd7",
+                "title": "Teilzeit / Vollzeit",
+                "slug": "teilzeit-vollzeit"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyny5c2410741zmnh5x19xk2",
+                "title": "Teilzeit",
+                "slug": "teilzeit"
+              }
+            }
+          ],
+          "workingModels": [
+            {
+              "model": {
+                "id": "cl2iyhrca67991zi7a9e4lnb8",
+                "title": "Onsite",
+                "slug": "onsite"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyhrcl68081zi7qpss6gf6",
+                "title": "Hybrid",
+                "slug": "hybrid"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyhrct68171zi7za7r9xpm",
+                "title": "Full Remote",
+                "slug": "full-remote"
+              }
+            }
+          ],
+          "contractType": [
+            {
+              "model": {
+                "id": "cl2iyp0z28292311zi7n0l4dhii",
+                "title": "Unbefristetes Dienstverhältnis",
+                "slug": "unbefristetes-dienstverhaeltnis"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyny2h2408721zmng62ab387",
+                "title": "Lehrstelle / Ausbildungsplatz",
+                "slug": "lehrstelle-ausbildungsplatz"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyq3lu3042561zmnxs50e9kn",
+                "title": "Befristetes Dienstverhältnis",
+                "slug": "befristetes-dienstverhaeltnis"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyq3ny8638341zi70xeyg2lm",
+                "title": "Praktikum / Schulpraktikum",
+                "slug": "praktikum-schulpraktikum"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iypcly8539731zi7amrxqr87",
+                "title": "Freiberufler",
+                "slug": "freiberufler"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyny3q7809281zi7i6p7reyo",
+                "title": "Verleih / Zwischenzeitlich",
+                "slug": "verleih-zwischenzeitlich"
+              }
+            }
+          ],
+          "salaryRanges": [
+            {
+              "model": {
+                "id": "clagvq8a11713711fv4fxzvnjw",
+                "title": "ab 21.000",
+                "slug": "ab-21-000"
+              }
+            },
+            {
+              "model": {
+                "id": "clagvq8ao1714611fv26xj6eam",
+                "title": "ab 28.000",
+                "slug": "ab-28-000"
+              }
+            },
+            {
+              "model": {
+                "id": "clagvq8ba1715511fv2snt3ewu",
+                "title": "ab 35.000",
+                "slug": "ab-35-000"
+              }
+            },
+            {
+              "model": {
+                "id": "clagvq8bw1716411fv50sdk5q1",
+                "title": "ab 42.000",
+                "slug": "ab-42-000"
+              }
+            },
+            {
+              "model": {
+                "id": "clagvq8ck1717311fvhgk7rw7h",
+                "title": "ab 49.000",
+                "slug": "ab-49-000"
+              }
+            },
+            {
+              "model": {
+                "id": "clagvq8eb1721311fv1f3n8xwr",
+                "title": "ab 56.000",
+                "slug": "ab-56-000"
+              }
+            },
+            {
+              "model": {
+                "id": "clagvq8ex1722411fvemjodkaz",
+                "title": "ab 70.000",
+                "slug": "ab-70-000"
+              }
+            }
+          ],
+          "jobFields": [
+            {
+              "model": {
+                "id": "cls0keytq0000jq0croig191n",
+                "title": "IT",
+                "slug": "it-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi8b593021zi7x8npad9s",
+                "title": "System",
+                "slug": "system-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi8th104601zi7lh5x1vdm",
+                "title": "BI",
+                "slug": "bi-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi8us106091zi7loj53xl1",
+                "title": "Network",
+                "slug": "network-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi960117711zi7as7yeuxr",
+                "title": "Project",
+                "slug": "project-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi9h4130101zi7kl1zno2q",
+                "title": "Support",
+                "slug": "support-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi85u89081zi7y3ugjfvw",
+                "title": "DevOps",
+                "slug": "devops-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi8xk108281zi718qngzc6",
+                "title": "Application",
+                "slug": "application-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi85y89261zi7u5afaxxd",
+                "title": "Web",
+                "slug": "web-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi85w89191zi75064ppjr",
+                "title": "Security",
+                "slug": "security-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi8ad92211zi7xhvhim7g",
+                "title": "Back End",
+                "slug": "back-end"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi95p117501zi70mzpm3k4",
+                "title": "Software",
+                "slug": "software-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi95z117691zi7m13xh1rs",
+                "title": "Data",
+                "slug": "data-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi9gw129741zi7tta549pu",
+                "title": "Embedded",
+                "slug": "embedded-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi961117821zi7awldlfma",
+                "title": "Full Stack",
+                "slug": "full-stack-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi8qp102741zi7zlv2zu2t",
+                "title": "Test/QA",
+                "slug": "test-qa-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi83087901zi7fnmsmuhm",
+                "title": "Front End",
+                "slug": "front-end"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi9bc124451zi7atg36qyz",
+                "title": "Requirements",
+                "slug": "requirements-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi9bi124711zi7agiojdml",
+                "title": "Product",
+                "slug": "product-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi9e5127151zi71z6sylmj",
+                "title": "Scrum",
+                "slug": "scrum-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi961117781zi723mwu6bo",
+                "title": "Database",
+                "slug": "database-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi9e7127211zi7vyqga6br",
+                "title": "UX/UI",
+                "slug": "ux-ui-field"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi8ae92231zi79gkdnwm8",
+                "title": "Mobile",
+                "slug": "mobile-field-1"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi85s89021zi7zb4gbyno",
+                "title": "Games",
+                "slug": "games-field"
+              }
+            }
+          ],
+          "companyType": [
+            {
+              "model": {
+                "id": "cl2iyi73181281zi77v10dm69",
+                "title": "Etablierte Firma",
+                "slug": "etablierte-firma-companytype"
+              }
+            },
+            {
+              "model": {
+                "id": "clgz0z20s000y6j12ekqvfwrn",
+                "title": "Recruiting Agentur",
+                "slug": "recruiting-agentur"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi7gw84031zi7t7esqkwx",
+                "title": "Digitale Agentur",
+                "slug": "digitale-agentur-companytype"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi7h184291zi7myb173e7",
+                "title": "Startup",
+                "slug": "startup-companytype"
+              }
+            }
+          ],
+          "osmState": [
+            {
+              "model": {
+                "id": "clk8tiq5n0000l80ftz7yauai",
+                "title": "Wien",
+                "slug": "wien-at"
+              }
+            },
+            {
+              "model": {
+                "id": "clk8i3zln000wmi0fcd808jeh",
+                "title": "Oberösterreich",
+                "slug": "oberoesterreich-at"
+              }
+            },
+            {
+              "model": {
+                "id": "clk8kln730002mg0f8pmz33g1",
+                "title": "Steiermark",
+                "slug": "steiermark-at"
+              }
+            },
+            {
+              "model": {
+                "id": "clk8khm4i0004l40fnngh2hdo",
+                "title": "Salzburg",
+                "slug": "salzburg-at"
+              }
+            },
+            {
+              "model": {
+                "id": "clk8jp4p00002l50fmhjs9w3k",
+                "title": "Tirol",
+                "slug": "tirol-at"
+              }
+            },
+            {
+              "model": {
+                "id": "clk8i8q25000mml0fjoft9810",
+                "title": "Niederösterreich",
+                "slug": "niederoesterreich-at"
+              }
+            },
+            {
+              "model": {
+                "id": "clk8kp5qg000ymi0f6av9l9cu",
+                "title": "Vorarlberg",
+                "slug": "vorarlberg-at"
+              }
+            },
+            {
+              "model": {
+                "id": "clk8khdmt0004mc0fddnq29rh",
+                "title": "Kärnten",
+                "slug": "kaernten-at"
+              }
+            },
+            {
+              "model": {
+                "id": "clk8kep840000ms0f1tpibnbj",
+                "title": "Burgenland",
+                "slug": "burgenland-at"
+              }
+            }
+          ],
+          "jobTopics": [
+            {
+              "model": {
+                "id": "cl5ac0fl6152983020qu16sd0mpv",
+                "title": "Automation",
+                "slug": "automation"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowfo8113061zi7s3yw4boa",
+                "title": "Cloud Computing",
+                "slug": "cloud-computing"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp7sn8386171zi79u6enpqe",
+                "title": "AI",
+                "slug": "ai"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iypjl82965471zmnsipofpgu",
+                "title": "Cyber/Security",
+                "slug": "cyber-security"
+              }
+            },
+            {
+              "model": {
+                "id": "cl58wk9ic81188021r0wf9coidf",
+                "title": "ERP Software",
+                "slug": "erp-software"
+              }
+            },
+            {
+              "model": {
+                "id": "cl58wk9cv15298331zpdifbfoo5v",
+                "title": "Architecture",
+                "slug": "architecture"
+              }
+            },
+            {
+              "model": {
+                "id": "cl58wk9f315299591zpd76cnvhmt",
+                "title": "Integrations",
+                "slug": "integrations"
+              }
+            },
+            {
+              "model": {
+                "id": "cl58wk9ib81187621r00thzy8p0",
+                "title": "Leadership",
+                "slug": "leadership"
+              }
+            },
+            {
+              "model": {
+                "id": "cl58wk9ib81187821r074ox18sg",
+                "title": "Product Development",
+                "slug": "product-development"
+              }
+            },
+            {
+              "model": {
+                "id": "cl58wk9ic81188221r03p2g80qc",
+                "title": "Quality Assurance",
+                "slug": "quality-assurance"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp7ss2838311zmn6pk2zo0d",
+                "title": "IoT",
+                "slug": "io-t"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowaf8107431zi7f0bf2c5r",
+                "title": "Machine Learning",
+                "slug": "machine-learning"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowfa2667321zmnldsds6sm",
+                "title": "Industrie 4.0",
+                "slug": "industrie-4-0"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowhr8115591zi7ym1cde26",
+                "title": "Data Economy",
+                "slug": "data-economy"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowfp8113161zi7tfejywlb",
+                "title": "Microservices",
+                "slug": "microservices"
+              }
+            },
+            {
+              "model": {
+                "id": "cl58wk9id81188421r032bdlnf2",
+                "title": "API Design",
+                "slug": "api-design"
+              }
+            },
+            {
+              "model": {
+                "id": "cl58wk9d281158421r0ga39gy1a",
+                "title": "User Interaction",
+                "slug": "user-interaction"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowak2663901zmnkebt9xc3",
+                "title": "HealthTech",
+                "slug": "health-tech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowfp8113181zi7bqe7nxm7",
+                "title": "Web Performance",
+                "slug": "web-performance"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowac8107311zi7ldu7dope",
+                "title": "Digital Workplace",
+                "slug": "digital-workplace"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowai2663781zmnqa3qz4pk",
+                "title": "E-Commerce",
+                "slug": "e-commerce"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyqaka80091ylaoqaiarx9",
+                "title": "Big Data",
+                "slug": "big-data"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp7xs8392701zi7qrzqi9ih",
+                "title": "Mobile Computing",
+                "slug": "mobile-computing"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowfo8113081zi785qvr8g0",
+                "title": "Robotics",
+                "slug": "robotics"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp7sm8386131zi7vofp8zyd",
+                "title": "E-Mobilität",
+                "slug": "e-mobilitaet"
+              }
+            },
+            {
+              "model": {
+                "id": "cljqvvbb100049113t2iivajn",
+                "title": "Kryptographie",
+                "slug": "kryptographie"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp7sm8386151zi7r0wrtsta",
+                "title": "Home Automation",
+                "slug": "home-automation"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowag8107451zi7438chsco",
+                "title": "FinTech",
+                "slug": "fin-tech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp81i33061ylaor4b9ghc",
+                "title": "Computer Vision",
+                "slug": "computer-vision"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iypjql2967831zmn89q4gx2z",
+                "title": "GreenTech",
+                "slug": "green-tech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowaf2663721zmna131csrk",
+                "title": "Gaming Industry",
+                "slug": "gaming-industry"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowhw2669521zmnqtnudmof",
+                "title": "SEO",
+                "slug": "seo"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowac8107331zi79j90a0ek",
+                "title": "Autonomous Driving",
+                "slug": "autonomous-driving"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowaj2663861zmnuuxa5o19",
+                "title": "Augmented Reality",
+                "slug": "augmented-reality"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp7sq2838231zmnqmh1z6q7",
+                "title": "CleanTech",
+                "slug": "cleantech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp7t08386841zi799l224q3",
+                "title": "Chatbot",
+                "slug": "chatbot"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp7sp2838191zmnnpdsedsy",
+                "title": "SpaceTech",
+                "slug": "space-tech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp7ss2838331zmnyvt99jh0",
+                "title": "Progressive Web App",
+                "slug": "progressive-web-app"
+              }
+            },
+            {
+              "model": {
+                "id": "cl58wk9cv81156021r0oa6tftkm",
+                "title": "Crypto",
+                "slug": "crypto"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iypjl72965391zmncsplk46m",
+                "title": "Voice Assistant",
+                "slug": "voice-assistant"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp7sq2838251zmn66aifb0r",
+                "title": "Virtual Reality",
+                "slug": "virtual-reality"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowai2663801zmndaihq8lb",
+                "title": "RegTech",
+                "slug": "reg-tech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp7ut2840081zmndnnz1hq6",
+                "title": "AgraTech",
+                "slug": "agra-tech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp7sl8386111zi7az91txzi",
+                "title": "SportsTech",
+                "slug": "sports-tech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iypjif8560951zi7b6wv4on8",
+                "title": "MarTech",
+                "slug": "mar-tech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp7t58387181zi74f5zewzk",
+                "title": "LegalTech",
+                "slug": "legal-tech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowae8107391zi71qgnlh9m",
+                "title": "HRTech",
+                "slug": "hr-tech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowhl8115231zi7sc1mkmjz",
+                "title": "Blockchain",
+                "slug": "blockchain"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowah2663761zmnwnjetghj",
+                "title": "BioTech",
+                "slug": "bio-tech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowad8107371zi7jvirtaul",
+                "title": "TravelTech",
+                "slug": "travel-tech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowag2663741zmnbrsgbbdp",
+                "title": "Serverless Computing",
+                "slug": "serverless-computing"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyowax8107981zi7bs18l1y2",
+                "title": "InsurTech",
+                "slug": "insur-tech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyp7sr2838291zmnia1m5tbw",
+                "title": "IIoT",
+                "slug": "i-io-t"
+              }
+            }
+          ],
+          "benefits": [
+            {
+              "model": {
+                "id": "cl2iyi6ug79261zi7pu09jbpp",
+                "title": "Flexible Arbeitszeiten",
+                "slug": "flexible-arbeitszeiten"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6ro78771zi7uf3c52f8",
+                "title": "Home Office",
+                "slug": "home-office"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6mg77881zi7bh2n0ewe",
+                "title": "Team Events",
+                "slug": "team-events"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6ow78361zi7t80c1q0m",
+                "title": "Gute Anbindung",
+                "slug": "gute-anbindung"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6gs75211zi7w94pnmki",
+                "title": "Frisches Obst",
+                "slug": "frisches-obst"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6mf77861zi7kut84j6y",
+                "title": "Betriebsarzt",
+                "slug": "betriebsarzt"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6rg78521zi7kaqj2v4s",
+                "title": "Gesundheitsförderung",
+                "slug": "gesundheitsfoerderung"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6xd79671zi7ps0kfjdf",
+                "title": "Kaffee, Tee o. Ä",
+                "slug": "kaffee-tee-o-ae"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6xk80001zi7tsfiyanu",
+                "title": "Kantine/Betriebsrestaurant",
+                "slug": "kantine-betriebsrestaurant"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6mg77921zi7uotkss3c",
+                "title": "Essenszulage",
+                "slug": "essenszulage"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6ui79331zi7lm6kgk8n",
+                "title": "Mitarbeiterparkplatz",
+                "slug": "mitarbeiterparkplatz"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi70580281zi75m7m2w4k",
+                "title": "Mitarbeitervergünstigungen",
+                "slug": "mitarbeiterverguenstigungen"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6md77801zi77hun914i",
+                "title": "Fitness Angebote",
+                "slug": "fitness-angebote"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6oz78381zi70wm97zoq",
+                "title": "Kinderbetreuung",
+                "slug": "kinderbetreuung"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6xa79521zi7ktk6p2hj",
+                "title": "Verkehrsmittel-Zuschuss",
+                "slug": "verkehrsmittel-zuschuss"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6rm78691zi7i99malig",
+                "title": "Barrierefreiheit",
+                "slug": "barrierefreiheit"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6jl77251zi7b1zpi3uz",
+                "title": "Handy zur Privatnutzung",
+                "slug": "handy-zur-privatnutzung"
+              }
+            },
+            {
+              "model": {
+                "id": "cltmpkzf00001183b2putrlvk",
+                "title": "Klimaticket",
+                "slug": "klimaticket"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6xf79751zi7rjdi59si",
+                "title": "Notebook zur Privatnutzung",
+                "slug": "notebook-zur-privatnutzung"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6jj77101zi71mm67rqg",
+                "title": "Betr. Altersvorsorge",
+                "slug": "betr-altersvorsorge"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6jm77311zi7frml30ct",
+                "title": "No Dresscode",
+                "slug": "no-dresscode"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6jh77041zi7ds0kg65h",
+                "title": "Snacks, Süßigkeiten",
+                "slug": "snacks-suessigkeiten"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6xb79541zi7cn3pe7e5",
+                "title": "Fahrradabstellplatz",
+                "slug": "fahrradabstellplatz"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6ji77061zi7mgkhzxee",
+                "title": "Bildungskarenz/Auszeit",
+                "slug": "bildungskarenz-auszeit"
+              }
+            },
+            {
+              "model": {
+                "id": "cm0qr7qkf0011szspgf24cto3",
+                "title": "Jobrad",
+                "slug": "jobrad"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6xj79981zi785xddpy6",
+                "title": "Paten- & Mentor- Programm",
+                "slug": "paten-and-mentor-programm"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6md77781zi7j9wrhi37",
+                "title": "Mitarbeiterprämie",
+                "slug": "mitarbeiterpraemie"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6rn78731zi79j6cfl77",
+                "title": "Bonuszahlungen",
+                "slug": "bonuszahlungen"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6me77821zi7egpcyjoc",
+                "title": "Firmenauto",
+                "slug": "firmenauto"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6rq78881zi7turh2ibo",
+                "title": "Tischkicker o. Ä.",
+                "slug": "tischkicker-o-ae"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi70880411zi7edb51n1f",
+                "title": "Zusatzversicherung",
+                "slug": "zusatzversicherung"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6gt75231zi7t5zt00wo",
+                "title": "No All-In-Verträge",
+                "slug": "no-all-in-vertraege"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6gk74941zi702e4fvvg",
+                "title": "Massage, Yoga o. A.",
+                "slug": "massage-yoga-o-a"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi70680341zi7npls0tzi",
+                "title": "Mitarbeitergeschenke",
+                "slug": "mitarbeitergeschenke"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6jl77271zi7ktqhq688",
+                "title": "Mitarbeiterbeteiligung",
+                "slug": "mitarbeiterbeteiligung"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6rs79041zi7r3bzk31i",
+                "title": "Poolcar",
+                "slug": "poolcar"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6gp75121zi7wsmp1biw",
+                "title": "Extra Urlaubstage",
+                "slug": "extra-urlaubstage"
+              }
+            },
+            {
+              "model": {
+                "id": "clfs3ice2001s9111aqyjwlrf",
+                "title": "Workation",
+                "slug": "workation"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6rm78711zi7qoqeiqz1",
+                "title": "Psychische Gesundheitsv.",
+                "slug": "psychische-gesundheitsv"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6jj77141zi7b2w4dmuk",
+                "title": "Gaming Room",
+                "slug": "gaming-room"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi70880481zi7mlh096oy",
+                "title": "Urlaubs- und Weihnachtsgeld",
+                "slug": "urlaubs-und-weihnachtsgeld"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6xf79791zi7y0ca39if",
+                "title": "Relocation Package",
+                "slug": "relocation-package"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi70680301zi78g3k3dgr",
+                "title": "Ruheräume",
+                "slug": "ruheraeume"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6rr78971zi792v81fv4",
+                "title": "Tiere willkommen",
+                "slug": "tiere-willkommen"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6mi78031zi7rcvq6x8m",
+                "title": "Teambudget zur freien Verfügung",
+                "slug": "teambudget-zur-freien-verfuegung"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6xc79581zi7wleorv3a",
+                "title": "Zeit für ehrenamtliche Tätigkeit",
+                "slug": "zeit-fuer-ehrenamtliche-taetigkeit"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6jk77211zi7tfcml2as",
+                "title": "Mitarbeiterdarlehen",
+                "slug": "mitarbeiterdarlehen"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi6mc77761zi73f9mo4qp",
+                "title": "Textilservice",
+                "slug": "textilservice"
+              }
+            },
+            {
+              "model": {
+                "id": "clfs3m9s60032ch11uah7gzcd",
+                "title": "4 Tage Woche",
+                "slug": "4-tage-woche"
+              }
+            }
+          ],
+          "applicationMethods": [
+            {
+              "model": {
+                "id": "cl2iyi65u72001zi7l7dafgog",
+                "title": "Direkt im Gespräch",
+                "slug": "direkt-im-gespraech"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi68i72561zi78z2tkn9x",
+                "title": "Fachliche Arbeitsaufgabe",
+                "slug": "fachliche-arbeitsaufgabe"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi68j72691zi7b5lqyqsj",
+                "title": "Case Study",
+                "slug": "case-study"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi65s71861zi7cwq661mw",
+                "title": "Live-Coding",
+                "slug": "live-coding"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi66e72311zi7f9p3azto",
+                "title": "Whiteboard Interview",
+                "slug": "whiteboard-interview"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi68i72601zi7ua7cb4xr",
+                "title": "Online-Test",
+                "slug": "online-test"
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iyi65t71941zi7ep62w7o9",
+                "title": "Pair Programming",
+                "slug": "pair-programming"
+              }
+            }
+          ]
+        },
+        "facetDistributionsSearch": {
+          "technologies": [
+            {
+              "model": {
+                "id": "cl2iynkq87322521zi7il7vu5h5",
+                "title": "SQL",
+                "slug": "sql",
+                "lpiJob": [
+                  {
+                    "id": "cldroxyft376591129wr6qndbml",
+                    "canonical": "sql"
+                  }
+                ]
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iymxc81475091zmn1uc4egim",
+                "title": "C#",
+                "slug": "c-sharp",
+                "lpiJob": [
+                  {
+                    "id": "cldroxwo31352412117evtt2jucm",
+                    "canonical": "c-sharp"
+                  }
+                ]
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iymtaa6187691zi7ub2a9ae6",
+                "title": "Python",
+                "slug": "python",
+                "lpiJob": [
+                  {
+                    "id": "cldroxxz71353533117ekkgzkdft",
+                    "canonical": "python"
+                  }
+                ]
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iymstf1342311zmnbtxbt3nz",
+                "title": "Java",
+                "slug": "java",
+                "lpiJob": [
+                  {
+                    "id": "cldroxx9t1352802117e202wx82s",
+                    "canonical": "java"
+                  }
+                ]
+              }
+            },
+            {
+              "model": {
+                "id": "cl2iymjkl5796891zi7hsd8remp",
+                "title": "JIRA",
+                "slug": "jira",
+                "lpiJob": [
+                  {
+                    "id": "cldroxxbi375887129w1229m4cq",
+                    "canonical": "jira"
+                  }
+                ]
+              }
+            }
+          ],
+          "company": [
+            {
+              "model": {
+                "id": "cl2kauk7s153181zof38qh7q7y",
+                "title": "ANEXIA Internetdienstleistungs GmbH",
+                "slug": "anexia-internetdienstleistungs-gmbh",
+                "lpiJob": [
+                  {
+                    "id": "clbl1j71396946411bt6ecy4uqz",
+                    "canonical": "anexia-internetdienstleistungs-gmbh"
+                  }
+                ]
+              }
+            },
+            {
+              "model": {
+                "id": "cl2kaua6018041zmmjo2t5onb",
+                "title": "Accenture GmbH",
+                "slug": "accenture-gmbh",
+                "lpiJob": [
+                  {
+                    "id": "clbl1j1pl96621411bt0u6xligr",
+                    "canonical": "accenture-gmbh"
+                  }
+                ]
+              }
+            },
+            {
+              "model": {
+                "id": "clam7ykqb49524613fmdukxk2py",
+                "title": "Knapp AG",
+                "slug": "knapp-ag",
+                "lpiJob": [
+                  {
+                    "id": "clbl1kimg100239711bt2545xa2k",
+                    "canonical": "knapp-ag"
+                  }
+                ]
+              }
+            }
+          ],
+          "jobProfessions": [
+            {
+              "model": {
+                "id": "cl5w6wtt990167820q0rc2yabn6",
+                "title": "IT Techniker",
+                "slug": "it-techniker",
+                "lpiJob": [
+                  {
+                    "id": "cldsp2fih157768211b40zfduepx",
+                    "canonical": "it-techniker"
+                  }
+                ]
+              }
+            },
+            {
+              "model": {
+                "id": "cl5w6x4qu53295320ozf0o51xdg",
+                "title": "System Techniker",
+                "slug": "system-techniker",
+                "lpiJob": [
+                  {
+                    "id": "cli1wox9v02v2cr12ojxbt0ba",
+                    "canonical": "system-techniker"
+                  }
+                ]
+              }
+            },
+            {
+              "model": {
+                "id": "cl5w6x2z3167917620pd20bn8q5b",
+                "title": "Software Developer",
+                "slug": "software-developer",
+                "lpiJob": [
+                  {
+                    "id": "cldsp2fq5153879513aaekxzqe72",
+                    "canonical": "software-developer"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "page": 1,
+        "searchFilter": {
+          "company": [],
+          "jobProfessions": [],
+          "technologies": [],
+          "locations": [],
+          "benefits": [],
+          "companyType": [],
+          "jobFields": [],
+          "workingModels": [],
+          "applicationMethods": [],
+          "contractType": [],
+          "employmentType": [],
+          "jobLevel": [
+            "junior-job-level"
+          ],
+          "salaryRanges": [],
+          "jobTopics": [],
+          "osmState": []
+        },
+        "searchFilterJobAlert": {
+          "company": [],
+          "jobProfessions": [],
+          "technologies": [],
+          "locations": [],
+          "benefits": [],
+          "companyType": [],
+          "jobFields": [],
+          "workingModels": [],
+          "applicationMethods": [],
+          "contractType": [],
+          "employmentType": [],
+          "jobLevel": [
+            "junior-job-level"
+          ],
+          "salaryRanges": [],
+          "jobTopics": [],
+          "osmState": [],
+          "locationDistance": "0",
+          "text": ""
+        },
+        "activeJobs": [
+          {
+            "additionalInfo": {
+              "metaOsmLocationSlug": "st-poelten-134351",
+              "isExpired": false,
+              "_geoDistance": null,
+              "isDirectLocationMatch": false
+            },
+            "model": {
+              "id": "cmqz3fyfw00016mv5exqbwa85",
+              "sortedAt": "2026-06-29T10:47:30.258Z",
+              "createdAt": "2026-06-29T10:47:30.258Z",
+              "responsibilitiesExcerpt": "You contribute to basic and applied research projects in the fields of machine learning, computer vision and explainable AI. You develop and evaluate machine learning approaches for physiological or human-centered data, such as gait analysis,...",
+              "aiSummaryShort": "In diesem Job entwickelst du innovative Machine Learning-Ansätze zur Analyse von physiologischen Daten, erstellst Software in Python und unterstützt Forschungsprojekte sowie Lehrtätigkeiten an der Hochschule.",
+              "salaryYearRangeFrom": 0,
+              "salaryYearRangeTo": 0,
+              "slug": "53d839a7bb83c7a48a988e3ea67969cf",
+              "technologiesCount": 3,
+              "platforms": [
+                {
+                  "id": "cmqz3g0li00026mv508xui059",
+                  "type": "regular",
+                  "state": "published",
+                  "platform": "devjobsat"
+                }
+              ],
+              "pushAds": [],
+              "metaJobTitle": {
+                "id": "cmqz3fxb800006mv5hozxt4uh",
+                "title": "Junior Researcher - Machine Learning & AI"
+              },
+              "metaJobLevel": {
+                "id": "cl2iyi85t89041zi7z318dope",
+                "title": "Junior",
+                "slug": "junior-job-level"
+              },
+              "employmentType": {
+                "id": "cl2iyny5c2410741zmnh5x19xk2",
+                "title": "Teilzeit"
+              },
+              "metaJobWorkingModels": [
+                {
+                  "id": "cl2iyhrcl68081zi7qpss6gf6",
+                  "title": "Hybrid",
+                  "slug": "hybrid"
+                }
+              ],
+              "technologies": [
+                {
+                  "id": "cmqz3g21m00036mv5j3vrlpog",
+                  "metaTechnology": {
+                    "id": "cl2iymkyh1155701zmnho8yuwmn",
+                    "title": "TensorFlow",
+                    "slug": "tensorflow",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-tensorflow",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1533222991/dj/technologies/logo/tech-tensorflow.png"
+                    }
+                  }
+                },
+                {
+                  "id": "cmqz3g21t00046mv5tjnne67w",
+                  "metaTechnology": {
+                    "id": "cl2iymtaa6187691zi7ub2a9ae6",
+                    "title": "Python",
+                    "slug": "python",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-python",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1652880378/dj/technologies/logo/tech-python.png"
+                    }
+                  }
+                },
+                {
+                  "id": "cmqz3g21u00056mv5ovick0la",
+                  "metaTechnology": {
+                    "id": "cl2iyn1nq1591741zmny2ipmehw",
+                    "title": "PyTorch",
+                    "slug": "pytorch",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-logo (2)",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1652972620/dj/technologies/logo/tech-logo%20%282%29.png"
+                    }
+                  }
+                }
+              ],
+              "metaOsmLocations": [
+                {
+                  "id": "cl66cev2e98170323omnq7y0c9x",
+                  "title": "St. Pölten",
+                  "slug": "st-poelten-134351",
+                  "metaCountry": {
+                    "id": "cl5v2ak848524921mqdnkui1q1",
+                    "isoCode": "AT"
+                  }
+                }
+              ],
+              "company": {
+                "id": "cl2kbo51u11509951zofd1cfdnmx",
+                "title": "FH St. Pölten",
+                "slug": "fh-st-polten",
+                "easyApplyOptIn": true,
+                "averageReviewScore": 0,
+                "logo": {
+                  "id": "dj/companies/logo/qhjtx4eykgteprzuj7s6",
+                  "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1613469587/dj/companies/logo/qhjtx4eykgteprzuj7s6.png"
+                },
+                "platforms": [
+                  {
+                    "id": "cl475co5x3905831zlkethz1ci6",
+                    "type": "regular",
+                    "platform": "devjobsat"
+                  },
+                  {
+                    "id": "cl475cofa3908701zlkc31hbaow",
+                    "type": "regular",
+                    "platform": "devworkplacescom"
+                  },
+                  {
+                    "id": "cl6qiyrm8135759922mgnok7gd1y",
+                    "type": "regular",
+                    "platform": "itkarrieremesseat"
+                  },
+                  {
+                    "id": "cl6qiyurk135847422mgs981lluf",
+                    "type": "regular",
+                    "platform": "techtalkdayscom"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "additionalInfo": {
+              "metaOsmLocationSlug": "prambachkirchen-88558",
+              "isExpired": false,
+              "_geoDistance": null,
+              "isDirectLocationMatch": false
+            },
+            "model": {
+              "id": "cmqz2fv76000s60jo614tf9wa",
+              "sortedAt": "2026-06-29T10:19:26.424Z",
+              "createdAt": "2026-06-29T10:19:26.423Z",
+              "responsibilitiesExcerpt": "Du lernst, die passenden Werkzeuge, Materialien und Computerprogramme für deine Arbeit auszuwählen, zu besorgen und zu prüfen. Du arbeitest mit speziellen Programmiertools und lernst, sie richtig einzusetzen. Du installierst Geräte und Netzwerke,...",
+              "aiSummaryShort": "In dieser Ausbildung erlernst du die Auswahl und den Einsatz von Werkzeugen und Programmen, installierst Netzwerke, diagnostizierst und behebst technische Störungen in Geräten und arbeitest an der Einrichtung von Arbeitsplätzen.",
+              "salaryYearRangeFrom": 0,
+              "salaryYearRangeTo": 0,
+              "slug": "ce571782fcdb1c249cd4fc1d940a1454",
+              "technologiesCount": 0,
+              "platforms": [
+                {
+                  "id": "cmqz2fy4j000u60jo4pxw9jmj",
+                  "type": "regular",
+                  "state": "published",
+                  "platform": "devjobsat"
+                }
+              ],
+              "technologies": [],
+              "pushAds": [],
+              "metaJobTitle": {
+                "id": "cmqz2fu8h000r60jo1t38j3ta",
+                "title": "Lehre Informationstechniker-Systemtechnik"
+              },
+              "metaJobLevel": {
+                "id": "cl2iyi85t89041zi7z318dope",
+                "title": "Junior",
+                "slug": "junior-job-level"
+              },
+              "employmentType": {
+                "id": "cl2iyny527810041zi720x77mvg",
+                "title": "Vollzeit"
+              },
+              "metaJobWorkingModels": [],
+              "metaOsmLocations": [
+                {
+                  "id": "cl66atdbt075323lygoj4sux3",
+                  "title": "Prambachkirchen",
+                  "slug": "prambachkirchen-88558",
+                  "metaCountry": {
+                    "id": "cl5v2ak848524921mqdnkui1q1",
+                    "isoCode": "AT"
+                  }
+                }
+              ],
+              "company": {
+                "id": "cl2kb95ky6562161zofbpptm52h",
+                "title": "Schauer Agrotronic GmbH",
+                "slug": "schauer-agrotronic-gmbh",
+                "easyApplyOptIn": true,
+                "averageReviewScore": 3.18,
+                "logo": {
+                  "id": "dj/companies/logo/rgfaeeapoxvpq8eiszp1",
+                  "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1583499609/dj/companies/logo/rgfaeeapoxvpq8eiszp1.jpg"
+                },
+                "platforms": [
+                  {
+                    "id": "cl474ywbd15794681zlk9rm0fpjf",
+                    "type": "regular",
+                    "platform": "devjobsat"
+                  },
+                  {
+                    "id": "cl6qjb1sv10653222nww9lu8gpb",
+                    "type": "regular",
+                    "platform": "itkarrieremesseat"
+                  },
+                  {
+                    "id": "cl6qjb58310748622nw7tppu8tq",
+                    "type": "regular",
+                    "platform": "techtalkdayscom"
+                  },
+                  {
+                    "id": "cl474ywin15797431zlk5lskt818",
+                    "type": "regular",
+                    "platform": "devworkplacescom"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "additionalInfo": {
+              "metaOsmLocationSlug": "marktgemeinde-lauterach-75794",
+              "isExpired": false,
+              "_geoDistance": null,
+              "isDirectLocationMatch": false
+            },
+            "model": {
+              "id": "cmqz1qm18000gwjkvsb30m5bf",
+              "sortedAt": "2026-06-29T09:59:47.836Z",
+              "createdAt": "2026-06-29T09:59:47.836Z",
+              "responsibilitiesExcerpt": "Du erlernst diverse Programmiersprachen, insbesondere auf FileMaker Basis und hilfst in weiterer Folge bei der Programmierung und Anpassung von verschiedenen Kundenlösungen. Du unterstützt unsere Projektteams mit verantwortungsvollen Software-Tests. In...",
+              "aiSummaryShort": "In dieser Rolle lernst du verschiedene Programmiersprachen, entwickelst und testest Softwarelösungen für Kunden und unterstützt Projektteams bei Anpassungen und Kundenanfragen.",
+              "salaryYearRangeFrom": 0,
+              "salaryYearRangeTo": 0,
+              "slug": "ccc53626dbf395b4aa781bf32f6dd2bb",
+              "technologiesCount": 1,
+              "platforms": [
+                {
+                  "id": "cmqz1qppt000hwjkvl8e0a6m7",
+                  "type": "regular",
+                  "state": "published",
+                  "platform": "devjobsat"
+                }
+              ],
+              "pushAds": [],
+              "metaJobTitle": {
+                "id": "cmqz1qkcz000fwjkv5987eltg",
+                "title": "Lehrling Informationstechnologie - Applikationsentwicklung - Coding"
+              },
+              "metaJobLevel": {
+                "id": "cl2iyi85t89041zi7z318dope",
+                "title": "Junior",
+                "slug": "junior-job-level"
+              },
+              "employmentType": {
+                "id": "cl2iyny527810041zi720x77mvg",
+                "title": "Vollzeit"
+              },
+              "metaJobWorkingModels": [],
+              "technologies": [
+                {
+                  "id": "cmqz1qrk4000iwjkvzfvyfdhc",
+                  "metaTechnology": {
+                    "id": "cl2iyp99y2863181zmnpxlu1zkn",
+                    "title": "Filemaker",
+                    "slug": "filemaker",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-Filemaker",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1551553289/dj/technologies/logo/tech-Filemaker.jpg"
+                    }
+                  }
+                }
+              ],
+              "metaOsmLocations": [
+                {
+                  "id": "cl66qds2o159828923omes2h0reo",
+                  "title": "Marktgemeinde Lauterach",
+                  "slug": "marktgemeinde-lauterach-75794",
+                  "metaCountry": {
+                    "id": "cl5v2ak848524921mqdnkui1q1",
+                    "isoCode": "AT"
+                  }
+                }
+              ],
+              "company": {
+                "id": "cl2kb3te64538071zofna4x5ebl",
+                "title": "hgisystems IT OG",
+                "slug": "hgisystems-it-og",
+                "easyApplyOptIn": true,
+                "averageReviewScore": 0,
+                "logo": {
+                  "id": "dj/companies/logo/cr8srgxkuscekrr0a3yy",
+                  "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1551828901/dj/companies/logo/cr8srgxkuscekrr0a3yy.png"
+                },
+                "platforms": [
+                  {
+                    "id": "cl474q1hv13241781zl0x4g3tjyl",
+                    "type": "regular",
+                    "platform": "devworkplacescom"
+                  },
+                  {
+                    "id": "cl474q12t13236841zl08i77m22f",
+                    "type": "regular",
+                    "platform": "devjobsat"
+                  },
+                  {
+                    "id": "cl6r46lon9464201yrsny3t2bm0",
+                    "type": "regular",
+                    "platform": "techtalkdayscom"
+                  },
+                  {
+                    "id": "cl6r46kpv9455591yrsis4nsayq",
+                    "type": "regular",
+                    "platform": "itkarrieremesseat"
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "nearJobs": null,
+        "expiredJobs": [],
+        "hits": 215,
+        "selectedSearch": [],
+        "lpiSearchSuggestionData": {
+          "lpiTechnologies": [
+            {
+              "id": "clb24k0at102634511e2syembxa1",
+              "canonical": "office-365",
+              "metaTechnology": {
+                "id": "cl2iynrff2252271zmnkery6ssl",
+                "title": "Office 365"
+              }
+            },
+            {
+              "id": "clb24k5ul102948111e2pux9xpoh",
+              "canonical": "sharepoint",
+              "metaTechnology": {
+                "id": "cl2iyni5s2016711zmni2xpdelc",
+                "title": "SharePoint"
+              }
+            },
+            {
+              "id": "clb24jhuu101460011e2vsrc30qp",
+              "canonical": "cisco",
+              "metaTechnology": {
+                "id": "cl2iynseu2280121zmn9o2i8bdr",
+                "title": "Cisco"
+              }
+            },
+            {
+              "id": "clb24jijg19495511d4d1c36i8q",
+              "canonical": "css3",
+              "metaTechnology": {
+                "id": "cl2iynoig7481381zi7m7pzak2e",
+                "title": "CSS3"
+              }
+            },
+            {
+              "id": "clb24jskg20171011d40l2iqrdx",
+              "canonical": "kotlin",
+              "metaTechnology": {
+                "id": "cl2iymvg41419421zmntm1iopnv",
+                "title": "Kotlin"
+              }
+            }
+          ],
+          "lpiLocations": [
+            {
+              "id": "clb36r0hv3103911b22591fpyb",
+              "canonical": "amstetten-128084",
+              "metaOsmLocation": {
+                "id": "cl66cyn6y133959223om4n9eluxy",
+                "title": "Amstetten"
+              }
+            },
+            {
+              "id": "clbl1o7no109240911bt5d97468r",
+              "canonical": "stadt-kufstein-85918",
+              "metaOsmLocation": {
+                "id": "cl66dp2yy130027421nc0dg6tnr0",
+                "title": "Stadt Kufstein"
+              }
+            },
+            {
+              "id": "clb36r4223284211b2sh2azcmf",
+              "canonical": "perg-105564",
+              "metaOsmLocation": {
+                "id": "cl66g8nvf91174321qdb4md13ye",
+                "title": "Perg"
+              }
+            },
+            {
+              "id": "clb36r0t23124711b2c9l2xyif",
+              "canonical": "eggelsberg-412938",
+              "metaOsmLocation": {
+                "id": "cl66ci2fz62098421nccp2ub91e",
+                "title": "Eggelsberg"
+              }
+            },
+            {
+              "id": "clb36r23u3157711b2avlati4c",
+              "canonical": "gemeinde-gumpoldskirchen-152069",
+              "metaOsmLocation": {
+                "id": "cl66h8csk54799023omsbagd80f",
+                "title": "Gemeinde Gumpoldskirchen"
+              }
+            }
+          ],
+          "lpiTechnologiesLocations": [
+            {
+              "id": "clb24kzac104739111e2t7cwe1yd",
+              "canonical": "vue-js-wien-109166",
+              "metaTechnology": {
+                "id": "cl2iymrdy6103531zi79ul80aox",
+                "title": "Vue.js"
+              },
+              "metaOsmLocation": {
+                "id": "cl66c6fxh82634123omqet8nth2",
+                "title": "Wien"
+              }
+            },
+            {
+              "id": "clb24kqu1678212eumtyy7usp",
+              "canonical": "gitlab-wien-109166",
+              "metaTechnology": {
+                "id": "cl2iymvza6318011zi7q0adb3qv",
+                "title": "GitLab"
+              },
+              "metaOsmLocation": {
+                "id": "cl66c6fxh82634123omqet8nth2",
+                "title": "Wien"
+              }
+            },
+            {
+              "id": "clb24kotl22274611d4lsqg6yl5",
+              "canonical": "c-sharp-graz-34719",
+              "metaTechnology": {
+                "id": "cl2iymxc81475091zmn1uc4egim",
+                "title": "C#"
+              },
+              "metaOsmLocation": {
+                "id": "cl66bufla6287121ncc0lfdrnd",
+                "title": "Graz"
+              }
+            },
+            {
+              "id": "clb4m7mc588300011b2ehnnoxc6",
+              "canonical": "sap-s-4hana-wien-109166",
+              "metaTechnology": {
+                "id": "cl2iynpm97529451zi7webjcyl7",
+                "title": "SAP S/4Hana"
+              },
+              "metaOsmLocation": {
+                "id": "cl66c6fxh82634123omqet8nth2",
+                "title": "Wien"
+              }
+            },
+            {
+              "id": "clb24kwos999512euqfnp4vwm",
+              "canonical": "openshift-wien-109166",
+              "metaTechnology": {
+                "id": "cl2iymt0v6175241zi7hkqxek2t",
+                "title": "OpenShift"
+              },
+              "metaOsmLocation": {
+                "id": "cl66c6fxh82634123omqet8nth2",
+                "title": "Wien"
+              }
+            }
+          ]
+        },
+        "distance": null,
+        "metaCanonical": "/jobs/junior-job-level",
+        "linkHrefLang": "/jobs/junior-job-level",
+        "meta": {
+          "title": "Junior IT & Entwickler Jobs in Österreich - DEVjobs.at",
+          "description": "Entdecke Stellenangebote für Junior Researcher - Machine Learning & AI, Lehre Informationstechniker-Systemtechnik und mehr auf DEVjobs.at. Mit einem Gehalt von bis zu €70.000 pro Jahr!",
+          "image": "https://devjobs.at/share/search/jobs/twitter/og_image.jpeg??jobLevel=junior-job-level",
+          "indexed": true
+        }
+      }
+    }
+  }
+}

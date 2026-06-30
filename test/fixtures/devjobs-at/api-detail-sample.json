@@ -1,0 +1,1333 @@
+{
+  "state": {
+    "loaderData": {
+      "root": {
+        "showCookieBanner": true,
+        "showLangBanner": true,
+        "nonce": "f6674c87-caf6-4b3d-a7e7-a236df4cb70a",
+        "ENV": {
+          "PUBLIC_CLOUDINARY_CLOUD_NAME": "djproto",
+          "PUBLIC_APP_VERSION": "0.25.48",
+          "PLATFORM": "devjobsat",
+          "DOPPLER_ENVIRONMENT": "prd",
+          "DOMAIN_EN": "en.devjobs.at",
+          "DOMAIN_DE": "devjobs.at",
+          "VERCEL_ANALYTICS_URL": "/vitals",
+          "VERCEL_SPEED_INSIGHTS_ENABLED": "true",
+          "VERCEL_SPEED_INSIGHTS_SAMPLE_RATE": "0.1",
+          "VERCEL_GIT_COMMIT_SHA": "bb74dec4cc77ef8bdcb9d4f4cd9e6e1e8397ddac",
+          "SENTRY_ENABLED": "true",
+          "SENTRY_DSN": "https://11618489ac5d47859625202cd7eaa328@o1138738.ingest.sentry.io/4504531778207744",
+          "SENTRY_TUNNEL": "/sentry",
+          "FRIENDLYCAPTCHA_ENABLED": "true",
+          "FRIENDLYCAPTCHA_SITEKEY": "FCMM9LO7MRN39062",
+          "PLAUSIBLE_ID": "devjobs.at-a1ca9a6fb2cf65061bd95c39f709f963"
+        },
+        "LANG": "de",
+        "imageRewriteOrigin": "https://devjobs.at",
+        "shouldPreconnectImageRewriteOrigin": false,
+        "deferReactRouterScripts": false,
+        "lpiTechnologies": [
+          {
+            "title": "Java",
+            "href": "/jobs/java"
+          },
+          {
+            "title": "JavaScript",
+            "href": "/jobs/javascript"
+          },
+          {
+            "title": "Python",
+            "href": "/jobs/python"
+          },
+          {
+            "title": "Linux",
+            "href": "/jobs/linux"
+          },
+          {
+            "title": "C#",
+            "href": "/jobs/c-sharp"
+          },
+          {
+            "title": "Git",
+            "href": "/jobs/git"
+          },
+          {
+            "title": "Azure",
+            "href": "/jobs/azure"
+          },
+          {
+            "title": "Docker",
+            "href": "/jobs/docker"
+          }
+        ],
+        "lpiLocations": [
+          {
+            "title": "Linz",
+            "href": "/jobs/linz-86708"
+          },
+          {
+            "title": "Graz",
+            "href": "/jobs/graz-34719"
+          },
+          {
+            "title": "Salzburg",
+            "href": "/jobs/salzburg-86538"
+          },
+          {
+            "title": "Innsbruck",
+            "href": "/jobs/innsbruck-4835169"
+          },
+          {
+            "title": "Klagenfurt am Wörthersee",
+            "href": "/jobs/klagenfurt-am-woerthersee-105870"
+          },
+          {
+            "title": "Wels",
+            "href": "/jobs/wels-63175"
+          },
+          {
+            "title": "St. Pölten",
+            "href": "/jobs/st-poelten-134351"
+          },
+          {
+            "title": "Villach",
+            "href": "/jobs/villach-106163"
+          }
+        ],
+        "meta": {
+          "title": "Die Plattform für IT und Developer Jobs in Österreich | DEVjobs.at",
+          "description": "",
+          "domain": "https://devjobs.at"
+        }
+      },
+      "routes/job/$jobSlug": {
+        "lang": "de",
+        "metaCanonical": "/job/53d839a7bb83c7a48a988e3ea67969cf",
+        "linkHrefLang": "/job/53d839a7bb83c7a48a988e3ea67969cf",
+        "reviewsCount": 0,
+        "job": {
+          "id": "cmqz3fyfw00016mv5exqbwa85",
+          "aiSummaryShort": "In diesem Job entwickelst du innovative Machine Learning-Ansätze zur Analyse von physiologischen Daten, erstellst Software in Python und unterstützt Forschungsprojekte sowie Lehrtätigkeiten an der Hochschule.",
+          "englishOnly": true,
+          "slug": "53d839a7bb83c7a48a988e3ea67969cf",
+          "createdAt": "2026-06-29T10:47:30.258Z",
+          "salaryRangeType": "year",
+          "salaryRangeFrom": 45640,
+          "salaryRangeTo": null,
+          "salaryYearRangeFrom": 0,
+          "salaryYearRangeTo": 0,
+          "educationRequirements": {
+            "content": [
+              {
+                "type": "unordered-list",
+                "children": [
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "Completed Master's degree in Computer Science, Data Science, Artificial Intelligence, Media Technology, Software Engineering or a related technical field that qualifies you for admission to a PhD/doctoral programme."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "isAutoTranslated": false
+          },
+          "qualifications": {
+            "content": [
+              {
+                "type": "unordered-list",
+                "children": [
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "Advanced knowledge in the areas of explainable and interactive machine learning is an advantage."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "Strong interest in applied research and emerging technologies."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "Ability to work both independently and as part of a team."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "Analytical thinking and a structured working style."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "isAutoTranslated": false
+          },
+          "experienceRequirements": {
+            "content": [
+              {
+                "type": "unordered-list",
+                "children": [
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "Initial research experience as an intern, teaching assistant or research assistant is desirable."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "Strong programming skills in Python and experience with frameworks such as TensorFlow/PyTorch."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "Experience with physiological or human-centered data, such as gait analysis, eye-tracking or EEG data, is an advantage."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "isAutoTranslated": false
+          },
+          "offer": {
+            "content": [
+              {
+                "type": "unordered-list",
+                "children": [
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "A long-term employment in a modern, flexible work environment at the University of Applied Sciences St. Pölten with various work opportunities (e.g., remote work, creative spaces, etc.) as well as numerous benefits and further trainings."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "More free time for our staff: additional special leave days from 24/12 to 31/12 as well as on Good Friday."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "Permanent contract in an innovative, open-minded, and internationally oriented environment."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "A gross annual salary that takes your qualifications into account: at least € 45.640,- (basis: 40 h/week) with flexitime option (no core time) and comp time."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "isAutoTranslated": false
+          },
+          "responsibilities": {
+            "content": [
+              {
+                "type": "unordered-list",
+                "children": [
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "You contribute to basic and applied research projects in the fields of machine learning, computer vision and explainable AI."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "You develop and evaluate machine learning approaches for physiological or human-centered data, such as gait analysis, eye-tracking and EEG data."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "You develop software in Python using common machine learning frameworks (e.g., TensorFlow and PyTorch)."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "You support the development of research prototypes and frontend applications for demonstrators."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "You contribute to publications and the dissemination of research results."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "list-item",
+                    "children": [
+                      {
+                        "type": "list-item-content",
+                        "children": [
+                          {
+                            "text": "To a limited extent, you are involved in teaching (max. 6 semester periods a week) as well as in supervising scientific theses and teaching projects."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "isAutoTranslated": false
+          },
+          "responsibilitiesExcerpt": "You contribute to basic and applied research projects in the fields of machine learning, computer...",
+          "responsibilityDistributionBugfixing": null,
+          "responsibilityDistributionClientSupport": null,
+          "responsibilityDistributionDocumentation": null,
+          "responsibilityDistributionMeetings": null,
+          "responsibilityDistributionNewFeatures": null,
+          "responsibilityDistributionOrganisation": null,
+          "metaJobTitle": {
+            "id": "cmqz3fxb800006mv5hozxt4uh",
+            "title": "Junior Researcher - Machine Learning & AI"
+          },
+          "metaJobProfessions": [],
+          "platforms": [
+            {
+              "id": "cmqz3g0li00026mv508xui059",
+              "state": "published",
+              "type": "regular",
+              "platform": "devjobsat"
+            }
+          ],
+          "companyLocations": [],
+          "metaJobWorkingModels": [
+            {
+              "id": "cl2iyhrcl68081zi7qpss6gf6",
+              "title": "Hybrid",
+              "slug": "hybrid"
+            },
+            {
+              "id": "cl2iyhrca67991zi7a9e4lnb8",
+              "title": "Onsite",
+              "slug": "onsite"
+            }
+          ],
+          "metaOsmLocations": [
+            {
+              "id": "cl66cev2e98170323omnq7y0c9x",
+              "title": "St. Pölten",
+              "slug": "st-poelten-134351"
+            }
+          ],
+          "metaJobFields": [
+            {
+              "id": "cl2iyi95z117691zi7m13xh1rs",
+              "title": "Data"
+            }
+          ],
+          "pushAds": [],
+          "metaJobLevel": {
+            "id": "cl2iyi85t89041zi7z318dope",
+            "title": "Junior"
+          },
+          "contractType": {
+            "id": "cl2iyp0z28292311zi7n0l4dhii",
+            "title": "Unbefristetes Dienstverhältnis"
+          },
+          "directApplyHost": "jobs.ustp.at",
+          "directApply": "https://jobs.ustp.at/bewerbungsformular.html?jobCode=REC-0043",
+          "employmentType": {
+            "id": "cl2iyny5c2410741zmnh5x19xk2",
+            "title": "Teilzeit",
+            "slug": "teilzeit"
+          },
+          "metaTopics": [
+            {
+              "id": "cl2iyowaf8107431zi7f0bf2c5r",
+              "title": "Machine Learning",
+              "slug": "machine-learning",
+              "image": {
+                "id": "dj/topics/image/mfqf5nsrinpt9snjmnz1",
+                "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1548762712/dj/topics/image/mfqf5nsrinpt9snjmnz1.jpg"
+              },
+              "lpiJob": [
+                {
+                  "id": "cm0fhfsnn000cvkzzlrptt2g2",
+                  "canonical": "machine-learning"
+                },
+                {
+                  "id": "clb4m6sy086527911b2mifwin88",
+                  "canonical": "machine-learning"
+                }
+              ]
+            },
+            {
+              "id": "cl2iyp7sn8386171zi79u6enpqe",
+              "title": "AI",
+              "slug": "ai",
+              "image": {
+                "id": "dj/topics/image/ohgncidkoo69s1fuebdt",
+                "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1548762701/dj/topics/image/ohgncidkoo69s1fuebdt.jpg"
+              },
+              "lpiJob": [
+                {
+                  "id": "clefy3rns162995013eiw4jvmlpy",
+                  "canonical": "ai"
+                },
+                {
+                  "id": "clb4m6rji86438111b2437sc51g",
+                  "canonical": "ai"
+                }
+              ]
+            },
+            {
+              "id": "cl2iyp81i33061ylaor4b9ghc",
+              "title": "Computer Vision",
+              "slug": "computer-vision",
+              "image": {
+                "id": "dj/topics/image/qpiesc39pizslbsrgn00",
+                "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1575320892/dj/topics/image/qpiesc39pizslbsrgn00.jpg"
+              },
+              "lpiJob": [
+                {
+                  "id": "cm0sc9yc700rrla7f1cnixxw8",
+                  "canonical": "computer-vision"
+                },
+                {
+                  "id": "clb4m6s3y86471011b2uqu5lbkb",
+                  "canonical": "computer-vision"
+                }
+              ]
+            }
+          ],
+          "technologies": [
+            {
+              "id": "cmqz3g21u00056mv5ovick0la",
+              "metaTechnology": {
+                "id": "cl2iyn1nq1591741zmny2ipmehw",
+                "logo": {
+                  "id": "dj/technologies/logo/tech-logo (2)",
+                  "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1652972620/dj/technologies/logo/tech-logo%20%282%29.png"
+                },
+                "title": "PyTorch",
+                "slug": "pytorch",
+                "lpiJob": [
+                  {
+                    "id": "clb4m6jzh86045511b2z9c03vei",
+                    "canonical": "pytorch"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "cmqz3g21t00046mv5tjnne67w",
+              "metaTechnology": {
+                "id": "cl2iymtaa6187691zi7ub2a9ae6",
+                "logo": {
+                  "id": "dj/technologies/logo/tech-python",
+                  "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1652880378/dj/technologies/logo/tech-python.png"
+                },
+                "title": "Python",
+                "slug": "python",
+                "lpiJob": [
+                  {
+                    "id": "clb24k2ut102751111e28d9qx0c0",
+                    "canonical": "python"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "cmqz3g21m00036mv5j3vrlpog",
+              "metaTechnology": {
+                "id": "cl2iymkyh1155701zmnho8yuwmn",
+                "logo": {
+                  "id": "dj/technologies/logo/tech-tensorflow",
+                  "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1533222991/dj/technologies/logo/tech-tensorflow.png"
+                },
+                "title": "TensorFlow",
+                "slug": "tensorflow",
+                "lpiJob": [
+                  {
+                    "id": "clb24k81t23238711b2ugb7l6nf",
+                    "canonical": "tensorflow"
+                  }
+                ]
+              }
+            }
+          ],
+          "textkernelLocations": [
+            {
+              "id": "cl2kc2gj916004401zofex65uk9z",
+              "title": "Sankt Pölten",
+              "lat": 48.200000763,
+              "lng": 15.633330345,
+              "regionLabel": "Niederösterreich",
+              "metaCountry": {
+                "id": "cl5v2ak848524921mqdnkui1q1",
+                "title": "Österreich",
+                "isoCode": "AT"
+              },
+              "metaOsmLocation": {
+                "id": "cl66cev2e98170323omnq7y0c9x",
+                "title": "St. Pölten",
+                "slug": "st-poelten-134351",
+                "lat": 48.12451,
+                "lng": 15.61981,
+                "state": "Niederösterreich",
+                "postcode": "",
+                "metaCountry": {
+                  "id": "cl5v2ak848524921mqdnkui1q1",
+                  "title": "Österreich"
+                }
+              }
+            }
+          ],
+          "jobDescriptionHtml": {
+            "html": "<h2>Deine Rolle im Team</h2>\n\n<ul><li>You contribute to basic and applied research projects in the fields of machine learning, computer vision and explainable AI.</li>\n<li>You develop and evaluate machine learning approaches for physiological or human-centered data, such as gait analysis, eye-tracking and EEG data.</li>\n<li>You develop software in Python using common machine learning frameworks (e.g., TensorFlow and PyTorch).</li>\n<li>You support the development of research prototypes and frontend applications for demonstrators.</li>\n<li>You contribute to publications and the dissemination of research results.</li>\n<li>To a limited extent, you are involved in teaching (max. 6 semester periods a week) as well as in supervising scientific theses and teaching projects.</li>\n</ul>\n\n<h2>Unser Angebot</h2>\n\n<ul><li>A long-term employment in a modern, flexible work environment at the University of Applied Sciences St. Pölten with various work opportunities (e.g., remote work, creative spaces, etc.) as well as numerous benefits and further trainings.</li>\n<li>More free time for our staff: additional special leave days from 24/12 to 31/12 as well as on Good Friday.</li>\n<li>Permanent contract in an innovative, open-minded, and internationally oriented environment.</li>\n<li>A gross annual salary that takes your qualifications into account: at least € 45.640,- (basis: 40 h/week) with flexitime option (no core time) and comp time.</li>\n</ul>\n\n<h2>Technologien und Skills</h2>\n\n<ul><li>Python</li>\n<li>PyTorch</li>\n<li>TensorFlow</li>\n</ul>\n\n<h2>Unsere Erwartungen an dich:</h2>\n\n<h3>Qualifikationen</h3>\n\n<ul><li>Advanced knowledge in the areas of explainable and interactive machine learning is an advantage.</li>\n<li>Strong interest in applied research and emerging technologies.</li>\n<li>Ability to work both independently and as part of a team.</li>\n<li>Analytical thinking and a structured working style.</li>\n</ul>\n\n<h3>Erfahrung</h3>\n\n<ul><li>Initial research experience as an intern, teaching assistant or research assistant is desirable.</li>\n<li>Strong programming skills in Python and experience with frameworks such as TensorFlow/PyTorch.</li>\n<li>Experience with physiological or human-centered data, such as gait analysis, eye-tracking or EEG data, is an advantage.</li>\n</ul>\n\n<h3>Ausbildung</h3>\n\n<ul><li>Completed Master's degree in Computer Science, Data Science, Artificial Intelligence, Media Technology, Software Engineering or a related technical field that qualifies you for admission to a PhD/doctoral programme.</li>\n</ul>\n\n<h2>Benefits</h2>\n\n<ul><li>Home Office</li>\n<li>Flexible Arbeitszeiten</li>\n<li>Gesundheitsförderung</li>\n<li>Kinderbetreuung</li>\n</ul>\n\n"
+          },
+          "benefits": [
+            {
+              "id": "cl2iyi6ug79261zi7pu09jbpp",
+              "title": "Flexible Arbeitszeiten",
+              "emoji": "⏰",
+              "category": "Work-Life-Integration",
+              "icon": "clock",
+              "slug": "flexible-arbeitszeiten",
+              "lpiJob": [
+                {
+                  "id": "clepxkbg59893412dv06gu2ttj",
+                  "canonical": "flexible-arbeitszeiten"
+                },
+                {
+                  "id": "cleohypdu5825413ed34l4mcyx",
+                  "canonical": "flexible-arbeitszeiten"
+                }
+              ]
+            },
+            {
+              "id": "cl2iyi6ro78771zi7uf3c52f8",
+              "title": "Home Office",
+              "emoji": "🏠",
+              "category": "Work-Life-Integration",
+              "icon": "home",
+              "slug": "home-office",
+              "lpiJob": [
+                {
+                  "id": "clepxkdea9926412dvbe3hrook",
+                  "canonical": "home-office"
+                },
+                {
+                  "id": "cleohypu25844613edw82fquc2",
+                  "canonical": "home-office"
+                }
+              ]
+            },
+            {
+              "id": "cl2iyi6rg78521zi7kaqj2v4s",
+              "title": "Gesundheitsförderung",
+              "emoji": "🙂",
+              "category": "Gesundheit, Fitness & Fun",
+              "icon": "hand-holding-heart",
+              "slug": "gesundheitsfoerderung",
+              "lpiJob": [
+                {
+                  "id": "clepxkcg29912412dviz61ou56",
+                  "canonical": "gesundheitsfoerderung"
+                },
+                {
+                  "id": "cleohypjq5831313edebykeg8s",
+                  "canonical": "gesundheitsfoerderung"
+                }
+              ]
+            },
+            {
+              "id": "cl2iyi6oz78381zi70wm97zoq",
+              "title": "Kinderbetreuung",
+              "emoji": "🍼",
+              "category": "Work-Life-Integration",
+              "icon": "child",
+              "slug": "kinderbetreuung",
+              "lpiJob": [
+                {
+                  "id": "clepxke7w9949212dvk029121o",
+                  "canonical": "kinderbetreuung"
+                },
+                {
+                  "id": "cleohypzk5851613edn7dodvfy",
+                  "canonical": "kinderbetreuung"
+                }
+              ]
+            }
+          ],
+          "relatedJobs": [
+            {
+              "id": "cmnhflzyc0002p2wiw3uhgeej",
+              "slug": "aa9c325bad8242edff398a34a9643357",
+              "metaOsmLocationsCount": 2,
+              "metaOsmLocations": [
+                {
+                  "id": "cl66c3mtp77482723omqqajp0w7",
+                  "title": "Linz"
+                }
+              ],
+              "metaJobTitle": {
+                "id": "cmnhflyx60001p2wifqqi44u4",
+                "title": "Product Owner AI Stack"
+              },
+              "company": {
+                "id": "cl2kb8lyh6361871zofuc8zfuky",
+                "title": "APRO Kassensysteme GmbH",
+                "logo": {
+                  "id": "dj/companies/logo/w0un5e5zebjr3mwo9b10",
+                  "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1572887498/dj/companies/logo/w0un5e5zebjr3mwo9b10.gif"
+                }
+              }
+            },
+            {
+              "id": "cmmkdtcub07vk7h7060oqazb3",
+              "slug": "2f78bf9a8afc9b41b21effab37a85bc5",
+              "metaOsmLocationsCount": 2,
+              "metaJobTitle": {
+                "id": "cmmkdtc3707v87h701qp43u0e",
+                "title": "Senior Software Engineer Applied AI & Data Products"
+              },
+              "metaOsmLocations": [
+                {
+                  "id": "cl66c6fxh82634123omqet8nth2",
+                  "title": "Wien"
+                }
+              ],
+              "company": {
+                "id": "cl2kbi0wp7232471yrxrq21sjxn",
+                "title": "SQUER ",
+                "logo": {
+                  "id": "clkck9vhk00000gl017a5hnuc",
+                  "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1689942740/keystone6/clkck9vhk00000gl017a5hnuc.png"
+                }
+              }
+            },
+            {
+              "id": "cmp2akuun000b112ok7fomrcd",
+              "slug": "6b3b941db499999c5ec2a2d68079b61f",
+              "metaOsmLocationsCount": 1,
+              "metaOsmLocations": [
+                {
+                  "id": "cl66c6fxh82634123omqet8nth2",
+                  "title": "Wien"
+                }
+              ],
+              "metaJobTitle": {
+                "id": "cl484f9pr1841631zl0xn2mpksx",
+                "title": "Data Engineer"
+              },
+              "company": {
+                "id": "cl2kaylek2174531zmmyb5txu2v",
+                "title": "ÖBB-Konzern",
+                "logo": {
+                  "id": "dj/companies/logo/p4mdj7nohu35nwxnlhrr",
+                  "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1544028515/dj/companies/logo/p4mdj7nohu35nwxnlhrr.png"
+                }
+              }
+            }
+          ],
+          "relatedTopJobs": [
+            {
+              "id": "cmpfmolol00802j917t071fhq",
+              "createdAt": "2026-05-21T15:11:00.449Z",
+              "responsibilitiesExcerpt": "Individuelle Entwicklung und Optimierung von Softwarelösungen im Rahmen unserer Digitalisierungsprojekte mit Schwerpunkt ERP- und Web Anwendungen. Testen und Implementieren der Softwareanwendungen und Sicherstellen eines stabilen Betriebs....",
+              "salaryYearRangeFrom": 42000,
+              "salaryYearRangeTo": 0,
+              "slug": "1b90db96b9c73541a0251032c5619c22",
+              "technologiesCount": 7,
+              "platforms": [
+                {
+                  "id": "cmpfmorri00812j91aju4f4zk",
+                  "type": "premium",
+                  "state": "published",
+                  "platform": "devjobsat"
+                }
+              ],
+              "metaJobWorkingModels": [
+                {
+                  "id": "cl2iyhrcl68081zi7qpss6gf6",
+                  "title": "Hybrid",
+                  "slug": "hybrid"
+                },
+                {
+                  "id": "cl2iyhrca67991zi7a9e4lnb8",
+                  "title": "Onsite",
+                  "slug": "onsite"
+                }
+              ],
+              "pushAds": [
+                {
+                  "id": "cmpfnyd1a0000vrn7ax7076p0",
+                  "state": "published"
+                }
+              ],
+              "metaJobTitle": {
+                "id": "cm1p8ljvg000f3rojb73t1g3x",
+                "title": "Software Entwickler"
+              },
+              "employmentType": {
+                "id": "cl2iyny527810041zi720x77mvg",
+                "title": "Vollzeit"
+              },
+              "metaJobLevel": {
+                "id": "cl2iyi83187921zi7njo38ibs",
+                "title": "Erfahren",
+                "slug": "erfahren-job-level"
+              },
+              "technologies": [
+                {
+                  "id": "cmpfmopay02c4mqb6ih2w1fti",
+                  "metaTechnology": {
+                    "id": "cl2iymtaa6187691zi7ub2a9ae6",
+                    "title": "Python",
+                    "slug": "python",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-python",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1652880378/dj/technologies/logo/tech-python.png"
+                    }
+                  }
+                },
+                {
+                  "id": "cmpfmopb902c5mqb6yjr5k5x9",
+                  "metaTechnology": {
+                    "id": "cl2iymfjk5613471zi7l1qx5tmu",
+                    "title": "Kubernetes",
+                    "slug": "kubernetes",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-Kubernetes_logo_without_workmark",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1662117807/dj/technologies/logo/tech-Kubernetes_logo_without_workmark.png"
+                    }
+                  }
+                },
+                {
+                  "id": "cmpfmopb902c6mqb6ggit1gw7",
+                  "metaTechnology": {
+                    "id": "cl2iymrdy6103531zi79ul80aox",
+                    "title": "Vue.js",
+                    "slug": "vue-js",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-vue-js",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1533226328/dj/technologies/logo/tech-vue-js.png"
+                    }
+                  }
+                },
+                {
+                  "id": "cmpfmopbc02c7mqb63vjlglb3",
+                  "metaTechnology": {
+                    "id": "cl2iynfrl1954131zmn66x2i096",
+                    "title": "Odoo",
+                    "slug": "odoo",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-Odoo",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1547315822/dj/technologies/logo/tech-Odoo.png"
+                    }
+                  }
+                },
+                {
+                  "id": "cmpfmopbe02c8mqb6se9bkau2",
+                  "metaTechnology": {
+                    "id": "cl2iyn0c81554741zmng5s54j6i",
+                    "title": "Nuxt",
+                    "slug": "nuxt",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-2560px-Nuxt_logo",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1656061602/dj/technologies/logo/tech-2560px-Nuxt_logo.png"
+                    }
+                  }
+                }
+              ],
+              "metaOsmLocations": [
+                {
+                  "id": "cl66mnrse69960322qu09up2kiy",
+                  "title": "Korneuburg",
+                  "slug": "korneuburg-27270107",
+                  "metaCountry": {
+                    "id": "cl5v2ak848524921mqdnkui1q1",
+                    "isoCode": "AT"
+                  }
+                }
+              ],
+              "company": {
+                "id": "cl2kbmqjw10701981zmmfzaxungk",
+                "title": "philoro Edelmetalle GmbH",
+                "slug": "philoro-edelmetalle-gmb-h",
+                "logo": {
+                  "id": "5_FltV4Yh_aFQ1CN7zMyZDlfUb4",
+                  "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1779377832/keystone6/5_FltV4Yh_aFQ1CN7zMyZDlfUb4.jpg"
+                },
+                "easyApplyOptIn": true,
+                "platforms": [
+                  {
+                    "id": "clcr2ysra39421513fudm071y7s",
+                    "type": "premium",
+                    "platform": "devjobsat"
+                  },
+                  {
+                    "id": "clct7035771353312d9b85vqhzw",
+                    "type": "regular",
+                    "platform": "devjobsde"
+                  },
+                  {
+                    "id": "clcr2yu8b39567413fucjvyv9ec",
+                    "type": "regular",
+                    "platform": "techtalkdayscom"
+                  },
+                  {
+                    "id": "clcr2ytm539507913fu8i0cwp48",
+                    "type": "regular",
+                    "platform": "itkarrieremesseat"
+                  },
+                  {
+                    "id": "cl475boym4563461zl0twl80mxp",
+                    "type": "regular",
+                    "platform": "devworkplacescom"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "cmpcaly5c0000mg1zuekko5im",
+              "createdAt": "2026-05-19T07:09:42.432Z",
+              "responsibilitiesExcerpt": "Programmierung und Betreuung langfristiger Kundenprojekte und Beteiligung an Produktentwicklung. Dabei gibt es einerseits Aufgaben mit Frontend-Fokus (CSS, JavaScript, Blazor), andererseits auch im Backend (performante, skalierbare Applikationen mit...",
+              "salaryYearRangeFrom": 47500,
+              "salaryYearRangeTo": 80000,
+              "slug": "342e22b4a0259d3c27ac23ad673b7957",
+              "technologiesCount": 15,
+              "platforms": [
+                {
+                  "id": "cmpcam1480001mg1zkv8js6jd",
+                  "type": "premium",
+                  "state": "published",
+                  "platform": "devjobsat"
+                }
+              ],
+              "metaJobWorkingModels": [
+                {
+                  "id": "cl2iyhrcl68081zi7qpss6gf6",
+                  "title": "Hybrid",
+                  "slug": "hybrid"
+                },
+                {
+                  "id": "cl2iyhrca67991zi7a9e4lnb8",
+                  "title": "Onsite",
+                  "slug": "onsite"
+                }
+              ],
+              "pushAds": [
+                {
+                  "id": "cmpdnkbjs0000dcgcpaqw8vzk",
+                  "state": "published"
+                }
+              ],
+              "metaJobTitle": {
+                "id": "cldyakiyv28853512blofetyou1",
+                "title": "C# .NET Full Stack Engineer"
+              },
+              "employmentType": {
+                "id": "cl2iyny527810041zi720x77mvg",
+                "title": "Vollzeit"
+              },
+              "metaJobLevel": {
+                "id": "cl2iyi83187921zi7njo38ibs",
+                "title": "Erfahren",
+                "slug": "erfahren-job-level"
+              },
+              "technologies": [
+                {
+                  "id": "cmpcam1de0007efpjw97jmwbj",
+                  "metaTechnology": {
+                    "id": "cl2iyn5c36715701zi7hduy3zau",
+                    "title": ".NET Core",
+                    "slug": "net-core",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-original",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1547546775/dj/technologies/logo/tech-original.png"
+                    }
+                  }
+                },
+                {
+                  "id": "cmpcam1dn0008efpj3qtvfyjc",
+                  "metaTechnology": {
+                    "id": "cl2iymxc81475091zmn1uc4egim",
+                    "title": "C#",
+                    "slug": "c-sharp",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-csharp-original",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1540924665/dj/technologies/logo/tech-csharp-original.png"
+                    }
+                  }
+                },
+                {
+                  "id": "cmpcam1e10009efpj1gx6tkwd",
+                  "metaTechnology": {
+                    "id": "cl2iymxm46369591zi7tm4mu51s",
+                    "title": "PostgreSQL",
+                    "slug": "postgresql",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-1200px-Postgresql",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1652881675/dj/technologies/logo/tech-1200px-Postgresql.png"
+                    }
+                  }
+                },
+                {
+                  "id": "cmpcam1em000aefpj99wb55ur",
+                  "metaTechnology": {
+                    "id": "cl2iyn6yv1741921zmneal4q7a6",
+                    "title": "ASP.NET Core",
+                    "slug": "aspnet-core",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-NET_Core_Logo",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1661859754/dj/technologies/logo/tech-NET_Core_Logo.png"
+                    }
+                  }
+                },
+                {
+                  "id": "cmpcam1en000befpj8bnot4ek",
+                  "metaTechnology": {
+                    "id": "cl2iym6hz5193351zi7og8x1ujz",
+                    "title": "Azure",
+                    "slug": "azure",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-2021-ms-azure-logo",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1661503182/dj/technologies/logo/tech-2021-ms-azure-logo.png"
+                    }
+                  }
+                }
+              ],
+              "metaOsmLocations": [
+                {
+                  "id": "cl66c3mtp77482723omqqajp0w7",
+                  "title": "Linz",
+                  "slug": "linz-86708",
+                  "metaCountry": {
+                    "id": "cl5v2ak848524921mqdnkui1q1",
+                    "isoCode": "AT"
+                  }
+                }
+              ],
+              "company": {
+                "id": "cl2kaua6d23021zof4itp0xzz",
+                "title": "Adliance GmbH",
+                "slug": "adliance-gmb-h",
+                "logo": {
+                  "id": "VERFHKlyQB3NTIyXqhtTbJc2lE0",
+                  "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1779189786/keystone6/VERFHKlyQB3NTIyXqhtTbJc2lE0.jpg"
+                },
+                "easyApplyOptIn": true,
+                "platforms": [
+                  {
+                    "id": "cl4748iik6496181zl0d8y7lomm",
+                    "type": "premium",
+                    "platform": "devjobsat"
+                  },
+                  {
+                    "id": "cl6r3l0kl2627941yrs0603tz68",
+                    "type": "regular",
+                    "platform": "techtalkdayscom"
+                  },
+                  {
+                    "id": "cl4748is46498801zl0xtzsuhsm",
+                    "type": "regular",
+                    "platform": "devworkplacescom"
+                  },
+                  {
+                    "id": "cl6r3l04b2620141yrs3jnt6tho",
+                    "type": "regular",
+                    "platform": "itkarrieremesseat"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "cmq99go3x0000blo7d9jtasz2",
+              "createdAt": "2026-06-11T08:54:00.419Z",
+              "responsibilitiesExcerpt": "Build and ship new features across our Angular-based Cockpit and donation form systems Write clean, tested, well-documented code that your teammates enjoy working with Integrate with REST APIs and collaborate with backend engineers on data flows...",
+              "salaryYearRangeFrom": 54600,
+              "salaryYearRangeTo": 70000,
+              "slug": "f495df0575f66b578b6f6f860a61cfc9",
+              "technologiesCount": 4,
+              "platforms": [
+                {
+                  "id": "cmq99grnf00038bfd4mkfwvly",
+                  "type": "premium",
+                  "state": "published",
+                  "platform": "devjobsat"
+                }
+              ],
+              "metaJobWorkingModels": [
+                {
+                  "id": "cl2iyhrcl68081zi7qpss6gf6",
+                  "title": "Hybrid",
+                  "slug": "hybrid"
+                },
+                {
+                  "id": "cl2iyhrca67991zi7a9e4lnb8",
+                  "title": "Onsite",
+                  "slug": "onsite"
+                }
+              ],
+              "pushAds": [
+                {
+                  "id": "cmq99h0wf000011lwcrfol1rx",
+                  "state": "published"
+                }
+              ],
+              "metaJobTitle": {
+                "id": "cl484gmak2720811zncyla0pjv7",
+                "title": "Senior Front End Developer"
+              },
+              "employmentType": {
+                "id": "cl2iyny527810041zi720x77mvg",
+                "title": "Vollzeit"
+              },
+              "metaJobLevel": {
+                "id": "cl2iyi85z89301zi7y3kejx32",
+                "title": "Senior",
+                "slug": "senior-job-level"
+              },
+              "metaOsmLocations": [
+                {
+                  "id": "cl66c6fxh82634123omqet8nth2",
+                  "title": "Wien",
+                  "slug": "wien-109166",
+                  "metaCountry": {
+                    "id": "cl5v2ak848524921mqdnkui1q1",
+                    "isoCode": "AT"
+                  }
+                }
+              ],
+              "technologies": [
+                {
+                  "id": "cmq99grlb00008bfdjmg7spux",
+                  "metaTechnology": {
+                    "id": "cl2iymrdy6103531zi79ul80aox",
+                    "title": "Vue.js",
+                    "slug": "vue-js",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-vue-js",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1533226328/dj/technologies/logo/tech-vue-js.png"
+                    }
+                  }
+                },
+                {
+                  "id": "cmq99grlb00018bfdr0zdmr82",
+                  "metaTechnology": {
+                    "id": "cl2iymart5386931zi7ag201d4q",
+                    "title": "Angular",
+                    "slug": "angular",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-2048px-Angular_full_color_logo",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1652881743/dj/technologies/logo/tech-2048px-Angular_full_color_logo.png"
+                    }
+                  }
+                },
+                {
+                  "id": "cmq99grlf00028bfdzgvnjthk",
+                  "metaTechnology": {
+                    "id": "cl2iym5hd743311zmnmk4ybccl",
+                    "title": "TypeScript",
+                    "slug": "typescript",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-Typescript_logo_2020",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1662119071/dj/technologies/logo/tech-Typescript_logo_2020.png"
+                    }
+                  }
+                },
+                {
+                  "id": "cmq99groj00048bfdnf0mrveg",
+                  "metaTechnology": {
+                    "id": "cl2iynjk07272551zi74m62pr75",
+                    "title": "RESTful API",
+                    "slug": "restful-api",
+                    "logo": {
+                      "id": "dj/technologies/logo/tech-rain-drop-hi",
+                      "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1659906230/dj/technologies/logo/tech-rain-drop-hi.png"
+                    }
+                  }
+                }
+              ],
+              "company": {
+                "id": "cl2kb7orr5670821zmmqlx21rrd",
+                "title": "Formunauts",
+                "slug": "formunauts",
+                "logo": {
+                  "id": "P5QW2bgevNmgQL_8zv9qRDoe2MQ",
+                  "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1711126580/keystone6/P5QW2bgevNmgQL_8zv9qRDoe2MQ.png"
+                },
+                "easyApplyOptIn": true,
+                "platforms": [
+                  {
+                    "id": "cldoc236g2409ov29c975td76",
+                    "type": "premium",
+                    "platform": "devjobsde"
+                  },
+                  {
+                    "id": "cl474wm7n15744231zl0ay7ivb7d",
+                    "type": "premium",
+                    "platform": "devjobsat"
+                  },
+                  {
+                    "id": "cl474wmwd15751601zl0s30yfuqa",
+                    "type": "premium",
+                    "platform": "techtalkdayscom"
+                  },
+                  {
+                    "id": "cl474wmle15748751zl0q9w0nilb",
+                    "type": "premium",
+                    "platform": "itkarrieremesseat"
+                  },
+                  {
+                    "id": "cl474wn4r15754001zl0waf7vbwg",
+                    "type": "premium",
+                    "platform": "devworkplacescom"
+                  }
+                ]
+              }
+            }
+          ],
+          "company": {
+            "id": "cl2kbo51u11509951zofd1cfdnmx",
+            "privacyPolicyUrl": "",
+            "easyApplyOptIn": true,
+            "averageReviewScore": 0,
+            "slug": "fh-st-polten",
+            "title": "FH St. Pölten",
+            "logo": {
+              "id": "dj/companies/logo/qhjtx4eykgteprzuj7s6",
+              "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1613469587/dj/companies/logo/qhjtx4eykgteprzuj7s6.png"
+            },
+            "headerImage": null,
+            "platforms": [
+              {
+                "id": "cl475co5x3905831zlkethz1ci6",
+                "type": "regular",
+                "platform": "devjobsat",
+                "state": "published"
+              },
+              {
+                "id": "cl475cofa3908701zlkc31hbaow",
+                "type": "regular",
+                "platform": "devworkplacescom",
+                "state": "published"
+              },
+              {
+                "id": "cl6qiyrm8135759922mgnok7gd1y",
+                "type": "regular",
+                "platform": "itkarrieremesseat",
+                "state": "archived"
+              },
+              {
+                "id": "cl6qiyurk135847422mgs981lluf",
+                "type": "regular",
+                "platform": "techtalkdayscom",
+                "state": "archived"
+              }
+            ],
+            "companyReviewCategoryRating": [],
+            "locationCompanies": [],
+            "pageTeamCulture": null,
+            "metaCompanyType": {
+              "id": "cl2iyi73181281zi77v10dm69",
+              "title": "Etablierte Firma"
+            },
+            "videoStories": [],
+            "headerImageWithFallback": {
+              "id": "cl4y98v9y000120m14n9dhbze",
+              "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1656425956/keystone6/cl4y98v9y000120m14n9dhbze.jpg"
+            },
+            "workingModels": [
+              {
+                "id": "cl2iyhrcl68081zi7qpss6gf6",
+                "title": "Hybrid"
+              },
+              {
+                "id": "cl2iyhrca67991zi7a9e4lnb8",
+                "title": "Onsite"
+              }
+            ],
+            "pageOverview": {
+              "id": "cl2kbo74211528711zofsfwj2hd3",
+              "foundingYear": null,
+              "translatedPlatformText": "Mit mehr als 3.700 Studierenden in sechs Departments ist die Fachhochschule St. Pölten ein wesentlicher Player in der heimischen Hochschullandschaft und zudem einer der wichtigsten Arbeitgeber in der Region.",
+              "employeeCountRange": null,
+              "metaCompanyBranches": [
+                {
+                  "id": "cl2iyi7gv83961zi7dusj7wii",
+                  "title": "Bildungswesen"
+                }
+              ]
+            },
+            "exploreImages": {
+              "workspace": {
+                "id": "cl4y99ou8000220m1cbi4aogj",
+                "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1656425994/keystone6/cl4y99ou8000220m1cbi4aogj.jpg"
+              },
+              "technology": {
+                "id": "cl4y9ar7u000320m1ae3hh56x",
+                "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1656426044/keystone6/cl4y9ar7u000320m1ae3hh56x.jpg"
+              },
+              "career": {
+                "id": "cl4y9fzgq000720m18qjd8pry",
+                "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1656426288/keystone6/cl4y9fzgq000720m18qjd8pry.jpg"
+              },
+              "team1": {
+                "id": "cl4y9dt7f000520m13y0f2ab7",
+                "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1656426186/keystone6/cl4y9dt7f000520m13y0f2ab7.jpg"
+              },
+              "team2": {
+                "id": "cl4y9euwe000620m1fvzz6rnm",
+                "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1656426235/keystone6/cl4y9euwe000620m1fvzz6rnm.jpg"
+              },
+              "interview": {
+                "id": "cl4y9cjxq000420m1gseub5bm",
+                "publicUrl": "https://res.cloudinary.com/djproto/image/upload/v1656426128/keystone6/cl4y9cjxq000420m1gseub5bm.jpg"
+              }
+            }
+          }
+        },
+        "imageHost": "devjobs.at",
+        "salaryNetConversion": {
+          "from": 32998,
+          "year": 2026,
+          "to": null,
+          "periodType": "year"
+        },
+        "meta": {
+          "imageSlug": "53d839a7bb83c7a48a988e3ea67969cf",
+          "imageHost": "devjobs.at",
+          "title": "Junior Researcher - Machine Learning & AI bei FH St. Pölten | DEVjobs.at",
+          "description": "FH St. Pölten in St. Pölten sucht einen Junior Researcher - Machine Learning & AI mit PyTorch, Python und TensorFlow Kenntnissen. Jetzt bei DEVjobs.at bewerben!",
+          "indexed": true
+        },
+        "lcpImagePreloads": []
+      }
+    }
+  }
+}

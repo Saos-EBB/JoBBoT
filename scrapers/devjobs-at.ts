@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+import { chromium, type Page } from 'playwright';
 import type { ScrapedJob, ScraperAdapter } from './interface.ts';
 
 const BASE = 'https://www.devjobs.at';
@@ -56,13 +56,25 @@ export function parseDetailResult(context: unknown, baseJob: ScrapedJob): Scrape
   }
 }
 
+async function waitForState(page: Page, timeoutMs = 15_000): Promise<unknown> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const state = await page.evaluate(
+      () => (window as any).__reactRouterContext?.state ?? null
+    );
+    if (state != null) return page.evaluate(() => (window as any).__reactRouterContext);
+    await new Promise<void>(r => setTimeout(r, 200));
+  }
+  throw new Error('devjobs.at: __reactRouterContext.state timeout');
+}
+
 export async function fetchRemixContext(url: string): Promise<unknown> {
   const browser = await chromium.launch({ headless: true });
   try {
     const ctx = await browser.newContext({ userAgent: UA });
     const page = await ctx.newPage();
     await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
-    return await page.evaluate(() => (window as unknown as { __remixContext: unknown }).__remixContext);
+    return await waitForState(page);
   } finally {
     await browser.close();
   }
