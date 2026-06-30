@@ -2,6 +2,9 @@ import { fetchPage, sleep } from '../lib/fetch-page.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 
 const BASE = 'https://www.karriere.at';
+const DIAG_LIMIT = 3; // nur für Diagnose, später raus
+
+const ms = (t: number) => `${Math.round(performance.now() - t)}ms`;
 
 // ponytail: indexOf + trim reicht — script-block hat genau eine Zuweisung, kein Brace-Balancing nötig
 function extractVueState(html: string): unknown {
@@ -73,29 +76,43 @@ export const karriereAtAdapter: ScraperAdapter = {
   name: 'karriere.at',
   async scrape(queries: SourceQuery[], onProgress?: (msg: string) => void) {
     const byUrl = new Map<string, ScrapedJob>();
-    for (const query of queries) {
+
+    // DIAG: nur erstes Keyword — Schleife für Mess-Lauf begrenzt
+    const diagQueries = queries.slice(0, 1); // nur für Diagnose, später raus
+    for (const query of diagQueries) {
       const keyword = query.keyword ?? '';
       if (!keyword) continue;
       try {
         onProgress?.(`karriere.at — ${keyword} suchen...`);
+        const tSearch = performance.now();
         const searchHtml = await fetchSearchPage(keyword);
-        for (const job of parseSearchPage(searchHtml)) {
+        const jobs = parseSearchPage(searchHtml);
+        console.log(`[timing] search-fetch [${keyword}]: ${ms(tSearch)} → ${jobs.length} Jobs`);
+        for (const job of jobs) {
           if (!byUrl.has(job.url)) byUrl.set(job.url, job);
         }
       } catch (err) {
         console.warn(`[karriere.at] search fehlgeschlagen: ${keyword}`, err);
       }
     }
+
     const total = byUrl.size;
     let i = 0;
     const results: ScrapedJob[] = [];
-    for (const job of byUrl.values()) {
+    const jobs = [...byUrl.values()];
+    const diagLimit = Math.min(total, DIAG_LIMIT); // nur für Diagnose, später raus
+    for (let j = 0; j < diagLimit; j++) {
+      const job = jobs[j];
       i++;
       onProgress?.(`karriere.at — Detail ${i}/${total}: ${job.title.slice(0, 40)}`);
+      const tDetail = performance.now();
       try {
+        // fetchDetailPage enthält den 2s sleep — timing zeigt delay+fetch zusammen
         results.push(parseDetailPage(await fetchDetailPage(job.url), job));
+        console.log(`[timing] detail-fetch [${i}/${total}]: ${ms(tDetail)} (inkl. 2s delay)`);
       } catch (err) {
         console.warn(`[karriere.at] detail fehlgeschlagen: ${job.url}`, err);
+        console.log(`[timing] detail-fetch [${i}/${total}] FEHLER: ${ms(tDetail)}`);
         results.push(job);
       }
     }
