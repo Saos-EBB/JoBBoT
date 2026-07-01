@@ -1,0 +1,173 @@
+{
+  "source": "window.VUE_INITIAL_STATE / jobsSearchList.activeItems.items",
+  "url": "https://www.karriere.at/jobs/junior-developer/linz",
+  "activeJobsCount": 13,
+  "pagination": {
+    "page": 1,
+    "next_url_pattern": "https://www.karriere.at/jobs/{keywordSlug}/{locationSlug}?seite={page}"
+  },
+  "sample_jobs": [
+    {
+      "id": "7829963",
+      "companyId": "17783",
+      "link": "https://www.karriere.at/jobs/7829963",
+      "title": "Junior Softwareentwickler Für Intelligente Robotik (w/m/d)",
+      "company": {
+        "slug": "kern-engineering-careers",
+        "name": "KERN engineering careers GmbH",
+        "logoUrl": "//kcdn.at/company/17783/2513736/logo.companysquare.gif",
+        "employees": "101 - 500",
+        "isChiffre": false,
+        "companyEmpty": false,
+        "isLinkable": true,
+        "link": "https://www.karriere.at/f/kern-engineering-careers",
+        "isBrandingSolution": false,
+        "hasBranding": false,
+        "mainLocation": "Linz"
+      },
+      "locations": [
+        {
+          "name": "Linz",
+          "slug": "linz",
+          "link": "https://www.karriere.at/jobs/linz",
+          "isLandingpage": true,
+          "canonical": {
+            "keyword": "",
+            "location": "linz"
+          }
+        }
+      ],
+      "headlineTag": "h2",
+      "noPadding": false,
+      "isSplitView": true,
+      "disabled": false,
+      "showMemoButton": false,
+      "trackPage": "jobs",
+      "hideDate": false,
+      "hideWatchlistLoginInfo": true,
+      "showDislikeButton": false,
+      "showWatchListButton": true,
+      "isWatchlist": false,
+      "isSimilarJob": false,
+      "isActive": true,
+      "isSmartApplyJob": true,
+      "summary": null,
+      "hasBadges": true,
+      "isHomeOffice": false,
+      "employmentTypes": "Vollzeit",
+      "salary": "3.400 € – 4.400 € monatlich",
+      "showNewBadge": false,
+      "date": "19.6.2026",
+      "pushedJob": false,
+      "snippet": "Junior Softwareentwickler für intelligente Robotik (w/m/d) Bring Software auf die Straße, und entscheide mit, wie autonome Systeme sich in der Praxis verhalten 19.06.2026   Job-Nr..."
+    },
+    {
+      "id": "7823666",
+      "companyId": "17783",
+      "link": "https://www.karriere.at/jobs/7823666",
+      "title": "Junior Elektrotechniker Gebäudeplanung (w/m/d)",
+      "company": {
+        "slug": "kern-engineering-careers",
+        "name": "KERN engineering careers GmbH",
+        "logoUrl": "//kcdn.at/company/17783/2513736/logo.companysquare.gif",
+        "employees": "101 - 500",
+        "isChiffre": false,
+        "companyEmpty": false,
+        "isLinkable": true,
+        "link": "https://www.karriere.at/f/kern-engineering-careers",
+        "isBrandingSolution": false,
+        "hasBranding": false,
+        "mainLocation": "Linz"
+      },
+      "locations": [
+        {
+          "name": "Linz",
+          "slug": "linz",
+          "link": "https://www.karriere.at/jobs/linz",
+          "isLandingpage": true,
+          "canonical": {
+            "keyword": "",
+            "location": "linz"
+          }
+        }
+      ],
+      "headlineTag": "h2",
+      "noPadding": false,
+      "isSplitView": true,
+      "disabled": false,
+      "showMemoButton": false,
+      "trackPage": "jobs",
+      "hideDate": false,
+      "hideWatchlistLoginInfo": true,
+      "showDislikeButton": false,
+      "showWatchListButton": true,
+      "isWatchlist": false,
+      "isSimilarJob": false,
+      "isActive": true,
+      "isSmartApplyJob": true,
+      "summary": null,
+      "hasBadges": true,
+      "isHomeOffice": false,
+      "employmentTypes": "Vollzeit",
+      "salary": "3.500 € – 4.500 € monatlich",
+      "showNewBadge": false,
+      "date": "vor 7 Tagen veröffentlicht",
+      "pushedJob": false,
+      "snippet": "Junior Elektrotechniker Gebäudeplanung (w/m/d) Sie planen lieber Steckdosen als Zufälle? Dann bringen Sie mit Ihren Plänen Gebäude zum Strahlen! 24.06.2026  ..."
+    },
+    {
+      "id": "7805855",
+      "companyId": "5096",
+      "link": "https://www.karriere.at/jobs/7805855",
+      "title": "(Junior) Projektleiter (m/w/d)",
+      "company": {
+        "slug": "vace-engineering",
+        "name": "VACE Engineering GmbH",
+        "logoUrl": "//kcdn.at/company/5096/4082054/logo_karriereat_mind_298x92_v2.companysquare.png",
+        "employees": "101 - 500",
+        "isChiffre": false,
+        "companyEmpty": false,
+        "isLinkable": true,
+        "link": "https://www.karriere.at/f/vace-engineering",
+        "isBrandingSolution": false,
+        "hasBranding": true,
+        "mainLocation": "Linz"
+      },
+      "locations": [
+        {
+          "name": "Linz",
+          "slug": "linz",
+          "link": "https://www.karriere.at/jobs/linz",
+          "isLandingpage": true,
+          "canonical": {
+            "keyword": "",
+            "location": "linz"
+          }
+        }
+      ],
+      "headlineTag": "h2",
+      "noPadding": false,
+      "isSplitView": true,
+      "disabled": false,
+      "showMemoButton": false,
+      "trackPage": "jobs",
+      "hideDate": false,
+      "hideWatchlistLoginInfo": true,
+      "showDislikeButton": false,
+      "showWatchListButton": true,
+      "isWatchlist": false,
+      "isSimilarJob": false,
+      "isActive": true,
+      "isSmartApplyJob": true,
+      "summary": null,
+      "hasBadges": true,
+      "isHomeOffice": true,
+      "employmentTypes": "Vollzeit",
+      "salary": "ab 51.800 € jährlich",
+      "showNewBadge": false,
+      "date": "vor 7 Tagen veröffentlicht",
+      "pushedJob": false,
+      "snippet": "Ihre Aufgaben: Planungs- und Organisationsfähigkeit sowie hohe Problemlösungskompetenz, Eigenverantwortliches Arbeiten und Selbstständigkeit, Präsentationsstärke und Teamgeist, Führerschein der Klasse..."
+    }
+  ]
+}
