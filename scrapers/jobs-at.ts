@@ -1,6 +1,9 @@
-import type { ScrapedJob } from './interface.ts';
+import { sleep } from '../lib/fetch-page.ts';
+import { slugify } from '../lib/slugify.ts';
+import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 
 const BASE = 'https://www.jobs.at';
+const UA = 'Mozilla/5.0 (compatible; JobBot/0.1; +local)';
 
 export function parseSearchPage(html: string): Partial<ScrapedJob>[] {
   if (!html) return [];
@@ -83,3 +86,77 @@ export function parseDetailPage(html: string, base: Partial<ScrapedJob>): Scrape
   }
   return fallback;
 }
+
+// STEP 2a: ?q=<keyword> wird beim 302-Redirect verworfen (verifiziert — java/frontend
+// lieferten identische Ergebnisse, Cookies egal). Funktionierender Weg: pfadbasiert
+// /j/{keyword-slug}, kein Session-Handling nötig.
+async function fetchJobsAt(url: string): Promise<string> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 10_000);
+  try {
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      redirect: 'follow',
+      headers: { 'User-Agent': UA, 'Accept-Language': 'de-AT,de;q=0.9' },
+    });
+    if (!res.ok) throw new Error(`jobs.at ${res.status}: ${url}`);
+    return await res.text();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchSearchPage(keyword: string): Promise<string> {
+  return fetchJobsAt(`${BASE}/j/${slugify(keyword)}`);
+}
+
+async function fetchDetailPage(url: string): Promise<string> {
+  await sleep(2000);
+  return fetchJobsAt(url);
+}
+
+export const jobsAtAdapter: ScraperAdapter = {
+  name: 'jobs.at',
+  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (msg: string) => void) {
+    const byUrl = new Map<string, ScrapedJob>();
+
+    for (const query of queries) {
+      const keyword = query.keyword ?? '';
+      if (!keyword) continue;
+
+      try {
+        onProgress?.(`jobs.at — ${keyword} suchen...`);
+        const cards = parseSearchPage(await fetchSearchPage(keyword));
+
+        // STEP 2b: Ort ist in der Karte vorhanden → Gate hier, vor dem Detail-Fetch (wie devjobs.at)
+        const candidates = keep
+          ? cards.filter(c => keep({ ...c, description: c.description ?? '' } as ScrapedJob))
+          : cards;
+        console.log(`jobs.at '${keyword}': ${cards.length} Karten, ${candidates.length} nach Gate`);
+
+        for (const card of candidates) {
+          if (!card.url || byUrl.has(card.url)) continue;
+          onProgress?.(`jobs.at — Detail: ${(card.title ?? '').slice(0, 40)}`);
+          try {
+            const job = parseDetailPage(await fetchDetailPage(card.url), card);
+            byUrl.set(card.url, job);
+          } catch (err) {
+            console.warn(`[jobs.at] detail fehlgeschlagen: ${card.url}`, err);
+            byUrl.set(card.url, {
+              source: 'jobs.at',
+              url: card.url,
+              title: card.title ?? '',
+              company: card.company ?? '',
+              location: card.location,
+              description: '',
+            });
+          }
+        }
+      } catch (err) {
+        console.warn(`[jobs.at] search fehlgeschlagen: ${keyword}`, err);
+      }
+    }
+
+    return [...byUrl.values()];
+  },
+};
