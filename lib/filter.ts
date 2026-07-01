@@ -3,17 +3,32 @@ import type { Storage } from '../storage/index.ts';
 import { config } from '../config.ts';
 import { checkTitle } from './title-filter.ts';
 
-export const SYSTEM = `Du bewertest, ob eine Stellenanzeige für einen JUNIOR-SOFTWAREENTWICKLER passt.
+export const SYSTEM = `Du bewertest, ob eine Stellenanzeige für einen IT-BERUFSEINSTEIGER passt.
+Der Bewerber ist Junior-Softwareentwickler, offen für die gesamte Einsteiger-IT.
 
-PASST (match: true), wenn ALLE zutreffen:
-- Es ist eine Rolle, in der man SELBST CODE SCHREIBT (Frontend, Backend, Fullstack, Software-, Web-, App-, Mobile-Entwicklung). Die GENAUE Programmiersprache/Framework ist EGAL (Java, C#, Python, JavaScript, SAP, egal — Hauptsache Entwicklung).
-- Sie ist für Einsteiger geeignet: explizit Junior/Berufseinsteiger/Trainee, ODER die Beschreibung fordert KEINE mehrjährige Erfahrung (kein ">3 Jahre", kein "mehrjährige/fundierte Erfahrung", kein "Expert").
+PASST (match: true):
+- Software-/App-/Web-Entwicklung, EGAL welche Sprache/Framework (Java, C#, Python, JavaScript, SAP, egal — Hauptsache Entwicklung).
+- 2nd-Level-Support / Application Support (mit echter technischer Fehleranalyse, nicht nur Weiterleitung).
+- Junior/Einsteiger System- oder Netzwerk-Administration.
+- QA / Software-Testing (auch manuell, nicht nur automatisiert).
+- Lehrstelle NUR wenn coding-nah: Applikationsentwicklung / Coding / Softwareentwicklung.
+- Neutraler Titel ("Softwareentwickler" ohne Junior/Senior): PASST, WENN die Beschreibung KEINE mehrjährige Erfahrung / kein Senior-Niveau verlangt (kein ">3 Jahre", kein "mehrjährige/fundierte Erfahrung", kein "Expert").
+- Rolle, die 1st UND 2nd Level kombiniert: PASST (der 2nd-Level-Anteil zählt).
 
-PASST NICHT (match: false), wenn EINES zutrifft:
-- Keine Entwickler-Rolle: IT-Support/Helpdesk, System-/Netzwerk-Administration, Systemtechnik, Hardware/Elektrotechnik, reine Datenanalyse ohne Coding, Consultant/Berater, Projektleitung/Management, Vertrieb, Security-Governance ohne Coding.
-- Die Beschreibung verlangt mehrjährige Berufserfahrung oder Senior-Niveau.
+PASST NICHT (match: false):
+- Reiner 1st-Level-Support / Helpdesk (Anrufannahme, Ticket-Weiterleitung, Passwort-Resets, keine tiefere technische Analyse).
+- Senior / Lead / Principal, ODER Beschreibung fordert mehrjährige Berufserfahrung.
+- Lehrstelle, die NICHT coding-nah ist (Systemtechnik, Netzwerktechnik, Hardware, IT-Kaufmann) → raus.
+- Keine IT-Kernrolle: Vertrieb, reines Projektmanagement/Consulting ohne Technik, Elektrotechnik/Hardware-Bau, reine Datenerfassung.
 
-Wenn der Titel neutral ist ("Softwareentwickler" ohne Junior/Senior): ENTSCHEIDE ANHAND DER BESCHREIBUNG — geforderte Jahre/Erfahrung prüfen.
+Bei Unsicherheit über das Level: entscheide anhand der geforderten Berufsjahre in der Beschreibung.
+
+Grenzfälle zur Orientierung:
+- "Junior Java Developer" → true ("Einsteiger-Dev-Rolle")
+- Reiner 1st-Level-Helpdesk (nur Anrufannahme, Weiterleitung) → false ("reiner 1st-Level")
+- 2nd-Level / Application Support mit Fehleranalyse → true ("2nd-Level-Support")
+- "Lehre Applikationsentwicklung" → true ("coding-nahe Lehre")
+- "Lehre/Lehrling IT-Systemtechnik" → false ("Lehre nicht coding-nah")
 
 Antworte mit NUR diesem JSON, nichts davor/danach:
 {"match": true oder false, "reason": "max 15 Wörter, deutsch"}`;
@@ -37,10 +52,11 @@ Firma: ${job.company}
 Ort: ${job.location ?? ''}${desc ? `\nBeschreibung: ${desc}` : ''}`;
 }
 
-// Kein Few-Shot: bei qwen2.5:3b + temperature 0 papageit das Modell das nächstgelegene
-// Few-Shot-Beispiel statt den tatsächlichen Job zu bewerten (reproduziert — gleiche
-// reason wortidentisch mit dem Beispiel, unabhängig vom Input). Reiner System-Prompt
-// + format:json klassifiziert zuverlässig.
+// Kein Few-Shot als eigene Chat-Turns: bei qwen2.5:3b + temperature 0 papageit das
+// Modell das nächstgelegene Few-Shot-Beispiel statt den tatsächlichen Job zu bewerten
+// (reproduziert — gleiche reason wortidentisch mit dem Beispiel, unabhängig vom Input).
+// Grenzfälle (2nd-Level, coding-nahe Lehre, ...) stehen stattdessen als Beispieltext
+// im SYSTEM-Prompt selbst — reiner System-Prompt + format:json klassifiziert zuverlässig.
 export function buildMessages(job: Job): { role: 'system' | 'user' | 'assistant'; content: string }[] {
   return [
     { role: 'system', content: SYSTEM },

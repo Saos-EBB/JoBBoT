@@ -72,6 +72,17 @@ test('SYSTEM: enthält match/reason JSON-Format', () => {
   assert.ok(SYSTEM.includes('match') && SYSTEM.includes('reason'));
 });
 
+test('SYSTEM: deckt breite IT-Definition ab (2nd-Level, coding-Lehre, 1st-Level)', () => {
+  assert.ok(SYSTEM.includes('2nd-Level'));
+  assert.ok(SYSTEM.toLowerCase().includes('coding'));
+  assert.ok(SYSTEM.includes('1st-Level') || SYSTEM.toLowerCase().includes('1st level') || SYSTEM.toLowerCase().includes('helpdesk'));
+});
+
+test('SYSTEM: enthält mind. 4 Grenzfall-Beispiele', () => {
+  const exampleLines = SYSTEM.split('\n').filter(l => l.includes('→'));
+  assert.ok(exampleLines.length >= 4, `erwartet >=4 Beispielzeilen, gefunden ${exampleLines.length}`);
+});
+
 test('buildMessages: system + finale user-message, kein Few-Shot', () => {
   const messages = buildMessages(sample());
   assert.strictEqual(messages[0].role, 'system');
