@@ -18,21 +18,56 @@ export interface RunScrapeOptions {
   keep?: (job: ScrapedJob) => boolean;
   storage: Storage;
   onProgress?: (name: string, current: number, total: number) => void;
+  maxConcurrent?: number;
+  maxBrowsers?: number;
 }
 
-// Alle Quellen parallel (allSettled — eine gescheiterte Quelle stoppt die anderen
-// nicht), Dedup+Save erst NACH allen Ergebnissen sequenziell (verhindert Write-
-// Races, wenn dieselbe Stelle auf zwei Quellen mit gleicher jobId auftaucht).
-export async function runScrape(options: RunScrapeOptions): Promise<SourceOutcome[]> {
-  const { names, registry, queriesFor, keep, storage, onProgress } = options;
+// Simple Zähl-Semaphore, kein neues Runtime-Dep. acquire() löst sofort auf wenn
+// noch Platz ist, sonst wartet der Aufrufer in der FIFO-Queue auf release().
+function createSlot(max: number) {
+  let active = 0;
+  const queue: (() => void)[] = [];
+  return {
+    acquire(): Promise<void> {
+      if (active < max) { active++; return Promise.resolve(); }
+      return new Promise<void>(resolve => queue.push(resolve));
+    },
+    release(): void {
+      active--;
+      const next = queue.shift();
+      if (next) { active++; next(); }
+    },
+  };
+}
 
-  const settled = await Promise.allSettled(
-    names.map(name => registry[name].scrape(
-      queriesFor(name),
-      keep,
-      (current, total) => onProgress?.(name, current, total),
-    )),
-  );
+// Alle Quellen parallel, aber gedrosselt: max `maxConcurrent` Adapter gleichzeitig
+// insgesamt, UND max `maxBrowsers` kind:"browser"-Adapter gleichzeitig (eigener
+// Slot zusätzlich zum globalen) — nie zwei Playwright-Browser parallel, die sich
+// lokal um CPU/Netzwerk streiten. allSettled bleibt: ein Adapter-Fehler stoppt
+// die anderen nicht. Dedup+Save erst NACH allen Ergebnissen sequenziell
+// (verhindert Write-Races, wenn dieselbe Stelle auf zwei Quellen mit gleicher
+// jobId auftaucht).
+export async function runScrape(options: RunScrapeOptions): Promise<SourceOutcome[]> {
+  const { names, registry, queriesFor, keep, storage, onProgress, maxConcurrent = 2, maxBrowsers = 1 } = options;
+
+  const totalSlot = createSlot(maxConcurrent);
+  const browserSlot = createSlot(maxBrowsers);
+
+  const settled = await Promise.allSettled(names.map(async name => {
+    await totalSlot.acquire();
+    const isBrowser = registry[name].kind === 'browser';
+    if (isBrowser) await browserSlot.acquire();
+    try {
+      return await registry[name].scrape(
+        queriesFor(name),
+        keep,
+        (current, total) => onProgress?.(name, current, total),
+      );
+    } finally {
+      if (isBrowser) browserSlot.release();
+      totalSlot.release();
+    }
+  }));
 
   const outcomes: SourceOutcome[] = [];
   for (let i = 0; i < names.length; i++) {

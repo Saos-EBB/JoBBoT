@@ -15,7 +15,7 @@
     "queries": [ { "params": "jobLevel=junior-job-level" } ]
   },
   "linkedin": {
-    "enabled": true,
+    "enabled": false,
     "queries": [
       { "keyword": "junior software developer", "location": "Oberösterreich, Österreich" },
       { "keyword": "junior softwareentwickler", "location": "Oberösterreich, Österreich" }

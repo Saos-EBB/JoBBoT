@@ -4,6 +4,14 @@ import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 const BASE = 'https://www.devjobs.at';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
 const MAX_PAGES = 20;
+// State-Poll-Fenster nach domcontentloaded: die Remix-Hydration kann auf langsamer
+// Hardware (oder unter Scheduler-Last neben anderen Adaptern) länger brauchen als
+// die ursprünglichen 15s. Leicht änderbar, falls das nochmal nicht reicht.
+const STATE_TIMEOUT_MS = 45_000;
+// Bekannte Remix-Context-Globals, älteste zuerst. Der Key ist schon mal umbenannt
+// worden — die Poll-Schleife scannt zusätzlich generisch nach jedem window["__*"]
+// mit .state.loaderData, übersteht also auch einen erneuten Rename.
+const KNOWN_STATE_KEYS = ['__reactRouterContext', '__remixContext'];
 
 const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
@@ -56,16 +64,50 @@ export function parseDetailResult(context: unknown, baseJob: ScrapedJob): Scrape
   }
 }
 
-async function waitForState(page: Page, timeoutMs = 15_000): Promise<unknown> {
+// Findet den ersten window["__*"]-Global mit .state.loaderData — bekannte Keys
+// zuerst (schnellerer Treffer im Normalfall), dann generischer Scan als Fallback.
+async function findStateKey(page: Page, knownKeys: string[]): Promise<string | null> {
+  return page.evaluate((keys: string[]) => {
+    const hasLoaderData = (v: unknown): boolean =>
+      typeof v === 'object' && v !== null && (v as any).state?.loaderData != null;
+    for (const k of keys) {
+      if (hasLoaderData((window as any)[k])) return k;
+    }
+    for (const k of Object.keys(window)) {
+      if (!k.startsWith('__')) continue;
+      if (hasLoaderData((window as any)[k])) return k;
+    }
+    return null;
+  }, knownKeys);
+}
+
+// Diagnose-Dump statt blindem Timeout-Fehler: zeigt beim nächsten Fail sofort, ob
+// sich der Context-Key erneut geändert hat (→ Key in KNOWN_STATE_KEYS ergänzen)
+// oder ob es reines Timing war (→ STATE_TIMEOUT_MS weiter hoch).
+async function diagnoseTimeout(page: Page): Promise<void> {
+  try {
+    const title = await page.title();
+    const globals = await page.evaluate(() => Object.keys(window).filter(k => k.startsWith('__')));
+    const reactRouterExists = await page.evaluate(() => (window as any).__reactRouterContext !== undefined);
+    const reactRouterHasState = await page.evaluate(() => (window as any).__reactRouterContext?.state !== undefined);
+    console.warn(
+      `[devjobs.at] State-Timeout Diagnose: title="${title}", __-Globals=${JSON.stringify(globals)}, ` +
+      `__reactRouterContext vorhanden=${reactRouterExists}, .state vorhanden=${reactRouterHasState}`
+    );
+  } catch (err) {
+    console.warn('[devjobs.at] Diagnose-Dump fehlgeschlagen', err);
+  }
+}
+
+async function waitForState(page: Page, timeoutMs = STATE_TIMEOUT_MS): Promise<unknown> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    const state = await page.evaluate(
-      () => (window as any).__reactRouterContext?.state ?? null
-    );
-    if (state != null) return page.evaluate(() => (window as any).__reactRouterContext);
+    const key = await findStateKey(page, KNOWN_STATE_KEYS);
+    if (key) return page.evaluate((k: string) => (window as any)[k], key);
     await new Promise<void>(r => setTimeout(r, 200));
   }
-  throw new Error('devjobs.at: __reactRouterContext.state timeout');
+  await diagnoseTimeout(page);
+  throw new Error('devjobs.at: kein Kontext mit .state.loaderData gefunden (Timeout)');
 }
 
 export async function fetchRemixContext(url: string): Promise<unknown> {
