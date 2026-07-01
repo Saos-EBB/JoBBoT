@@ -3,6 +3,20 @@ import { filterJob } from '../lib/filter.ts';
 import { writeFilterReport } from '../lib/filter-report.ts';
 import { createProgress } from '../lib/progress.ts';
 import type { FilterDecision } from '../lib/filter.ts';
+import { loadSettings } from '../lib/settings.ts';
+import type { FilterMode } from '../lib/settings.ts';
+
+function parseModeOverride(argv: string[]): FilterMode | undefined {
+  const arg = argv.find(a => a.startsWith('--filter='));
+  if (!arg) return undefined;
+  const value = arg.slice('--filter='.length);
+  if (value !== 'llm' && value !== 'regex') {
+    throw new Error(`Ungültiger --filter Wert: "${value}". Gültige Werte: llm, regex`);
+  }
+  return value;
+}
+
+const mode = parseModeOverride(process.argv.slice(2)) ?? loadSettings().filterMode;
 
 const storage = createStorage();
 const jobs = await storage.list({ status: 'new' });
@@ -12,13 +26,33 @@ if (jobs.length === 0) {
   process.exit(0);
 }
 
-console.log(`Filtere ${jobs.length} Job(s)...\n`);
+console.log(`Filtere ${jobs.length} Job(s)... (Modus: ${mode})\n`);
+
+function logLine(d: FilterDecision): void {
+  if (d.status === 'matched') {
+    console.log(`✓ sicher   — ${d.job.title} — ${d.job.company}`);
+  } else if (d.status === 'uncertain') {
+    console.log(`? unsicher — ${d.job.title} — ${d.job.company}`);
+    console.log(`    URL: ${d.job.url}`);
+  } else {
+    console.log(`✗ raus     — ${d.job.title} (Grund: ${d.rejectedBy})`);
+  }
+}
 
 const decisions: FilterDecision[] = [];
 for (let i = 0; i < jobs.length; i++) {
   const job = jobs[i];
+
+  // Regex-Modus ist offline und quasi instant — kein Spinner nötig, Zeilen-Logs reichen.
+  if (mode === 'regex') {
+    const d = await filterJob(job, storage, undefined, mode);
+    decisions.push(d);
+    logLine(d);
+    continue;
+  }
+
   const progress = createProgress(`Filter — Job ${i + 1}/${jobs.length}: ${job.title}`);
-  const d = await filterJob(job, storage);
+  const d = await filterJob(job, storage, undefined, mode);
   decisions.push(d);
 
   if (d.status === 'matched') {
@@ -36,4 +70,4 @@ const unsicher = decisions.filter(d => d.status === 'uncertain').length;
 const raus = decisions.filter(d => d.status === 'filtered_out').length;
 console.log(`\nFilter: ${sicher} sicher, ${unsicher} unsicher, ${raus} raus`);
 
-writeFilterReport(decisions);
+writeFilterReport(decisions, undefined, mode);

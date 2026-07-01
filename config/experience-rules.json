@@ -1,0 +1,16 @@
+{
+  "minYears": 3,
+  "experienceWords": ["erfahrung", "berufserfahrung", "experience"],
+  "disqualifyingPhrases": ["mehrjährige", "langjährige", "einschlägige",
+    "fundierte berufserfahrung", "proven experience", "extensive experience",
+    "seasoned"],
+  "optionalMarkers": ["von vorteil", "wünschenswert", "idealerweise", "ideal",
+    "von nutzen", "plus", "nice to have", "a plus", "gerne", "bevorzugt"],
+  "negationMarkers": ["keine", "ohne", "nicht erforderlich", "erste erfahrung",
+    "erste praktische", "no experience", "first experience"],
+  "juniorSignals": ["junior", "einsteiger", "berufseinsteiger", "absolvent",
+    "trainee", "lehre", "lehrling", "praktik", "early career", "graduate",
+    "quereinsteiger"],
+  "codingKeywords": ["applikationsentwicklung", "coding", "softwareentwicklung",
+    "programmier", "software developer", "applikationsentwickler"]
+}

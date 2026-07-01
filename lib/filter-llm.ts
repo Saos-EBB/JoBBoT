@@ -1,4 +1,6 @@
 import { config } from '../config.ts';
+import { buildStageInput } from './job-text.ts';
+import type { Decision, FilterStrategy } from './filter-types.ts';
 
 export type Tri = 'ja' | 'nein' | 'unsicher';
 
@@ -81,3 +83,40 @@ export async function judgeJob(jobInput: string, isLehre: boolean, ollama = conf
   if (first) return first;
   return attempt(jobInput, isLehre, ollama);
 }
+
+export type Judge = (jobInput: string, isLehre: boolean) => Promise<FilterJudgment | null>;
+
+function hasUnsicher(j: FilterJudgment): boolean {
+  return j.it_rolle === 'unsicher' || j.erfahrung_ab_3j_erforderlich === 'unsicher' || j.lehre_coding === 'unsicher';
+}
+
+// Kriterien → Decision-Mapping, unverändert aus dem bisherigen filter-decide.ts übernommen.
+// "unsicher" bzw. ein Parse-Fehler (judgment === null) zählt NIE als Reject — recall-sicher.
+function mapJudgment(judgment: FilterJudgment | null, lehre: boolean): Decision {
+  if (!judgment) return { status: 'uncertain' };
+
+  if (judgment.it_rolle === 'nein') return { status: 'filtered_out', rejectedBy: 'IT-Rolle', judgment };
+  if (judgment.erfahrung_ab_3j_erforderlich === 'ja') return { status: 'filtered_out', rejectedBy: 'Erfahrung ≥3J', judgment };
+  if (lehre && judgment.lehre_coding === 'nein') return { status: 'filtered_out', rejectedBy: 'Lehre nicht coding', judgment };
+
+  if (judgment.junior_signal === 'ja' && !hasUnsicher(judgment)) {
+    return { status: 'matched', judgment };
+  }
+  return { status: 'uncertain', judgment };
+}
+
+export function createLlmStrategy(options: { ollama?: string; judge?: Judge } = {}): FilterStrategy {
+  const ollama = options.ollama ?? config.ollamaHost;
+  const judge: Judge = options.judge ?? ((input, lehre) => judgeJob(input, lehre, ollama));
+
+  return {
+    name: 'llm',
+    async decide(job, lehre) {
+      const input = buildStageInput(job);
+      const judgment = await judge(input, lehre);
+      return mapJudgment(judgment, lehre);
+    },
+  };
+}
+
+export const llmStrategy = createLlmStrategy();

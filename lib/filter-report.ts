@@ -2,11 +2,12 @@ import { appendFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { FilterDecision } from './filter.ts';
 import type { FilterJudgment } from './filter-llm.ts';
+import type { FilterMode } from './settings.ts';
 
 const KRITERIEN = ['it_rolle', 'erfahrung_ab_3j_erforderlich', 'lehre_coding', 'junior_signal'] as const;
 
-function unsureNote(d: FilterDecision): string {
-  if (!d.judgment) return 'kein JSON-Urteil (Parse-Fehler)';
+function unsureNote(d: FilterDecision, mode: FilterMode): string {
+  if (!d.judgment) return mode === 'regex' ? 'kein Junior-Signal (Regex)' : 'kein JSON-Urteil (Parse-Fehler)';
   const j = d.judgment;
   const unsure = KRITERIEN.filter(k => j[k] === 'unsicher');
   if (unsure.length > 0) return unsure.join(', ');
@@ -28,14 +29,14 @@ function aggregate(decisions: FilterDecision[]): string {
   }).join('\n');
 }
 
-export function writeFilterReport(decisions: FilterDecision[], path = 'data/filter-log.md'): void {
+export function writeFilterReport(decisions: FilterDecision[], path = 'data/filter-log.md', mode: FilterMode = 'llm'): void {
   const raus = decisions.filter(d => d.status === 'filtered_out');
   const unsicher = decisions.filter(d => d.status === 'uncertain');
   const sicher = decisions.filter(d => d.status === 'matched');
 
   const ts = new Date().toISOString().slice(0, 16).replace('T', ' ');
   const lines: string[] = [
-    `\n## Filter-Lauf ${ts}  (${sicher.length} sicher, ${unsicher.length} unsicher, ${raus.length} raus)\n`,
+    `\n## Filter-Lauf ${ts}  Modus: ${mode}  (${sicher.length} sicher, ${unsicher.length} unsicher, ${raus.length} raus)\n`,
     '\n### Aggregat (Kriterien-Verteilung)\n',
     aggregate(decisions),
   ];
@@ -47,7 +48,7 @@ export function writeFilterReport(decisions: FilterDecision[], path = 'data/filt
 
   lines.push(`\n### Unsicher (${unsicher.length})\n`);
   for (const d of unsicher) {
-    lines.push(`- ${d.job.title} — ${d.job.company} — ${unsureNote(d)}`);
+    lines.push(`- ${d.job.title} — ${d.job.company} — ${unsureNote(d, mode)}`);
     lines.push(`  - URL: ${d.job.url}`);
   }
 
