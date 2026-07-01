@@ -6,7 +6,7 @@ import { createProgress } from '../lib/progress.ts';
 
 const profile = loadProfile();
 const storage = createStorage();
-const jobs = await storage.list({ status: 'matched' });
+const jobs = [...await storage.list({ status: 'matched' }), ...await storage.list({ status: 'uncertain' })];
 
 if (jobs.length === 0) {
   console.log('Keine gematchten Jobs zum Verarbeiten.');
