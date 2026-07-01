@@ -1,5 +1,5 @@
 export type JobStatus =
-  | 'new' | 'filtered_out' | 'matched' | 'generated' | 'reviewed' | 'drafted' | 'sent';
+  | 'new' | 'filtered_out' | 'uncertain' | 'matched' | 'generated' | 'reviewed' | 'drafted' | 'sent';
 
 export interface ScrapedJob {
   source: string;
