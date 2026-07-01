@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AddressInfo } from 'node:net';
-import { buildFilterPrompt, parseFilterResponse, filterJob } from '../lib/filter.ts';
+import { buildFilterPrompt, buildMessages, parseFilterResponse, filterJob, SYSTEM } from '../lib/filter.ts';
 import { writeFilterReport } from '../lib/filter-report.ts';
 import { createStorage } from '../storage/index.ts';
 import { toJob } from '../lib/normalize.ts';
@@ -42,9 +42,23 @@ test('buildFilterPrompt: enthält "junior" als Kriterium', () => {
   assert.ok(buildFilterPrompt(sample()).toLowerCase().includes('junior'));
 });
 
-test('buildFilterPrompt: enthält "match" und "reason"', () => {
-  const p = buildFilterPrompt(sample());
-  assert.ok(p.includes('match') && p.includes('reason'));
+test('buildFilterPrompt: HTML-Tags werden entfernt', () => {
+  const job = { ...sample(), description: '<p>Wir suchen <strong>dich</strong>!</p>' };
+  const p = buildFilterPrompt(job);
+  assert.ok(!p.includes('<p>') && !p.includes('<strong>'));
+  assert.ok(p.includes('Wir suchen') && p.includes('dich'));
+});
+
+test('SYSTEM: enthält match/reason JSON-Format', () => {
+  assert.ok(SYSTEM.includes('match') && SYSTEM.includes('reason'));
+});
+
+test('buildMessages: system + 2 few-shot Paare (4 Nachrichten) + finale user-message', () => {
+  const messages = buildMessages(sample());
+  assert.strictEqual(messages[0].role, 'system');
+  assert.strictEqual(messages.length, 6); // system + 2×(user+assistant) + finale user
+  assert.strictEqual(messages[messages.length - 1].role, 'user');
+  assert.ok(messages[messages.length - 1].content.includes(sample().title));
 });
 
 test('parseFilterResponse: match:true', () => {
