@@ -72,12 +72,12 @@ test('SYSTEM: enthält match/reason JSON-Format', () => {
   assert.ok(SYSTEM.includes('match') && SYSTEM.includes('reason'));
 });
 
-test('buildMessages: system + 2 few-shot Paare (4 Nachrichten) + finale user-message', () => {
+test('buildMessages: system + finale user-message, kein Few-Shot', () => {
   const messages = buildMessages(sample());
   assert.strictEqual(messages[0].role, 'system');
-  assert.strictEqual(messages.length, 6); // system + 2×(user+assistant) + finale user
-  assert.strictEqual(messages[messages.length - 1].role, 'user');
-  assert.ok(messages[messages.length - 1].content.includes(sample().title));
+  assert.strictEqual(messages.length, 2); // system + user, kein Few-Shot (siehe lib/filter.ts)
+  assert.strictEqual(messages[1].role, 'user');
+  assert.ok(messages[1].content.includes(sample().title));
 });
 
 test('parseFilterResponse: match:true', () => {

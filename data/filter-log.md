@@ -136,3 +136,315 @@
 - Junior Softwareentwickler Für Intelligente Robotik (w/m/d) — KERN engineering careers GmbH  (Grund: LLM-Antwort nicht parsebar)
 
 ---
+
+## Filter-Lauf 2026-07-01 07:10  (matched: 2, aussortiert: 93, skipped: 0)
+
+
+### Aussortiert per Titel-Regel (25)
+
+- IT Cloud Division Lehrling — TOMORIS GmbH (Begriff: 'lehrling')
+- IT Enterprise Systems Lehrling — TOMORIS GmbH (Begriff: 'lehrling')
+- IT Field Service Lehrling — TOMORIS GmbH (Begriff: 'lehrling')
+- Lehre Applikationsentwickler - Coding — Starlim Spritzguss Gmbh (Begriff: 'lehre')
+- Lehre Informationstechnologie - Systemtechnik — Molin Industrie - Inbetriebnahme & Montage Gmbh & Co.kg (Begriff: 'lehre')
+- Lehre Informationstechnologie/Systemtechnik — Rubig (Begriff: 'lehre')
+- Lehrling Informationstechnologie - Schwerpunkt Systemtechnik — x-tention Informationstechnologie GmbH (Begriff: 'lehrling')
+- Lehrling IT-Systemtechnik — CANCOM a+d IT Solutions GmbH (Begriff: 'lehrling')
+- Lehrling IT-Systemtechnik — Mann & Mouse IT-Services GmbH (Begriff: 'lehrling')
+- Senior Database Architect (m/f/d) — CGM Clinical Österreich GmbH (Begriff: 'senior')
+- Senior Database Architect (m/f/d) — CompuGroup Medical SE (Begriff: 'senior')
+- Senior Frontend Developer (w/m/x) — epunkt GmbH (Begriff: 'senior')
+- Senior Full Stack Developer (m/f/d) – Hagenberg i. M., Wien / Vollzeit — ventopay gmbh (Begriff: 'senior')
+- Senior Full-Stack Developer (.NET / Angular) (w/m/x) — BEKO Solutions GmbH (Begriff: 'senior')
+- (Senior) Full Stack Developer* — KTM AG (Begriff: 'senior')
+- Senior Fullstack Developer (d/m/w) — Ebcont (Begriff: 'senior')
+- Senior Java Developer (d/w/m) — Ebcont (Begriff: 'senior')
+- Senior Java Entwickler & Project Lead (w/m/x) — epunkt GmbH (Begriff: 'senior')
+- Senior Java Entwickler (w/m/x) — epunkt GmbH (Begriff: 'senior')
+- Senior Software Engineer — TeamViewer GmbH (Begriff: 'senior')
+- Senior Webentwickler (w/m/x) — epunkt GmbH (Begriff: 'senior')
+- SOFTWARE DEVELOPER*IN Junior bis Senior JavaScript / PHP (m/w/d) — EI-TEA Partner GmbH (Begriff: 'senior')
+- System Engineer Datacenter Senior/Junior — Magistrat Linz - Personal und Zentrale Services (Begriff: 'senior')
+- Team Lead, Software Development — TeamViewer (Begriff: 'lead')
+- Web-Developer:in & Softwarearchitekt:in — Expertis Gruppe (Begriff: 'architekt')
+
+### Aussortiert per LLM (68)
+
+- **Applikationsentwickler für C++ / Linux (m/w/d)** — Fronius Österreich — Thalheim bei Wels, Oberösterreich, Österreich
+  - Grund: keine Junior- oder Berufseinsteiger-Rolle, mehrjährige Erfahrung erwünscht
+  - URL: https://at.linkedin.com/jobs/view/applikationsentwickler-f%C3%BCr-c%2B%2B-linux-m-w-d-at-fronius-%C3%B6sterreich-4357659322
+  - Snippet: Leidenschaft für neue Technologien und revolutionäre Lösungen – dafür steht Fronius seit 1945. Als Applikationsentwickler/-in für C++ auf Linux-System
+- **Back End Developer** — Ahoi Kapptn! — Österreich
+  - Grund: Klare Backend-Entwicklerrolle mit mehrjähriger Erfahrung erwähnt
+  - URL: https://jobs.ams.at/public/emps/jobs/22376645
+  - Snippet: Deine Rolle im Team Backend Developer:in (all Levels)Als Backend Developer:in verantwortlich für die Umsetzung unserer Backends. Du baust eigenständig
+- **Backend Deve­loper (m/w/d)** — BWT Group — Mondsee, Oberösterreich, Österreich
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://at.linkedin.com/jobs/view/backend-deve%C2%ADloper-m-w-d-at-bwt-group-4434165292
+  - Snippet: Ihre Aufgaben<br><br><ul><li>Weiter­ent­wick­lung, Wartung und Opti­mie­rung unserer Backend- Systeme rund um Shop­ware 6</li><li>Analyse und Behe­bun
+- **Backend Developer für Charging-Lösungen (m/w/d)** — Fronius Österreich — Thalheim bei Wels, Oberösterreich, Österreich
+  - Grund: Keine Entwicklerrolle, Betreuung und Wartung IT-Infrastruktur
+  - URL: https://at.linkedin.com/jobs/view/backend-developer-f%C3%BCr-charging-l%C3%B6sungen-m-w-d-at-fronius-%C3%B6sterreich-4423234770
+  - Snippet: Als Backend Developer betreust du ein bestehendes Produkt und entwickelst das Cloud-System für die nächste Generation von Ladegeräten weiter. Du sorgs
+- **Backend Developer (m/w/d) - in Linz - Kotlin / Spring** — Optimind — Linz, Oberösterreich, Österreich
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://at.linkedin.com/jobs/view/backend-developer-m-w-d-in-linz-kotlin-spring-at-optimind-4432250284
+  - Snippet: <p>Optimind entwickelt und betreibt eine weltweit einzigartige Softwarelösung, die sich auf die vollautomatisierte Verbesserung von Verkaufsseiten im 
+- **BACKEND WEB DEVELOPER (m/w/d)** — eurofunk Kappacher GmbH — Hagenberg im Mühlkreis, Oberösterreich, Österreich
+  - Grund: Keine Entwickler-Rolle (Systemtechnik)
+  - URL: https://at.linkedin.com/jobs/view/backend-web-developer-m-w-d-at-eurofunk-kappacher-gmbh-4317419244
+  - Snippet: <ul><li>Hagenberg im Mühlkreis</li><li>Klagenfurt</li><li>Linz</li><li>Salzburg</li><li>St. Johann im Pongau</li><li>Berufserfahrung</li><li>Vollzeit<
+- **Cross Platform Software Developer Flutter/MAUI (m/w/d)** — Rosenbauer Group — Leonding, Oberösterreich, Österreich
+  - Grund: keine Entwicklerrolle, keine Junior-Bezeichnung
+  - URL: https://at.linkedin.com/jobs/view/cross-platform-software-developer-flutter-maui-m-w-d-at-rosenbauer-group-4420930401
+  - Snippet: Stelle verfügbar ab:<br><br>nach Vereinbarung<br><br>Beschäftigungsausmaß:<br><br>Voll-/Teilzeit<br><br>Dienstgeber:<br><br>Rosenbauer International A
+- **Data Engineer / Developer Data Warehouse & SQL Server für Investmentfonds (m/w/d)** — Oberbank — Linz, Oberösterreich, Österreich
+  - Grund: IT-Support/Projektleitung ohne Coding
+  - URL: https://at.linkedin.com/jobs/view/data-engineer-developer-data-warehouse-sql-server-f%C3%BCr-investmentfonds-m-w-d-at-oberbank-4402292770
+  - Snippet: Linz<br><br>MY JOB<br><br>Sie verstärken das IT-Team der 3 Banken-Generali Investment-Gesellschaft m.b.H. (www.3bg.at), eine gemeinsame Fondstochter d
+- **Development Engineer (m/f/d) Embedded Software** — BRP-Rotax — Gunskirchen, Oberösterreich, Österreich
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://at.linkedin.com/jobs/view/development-engineer-m-f-d-embedded-software-at-brp-rotax-4391096590
+  - Snippet: International, innovative, pioneering: We at BRP-Rotax are part of the global company BRP and we are passionate about moving the world's most exciting
+- **Elektronik Entwickler / Testingenieur** — Akkodis — Linz (Stadt), Oberösterreich, Österreich
+  - Grund: Hardware/Elektrotechnik, keine Entwicklerrolle
+  - URL: https://at.linkedin.com/jobs/view/elektronik-entwickler-testingenieur-at-akkodis-4425779234
+- **Embedded Soft­ware Engi­neer (m/w/d)** — BWT Group — Mondsee, Oberösterreich, Österreich
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://at.linkedin.com/jobs/view/embedded-soft%C2%ADware-engi%C2%ADneer-m-w-d-at-bwt-group-4393045451
+  - Snippet: Ihre Aufgaben<br><br><ul><li>Entwick­lung von Embedded Soft­ware in C/C++ mit Fokus auf IoT, Steue­rungs­sys­teme und Embedded HMI</li><li>Mitar­beit 
+- **Embedded-Software-Entwickler (m/w/d)** — E+E Elektronik Ges.m.b.H — Engerwitzdorf
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://www.karriere.at/jobs/10021401
+  - Snippet: <p>Willkommen bei <strong>E+E Elektronik</strong>! Wir sind die <strong>Spezialisten</strong> für Sensoren und Messgeräte für Feuchte, CO₂, Feuchte in
+- **Full Stack Developer Back End** — Ahoi Kapptn! — Österreich
+  - Grund: Rolle fokussiert auf Backend ohne explizite Junior-Beschreibung
+  - URL: https://jobs.ams.at/public/emps/jobs/22376643
+  - Snippet: Deine Rolle im Team Fullstack Developer:in (Focus: Backend)Du liebst es, komplexe Systeme im Hintergrund zu steuern, möchtest aber auch in anderen Ber
+- **Full Stack Developer C# / Vue.js – Fokus Backend (M/W/D)*** — TGW Logistics — Marchtrenk, Oberösterreich, Österreich
+  - Grund: Rolle fokussiert auf Backend, keine Frontend-Entwicklung
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-c%23-vue-js-%E2%80%93-fokus-backend-m-w-d-at-tgw-logistics-4419625664
+  - Snippet: Als Full-Stack Developer:in mit Schwerpunkt Backend fühlst du dich im .NET-Umfeld zu Hause und arbeitest gerne an komplexen Softwarelösungen.<br><br>D
+- **Full Stack Developer C# / Vue.js – Fokus Backend (M/F/D)*** — TGW Logistics — Marchtrenk, Oberösterreich, Österreich
+  - Grund: Klar definierte Backend-Rolle ohne Code-Schreiben in Frontend
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-c%23-vue-js-%E2%80%93-fokus-backend-m-f-d-at-tgw-logistics-4419634394
+  - Snippet: As a full-stack developer with a focus on the backend, you feel at home in the . NET environment at home and enjoy working on complex software solutio
+- **Full Stack Developer | SPORTS m/w/x** — WINTERSTEIGER Inc. — Ried im Innkreis, Oberösterreich, Österreich
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-sports-m-w-x-at-wintersteiger-inc-4418782654
+  - Snippet: <strong>Wir verstärken unser Team und suchen <br><br></strong><strong>Full Stack Developer | SPORTS m/w/x<br><br></strong><strong>Vollzeit | Ried im I
+- **Full-Stack Entwickler .NET/Angular (w/m/div.)** — Bosch Österreich — Linz, Oberösterreich, Österreich
+  - Grund: Klare Senior-Entwicklerrolle ohne Junior-Kennzeichen
+  - URL: https://at.linkedin.com/jobs/view/full-stack-entwickler-net-angular-w-m-div-at-bosch-%C3%B6sterreich-4433840029
+  - Snippet: <p>Bei Bosch gestalten wir Zukunft mit hochwertigen Technologien und Dienstleistungen, die Begeisterung wecken und das Leben der Menschen verbessern. 
+- **Full Stack / Web Developer (m/w/x)** — EV Group — Sankt Florian am Inn, Oberösterreich, Österreich
+  - Grund: Klare Entwicklerrolle verlangt mehrjährige Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/full-stack-web-developer-m-w-x-at-ev-group-4295645097
+  - Snippet: Wenn du Freude daran hast, sowohl Backend als auch Frontend gemeinsam zu entwickeln und keine Scheu davor hast, tief in komplexe Analysen und Benutzer
+- **Fullstack-Entwickler:in mit Java Backend und Vue/Nuxt Frontend** — STRABAG — Linz, Oberösterreich, Österreich
+  - Grund: Keine Junior-Rolle/Einsteiger geeignet
+  - URL: https://at.linkedin.com/jobs/view/fullstack-entwickler-in-mit-java-backend-und-vue-nuxt-frontend-at-strabag-4418142917
+  - Snippet: <strong>Aufgaben<br><br></strong>Kreativität und Neugier treiben deinen Innovationsdrang an? Du möchtest internationale Softwareprodukte aktiv mitgest
+- **HTL Absolvent/in (m/w/d)** — Rosenbauer Group — Leonding, Oberösterreich, Österreich
+  - Grund: Keine Entwickler-Rolle, HTL-Ausbildung erwünscht
+  - URL: https://at.linkedin.com/jobs/view/htl-absolvent-in-m-w-d-at-rosenbauer-group-4401792296
+  - Snippet: Stelle verfügbar ab:<br><br>nach Vereinbarung<br><br>Beschäftigungsausmaß:<br><br>Voll-/Teilzeit<br><br>Dienstgeber:<br><br>Rosenbauer International A
+- **IT-Risk / IT-Governance Junior Manager** — Partner Bank — Linz
+  - Grund: Projektleitung/Management, keine Entwicklerrolle
+  - URL: https://www.devjobs.at/job/002438b43c9a4625a5dbdd52e4fa5551
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Sie möchten unsere externe IT-Risk-Beratung in der Durchführung von Risikoanalysen, IT-Risk Assessments und Busi
+- **Java Developer (f/m/d)** — Mindbreeze — Linz (Stadt), Oberösterreich, Österreich
+  - Grund: Keine Entwicklerrolle, keine Code-Schreibung
+  - URL: https://at.linkedin.com/jobs/view/java-developer-f-m-d-at-mindbreeze-4391540796
+  - Snippet: <p>Zur Verstärkung unseres Teams suchen wir eine engagierte Persönlichkeit, die uns bei der Weiterentwicklung unseres Produkts Mindbreeze InSpire unte
+- **Java Software Engineer** — Noir — Linz (Stadt), Oberösterreich, Österreich
+  - Grund: Klare Entwicklerrolle verlangt mehrjährige Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/java-software-engineer-at-noir-4434427781
+  - Snippet: <p><strong><u>Java Developer – Banking Technology – Linz / Innsbruck, Austria / Hybrid</u></strong></p><p><u> </u></p><p><em>(Key skills: Java, Object
+- **Junior AI & Software Developer (m/w/d) - Studentjob.at** — Jobster — Schwertberg, Oberösterreich, Österreich
+  - Grund: Keine Entwickler-Rolle, keine Junior-Bezeichnung
+  - URL: https://at.linkedin.com/jobs/view/junior-ai-software-developer-m-w-d-studentjob-at-at-jobster-4434104180
+  - Snippet: <strong>Wir sind ein oberösterreichisches Familienunternehmen mit weltweit 7.000 Mitarbeiterinnen und Mitarbeitern und führend in der Herstellung von 
+- **Junior Cloud Operations Engineer** — CELUM GmbH — Linz
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://www.devjobs.at/job/963ca8de53f70cdc3a7b033b8da7a21b
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Als Cloud Operations Engineer bei CELUM bist du Teil unseres internen Operation-Teams und sorgst dafür, dass uns
+- **Junior Data Analyst** — TD Trusted Decisions GmbH — Wels
+  - Grund: reine Datenanalyse ohne Coding
+  - URL: https://www.devjobs.at/job/19e03d2e6851c58db0294944c6490f46
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Du wirst Teil eines dynamischen Teams, das ausgereifte Applikationen für die Analyse von Unternehmensdaten entwi
+- **Junior Digitalisierungsexperte für erneuerbare Energien (m/w/d)** — Ingenieurbüro mitPlan GmbH — Gmunden, Oberösterreich, Österreich
+  - Grund: Keine Entwicklerrolle, keine Programmierung/Einsteiger-Eignung
+  - URL: https://at.linkedin.com/jobs/view/junior-digitalisierungsexperte-f%C3%BCr-erneuerbare-energien-m-w-d-at-engineering-office-mitplan-4428241067
+  - Snippet: <p>Wir – das Unternehmen mitPlan GmbH – sind ein unabhängiges Ingenieurbüro für Energietechnik und Meteorologie mit Firmensitz in Pinsdorf/Salzkammerg
+- **Junior Inhouse Consultant (m/w/d) – SAP Commerce** — Wacker Neuson — Hörsching
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://www.karriere.at/jobs/7723322
+  - Snippet: <p><strong>Willkommen bei Wacker Neuson</strong>, einem weltweit führenden Anbieter von Baugeräten und Kompaktmaschinen. In unserer Corporate IT entwi
+- **Junior IT Consultant** — Hapeko — Linz
+  - Grund: IT-Consultant, keine Entwicklerrolle
+  - URL: https://www.devjobs.at/job/3d66ba3ee1534c8a42358c45b5d3b620
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Unterstützung bei der Umsetzung von Softwareprojekten bei Industrieunternehmen im DACH-Raum.</li> <li>Mitarbeit 
+- **Junior IT Techniker** — Leyrer + Graf — Traun
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://www.devjobs.at/job/1e29a7a2f212c1751ada83f8fcbaf56d
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Als Cloud Engineer sind Sie in einem modernen, hybriden IT-Umfeld tätig und leisten einen wesentlichen Beitrag z
+- **Junior Javascript & Typescript Backend Engineer** — Dynatrace Austria GmbH — Linz
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://jobs.ams.at/public/emps/jobs/22231644
+  - Snippet: <ams-heading-1>Your role at Dynatrace</ams-heading-1> <p class="text-black fs-s">We build, maintain, and support the customer‑facing JavaScript agent 
+- **Junior Javascript & Typescript Backend Engineer** — Dynatrace — Linz, Oberösterreich, Österreich
+  - Grund: Berufserfahrung vorausgesetzt
+  - URL: https://at.linkedin.com/jobs/view/junior-javascript-typescript-backend-engineer-at-dynatrace-4410787202
+  - Snippet: <strong>Your role at Dynatrace<br><br></strong>We build, maintain, and support the customer‑facing JavaScript agent that collects web data for Real Us
+- **Junior-Projektleiter Elektrotechnik (m/w/d)** — ETZI-Group GmbH — Ried im Traunkreis
+  - Grund: Projektleiter, keine Entwicklerrolle
+  - URL: https://www.karriere.at/jobs/10024285
+  - Snippet: <p>Wir sind ein seit mehr als 30 Jahren bestehendes, österreichisches Familienunternehmen. Durch unsere ausgezeichnete Qualität sind wir Marktführer i
+- **(Junior) Projektleiter/in E-Mobilität** — eww Gruppe — Wels
+  - Grund: Projektleitung/Management, keine Entwicklerrolle
+  - URL: https://www.karriere.at/jobs/10023311
+  - Snippet: <p>Als umfassender Elektrotechnik-Dienstleister realisiert die eww Anlagentechnik GmbH mit der Marke emobil.link innovative Projekte in der E-Mobilitä
+- **JUNIOR SOFTWARE ENGINEER (ELECTRICS & AUTOMATION) (M/W)** — JK Engineering GmbH — Linz
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://jobs.ams.at/public/emps/jobs/21818947
+  - Snippet: <p>Im Raum Linz</p> <ams-heading-2>Ihre Aufgaben:</ams-heading-2> <ul><li>Festlegung vom Requirement Engineering</li><li>Umsetzung sowie Auslieferung 
+- **Junior Softwareentwickler Für Intelligente Robotik (w/m/d)** — KERN engineering careers GmbH — Linz
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://www.karriere.at/jobs/7829963
+  - Snippet: <h2>Junior Softwareentwickler für intelligente Robotik (w/m/d)</h2> <h4><strong>Bring Software auf die Straße - und entscheide mit, wie autonome Syste
+- **Junior Specialist Information Security Governance** — Plasser & Theurer — Linz
+  - Grund: Projektleitung/Management, keine Entwicklerrolle
+  - URL: https://www.devjobs.at/job/6fe575ebbc3140a7bf7a163557a14f84
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Unterstützung bei der Erstellung und Aktualisierung von ISM-Richtlinien, Standards und Vorgaben</li> <li>Vorbere
+- **Machine Learning & Generative AI Engineer (m/w/d)** — Miba Group — Laakirchen, Oberösterreich, Österreich
+  - Grund: Entwicklerrolle mit mehrjähriger Erfahrung erwünscht
+  - URL: https://at.linkedin.com/jobs/view/machine-learning-generative-ai-engineer-m-w-d-at-miba-group-4433329896
+  - Snippet: <strong>Ihre Aufgaben<br><br></strong><ul><li>Entwicklung neuer Technologien mit Schwerpunkt Machine Learning und Artificial Intelligence</li><li>Mita
+- **Mobile Engineer (d/f/m)** — hello again — Leonding, Oberösterreich, Österreich
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://at.linkedin.com/jobs/view/mobile-engineer-d-f-m-at-hello-again-4419292383
+  - Snippet: <p>At hello again, we empower companies to build lasting customer relationships through a sophisticated digital loyalty solution. We aren't just build
+- **Pimcore/PHP Software-Entwickler (m/w/d)** — high5it — Hagenberg im Mühlkreis, Oberösterreich, Österreich
+  - Grund: Keine Entwicklerrolle (IT-Support/Systemtechnik)
+  - URL: https://at.linkedin.com/jobs/view/pimcore-php-software-entwickler-m-w-d-at-high5it-4423619593
+  - Snippet: <p>Die high5it GmbH ist ein wegweisender Recruiting-Dienstleister aus Österreich, der sich auf Recruiting-Services für die Anforderungen der IT- und D
+- **Praktikant Digitalisierung & Softwareentwicklung im Bereich E-Mobilität (w/m/x)** — BMW Group — Steyr, Oberösterreich, Österreich
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://at.linkedin.com/jobs/view/praktikant-digitalisierung-softwareentwicklung-im-bereich-e-mobilit%C3%A4t-w-m-x-at-bmw-group-4432252749
+  - Snippet: <strong>EIN GUTES PRAKTIKUM IST PRAKTISCH NIE THEORETISCH.<br><br></strong><strong>TEILE DEINE LEIDENSCHAFT.<br><br></strong>Erfolg ist Teamarbeit. Nu
+- **Praktikant** — Ahoi Kapptn! — Linz
+  - Grund: Keine Entwickler-Rolle, keine Junior-Entwicklung
+  - URL: https://www.devjobs.at/job/f6a7b00a64408b75c3ddff6eb74f7caa
+  - Snippet: <h2>Deine Rolle im Team</h2>  <p>Setz mit uns die Segel Richtung Innovation: Bei Ahoi Kapptn! bist du der Zeit einen Schritt voraus. Wir integrieren K
+- **Praktikum Junior App Manager** — hello again GmbH — Leonding
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://www.devjobs.at/job/f2df89134ffb892d0c889cb853f9f6fa
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Als Praktikant:in im Fulfillment-Team bist du direkt im Maschinenraum unserer Systeme aktiv: Du arbeitest intens
+- **React Software Entwickler (f/m/d)** — myflexbox — Linz (Stadt), Oberösterreich, Österreich
+  - Grund: Keine Entwicklerrolle, IT-Support/Systemtechnik
+  - URL: https://at.linkedin.com/jobs/view/react-software-entwickler-f-m-d-at-myflexbox-4428805368
+  - Snippet: <p>Hast du Bock auf einen Job mit echtem Impact? Um unsere technischen Lösungen weiter zu optimieren und die Nutzererfahrung unserer smarten Locker-Lö
+- **Sachbearbeiter/in Webentwicklung und IT-Koordination** — Land Oberösterreich — Linz
+  - Grund: IT-Koordination/Support, keine Entwicklerrolle
+  - URL: https://www.karriere.at/jobs/7835417
+  - Snippet: <h2>Sachbearbeiter/in Webentwicklung und IT-Koordination</h2> <h3>Abteilung Kultur | Voll- oder Teilzeit mit mindestens 30 Wochenstunden</h3> <ul> <li
+- **SAP Inhouse Consultant PP (full time/f/m/d)** — delfort — Traun, Oberösterreich, Österreich
+  - Grund: IT-Support/Consultant ohne Coding
+  - URL: https://at.linkedin.com/jobs/view/sap-inhouse-consultant-pp-full-time-f-m-d-at-delfort-4419211184
+  - Snippet: <strong>Your tasks</strong><br><ul><li>SAP inhouse consultant as leading role for the Module PP</li><li>Conception, customization &amp; implementation
+- **Simulation & Digital Solutions Scientist (m/w/x)** — EV Group — Sankt Florian am Inn, Oberösterreich, Österreich
+  - Grund: IT-Support/Projektleitung, keine Entwicklerrolle
+  - URL: https://at.linkedin.com/jobs/view/simulation-digital-solutions-scientist-m-w-x-at-ev-group-4431083703
+  - Snippet: <p><strong>Bei EVG drängt es uns ständig zu Neuem. Neugierde ist Teil unserer DNA. Wir suchen Mitarbeiter*innen, die wie wir sind: Denker mit Praxisbe
+- **Software Consultant/ IT Consultant (m/w/d)** — myneva — Linz, Oberösterreich, Österreich
+  - Grund: IT-Support/Consultant, keine Entwicklerrolle
+  - URL: https://at.linkedin.com/jobs/view/software-consultant-it-consultant-m-w-d-at-myneva-4427482543
+  - Snippet: Deine Mission<br><br>In dieser vielfältigen und vielseitigen Rolle bist du zuständig für die Beratung, die technische Umsetzung, Einrichtung, Implemen
+- **Software Developer Embedded Systems (New Product Line) (M/W/D)*** — TGW Logistics — Wels, Oberösterreich, Österreich
+  - Grund: keine Entwicklerrolle, eher Systemtechnik/Systemadministration
+  - URL: https://at.linkedin.com/jobs/view/software-developer-embedded-systems-new-product-line-m-w-d-at-tgw-logistics-4398412511
+  - Snippet: Du möchtest bei der Entwicklung einer völlig neuen Produktlinie mitwirken – inklusive innovativer mobiler Robotik? Dann werde Teil unseres hochmotivie
+- **Software Developer/in (m/w/d).** — TANNPAPIER GmbH — Traun
+  - Grund: Keine Entwicklerrolle, Berufserfahrung vorgeschrieben
+  - URL: https://jobs.ams.at/public/emps/jobs/22159324
+  - Snippet: <ams-heading-1>IHRE AUFGABEN</ams-heading-1> <ul><li>Betreuung, Betrieb und Weiterentwicklung unserer eigenentwickelten Planungs-Software sowie unsere
+- **Software Developer (M/F/D)*** — TGW Logistics — Marchtrenk, Oberösterreich, Österreich
+  - Grund: verlangt mehrjährige Berufserfahrung oder Senior-Niveau
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-f-d-at-tgw-logistics-4424889537
+  - Snippet: Do you want to travel and at the same time extend the life cycle of our customers' systems with your innovative solutions? Then you've come to the rig
+- **Software Developer (m/w/d)** — efinio IT & Engineering — Oberösterreich, Österreich
+  - Grund: keine Junior-Entwicklerrolle, erfordernde Erfahrung erwähnt
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-w-d-at-efinio-it-engineering-4268563514
+  - Snippet: Tätigkeiten<br><br><ul><li>Entwurf, Entwicklung und Implementierung von Softwarelösungen in verschiedenen Programmiersprachen wie Java, C#, C, C++, et
+- **Software Engineer AI-Agents (all genders)** — msg — Sankt Georgen im Attergau, Oberösterreich, Österreich
+  - Grund: IT-Support/Projektleitung ohne Coding
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-ai-agents-all-genders-at-msg-4374069743
+  - Snippet: Bist du bereit, die Zukunft mitzugestalten? Dann bist du in unseren Bereichen Data &amp; Analytics und Software Engineering genau richtig. Es erwarten
+- **Software Engineer - Early Career (m/f/x)** — Dynatrace — Linz, Oberösterreich, Österreich
+  - Grund: Keine Entwickler-Rolle, keine Junior- oder Early-Career-Erforderung
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-early-career-m-f-x-at-dynatrace-4421234524
+  - Snippet: <strong>Who We Are<br><br></strong><strong>Dynatrace (NYSE: DT)</strong> is the <strong>world-leading AI-powered observability platform</strong>. We’r
+- **Software Engineer (m/f/d)** — GE HealthCare — Vöcklamarkt, Oberösterreich, Österreich
+  - Grund: Keine Entwickler-Rolle, keine Code-Schreibung beschrieben
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-m-f-d-at-ge-healthcare-4423011705
+  - Snippet: <strong>Job Description Summary<br><br></strong>GE HealthCare entwickelt und produziert am Standort Zipf, Oberösterreich medizinische diagnostische hi
+- **Software Engineer (w/m/d)** — GE HealthCare — Vöcklamarkt, Oberösterreich, Österreich
+  - Grund: Keine Entwickler-Rolle, keine Code-Schreibung
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-w-m-d-at-ge-healthcare-4398027091
+  - Snippet: <strong>Job Description Summary<br><br></strong>GE HealthCare entwickelt und produziert am Standort Zipf, Oberösterreich medizinische diagnostische hi
+- **Software Entwickler C/C++ (m/w/d)** — best4best consulting - Personalberatung & Talente Vermittlung — Peilstein im Mühlviertel, Oberösterreich, Österreich
+  - Grund: keine Junior-Entwicklerrolle, mehrjährige Berufserfahrung erwünscht
+  - URL: https://at.linkedin.com/jobs/view/software-entwickler-c-c%2B%2B-m-w-d-at-best4best-consulting-personalberatung-talente-vermittlung-4414200757
+  - Snippet: Aufgaben<br><br><ul><li>Entwicklung und Wartung von Softwarelösungen in C / C++ von modernen Maschinen- und Anlagensteuerungen für unsere innovativen 
+- **Software Entwickler:in (m/w/d)** — Hainzl Industriesysteme GmbH — Linz
+  - Grund: Keine Entwicklerrolle, keine Code-Schreibung
+  - URL: https://www.karriere.at/jobs/7804202
+  - Snippet: <h2>Software Entwickler:in (m/w/d)</h2> <h3>Tech stack: C/C++, C# oder Java</h3> <p>Starten Sie Ihre Karriere im #Teamhainzl </p> <p>Uns und unsere Pr
+- **Software-Entwickler:in (M/W/D)*** — TGW Logistics — Marchtrenk, Oberösterreich, Österreich
+  - Grund: Keine Entwicklerrolle, keine mindestens 2-jährige Berufserfahrung in der Softwareentwicklung verlangt
+  - URL: https://at.linkedin.com/jobs/view/software-entwickler-in-m-w-d-at-tgw-logistics-4424893494
+  - Snippet: Du willst reisen und die leistungsfähigsten Logistikanlagen in Europa mit innovativen Softwarelösungen zum Leben erwecken? Dann bist du bei uns richti
+- **Software Entwickler (m/w/d)** — MAIT for business — Linz, Oberösterreich, Österreich
+  - Grund: Keine Entwicklerrolle (IT-Support/Systemtechnik)
+  - URL: https://at.linkedin.com/jobs/view/software-entwickler-m-w-d-at-mait-for-business-4404197045
+  - Snippet: <p>&nbsp;</p><br><p><span><strong>Was dich in deiner Rolle erwartet</strong></span></p><br><ul><br><li>Entwicklung und Weiterentwicklung moderner Full
+- **Software Entwickler .NET-Bereich (m/f/d) – Hagenberg i. M. / Vollzeit** — ventopay gmbh — Hagenberg im Mühlkreis, Oberösterreich, Österreich
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://at.linkedin.com/jobs/view/software-entwickler-net-bereich-m-f-d-%E2%80%93-hagenberg-i-m-vollzeit-at-ventopay-gmbh-4390343867
+  - Snippet: Du bist motiviert, arbeitest gerne im Team und suchst nach einer neuen Herausforderung? Dann bist du bei uns richtig! ventopay ist mit der mocca® Prod
+- **Softwareengineering SPS m/w/x** — WINTERSTEIGER Inc. — Mettmach, Oberösterreich, Österreich
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://at.linkedin.com/jobs/view/softwareengineering-sps-m-w-x-at-wintersteiger-inc-4412637870
+  - Snippet: <strong>Wir verstärken unser Team und suchen im Bereich<br><br></strong><strong>Softwareengineering SPS m/w/x<br><br></strong><strong>Vollzeit | Mettm
+- **Softwareentwickler (w/m/d) - Frontend** — Nürnberg Digital Festival NUEDIGITAL — Furth, Oberösterreich, Österreich
+  - Grund: Keine Entwicklerrolle, eher IT-Support/Systemtechnik beschrieben
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-frontend-at-n%C3%BCrnberg-digital-festival-nuedigital-4419174064
+  - Snippet: <strong>Dafür Brauchen Wir Dich<br><br></strong>Wir erklären dir als <strong>Frontend-Entwicklerin</strong> bzw. <strong>Frontend-Entwickler</strong> 
+- **Softwareentwickler (w/m/d) Robotik/Vision** — TRUMPF Maschinen Austria — Pasching, Oberösterreich, Österreich
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-robotik-vision-at-trumpf-maschinen-austria-4390144343
+  - Snippet: As a family-run, high-tech company with nearly 19,000 employees at 71 locations worldwide, we are looking for forward thinkers with unconventional ide
+- **SPS-Programmierer (m/w/d)** — efinio IT & Engineering — Oberösterreich, Österreich
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://at.linkedin.com/jobs/view/sps-programmierer-m-w-d-at-efinio-it-engineering-4422886186
+  - Snippet: Tätigkeiten<br><br><ul><li>Programmierung von SPS-Steuerungen für hochautomatisierte Anlagen und Maschinen</li><li>Durchführung umfassender Tests und 
+- **System Engineer** — Premedia GmbH — Linz
+  - Grund: IT-Support/Systemtechnik, keine Entwicklerrolle
+  - URL: https://www.devjobs.at/job/c26feb63ba5a5a0cab63e6f5ed0126c6
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Als System Engineer bei Premedia bist du Teil unseres IT Hub und sorgst gemeinsam mit deinem Team für einen stab
+- **Test** — Karl Binder GmbH & Co KG — Enns, Oberösterreich, Österreich
+  - Grund: neutral Titel ohne spezifische Entwicklerangabe
+  - URL: https://at.linkedin.com/jobs/view/test-at-karl-binder-gmbh-co-kg-4433480518
+  - Snippet: <ul><li>test</li><li>test</li><li>test</li><li>test</li><li>test</li><li>test</li><li>test</li><li>test</li><li>test</li><li>test</li><li>test</li><li
+- **WebApp-Development (Linz, AT)** — Develite GmbH & Co. KG — Linz, Oberösterreich, Österreich
+  - Grund: Keine Entwickler-Rolle beschrieben
+  - URL: https://at.linkedin.com/jobs/view/webapp-development-linz-at-at-develite-gmbh-co-kg-4434269433
+  - Snippet: <strong>Verstärke unser Team in Linz und bei unseren Kunden vor Ort!<br><br></strong><strong>Deine Aufgaben<br><br></strong><ul><li>Analyse der Kunden
+
+### Behalten
+
+- Junior Software Engineer (m/w/d) — EBNER Industrieofenbau GmbH — Leonding
+- Junior Softwareentwickler - Java (w/m/d) — Kern Engineering Careers — Linz
+
+---

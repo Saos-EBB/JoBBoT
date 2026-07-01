@@ -18,20 +18,6 @@ Wenn der Titel neutral ist ("Softwareentwickler" ohne Junior/Senior): ENTSCHEIDE
 Antworte mit NUR diesem JSON, nichts davor/danach:
 {"match": true oder false, "reason": "max 15 Wörter, deutsch"}`;
 
-// Zwei Beispiele als user/assistant-Paare, damit das 3b-Modell Format und Logik stabil hält.
-const FEWSHOT: { role: 'user' | 'assistant'; content: string }[] = [
-  {
-    role: 'user',
-    content: 'Titel: Junior Frontend Developer\nFirma: TechCorp GmbH\nOrt: Linz\nBeschreibung: Wir suchen eine:n Junior Frontend Developer zur Verstärkung unseres Teams. Du arbeitest mit React und TypeScript. Erste Erfahrung von Vorteil, kein Muss. Wir bieten Einschulung und Mentoring.',
-  },
-  { role: 'assistant', content: '{"match": true, "reason": "Klare Junior-Entwicklerrolle, keine Erfahrung vorausgesetzt"}' },
-  {
-    role: 'user',
-    content: 'Titel: IT-Systemtechniker (m/w/d)\nFirma: Musterfirma GmbH\nOrt: Wels\nBeschreibung: Betreuung und Wartung unserer IT-Infrastruktur, Serveradministration, Netzwerkbetreuung, Support für Mitarbeiter:innen bei Hard- und Softwareproblemen vor Ort.',
-  },
-  { role: 'assistant', content: '{"match": false, "reason": "IT-Support/Systemtechnik, keine Entwicklerrolle"}' },
-];
-
 export interface FilterDecision {
   job: Job;
   outcome: 'matched' | 'filtered_out' | 'skipped';
@@ -51,10 +37,13 @@ Firma: ${job.company}
 Ort: ${job.location ?? ''}${desc ? `\nBeschreibung: ${desc}` : ''}`;
 }
 
+// Kein Few-Shot: bei qwen2.5:3b + temperature 0 papageit das Modell das nächstgelegene
+// Few-Shot-Beispiel statt den tatsächlichen Job zu bewerten (reproduziert — gleiche
+// reason wortidentisch mit dem Beispiel, unabhängig vom Input). Reiner System-Prompt
+// + format:json klassifiziert zuverlässig.
 export function buildMessages(job: Job): { role: 'system' | 'user' | 'assistant'; content: string }[] {
   return [
     { role: 'system', content: SYSTEM },
-    ...FEWSHOT,
     { role: 'user', content: buildFilterPrompt(job) },
   ];
 }
