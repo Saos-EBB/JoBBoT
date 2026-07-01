@@ -69,8 +69,7 @@ export function parseFilterResponse(raw: string): { match: boolean; reason: stri
   }
 }
 
-export async function filterJob(job: Job, storage: Storage, ollama = config.ollamaHost): Promise<FilterDecision> {
-  let raw = '';
+async function callOllama(job: Job, ollama: string): Promise<{ raw?: string; error?: string }> {
   try {
     const res = await fetch(`${ollama}/api/chat`, {
       method: 'POST',
@@ -78,21 +77,40 @@ export async function filterJob(job: Job, storage: Storage, ollama = config.olla
       body: JSON.stringify({
         model: config.modelFilter,
         messages: buildMessages(job),
+        format: 'json',
+        options: { temperature: 0 },
         stream: false,
       }),
     });
-    if (!res.ok) {
-      return { job, outcome: 'skipped', reason: `Ollama HTTP ${res.status}`, source: 'llm' };
-    }
+    if (!res.ok) return { error: `Ollama HTTP ${res.status}` };
     const data = await res.json() as { message?: { content?: string } };
-    raw = data?.message?.content ?? '';
+    return { raw: data?.message?.content ?? '' };
   } catch (err) {
-    return { job, outcome: 'skipped', reason: `Netzwerkfehler: ${String(err)}`, source: 'llm' };
+    return { error: `Netzwerkfehler: ${String(err)}` };
+  }
+}
+
+export async function filterJob(job: Job, storage: Storage, ollama = config.ollamaHost): Promise<FilterDecision> {
+  const first = await callOllama(job, ollama);
+  if (first.error) {
+    return { job, outcome: 'skipped', reason: first.error, source: 'llm' };
   }
 
-  const parsed = parseFilterResponse(raw);
+  let raw = first.raw ?? '';
+  let parsed = parseFilterResponse(raw);
+
   if (!parsed) {
-    return { job, outcome: 'skipped', reason: 'LLM-Antwort nicht parsebar', source: 'llm' };
+    const retry = await callOllama(job, ollama);
+    if (retry.error) {
+      return { job, outcome: 'skipped', reason: retry.error, source: 'llm' };
+    }
+    raw = retry.raw ?? '';
+    parsed = parseFilterResponse(raw);
+  }
+
+  if (!parsed) {
+    console.warn(`[filter] Parse-Fehler bei "${job.title}" nach Retry: ${raw.slice(0, 200)}`);
+    return { job, outcome: 'skipped', reason: 'LLM-Antwort nicht parsebar (nach Retry)', source: 'llm' };
   }
 
   job.match = { ok: parsed.match, reason: parsed.reason };
