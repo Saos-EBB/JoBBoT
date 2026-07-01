@@ -1,5 +1,6 @@
 import { config } from '../config.ts';
 import { buildStageInput } from './job-text.ts';
+import { loadSettings } from './settings.ts';
 import type { Decision, FilterStrategy } from './filter-types.ts';
 
 export type Tri = 'ja' | 'nein' | 'unsicher';
@@ -57,7 +58,7 @@ async function attempt(jobInput: string, isLehre: boolean, ollama: string): Prom
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: config.modelWriter,
+        model: loadSettings().filterModel,
         messages: [
           { role: 'system', content: SYSTEM },
           { role: 'user', content: (isLehre ? 'Dies ist eine Lehrstelle.\n' : '') + jobInput },
