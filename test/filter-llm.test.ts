@@ -2,14 +2,29 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { askClearYesNo, parseVerdict } from '../lib/filter-llm.ts';
+import { judgeJob, parseJudgment } from '../lib/filter-llm.ts';
 
-test('parseVerdict: "ja"/"nein"/"unsicher" korrekt, sonst null', () => {
-  assert.equal(parseVerdict('{"antwort":"ja"}'), 'ja');
-  assert.equal(parseVerdict('{"antwort":"nein"}'), 'nein');
-  assert.equal(parseVerdict('{"antwort":"unsicher"}'), 'unsicher');
-  assert.equal(parseVerdict('{"antwort":"vielleicht"}'), null);
-  assert.equal(parseVerdict('kein json'), null);
+const VALID = '{"it_rolle":"ja","erfahrung_ab_3j_erforderlich":"nein","lehre_coding":"n/a","junior_signal":"ja"}';
+
+test('parseJudgment: gültiges JSON mit allen vier Keys', () => {
+  assert.deepEqual(parseJudgment(VALID), {
+    it_rolle: 'ja',
+    erfahrung_ab_3j_erforderlich: 'nein',
+    lehre_coding: 'n/a',
+    junior_signal: 'ja',
+  });
+});
+
+test('parseJudgment: fehlender Key → null', () => {
+  assert.equal(parseJudgment('{"it_rolle":"ja"}'), null);
+});
+
+test('parseJudgment: ungültiger Wert → null', () => {
+  assert.equal(parseJudgment('{"it_rolle":"vielleicht","erfahrung_ab_3j_erforderlich":"nein","lehre_coding":"n/a","junior_signal":"ja"}'), null);
+});
+
+test('parseJudgment: kein JSON → null', () => {
+  assert.equal(parseJudgment('kein json'), null);
 });
 
 function mockChatSequence(contents: string[]): Promise<{ url: string; close: () => void; calls: () => number }> {
@@ -30,27 +45,33 @@ function mockChatSequence(contents: string[]): Promise<{ url: string; close: () 
   });
 }
 
-test('askClearYesNo: gültige Antwort → sofort zurück, 1 Call', async (t) => {
-  const { url, close, calls } = await mockChatSequence(['{"antwort":"ja"}']);
+test('judgeJob: gültige Antwort → sofort zurück, 1 Call', async (t) => {
+  const { url, close, calls } = await mockChatSequence([VALID]);
   t.after(close);
-  assert.equal(await askClearYesNo('frage?', 'input', url), 'ja');
+  assert.deepEqual(await judgeJob('input', false, url), {
+    it_rolle: 'ja',
+    erfahrung_ab_3j_erforderlich: 'nein',
+    lehre_coding: 'n/a',
+    junior_signal: 'ja',
+  });
   assert.equal(calls(), 1);
 });
 
-test('askClearYesNo: 1. Call Müll, 2. Call gültig → Retry greift', async (t) => {
-  const { url, close, calls } = await mockChatSequence(['kein json', '{"antwort":"nein"}']);
+test('judgeJob: 1. Call Müll, 2. Call gültig → Retry greift', async (t) => {
+  const { url, close, calls } = await mockChatSequence(['kein json', VALID]);
   t.after(close);
-  assert.equal(await askClearYesNo('frage?', 'input', url), 'nein');
+  const result = await judgeJob('input', false, url);
+  assert.notEqual(result, null);
   assert.equal(calls(), 2);
 });
 
-test('askClearYesNo: 2× Müll → "unsicher" (nie hart ablehnen)', async (t) => {
+test('judgeJob: 2× Müll → null (kein hartes Urteil erraten)', async (t) => {
   const { url, close, calls } = await mockChatSequence(['Müll 1', 'Müll 2']);
   t.after(close);
-  assert.equal(await askClearYesNo('frage?', 'input', url), 'unsicher');
+  assert.equal(await judgeJob('input', false, url), null);
   assert.equal(calls(), 2);
 });
 
-test('askClearYesNo: Netzwerkfehler (kein Server) → "unsicher"', async () => {
-  assert.equal(await askClearYesNo('frage?', 'input', 'http://127.0.0.1:1'), 'unsicher');
+test('judgeJob: Netzwerkfehler (kein Server) → null', async () => {
+  assert.equal(await judgeJob('input', false, 'http://127.0.0.1:1'), null);
 });

@@ -19,8 +19,14 @@ const sample = (title = 'Junior Developer') => toJob({
   description: 'Anforderungen: TypeScript-Kenntnisse.',
 });
 
-// liefert bei jedem Call den nächsten Eintrag aus `contents` (letzter wiederholt sich) —
-// simuliert die Antworten der Kaskaden-Stufen in Reihenfolge (IT-Rolle, Erfahrung, ...).
+const judgmentJson = (overrides: Record<string, string> = {}): string => JSON.stringify({
+  it_rolle: 'ja',
+  erfahrung_ab_3j_erforderlich: 'nein',
+  lehre_coding: 'n/a',
+  junior_signal: 'ja',
+  ...overrides,
+});
+
 function mockChatSequence(contents: string[]): Promise<{ url: string; close: () => void; calls: () => number }> {
   let i = 0;
   let count = 0;
@@ -41,14 +47,14 @@ function mockChatSequence(contents: string[]): Promise<{ url: string; close: () 
 
 // ── filterJob mit mock Ollama ────────────────────────────────────────────────
 
-test('filterJob: IT-Rolle ja, Erfahrung nein → status "matched"', async (t) => {
+test('filterJob: it_rolle ja, erfahrung nein, junior_signal ja → status "matched"', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const storage = createStorage(dir);
   const job = sample();
   await storage.save(job);
 
-  const { url, close } = await mockChatSequence(['{"antwort":"ja"}', '{"antwort":"nein"}']);
+  const { url, close } = await mockChatSequence([judgmentJson()]);
   t.after(close);
 
   const d = await filterJob(job, storage, url);
@@ -56,14 +62,14 @@ test('filterJob: IT-Rolle ja, Erfahrung nein → status "matched"', async (t) =>
   assert.equal((await storage.get(job.id))?.status, 'matched');
 });
 
-test('filterJob: IT-Rolle nein → status "filtered_out", Datei bleibt erhalten (kein delete)', async (t) => {
+test('filterJob: it_rolle nein → status "filtered_out", Datei bleibt erhalten (kein delete)', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const storage = createStorage(dir);
   const job = sample();
   await storage.save(job);
 
-  const { url, close } = await mockChatSequence(['{"antwort":"nein"}']);
+  const { url, close } = await mockChatSequence([judgmentJson({ it_rolle: 'nein' })]);
   t.after(close);
 
   const d = await filterJob(job, storage, url);
@@ -86,7 +92,7 @@ test('filterJob: Titel-Regel ("Senior...") → status "filtered_out", KEIN Ollam
   const server = createServer((_, res) => {
     called = true;
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ message: { content: '{"antwort":"ja"}' } }));
+    res.end(JSON.stringify({ message: { content: judgmentJson() } }));
   });
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', () => resolve()));
   const { port } = server.address() as AddressInfo;
@@ -99,14 +105,14 @@ test('filterJob: Titel-Regel ("Senior...") → status "filtered_out", KEIN Ollam
   assert.ok((await storage.get(job.id)) !== null);
 });
 
-test('filterJob: IT-Rolle unsicher → status "uncertain", Datei bleibt', async (t) => {
+test('filterJob: junior_signal nein → status "uncertain", Datei bleibt', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const storage = createStorage(dir);
   const job = sample();
   await storage.save(job);
 
-  const { url, close } = await mockChatSequence(['{"antwort":"unsicher"}', '{"antwort":"nein"}']);
+  const { url, close } = await mockChatSequence([judgmentJson({ junior_signal: 'nein' })]);
   t.after(close);
 
   const d = await filterJob(job, storage, url);
@@ -114,14 +120,14 @@ test('filterJob: IT-Rolle unsicher → status "uncertain", Datei bleibt', async 
   assert.ok((await storage.get(job.id)) !== null);
 });
 
-test('filterJob: 2× Müll bei einer Stufe → "unsicher" statt Absturz, Job wird "uncertain"', async (t) => {
+test('filterJob: 2× Müll → "uncertain" statt Absturz', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const storage = createStorage(dir);
   const job = sample();
   await storage.save(job);
 
-  const { url, close } = await mockChatSequence(['Müll 1', 'Müll 2', '{"antwort":"nein"}']);
+  const { url, close } = await mockChatSequence(['Müll 1', 'Müll 2']);
   t.after(close);
 
   const d = await filterJob(job, storage, url);
@@ -134,12 +140,12 @@ function decision(overrides: Partial<FilterDecision> & { job: ReturnType<typeof 
   return {
     job: overrides.job,
     status: overrides.status ?? 'matched',
-    stages: overrides.stages ?? [],
     rejectedBy: overrides.rejectedBy,
+    judgment: overrides.judgment,
   };
 }
 
-test('writeFilterReport: drei Fächer mit Summenzeile', async (t) => {
+test('writeFilterReport: drei Fächer mit Aggregat und Summenzeile', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const reportPath = join(dir, 'filter-log.md');
@@ -150,7 +156,7 @@ test('writeFilterReport: drei Fächer mit Summenzeile', async (t) => {
     decision({
       job: { ...job, title: 'Frontend Dev' },
       status: 'uncertain',
-      stages: [{ stage: 'IT-Rolle', verdict: 'unsicher', outcome: 'unsure' }],
+      judgment: { it_rolle: 'unsicher', erfahrung_ab_3j_erforderlich: 'nein', lehre_coding: 'n/a', junior_signal: 'nein' },
     }),
     decision({ job: { ...job, title: 'Junior Dev' }, status: 'matched' }),
   ];
@@ -158,11 +164,12 @@ test('writeFilterReport: drei Fächer mit Summenzeile', async (t) => {
   writeFilterReport(decisions, reportPath);
   const content = readFileSync(reportPath, 'utf8');
 
+  assert.ok(content.includes('### Aggregat'));
   assert.ok(content.includes('### Raus (1)'));
-  assert.ok(content.includes('rausgeflogen an: Seniorität (Titel)'));
+  assert.ok(content.includes('Grund: Seniorität (Titel)'));
   assert.ok(content.includes('### Unsicher (1)'));
   assert.ok(content.includes('Frontend Dev'));
-  assert.ok(content.includes('unsicher an: IT-Rolle'));
+  assert.ok(content.includes('it_rolle'));
   assert.ok(content.includes('### Sicher (1)'));
   assert.ok(content.includes('Junior Dev'));
   assert.ok(content.includes('1 sicher, 1 unsicher, 1 raus'));
