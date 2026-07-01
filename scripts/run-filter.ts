@@ -1,5 +1,5 @@
 import { createStorage } from '../storage/index.ts';
-import { decideJob } from '../lib/filter.ts';
+import { filterJob } from '../lib/filter.ts';
 import { writeFilterReport } from '../lib/filter-report.ts';
 import { sleep } from '../lib/fetch-page.ts';
 import type { FilterDecision } from '../lib/filter.ts';
@@ -22,28 +22,26 @@ console.log(`Filtere ${jobs.length} Job(s)...\n`);
 const decisions: FilterDecision[] = [];
 for (let i = 0; i < jobs.length; i++) {
   const job = jobs[i];
-  const d = await decideJob(job, storage);
+  const d = await filterJob(job, storage);
   decisions.push(d);
 
-  if (d.outcome === 'matched') {
-    console.log(green(`✓ matched      — ${d.job.title} — ${d.job.company}`));
-  } else if (d.outcome === 'filtered_out' && d.source === 'title-rule') {
-    console.log(red(`✗ Titel-Regel  — ${d.job.title} ('${d.term}')`));
-  } else if (d.outcome === 'filtered_out') {
-    console.log(red(`✗ filtered_out — ${d.job.title} — ${d.job.company} (${d.job.location ?? ''})`));
-    console.log(`    Grund: ${d.reason}`);
-    console.log(`    URL:   ${d.job.url}`);
+  if (d.status === 'matched') {
+    console.log(green(`✓ sicher   — ${d.job.title} — ${d.job.company}`));
+  } else if (d.status === 'uncertain') {
+    const stufen = d.stages.filter(s => s.outcome === 'unsure').map(s => s.stage).join(', ');
+    console.log(yellow(`? unsicher — ${d.job.title} — ${d.job.company} (Stufe: ${stufen})`));
+    console.log(`    URL: ${d.job.url}`);
   } else {
-    console.log(yellow(`… skipped      — ${d.job.title} (${d.reason})`));
+    console.log(red(`✗ raus     — ${d.job.title} (Stufe: ${d.rejectedBy})`));
   }
 
-  // Titel-Regel macht keinen Ollama-Call, keine Pause nötig
-  if (i < jobs.length - 1 && d.source !== 'title-rule') await sleep(500);
+  // Titel-Regel (Stufe 1) macht keinen Ollama-Call, keine Pause nötig
+  if (i < jobs.length - 1 && d.stages.length > 1) await sleep(500);
 }
 
-const matched  = decisions.filter(d => d.outcome === 'matched').length;
-const filtered = decisions.filter(d => d.outcome === 'filtered_out').length;
-const skipped  = decisions.filter(d => d.outcome === 'skipped').length;
-console.log(`\nFilter fertig: ${matched} matched, ${filtered} aussortiert, ${skipped} skipped`);
+const sicher = decisions.filter(d => d.status === 'matched').length;
+const unsicher = decisions.filter(d => d.status === 'uncertain').length;
+const raus = decisions.filter(d => d.status === 'filtered_out').length;
+console.log(`\nFilter: ${sicher} sicher, ${unsicher} unsicher, ${raus} raus`);
 
 writeFilterReport(decisions);

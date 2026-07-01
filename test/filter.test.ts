@@ -4,34 +4,23 @@ import { createServer } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AddressInfo } from 'node:net';
-import { buildFilterPrompt, buildMessages, parseFilterResponse, filterJob, decideJob, SYSTEM } from '../lib/filter.ts';
+import { filterJob } from '../lib/filter.ts';
+import type { FilterDecision } from '../lib/filter.ts';
 import { writeFilterReport } from '../lib/filter-report.ts';
 import { createStorage } from '../storage/index.ts';
 import { toJob } from '../lib/normalize.ts';
 import { tmpDir, rmTmp } from './helpers.ts';
 
-const sample = () => toJob({
+const sample = (title = 'Junior Developer') => toJob({
   source: 'karriere.at',
   url: 'https://www.karriere.at/jobs/123',
-  title: 'Junior Developer',
+  title,
   company: 'Test GmbH',
-  description: 'Wir suchen einen Junior Developer für unser Team.',
+  description: 'Anforderungen: TypeScript-Kenntnisse.',
 });
 
-function mockChat(content: string): Promise<{ url: string; close: () => void }> {
-  return new Promise(resolve => {
-    const server = createServer((_, res) => {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: { role: 'assistant', content } }));
-    });
-    server.listen(0, '127.0.0.1', () => {
-      const { port } = server.address() as AddressInfo;
-      resolve({ url: `http://127.0.0.1:${port}`, close: () => server.close() });
-    });
-  });
-}
-
-// liefert bei jedem Call den nächsten Eintrag aus `contents` (letzter wiederholt sich)
+// liefert bei jedem Call den nächsten Eintrag aus `contents` (letzter wiederholt sich) —
+// simuliert die Antworten der Kaskaden-Stufen in Reihenfolge (IT-Rolle, Erfahrung, ...).
 function mockChatSequence(contents: string[]): Promise<{ url: string; close: () => void; calls: () => number }> {
   let i = 0;
   let count = 0;
@@ -50,297 +39,145 @@ function mockChatSequence(contents: string[]): Promise<{ url: string; close: () 
   });
 }
 
-// ── pure ─────────────────────────────────────────────────────────────────────
+// ── filterJob mit mock Ollama ────────────────────────────────────────────────
 
-test('buildFilterPrompt: enthält title', () => {
-  const job = sample();
-  assert.ok(buildFilterPrompt(job).includes(job.title));
-});
-
-test('buildFilterPrompt: enthält "junior" als Kriterium', () => {
-  assert.ok(buildFilterPrompt(sample()).toLowerCase().includes('junior'));
-});
-
-test('buildFilterPrompt: HTML-Tags werden entfernt', () => {
-  const job = { ...sample(), description: '<p>Wir suchen <strong>dich</strong>!</p>' };
-  const p = buildFilterPrompt(job);
-  assert.ok(!p.includes('<p>') && !p.includes('<strong>'));
-  assert.ok(p.includes('Wir suchen') && p.includes('dich'));
-});
-
-test('SYSTEM: enthält match/reason JSON-Format', () => {
-  assert.ok(SYSTEM.includes('match') && SYSTEM.includes('reason'));
-});
-
-test('SYSTEM: deckt breite IT-Definition ab (2nd-Level, coding-Lehre, 1st-Level)', () => {
-  assert.ok(SYSTEM.includes('2nd-Level'));
-  assert.ok(SYSTEM.toLowerCase().includes('coding'));
-  assert.ok(SYSTEM.includes('1st-Level') || SYSTEM.toLowerCase().includes('1st level') || SYSTEM.toLowerCase().includes('helpdesk'));
-});
-
-test('SYSTEM: enthält mind. 4 Grenzfall-Beispiele', () => {
-  const exampleLines = SYSTEM.split('\n').filter(l => l.includes('→'));
-  assert.ok(exampleLines.length >= 4, `erwartet >=4 Beispielzeilen, gefunden ${exampleLines.length}`);
-});
-
-test('buildMessages: system + finale user-message, kein Few-Shot', () => {
-  const messages = buildMessages(sample());
-  assert.strictEqual(messages[0].role, 'system');
-  assert.strictEqual(messages.length, 2); // system + user, kein Few-Shot (siehe lib/filter.ts)
-  assert.strictEqual(messages[1].role, 'user');
-  assert.ok(messages[1].content.includes(sample().title));
-});
-
-test('parseFilterResponse: match:true', () => {
-  assert.deepEqual(parseFilterResponse('{"match":true,"reason":"passt"}'), { match: true, reason: 'passt' });
-});
-
-test('parseFilterResponse: match:false', () => {
-  assert.deepEqual(parseFilterResponse('{"match":false,"reason":"Senior-Rolle"}'), { match: false, reason: 'Senior-Rolle' });
-});
-
-test('parseFilterResponse: kein JSON → null', () => {
-  assert.strictEqual(parseFilterResponse('irgendein Text kein JSON'), null);
-});
-
-test('parseFilterResponse: "" → null', () => {
-  assert.strictEqual(parseFilterResponse(''), null);
-});
-
-test('parseFilterResponse: reason fehlt → null', () => {
-  assert.strictEqual(parseFilterResponse('{"match":true}'), null);
-});
-
-// ── filterJob mit mock ────────────────────────────────────────────────────────
-
-test('filterJob: match:true → status "matched"', async (t) => {
+test('filterJob: IT-Rolle ja, Erfahrung nein → status "matched"', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const storage = createStorage(dir);
   const job = sample();
   await storage.save(job);
 
-  const { url, close } = await mockChat('{"match":true,"reason":"Junior-Stelle"}');
-  t.after(close);
-
-  await filterJob(job, storage, url);
-  assert.strictEqual(job.status, 'matched');
-  assert.strictEqual((await storage.get(job.id))?.status, 'matched');
-});
-
-test('filterJob: match:false → status "filtered_out"', async (t) => {
-  const dir = await tmpDir();
-  t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
-  const job = sample();
-  await storage.save(job);
-
-  const { url, close } = await mockChat('{"match":false,"reason":"Senior-Rolle"}');
-  t.after(close);
-
-  await filterJob(job, storage, url);
-  assert.strictEqual(job.status, 'filtered_out');
-});
-
-test('filterJob: Ollama antwortet mit Müll → status bleibt "new"', async (t) => {
-  const dir = await tmpDir();
-  t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
-  const job = sample();
-  await storage.save(job);
-
-  const { url, close } = await mockChat('das ist kein JSON');
-  t.after(close);
-
-  await filterJob(job, storage, url);
-  assert.strictEqual(job.status, 'new');
-});
-
-// ── FilterDecision-Rückgabewerte ─────────────────────────────────────────────
-
-test('filterJob: match:true → outcome "matched"', async (t) => {
-  const dir = await tmpDir();
-  t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
-  const job = sample();
-  await storage.save(job);
-
-  const { url, close } = await mockChat('{"match":true,"reason":"Junior-Stelle"}');
+  const { url, close } = await mockChatSequence(['{"antwort":"ja"}', '{"antwort":"nein"}']);
   t.after(close);
 
   const d = await filterJob(job, storage, url);
-  assert.strictEqual(d.outcome, 'matched');
-  assert.ok(d.reason.length > 0);
-  assert.ok(d.job.title.length > 0);
+  assert.equal(d.status, 'matched');
+  assert.equal((await storage.get(job.id))?.status, 'matched');
 });
 
-test('filterJob: match:false → outcome "filtered_out", job-Daten erhalten', async (t) => {
+test('filterJob: IT-Rolle nein → status "filtered_out", Datei bleibt erhalten (kein delete)', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const storage = createStorage(dir);
   const job = sample();
   await storage.save(job);
 
-  const { url, close } = await mockChat('{"match":false,"reason":"Senior-Stelle"}');
+  const { url, close } = await mockChatSequence(['{"antwort":"nein"}']);
   t.after(close);
 
   const d = await filterJob(job, storage, url);
-  assert.strictEqual(d.outcome, 'filtered_out');
-  assert.ok(d.reason.length > 0);
-  assert.strictEqual(d.job.title, job.title);
-  assert.strictEqual(d.job.url, job.url);
-  // aus Storage gelöscht
-  assert.strictEqual(await storage.get(job.id), null);
+  assert.equal(d.status, 'filtered_out');
+  assert.equal(d.rejectedBy, 'IT-Rolle');
+  // Retain: Datei existiert noch, nichts gelöscht
+  const stored = await storage.get(job.id);
+  assert.ok(stored !== null);
+  assert.equal(stored?.status, 'filtered_out');
 });
 
-test('filterJob: Müll → outcome "skipped"', async (t) => {
+test('filterJob: Titel-Regel ("Senior...") → status "filtered_out", KEIN Ollama-Call, Datei bleibt', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const storage = createStorage(dir);
-  const job = sample();
-  await storage.save(job);
-
-  const { url, close } = await mockChat('das ist kein JSON');
-  t.after(close);
-
-  const d = await filterJob(job, storage, url);
-  assert.strictEqual(d.outcome, 'skipped');
-  assert.ok(d.reason.length > 0);
-});
-
-// ── Retry ────────────────────────────────────────────────────────────────────
-
-test('filterJob: 1. Call Müll, 2. Call valide → Retry greift, outcome korrekt', async (t) => {
-  const dir = await tmpDir();
-  t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
-  const job = sample();
-  await storage.save(job);
-
-  const { url, close, calls } = await mockChatSequence(['kein json', '{"match":true,"reason":"Retry hat geklappt"}']);
-  t.after(close);
-
-  const d = await filterJob(job, storage, url);
-  assert.strictEqual(d.outcome, 'matched');
-  assert.strictEqual(d.reason, 'Retry hat geklappt');
-  assert.strictEqual(calls(), 2);
-});
-
-test('filterJob: 2× Müll → outcome "skipped", status bleibt "new", genau 2 Calls', async (t) => {
-  const dir = await tmpDir();
-  t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
-  const job = sample();
-  await storage.save(job);
-
-  const { url, close, calls } = await mockChatSequence(['Müll 1', 'Müll 2']);
-  t.after(close);
-
-  const d = await filterJob(job, storage, url);
-  assert.strictEqual(d.outcome, 'skipped');
-  assert.strictEqual(job.status, 'new');
-  assert.strictEqual(calls(), 2);
-});
-
-// ── decideJob (Titel-Vorfilter) ────────────────────────────────────────────────
-
-test('decideJob: "Senior..."-Titel → per Regel aussortiert, KEIN Ollama-Call', async (t) => {
-  const dir = await tmpDir();
-  t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
-  const job = toJob({
-    source: 'karriere.at',
-    url: 'https://www.karriere.at/jobs/999',
-    title: 'Senior Fullstack Developer',
-    company: 'Test GmbH',
-    description: 'Wir suchen einen erfahrenen Senior Entwickler.',
-  });
+  const job = sample('Senior Fullstack Developer');
   await storage.save(job);
 
   let called = false;
   const server = createServer((_, res) => {
     called = true;
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ message: { content: '{"match":true,"reason":"sollte nie aufgerufen werden"}' } }));
+    res.end(JSON.stringify({ message: { content: '{"antwort":"ja"}' } }));
   });
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', () => resolve()));
   const { port } = server.address() as AddressInfo;
   t.after(() => server.close());
 
-  const d = await decideJob(job, storage, `http://127.0.0.1:${port}`);
-  assert.strictEqual(d.outcome, 'filtered_out');
-  assert.strictEqual(d.source, 'title-rule');
-  assert.strictEqual(d.term, 'senior');
-  assert.strictEqual(called, false);
-  assert.strictEqual((await storage.get(job.id)), null);
+  const d = await filterJob(job, storage, `http://127.0.0.1:${port}`);
+  assert.equal(d.status, 'filtered_out');
+  assert.equal(d.rejectedBy, 'Seniorität (Titel)');
+  assert.equal(called, false);
+  assert.ok((await storage.get(job.id)) !== null);
 });
 
-test('decideJob: neutraler Titel → geht an filterJob (LLM)', async (t) => {
+test('filterJob: IT-Rolle unsicher → status "uncertain", Datei bleibt', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const storage = createStorage(dir);
   const job = sample();
   await storage.save(job);
 
-  const { url, close } = await mockChat('{"match":true,"reason":"Junior-Stelle"}');
+  const { url, close } = await mockChatSequence(['{"antwort":"unsicher"}', '{"antwort":"nein"}']);
   t.after(close);
 
-  const d = await decideJob(job, storage, url);
-  assert.strictEqual(d.outcome, 'matched');
-  assert.strictEqual(d.source, 'llm');
+  const d = await filterJob(job, storage, url);
+  assert.equal(d.status, 'uncertain');
+  assert.ok((await storage.get(job.id)) !== null);
+});
+
+test('filterJob: 2× Müll bei einer Stufe → "unsicher" statt Absturz, Job wird "uncertain"', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const job = sample();
+  await storage.save(job);
+
+  const { url, close } = await mockChatSequence(['Müll 1', 'Müll 2', '{"antwort":"nein"}']);
+  t.after(close);
+
+  const d = await filterJob(job, storage, url);
+  assert.equal(d.status, 'uncertain');
 });
 
 // ── writeFilterReport ─────────────────────────────────────────────────────────
 
-test('writeFilterReport: schreibt Datei mit Aussortiert + reason', async (t) => {
+function decision(overrides: Partial<FilterDecision> & { job: ReturnType<typeof sample> }): FilterDecision {
+  return {
+    job: overrides.job,
+    status: overrides.status ?? 'matched',
+    stages: overrides.stages ?? [],
+    rejectedBy: overrides.rejectedBy,
+  };
+}
+
+test('writeFilterReport: drei Fächer mit Summenzeile', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const reportPath = join(dir, 'filter-log.md');
-
   const job = sample();
-  const decisions = [
-    { job, outcome: 'filtered_out' as const, reason: 'Senior-Rolle, >3 Jahre', source: 'llm' as const },
-    { job: { ...job, title: 'Frontend Dev' }, outcome: 'matched' as const, reason: 'Junior ok', source: 'llm' as const },
+
+  const decisions: FilterDecision[] = [
+    decision({ job, status: 'filtered_out', rejectedBy: 'Seniorität (Titel)' }),
+    decision({
+      job: { ...job, title: 'Frontend Dev' },
+      status: 'uncertain',
+      stages: [{ stage: 'IT-Rolle', verdict: 'unsicher', outcome: 'unsure' }],
+    }),
+    decision({ job: { ...job, title: 'Junior Dev' }, status: 'matched' }),
   ];
 
   writeFilterReport(decisions, reportPath);
-
   const content = readFileSync(reportPath, 'utf8');
-  assert.ok(content.includes('Aussortiert'));
-  assert.ok(content.includes('Senior-Rolle'));
-  assert.ok(content.includes('Behalten'));
+
+  assert.ok(content.includes('### Raus (1)'));
+  assert.ok(content.includes('rausgeflogen an: Seniorität (Titel)'));
+  assert.ok(content.includes('### Unsicher (1)'));
   assert.ok(content.includes('Frontend Dev'));
+  assert.ok(content.includes('unsicher an: IT-Rolle'));
+  assert.ok(content.includes('### Sicher (1)'));
+  assert.ok(content.includes('Junior Dev'));
+  assert.ok(content.includes('1 sicher, 1 unsicher, 1 raus'));
 });
 
 test('writeFilterReport: append-Modus (zwei Läufe → beide Header)', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const reportPath = join(dir, 'filter-log.md');
-
   const job = sample();
-  writeFilterReport([{ job, outcome: 'matched', reason: 'ok', source: 'llm' }], reportPath);
-  writeFilterReport([{ job, outcome: 'matched', reason: 'ok', source: 'llm' }], reportPath);
+
+  writeFilterReport([decision({ job, status: 'matched' })], reportPath);
+  writeFilterReport([decision({ job, status: 'matched' })], reportPath);
 
   const content = readFileSync(reportPath, 'utf8');
   const matches = content.match(/## Filter-Lauf/g) ?? [];
-  assert.strictEqual(matches.length, 2);
-});
-
-test('writeFilterReport: trennt Titel-Regel- und LLM-Aussortierungen', async (t) => {
-  const dir = await tmpDir();
-  t.after(() => rmTmp(dir));
-  const reportPath = join(dir, 'filter-log.md');
-
-  const job = sample();
-  const decisions = [
-    { job: { ...job, title: 'Senior Dev' }, outcome: 'filtered_out' as const, reason: "Titel-Ausschluss: 'senior'", source: 'title-rule' as const, term: 'senior' },
-    { job, outcome: 'filtered_out' as const, reason: 'IT-Support, keine Entwicklerrolle', source: 'llm' as const },
-  ];
-
-  writeFilterReport(decisions, reportPath);
-  const content = readFileSync(reportPath, 'utf8');
-  assert.ok(content.includes('Aussortiert per Titel-Regel'));
-  assert.ok(content.includes('Aussortiert per LLM'));
-  assert.ok(content.includes("Begriff: 'senior'"));
-  assert.ok(content.includes('IT-Support, keine Entwicklerrolle'));
+  assert.equal(matches.length, 2);
 });
