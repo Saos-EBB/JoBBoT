@@ -65,6 +65,7 @@ async function fetchSearchPage(page: Page, keyword: string, pageNum: number, loc
 
 export const amsAdapter: ScraperAdapter = {
   name: 'ams',
+  kind: 'browser',
   async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (current: number, total: number) => void) {
     const byUrl = new Map<string, ScrapedJob>();
     const browser = await chromium.launch({ headless: true });

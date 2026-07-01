@@ -24,6 +24,7 @@ export type SourceQuery = Record<string, string>;
 
 export interface ScraperAdapter {
   name: string;
+  kind: 'fetch' | 'browser';
   scrape(
     queries: SourceQuery[],
     keep?: (job: ScrapedJob) => boolean,
