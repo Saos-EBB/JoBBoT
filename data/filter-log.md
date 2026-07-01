@@ -676,3 +676,196 @@
 - Softwareentwickler (w/m/d) - Frontend — Nürnberg Digital Festival NUEDIGITAL — Furth, Oberösterreich, Österreich
 
 ---
+
+## Filter-Lauf 2026-07-01 09:45  (matched: 1, aussortiert: 55, skipped: 0)
+
+
+### Aussortiert per Titel-Regel (14)
+
+- Junior/Senior C# Full Stack Web Developer für SaaS App, IT Firma (m/w/d) — impactit GmbH (Begriff: 'senior')
+- Senior Frontend Developer (m/w/d) — 3 Banken IT GmbH (Begriff: 'senior')
+- Senior Frontend Developer (w/m/x) — epunkt GmbH (Begriff: 'senior')
+- Senior Fullstack Developer (d/m/w) — EBCONT (Begriff: 'senior')
+- Senior Java Backend Developer (m/w/d) — 3 Banken IT GmbH (Begriff: 'senior')
+- Senior Java Developer (d/w/m) — EBCONT (Begriff: 'senior')
+- Senior Java Developer (m/w/d) — EBCONT (Begriff: 'senior')
+- Senior Java Developer Materialflusssystem (m/w/d) — Schachermayer GmbH (Begriff: 'senior')
+- Senior Java Entwickler & Project Lead (w/m/x) — epunkt GmbH (Begriff: 'senior')
+- Senior Software Developer – Development Tools (w/m/d) — Fabasoft (Begriff: 'senior')
+- Senior Software Developer mit Fokus auf Kotlin &amp; Java (m/w/d) — x-tention Informationstechnologie GmbH (Begriff: 'senior')
+- Senior Software Entwickler:in C# (m/w/d) — PDC GmbH (Begriff: 'senior')
+- Web-Developer:in &amp; Softwarearchitekt:in (m/w/d) — BBRZ GRUPPE (Begriff: 'architekt')
+- Web-Developer:in & Softwarearchitekt:in — Expertis Gruppe (Begriff: 'architekt')
+
+### Aussortiert per LLM (41)
+
+- **AI Engineer (m/w/d)** — AGILOX Services GmbH — Linz
+  - Grund: Senior-Niveau und keine coding-nah Beschreibung
+  - URL: https://www.jobs.at/i/7887116
+  - Snippet: <p>Anstellungsart: <strong>Vollzeit</strong> <br> Abteilung: <strong>AI Products</strong> <br> Level: <strong>Mid-Level / Expert / Senior</strong> <br
+- **Embedded-Software-Entwickler (m/w/d)** — E+E Elektronik Ges.m.b.H — Engerwitzdorf
+  - Grund: keine coding-nahen oder Einsteiger-IT-Beschäftigungen
+  - URL: https://www.karriere.at/jobs/10021401
+  - Snippet: <p>Willkommen bei <strong>E+E Elektronik</strong>! Wir sind die <strong>Spezialisten</strong> für Sensoren und Messgeräte für Feuchte, CO₂, Feuchte in
+- **Embedded-Software-Entwickler (m/w/d)** — E + E Elektronik Ges.m.b.H. — Engerwitzdorf
+  - Grund: Senior/Nachfolger-Niveau verlangt
+  - URL: https://www.jobs.at/i/7881491
+  - Snippet: <p>Willkommen bei <strong>E+E Elektronik</strong>! Wir sind die <strong>Spezialisten</strong> f&uuml;r Sensoren und Messger&auml;te f&uuml;r Feuchte, 
+- **Frontend Web Developer*in (m/w/d)** — karriere.at GmbH — Linz
+  - Grund: reiner 1st-Level-Helpdesk
+  - URL: https://www.jobs.at/i/7877222
+  - Snippet: <p>karriere.at ist &Ouml;sterreichs gr&ouml;&szlig;tes Jobportal und besteht aus rund 200 motivierten Mitarbeiter&#42;innen, die sich t&auml;glich daf
+- **IT Cloud Division Lehrling** — TOMORIS GmbH — Marchtrenk
+  - Grund: Lehre nicht coding-nah und keine Applikationsentwicklung
+  - URL: https://www.devjobs.at/job/b38889814a622aa01a5c6791738ab8b4
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Du wirst Teil unserer Cloud Division, also jenes Teams, das Unternehmen in die moderne Arbeitswelt bringt - mit 
+- **IT Enterprise Systems Lehrling** — TOMORIS GmbH — Marchtrenk
+  - Grund: Lehre/Lehrling IT-Systemtechnik
+  - URL: https://www.devjobs.at/job/250898269d8258f83709bcc5b3ff05c3
+  - Snippet: <h2>Deine Rolle im Team</h2>  <p>Du wirst Teil unseres Network Intelligence Teams, einem Bereich, der hochspezialisierte IT-Infrastruktur betreibt und
+- **IT Field Service Lehrling** — TOMORIS GmbH — Marchtrenk
+  - Grund: Lehre/Lehrling IT-Systemtechnik
+  - URL: https://www.devjobs.at/job/152166c9b5c53d92e9063ba8dc042d96
+  - Snippet: <h2>Deine Rolle im Team</h2>  <p>Du wirst Teil unseres Field-Service-Teams und arbeitest eng mit unseren Cloud-, Enterprise- und Networking-Engineers 
+- **IT-Risk / IT-Governance Junior Manager** — Partner Bank — Linz
+  - Grund: Senior / Lead / Principal erwähnt (Projektmanagement/Consulting ohne Technik)
+  - URL: https://www.devjobs.at/job/002438b43c9a4625a5dbdd52e4fa5551
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Sie möchten unsere externe IT-Risk-Beratung in der Durchführung von Risikoanalysen, IT-Risk Assessments und Busi
+- **(Junior) Business Development Manager (m/w/d)** —  — 
+  - Grund: reiner 1st-Level-Helpdesk
+  - URL: https://www.jobs.at/i/7880039
+  - Snippet: <p><strong>Help bring our breakthrough display tech into the next generation of smart glasses.</strong>  </p> <p><strong>Vitrealab </strong>(www.vitre
+- **Junior Cloud Operations Engineer** — CELUM GmbH — Linz
+  - Grund: keine coding-nahen IT-Kernrolle
+  - URL: https://www.devjobs.at/job/963ca8de53f70cdc3a7b033b8da7a21b
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Als Cloud Operations Engineer bei CELUM bist du Teil unseres internen Operation-Teams und sorgst dafür, dass uns
+- **Junior Data Analyst** — TD Trusted Decisions GmbH — Wels
+  - Grund: keine coding-nahen IT-Rollen
+  - URL: https://www.devjobs.at/job/19e03d2e6851c58db0294944c6490f46
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Du wirst Teil eines dynamischen Teams, das ausgereifte Applikationen für die Analyse von Unternehmensdaten entwi
+- **Junior Inhouse Consultant (m/w/d) – SAP Commerce** — Wacker Neuson — Hörsching
+  - Grund: Lehre nicht coding-nah
+  - URL: https://www.karriere.at/jobs/7723322
+  - Snippet: <p><strong>Willkommen bei Wacker Neuson</strong>, einem weltweit führenden Anbieter von Baugeräten und Kompaktmaschinen. In unserer Corporate IT entwi
+- **Junior IT Consultant** — Hapeko — Linz
+  - Grund: keine coding-nahen Aufgaben beschrieben
+  - URL: https://www.devjobs.at/job/3d66ba3ee1534c8a42358c45b5d3b620
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Unterstützung bei der Umsetzung von Softwareprojekten bei Industrieunternehmen im DACH-Raum.</li> <li>Mitarbeit 
+- **Junior IT Techniker** — Leyrer + Graf — Traun
+  - Grund: Senior / Lead / Principal erwähnt
+  - URL: https://www.devjobs.at/job/1e29a7a2f212c1751ada83f8fcbaf56d
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Als Cloud Engineer sind Sie in einem modernen, hybriden IT-Umfeld tätig und leisten einen wesentlichen Beitrag z
+- **Junior Javascript & Typescript Backend Engineer** — Dynatrace GmbH — Linz
+  - Grund: reiner 1st-Level-Helpdesk (nur Anrufannahme, Weiterleitung)
+  - URL: https://www.devjobs.at/job/3e23496f9c95e33aba673839b4611957
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>We build, maintain, and support the customer-facing JavaScript agent that collects web data for Real User Monito
+- **Junior Javascript & Typescript Engineer** — Dynatrace GmbH — Linz
+  - Grund: reiner 1st-Level-Helpdesk (nur Anrufannahme, Weiterleitung)
+  - URL: https://www.devjobs.at/job/bccb82b32936c9cd958239c30d0d6cb2
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>We build, maintain, and support the customer-facing JavaScript agent that collects web data for Real User Monito
+- **Junior-Projektleiter Elektrotechnik (m/w/d)** —  — Ried Im Traunkreis
+  - Grund: Senior / Lead / Principal - Verantwortung für Projektleitung
+  - URL: https://www.jobs.at/i/7887256
+  - Snippet: <p>Wir sind ein seit mehr als 30 Jahren bestehendes, &ouml;sterreichisches Familienunternehmen. Durch unsere ausgezeichnete Qualit&auml;t sind wir Mar
+- **Junior-Projektleiter Elektrotechnik (m/w/d)** — ETZI-Group GmbH — Ried im Traunkreis
+  - Grund: Senior / Lead / Principal beschrieben
+  - URL: https://www.karriere.at/jobs/10024285
+  - Snippet: <p>Wir sind ein seit mehr als 30 Jahren bestehendes, österreichisches Familienunternehmen. Durch unsere ausgezeichnete Qualität sind wir Marktführer i
+- **(Junior) Projektleiter/in E-Mobilität** — eww Gruppe — Wels
+  - Grund: Senior / Lead / Principal oder keine IT-Kernrolle
+  - URL: https://www.karriere.at/jobs/10023311
+  - Snippet: <p>Als umfassender Elektrotechnik-Dienstleister realisiert die eww Anlagentechnik GmbH mit der Marke emobil.link innovative Projekte in der E-Mobilitä
+- **Junior Projektleiter:in (m/w/d)** —  — Matrei In Osttirol, Linz
+  - Grund: Senior / Lead / Principal und keine coding-nah Rolle
+  - URL: https://www.jobs.at/i/7887875
+  - Snippet: <p>Du m&ouml;chtest Verantwortung &uuml;bernehmen und spannende Infrastrukturprojekte aktiv mitgestalten? <br> Du interessierst dich f&uuml;r technisc
+- **Junior Software Developer** — TANNPAPIER GmbH — Traun
+  - Grund: keine coding-nahen Aufgaben beschrieben
+  - URL: https://www.devjobs.at/job/65be0a25eef8946dbb78384f9fab8e37
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Betreuung, Betrieb und Weiterentwicklung unserer eigenentwickelten Planungs-Software sowie unserer Standardsoftw
+- **Junior Softwareentwickler Für Intelligente Robotik (w/m/d)** — KERN engineering careers GmbH — Linz
+  - Grund: Lehre nicht coding-nah
+  - URL: https://www.karriere.at/jobs/7829963
+  - Snippet: <h2>Junior Softwareentwickler für intelligente Robotik (w/m/d)</h2> <h4><strong>Bring Software auf die Straße - und entscheide mit, wie autonome Syste
+- **Junior Specialist Information Security Governance** — Plasser & Theurer — Linz
+  - Grund: Lehre nicht coding-nah
+  - URL: https://www.devjobs.at/job/6fe575ebbc3140a7bf7a163557a14f84
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Unterstützung bei der Erstellung und Aktualisierung von ISM-Richtlinien, Standards und Vorgaben</li> <li>Vorbere
+- **Lehre Applikationsentwickler - Coding** — Starlim Spritzguss Gmbh — Marchtrenk
+  - Grund: Lehre Applikationsentwickler - Coding ohne technische Berufserfahrung
+  - URL: https://www.devjobs.at/job/57bd5d5d2a4b4cc59a0512c5f9dd1b64
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Als Applikationsentwickler (m/w/d) arbeitest du bei der Entwicklung und Wartung von Software-Systemen mit.</li> 
+- **Lehre Informationstechnologie & Systemtechnik** — Elektroanlagen G. Klampfer GmbH — Leonding
+  - Grund: Lehre/Lehrling IT-Systemtechnik
+  - URL: https://www.devjobs.at/job/9f54809f83e56cc7260113b953c25b14
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Administration Netzwerkinfrastruktur, Installation und Wartung von Servern und Arbeitsplatzrechnern.</li> <li>Be
+- **Lehre Informationstechnologie - Systemtechnik** — Molin Industrie - Inbetriebnahme & Montage Gmbh & Co.kg — Wels
+  - Grund: Lehre/Lehrling IT-Systemtechnik
+  - URL: https://www.devjobs.at/job/54312ee6e4c8bd5f718401bb6e925abd
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Bereitstellung und Installation von Soft- und Hardware</li> <li>Konfiguration, Test und Wartung von Hard- und So
+- **Lehre Informationstechnologie/Systemtechnik** — Rubig — Wels
+  - Grund: Lehre/Lehrling IT-Systemtechnik - nicht coding-nah
+  - URL: https://www.devjobs.at/job/b459ddd6526bb8a93d256e621c78dd94
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Arbeiten und Lernen im Tagesgeschäft.</li> <li>Installation und Inbetriebnahme von IT-Hard- und Software.</li> <
+- **Lehre Informationstechnologie/Systemtechnik** — RÜBIG GmbH & Co KG — Marchtrenk
+  - Grund: Lehre/Lehrling IT-Systemtechnik
+  - URL: https://www.devjobs.at/job/b0689e6f0b75a5ba7d55f7e48a0c1e92
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Arbeiten und Lernen im Tagesgeschäft.</li> <li>Installation und Inbetriebnahme von IT-Hard- und Software.</li> <
+- **Lehre IT-Systemtechniker** — EREMA Group — Ansfelden
+  - Grund: Lehre/Lehrling IT-Systemtechnik → falsch (nicht coding-nah)
+  - URL: https://www.devjobs.at/job/6e96794026aef6d13544ff07ed6bd3ad
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>4 abwechslungsreiche Lehrjahre</li> <li>Ausbildung in der Abteilung Informations- und Kommunikationstechnologie<
+- **Lehrling Informationstechnologie - Schwerpunkt Systemtechnik** — x-tention Informationstechnologie GmbH — Wels
+  - Grund: Lehrling-Position ohne coding-nah und mit Erstanalyse von Tickets
+  - URL: https://www.devjobs.at/job/b985c63dab5d6058ff3820c7f0acccce
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Automatisierte Installation und Konfiguration von Hardware.</li> <li>Softwareverteilung und Updatemanagement.</l
+- **Lehrling IT-Systemtechnik** — CANCOM a+d IT Solutions GmbH — Leonding
+  - Grund: Lehre nicht coding-nah
+  - URL: https://www.devjobs.at/job/11fbee9ef900a84cee67c907ee9b133b
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Kundenberatung zu Hardware, Software und Security</li> <li>Planen von Netzwerken, Server- und Datenspeicher</li>
+- **Lehrling IT-Systemtechnik** — Mann & Mouse IT-Services GmbH — Leonding
+  - Grund: Lehre nicht coding-nah
+  - URL: https://www.devjobs.at/job/d05251de3fbedd70e574dc62156a25e0
+  - Snippet: <h2>Deine Rolle im Team</h2>  <p>In deiner Ausbildungszeit bist du Mitglied unseres Service Desks und unterstützt nach deiner Einarbeitungszeit das Te
+- **Marketing &amp; Communications Manager 80-100 % (m/w/d)** — location — 
+  - Grund: Keine IT-Kernrolle
+  - URL: https://www.jobs.at/i/7885339
+  - Snippet: <p>Help us cool the planet and set carbon standards as part of our team. Carbon Standards International is a standard setter and provider of registry 
+- **Praktikant** — Ahoi Kapptn! — Linz
+  - Grund: keine coding-nahen oder 2nd-Level-Support-Funktionen
+  - URL: https://www.devjobs.at/job/f6a7b00a64408b75c3ddff6eb74f7caa
+  - Snippet: <h2>Deine Rolle im Team</h2>  <p>Setz mit uns die Segel Richtung Innovation: Bei Ahoi Kapptn! bist du der Zeit einen Schritt voraus. Wir integrieren K
+- **Praktikum Junior App Manager** — hello again GmbH — Leonding
+  - Grund: Lehre nicht coding-nah
+  - URL: https://www.devjobs.at/job/f2df89134ffb892d0c889cb853f9f6fa
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Als Praktikant:in im Fulfillment-Team bist du direkt im Maschinenraum unserer Systeme aktiv: Du arbeitest intens
+- **Sachbearbeiter/in Webentwicklung und IT-Koordination (m/w/d)** — Land Oberösterreich, Amt der OÖ. Landesregierung — Linz
+  - Grund: keine coding-nahen IT-Rollen
+  - URL: https://www.jobs.at/i/7887837
+  - Snippet: <h2>Sachbearbeiter/in Webentwicklung und IT-Koordination</h2> <h3>Abteilung Kultur | Voll- oder Teilzeit mit mindestens 30 Wochenstunden</h3> <ul> <li
+- **Sachbearbeiter/in Webentwicklung und IT-Koordination** — Land Oberösterreich — Linz
+  - Grund: keine coding-nahen IT-Kernrolle
+  - URL: https://www.karriere.at/jobs/7835417
+  - Snippet: <h2>Sachbearbeiter/in Webentwicklung und IT-Koordination</h2> <h3>Abteilung Kultur | Voll- oder Teilzeit mit mindestens 30 Wochenstunden</h3> <ul> <li
+- **Software Entwickler:in (m/w/d)** — Hainzl Industriesysteme GmbH — Linz
+  - Grund: keine coding-nahen Aufgaben beschrieben
+  - URL: https://www.karriere.at/jobs/7804202
+  - Snippet: <h2>Software Entwickler:in (m/w/d)</h2> <h3>Tech stack: C/C++, C# oder Java</h3> <p>Starten Sie Ihre Karriere im #Teamhainzl </p> <p>Uns und unsere Pr
+- **Software-Entwickler mit Schwerpunkt Embedded Linux (m/w/d)** — MEC electronics GmbH — 
+  - Grund: Senior / Lead / Principal oder Beschreibung fordert mehrjährige Berufserfahrung
+  - URL: https://www.jobs.at/i/7876987
+  - Snippet: <p>Wir sind ein inhabergef&uuml;hrtes, &ouml;sterreichisches Technologieunternehmen mit Sitz in Wien. Unser Fokus liegt auf innovativen L&ouml;sungen 
+- **Student (m/w/d) für eine Studien- oder Abschlussarbeit im Bereich Elektronik, Softwareentwicklung, Mechatronik, Maschinenbau, Mobilhydraulik, Konstruktion** — Wacker Neuson Linz GmbH — Hörsching
+  - Grund: Lehre nicht coding-nah
+  - URL: https://www.jobs.at/i/7847742
+  - Snippet: <p>Verst&auml;rken Sie uns <strong>ab Fr&uuml;hjahr 2026</strong> als  </p> <h2>Student (m/w/d) f&uuml;r eine Studien- oder Abschlussarbeit im Bereich
+- **System Engineer** — Premedia GmbH — Linz
+  - Grund: keine coding-nahen IT-Kernrolle
+  - URL: https://www.devjobs.at/job/c26feb63ba5a5a0cab63e6f5ed0126c6
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Als System Engineer bei Premedia bist du Teil unseres IT Hub und sorgst gemeinsam mit deinem Team für einen stab
+
+### Behalten
+
+- Software Engineer - Early Career — Dynatrace GmbH — Linz
+
+---
