@@ -40,6 +40,8 @@ function logLine(d: FilterDecision): void {
 }
 
 const decisions: FilterDecision[] = [];
+let llmMs = 0;
+let llmCalls = 0;
 for (let i = 0; i < jobs.length; i++) {
   const job = jobs[i];
 
@@ -52,7 +54,10 @@ for (let i = 0; i < jobs.length; i++) {
   }
 
   const progress = createProgress(`Filter — Job ${i + 1}/${jobs.length}: ${job.title}`);
+  const start = performance.now();
   const d = await filterJob(job, storage, undefined, mode);
+  llmMs += performance.now() - start;
+  llmCalls++;
   decisions.push(d);
 
   if (d.status === 'matched') {
@@ -69,5 +74,10 @@ const sicher = decisions.filter(d => d.status === 'matched').length;
 const unsicher = decisions.filter(d => d.status === 'uncertain').length;
 const raus = decisions.filter(d => d.status === 'filtered_out').length;
 console.log(`\nFilter: ${sicher} sicher, ${unsicher} unsicher, ${raus} raus`);
+
+if (llmCalls > 0) {
+  const model = loadSettings().filterModel;
+  console.log(`Ø ${model}: ${(llmMs / llmCalls).toFixed(0)}ms/Job, Gesamt ${(llmMs / 1000).toFixed(1)}s für ${llmCalls} Jobs`);
+}
 
 writeFilterReport(decisions, undefined, mode);
