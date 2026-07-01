@@ -64,16 +64,21 @@ export interface AggregateProgress {
 // jedem report()-Aufruf.
 export function createAggregateProgress(sources: string[]): AggregateProgress {
   const tty = process.stdout.isTTY === true;
-  const state = new Map<string, { current: number; total: number }>(sources.map(s => [s, { current: 0, total: 0 }]));
+  const state = new Map<string, { current: number; total: number; started: boolean }>(
+    sources.map(s => [s, { current: 0, total: 0, started: false }]),
+  );
   let frameIdx = 0;
   let prevLen = 0;
   let stopped = false;
   let lastPlainRender = 0;
 
+  // Quellen, die noch auf einen Scheduler-Slot warten, haben noch KEIN report()
+  // gesehen (der erste Aufruf kommt erst, wenn der Adapter tatsächlich startet) —
+  // "wartet…" statt irreführendem "0/0".
   function render(): string {
     return sources.map(s => {
       const st = state.get(s)!;
-      return `${s} ${st.current}/${st.total}`;
+      return st.started ? `${s} ${st.current}/${st.total}` : `${s} wartet…`;
     }).join(' · ');
   }
 
@@ -90,7 +95,7 @@ export function createAggregateProgress(sources: string[]): AggregateProgress {
   return {
     report(source, current, total) {
       if (stopped || !state.has(source)) return;
-      state.set(source, { current, total });
+      state.set(source, { current, total, started: true });
       if (!tty) {
         const now = Date.now();
         if (now - lastPlainRender > 1000) {
