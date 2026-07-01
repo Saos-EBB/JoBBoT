@@ -19,6 +19,7 @@
     "scrape:devjobs": "tsx scripts/run-scrape.ts --source=devjobs",
     "scrape:linkedin": "tsx scripts/run-scrape.ts --source=linkedin",
     "scrape:ams": "tsx scripts/run-scrape.ts --source=ams",
+    "scrape:jobs": "tsx scripts/run-scrape.ts --source=jobs",
     "anschreiben": "tsx scripts/run-anschreiben.ts",
     "install:browsers": "playwright install chromium"
   },

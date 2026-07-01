@@ -27,5 +27,15 @@
       { "keyword": "junior software developer", "location": "Linz", "vicinity": "40" },
       { "keyword": "junior softwareentwickler", "location": "Linz", "vicinity": "40" }
     ]
+  },
+  "jobs.at": {
+    "enabled": true,
+    "queries": [
+      { "keyword": "software-entwickler" },
+      { "keyword": "junior-developer" },
+      { "keyword": "softwareentwickler" },
+      { "keyword": "webentwickler" },
+      { "keyword": "java-entwickler" }
+    ]
   }
 }
