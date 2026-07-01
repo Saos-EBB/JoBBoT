@@ -120,6 +120,22 @@ test('filterJob: junior_signal nein → status "uncertain", Datei bleibt', async
   assert.ok((await storage.get(job.id)) !== null);
 });
 
+test('filterJob: Regex-Modus, disqualifizierende Erfahrung → filtered_out, Datei bleibt (Retain)', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const job = sample('Software Developer');
+  job.description = 'Anforderungen: Mind. 3 Jahre Berufserfahrung erforderlich.';
+  await storage.save(job);
+
+  const d = await filterJob(job, storage, undefined, 'regex');
+  assert.equal(d.status, 'filtered_out');
+  assert.match(d.rejectedBy ?? '', /Erfahrung ≥3J/);
+  const stored = await storage.get(job.id);
+  assert.ok(stored !== null);
+  assert.equal(stored?.status, 'filtered_out');
+});
+
 test('filterJob: 2× Müll → "uncertain" statt Absturz', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
