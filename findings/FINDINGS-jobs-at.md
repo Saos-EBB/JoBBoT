@@ -25,6 +25,8 @@ Sitemap: https://www.jobs.at/sitemaps/sitemap-jobs.xml
 - Kein Bot-Schutz: keine `cf-ray`/`cf-mitigated`/`x-vercel-*`-Header, kein "Just a moment"/Captcha im Body. Server: nginx, Backend `x-backend: web01`, Cookies zeigen Laravel-App (`XSRF-TOKEN`, `laravel_session`).
 - Datenquelle: **kein** JSON-LD-Joblist, **kein** `__NEXT_DATA__`/`__NUXT__`/`__INITIAL_STATE__` auf der Suchseite. Stattdessen Tier (d)/(c)-Hybrid: serverseitig gerendertes HTML mit reichen `data-*`-Attributen pro Job-Karte:
 
+⚠️ **Korrektur (siehe STEP 2 unten):** `?q=...` ist **kein funktionierender Such-Parameter** — er wird beim 302-Redirect verworfen. Die tatsächlich funktionierende Such-URL ist pfadbasiert: `https://www.jobs.at/j/{keyword-slug}`.
+
 ```html
 <h2 class="c-job-title ..." data-job-title>
   <a class="j-c-link" href="https://www.jobs.at/i/7811246" data-c-id="7811246"
@@ -40,6 +42,39 @@ Sitemap: https://www.jobs.at/sitemaps/sitemap-jobs.xml
 ```
 
 ~15 Jobs pro Seitenaufruf, Detail-URL-Muster `https://www.jobs.at/i/{jobId}`. Fixture: `test/fixtures/jobs-at/search.html` (495.788 Bytes).
+
+## STEP 2 — Such-Mechanik verifiziert (vor dem Adapter-Bau)
+
+### (a) Keyword-Filterung
+
+`https://www.jobs.at/jobs?q=<kw>` → 302 → `https://www.jobs.at/j` — der Query-String wird beim Redirect **verworfen**. Getestet mit `q=java` vs. `q=frontend`, mit und ohne wiederverwendetem Cookie-Jar (Laravel-Session): alle drei Requests lieferten **exakt dieselben 15 Jobs** in derselben Reihenfolge. Keyword-Filterung über `?q=` funktioniert nicht, Session/Cookies spielen keine Rolle.
+
+**Gefundene funktionierende Alternative:** `https://www.jobs.at/j/{keyword-slug}` (pfadbasiert, analog zu den Location-Links `/j/-/{ort}`). Verifiziert über 8 verschiedene Slugs:
+
+| Slug | Status | Ergebnis |
+|---|---|---|
+| `software-entwickler` | 200 | Software-Entwickler-Jobs |
+| `java` | 200 | Java-spezifische Jobs, klar anders als oben |
+| `junior-software-entwickler`, `junior-entwickler`, `webentwickler` | 200 | Mehrwort/Bindestrich-Slugs funktionieren |
+| `büro` (roh) / `buero` (transliteriert) | 200 | beide funktionieren, leicht unterschiedliche (nicht identische) Trefferlisten — Transliteration empfohlen für stabile URL-Erzeugung im Code |
+| `Java` vs `java` | 200 / 200 | **case-insensitive**, byte-identische Ergebnismengen |
+| `marketing` | 200 | klar andere, branchenpassende Treffer — bestätigt, dass Filterung kein Zufall ist |
+
+Kombination Keyword+Ort im selben Pfad (`/j/{kw}/-/{ort}`) → **404**, nicht unterstützt.
+
+### (b) Ort in der Suchkarte
+
+**JA.** Jede Job-Karte (`<li data-job="{id}" data-c-id="{id}" ...>`) enthält einen `<ul data-job-location>`-Block mit `<a class="js-locationLink" href="https://www.jobs.at/j/-/{ort-slug}">{Ort}</a>` — Location-Gate kann also **vor** dem Detail-Fetch greifen (wie bei devjobs.at), analog zu `location: r.company?.address?.municipality` bei AMS.
+
+### (c) Pagination — wichtige Einschränkung
+
+**Keine statische Pagination.** Nur die ersten ~15 Jobs pro Keyword sind per plain fetch erreichbar:
+- `?page=2` → HTTP 301, wird vom Server auf die kanonische URL zurückgeleitet (aktiv entfernt).
+- `?p=2`, `?offset=15` → HTTP 200, aber **byte-identische** Ergebnismenge wie Seite 1 (Parameter werden ignoriert).
+- `/j/entwickler/2` → HTTP 404.
+- HTML enthält `<div id="job-infinite-search-results" ...>` + `<noscript>`-Hinweis "Bitte aktiviere JavaScript ... um weitere Ergebnisse zu laden" — Pagination läuft rein über Client-JS (Infinite Scroll), der zugrunde liegende AJAX-Call ist nicht im inline-HTML sichtbar (vermutlich im externen JS-Bundle, nicht untersucht).
+
+**Konsequenz:** Ein plain-fetch-Adapter bekommt pro Keyword nur die ersten ~15 Treffer. Entschieden: akzeptieren, mit mehreren Keywords in `config/sources.json` ausgleichen (gleiches Muster wie bei karriere.at/devjobs.at) — kein Playwright für volle Pagination.
 
 ## Step A3 — Detailseite
 
@@ -75,10 +110,11 @@ Fixture: `test/fixtures/jobs-at/detail.html` (182.326 Bytes).
 
 ## Gesamturteil
 
-**Plain fetch reicht vollständig.** Kein Cloudflare/Vercel-Bot-Challenge, robots.txt erlaubt explizit. Empfohlener Ansatz für einen künftigen Adapter (analog `karriere-at.ts`, kein Playwright nötig):
+**Plain fetch reicht vollständig — mit einer Einschränkung.** Kein Cloudflare/Vercel-Bot-Challenge, robots.txt erlaubt explizit. Empfohlener Ansatz für einen künftigen Adapter (analog `karriere-at.ts`, kein Playwright nötig):
 
-1. Suchseite(n) per plain fetch, Job-IDs/Detail-URLs aus `data-c-id`/`href="https://www.jobs.at/i/{id}"` extrahieren (Tier d/c-Hybrid, HTML-Regex reicht wie bei karriere.at).
+1. Suchseite pro Keyword über `https://www.jobs.at/j/{keyword-slug}` (NICHT `?q=`, siehe STEP 2a), Job-IDs/Detail-URLs + Ort aus `data-c-id`/`href="https://www.jobs.at/i/{id}"`/`data-job-location` extrahieren (Tier d/c-Hybrid, HTML-Regex reicht wie bei karriere.at). Location-Gate kann hier schon greifen (STEP 2b).
 2. Jede Detailseite per plain fetch, JSON-LD `JobPosting`-Block parsen (Tier a) — liefert alle Felder sauber strukturiert, keine weitere HTML-Extraktion für die Detaildaten nötig.
+3. **Limit:** ~15 Treffer pro Keyword, keine statische Pagination (STEP 2c). Ausgleich über mehrere Keywords in `config/sources.json`, kein Playwright.
 
 ## Fixtures
 
