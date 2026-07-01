@@ -1,7 +1,7 @@
-const HARD_EXCLUDE = [
-  'senior', 'lead', 'principal', 'architekt',
-  'lehre', 'lehrling', 'ausbildung',
-];
+// Nur Seniorität hart ausschließen. Lehre/Lehrling und 1st/2nd-Level entscheidet
+// der LLM aus der Beschreibung — eine Titel-Keyword-Regel kann "coding-nahe Lehre"
+// vs. "Lehre Systemtechnik" bzw. "1st Level" vs. "1st & 2nd Level" nicht sauber trennen.
+const HARD_EXCLUDE = ['senior', 'lead', 'principal', 'architekt'];
 
 export interface TitleVerdict {
   excluded: boolean;

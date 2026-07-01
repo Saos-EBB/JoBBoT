@@ -20,16 +20,12 @@ test('checkTitle: "Web-Developer:in & Softwarearchitekt:in" → excluded, term "
   assert.strictEqual(v.term, 'architekt');
 });
 
-test('checkTitle: "Lehre Applikationsentwickler - Coding" → excluded, term "lehre"', () => {
-  const v = checkTitle('Lehre Applikationsentwickler - Coding');
-  assert.strictEqual(v.excluded, true);
-  assert.strictEqual(v.term, 'lehre');
+test('checkTitle: "Lehre Applikationsentwickler - Coding" → NICHT excluded (LLM sortiert)', () => {
+  assert.strictEqual(checkTitle('Lehre Applikationsentwickler - Coding').excluded, false);
 });
 
-test('checkTitle: "Lehrling IT-Systemtechnik" → excluded, term "lehrling"', () => {
-  const v = checkTitle('Lehrling IT-Systemtechnik');
-  assert.strictEqual(v.excluded, true);
-  assert.strictEqual(v.term, 'lehrling');
+test('checkTitle: "Lehrling IT-Systemtechnik" → NICHT excluded (LLM sortiert)', () => {
+  assert.strictEqual(checkTitle('Lehrling IT-Systemtechnik').excluded, false);
 });
 
 test('checkTitle: "Junior Software Developer" → NICHT excluded', () => {
