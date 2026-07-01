@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AddressInfo } from 'node:net';
-import { buildFilterPrompt, buildMessages, parseFilterResponse, filterJob, SYSTEM } from '../lib/filter.ts';
+import { buildFilterPrompt, buildMessages, parseFilterResponse, filterJob, decideJob, SYSTEM } from '../lib/filter.ts';
 import { writeFilterReport } from '../lib/filter-report.ts';
 import { createStorage } from '../storage/index.ts';
 import { toJob } from '../lib/normalize.ts';
@@ -27,6 +27,25 @@ function mockChat(content: string): Promise<{ url: string; close: () => void }> 
     server.listen(0, '127.0.0.1', () => {
       const { port } = server.address() as AddressInfo;
       resolve({ url: `http://127.0.0.1:${port}`, close: () => server.close() });
+    });
+  });
+}
+
+// liefert bei jedem Call den nächsten Eintrag aus `contents` (letzter wiederholt sich)
+function mockChatSequence(contents: string[]): Promise<{ url: string; close: () => void; calls: () => number }> {
+  let i = 0;
+  let count = 0;
+  return new Promise(resolve => {
+    const server = createServer((_, res) => {
+      count++;
+      const content = contents[Math.min(i, contents.length - 1)];
+      i++;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: { role: 'assistant', content } }));
+    });
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address() as AddressInfo;
+      resolve({ url: `http://127.0.0.1:${port}`, close: () => server.close(), calls: () => count });
     });
   });
 }
@@ -178,6 +197,88 @@ test('filterJob: Müll → outcome "skipped"', async (t) => {
   assert.ok(d.reason.length > 0);
 });
 
+// ── Retry ────────────────────────────────────────────────────────────────────
+
+test('filterJob: 1. Call Müll, 2. Call valide → Retry greift, outcome korrekt', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const job = sample();
+  await storage.save(job);
+
+  const { url, close, calls } = await mockChatSequence(['kein json', '{"match":true,"reason":"Retry hat geklappt"}']);
+  t.after(close);
+
+  const d = await filterJob(job, storage, url);
+  assert.strictEqual(d.outcome, 'matched');
+  assert.strictEqual(d.reason, 'Retry hat geklappt');
+  assert.strictEqual(calls(), 2);
+});
+
+test('filterJob: 2× Müll → outcome "skipped", status bleibt "new", genau 2 Calls', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const job = sample();
+  await storage.save(job);
+
+  const { url, close, calls } = await mockChatSequence(['Müll 1', 'Müll 2']);
+  t.after(close);
+
+  const d = await filterJob(job, storage, url);
+  assert.strictEqual(d.outcome, 'skipped');
+  assert.strictEqual(job.status, 'new');
+  assert.strictEqual(calls(), 2);
+});
+
+// ── decideJob (Titel-Vorfilter) ────────────────────────────────────────────────
+
+test('decideJob: "Senior..."-Titel → per Regel aussortiert, KEIN Ollama-Call', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const job = toJob({
+    source: 'karriere.at',
+    url: 'https://www.karriere.at/jobs/999',
+    title: 'Senior Fullstack Developer',
+    company: 'Test GmbH',
+    description: 'Wir suchen einen erfahrenen Senior Entwickler.',
+  });
+  await storage.save(job);
+
+  let called = false;
+  const server = createServer((_, res) => {
+    called = true;
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ message: { content: '{"match":true,"reason":"sollte nie aufgerufen werden"}' } }));
+  });
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', () => resolve()));
+  const { port } = server.address() as AddressInfo;
+  t.after(() => server.close());
+
+  const d = await decideJob(job, storage, `http://127.0.0.1:${port}`);
+  assert.strictEqual(d.outcome, 'filtered_out');
+  assert.strictEqual(d.source, 'title-rule');
+  assert.strictEqual(d.term, 'senior');
+  assert.strictEqual(called, false);
+  assert.strictEqual((await storage.get(job.id)), null);
+});
+
+test('decideJob: neutraler Titel → geht an filterJob (LLM)', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const job = sample();
+  await storage.save(job);
+
+  const { url, close } = await mockChat('{"match":true,"reason":"Junior-Stelle"}');
+  t.after(close);
+
+  const d = await decideJob(job, storage, url);
+  assert.strictEqual(d.outcome, 'matched');
+  assert.strictEqual(d.source, 'llm');
+});
+
 // ── writeFilterReport ─────────────────────────────────────────────────────────
 
 test('writeFilterReport: schreibt Datei mit Aussortiert + reason', async (t) => {
@@ -212,4 +313,23 @@ test('writeFilterReport: append-Modus (zwei Läufe → beide Header)', async (t)
   const content = readFileSync(reportPath, 'utf8');
   const matches = content.match(/## Filter-Lauf/g) ?? [];
   assert.strictEqual(matches.length, 2);
+});
+
+test('writeFilterReport: trennt Titel-Regel- und LLM-Aussortierungen', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const reportPath = join(dir, 'filter-log.md');
+
+  const job = sample();
+  const decisions = [
+    { job: { ...job, title: 'Senior Dev' }, outcome: 'filtered_out' as const, reason: "Titel-Ausschluss: 'senior'", source: 'title-rule' as const, term: 'senior' },
+    { job, outcome: 'filtered_out' as const, reason: 'IT-Support, keine Entwicklerrolle', source: 'llm' as const },
+  ];
+
+  writeFilterReport(decisions, reportPath);
+  const content = readFileSync(reportPath, 'utf8');
+  assert.ok(content.includes('Aussortiert per Titel-Regel'));
+  assert.ok(content.includes('Aussortiert per LLM'));
+  assert.ok(content.includes("Begriff: 'senior'"));
+  assert.ok(content.includes('IT-Support, keine Entwicklerrolle'));
 });
