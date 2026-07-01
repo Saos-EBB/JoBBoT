@@ -125,15 +125,16 @@ async function fetchDetailPage(url: string): Promise<string> {
 
 export const jobsAtAdapter: ScraperAdapter = {
   name: 'jobs.at',
-  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (msg: string) => void) {
+  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (current: number, total: number) => void) {
     const byUrl = new Map<string, ScrapedJob>();
 
-    for (const query of queries) {
+    for (let qi = 0; qi < queries.length; qi++) {
+      const query = queries[qi];
       const keyword = query.keyword ?? '';
       if (!keyword) continue;
 
       try {
-        onProgress?.(`jobs.at — ${keyword} suchen...`);
+        onProgress?.(qi + 1, queries.length);
         const cards = parseSearchPage(await fetchSearchPage(keyword));
 
         // STEP 2b: Ort ist in der Karte vorhanden → Gate hier, vor dem Detail-Fetch (wie devjobs.at)
@@ -142,9 +143,10 @@ export const jobsAtAdapter: ScraperAdapter = {
           : cards;
         console.log(`jobs.at '${keyword}': ${cards.length} Karten, ${candidates.length} nach Gate`);
 
-        for (const card of candidates) {
+        for (let di = 0; di < candidates.length; di++) {
+          const card = candidates[di];
           if (!card.url || byUrl.has(card.url)) continue;
-          onProgress?.(`jobs.at — Detail: ${(card.title ?? '').slice(0, 40)}`);
+          onProgress?.(di + 1, candidates.length);
           try {
             const job = parseDetailPage(await fetchDetailPage(card.url), card);
             byUrl.set(card.url, job);

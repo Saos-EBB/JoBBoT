@@ -71,13 +71,14 @@ async function fetchDetailPage(url: string): Promise<string> {
 
 export const karriereAtAdapter: ScraperAdapter = {
   name: 'karriere.at',
-  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (msg: string) => void) {
+  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (current: number, total: number) => void) {
     const byUrl = new Map<string, ScrapedJob>();
-    for (const query of queries) {
+    for (let qi = 0; qi < queries.length; qi++) {
+      const query = queries[qi];
       const keyword = query.keyword ?? '';
       if (!keyword) continue;
       try {
-        onProgress?.(`karriere.at — ${keyword} suchen...`);
+        onProgress?.(qi + 1, queries.length);
         const searchHtml = await fetchSearchPage(keyword);
         for (const job of parseSearchPage(searchHtml)) {
           if (!byUrl.has(job.url)) byUrl.set(job.url, job);
@@ -93,7 +94,7 @@ export const karriereAtAdapter: ScraperAdapter = {
     const results: ScrapedJob[] = [];
     for (let i = 0; i < total; i++) {
       const job = candidates[i];
-      onProgress?.(`karriere.at — Detail ${i + 1}/${total}: ${job.title.slice(0, 40)}`);
+      onProgress?.(i + 1, total);
       try {
         results.push(parseDetailPage(await fetchDetailPage(job.url), job));
       } catch (err) {

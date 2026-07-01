@@ -82,12 +82,12 @@ export async function fetchRemixContext(url: string): Promise<unknown> {
 
 export const devJobsAtAdapter: ScraperAdapter = {
   name: 'devjobs.at',
-  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (msg: string) => void) {
+  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (current: number, total: number) => void) {
     const baseJobs: ScrapedJob[] = [];
     for (const query of queries) {
       const qstring = query.params ?? 'jobLevel=junior-job-level';
       const baseUrl = `${BASE}/jobs/search?${qstring}`;
-      onProgress?.(`devjobs.at — Seite 1 laden...`);
+      onProgress?.(1, 1);
       const firstCtx = await fetchRemixContext(baseUrl);
       const totalPages = Math.min(
         (firstCtx as any)?.state?.loaderData?.['routes/jobs/$canonical']?.totalPages ?? 1,
@@ -96,7 +96,7 @@ export const devJobsAtAdapter: ScraperAdapter = {
       baseJobs.push(...parseSearchResults(firstCtx));
       for (let page = 2; page <= totalPages; page++) {
         await delay(2000);
-        onProgress?.(`devjobs.at — Seite ${page}/${totalPages} laden...`);
+        onProgress?.(page, totalPages);
         baseJobs.push(...parseSearchResults(await fetchRemixContext(`${baseUrl}&page=${page}`)));
       }
     }
@@ -107,7 +107,7 @@ export const devJobsAtAdapter: ScraperAdapter = {
     for (let i = 0; i < total; i++) {
       const job = candidates[i];
       await delay(2000);
-      onProgress?.(`devjobs.at — Detail ${i + 1}/${total}: ${job.title.slice(0, 40)}`);
+      onProgress?.(i + 1, total);
       try {
         results.push(parseDetailResult(await fetchRemixContext(job.url), job));
       } catch (err) {

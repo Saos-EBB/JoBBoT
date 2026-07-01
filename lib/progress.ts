@@ -53,3 +53,57 @@ export function createProgress(initial = ''): Progress {
     stop,
   };
 }
+
+export interface AggregateProgress {
+  report(source: string, current: number, total: number): void;
+  stop(): void;
+}
+
+// Ein Timer für ALLE Quellen statt ein \r-Spinner pro Quelle (die würden sich
+// gegenseitig überschreiben). Non-TTY: gedrosselte Plain-Zeilen statt Flut bei
+// jedem report()-Aufruf.
+export function createAggregateProgress(sources: string[]): AggregateProgress {
+  const tty = process.stdout.isTTY === true;
+  const state = new Map<string, { current: number; total: number }>(sources.map(s => [s, { current: 0, total: 0 }]));
+  let frameIdx = 0;
+  let prevLen = 0;
+  let stopped = false;
+  let lastPlainRender = 0;
+
+  function render(): string {
+    return sources.map(s => {
+      const st = state.get(s)!;
+      return `${s} ${st.current}/${st.total}`;
+    }).join(' · ');
+  }
+
+  function clear() {
+    if (tty && prevLen > 0) process.stdout.write(`\r${' '.repeat(prevLen)}\r`);
+  }
+
+  const timer = tty ? setInterval(() => {
+    const line = `${FRAMES[frameIdx++ % FRAMES.length]} ${render()}`;
+    process.stdout.write(`\r${line}`);
+    prevLen = line.length;
+  }, 80) : null;
+
+  return {
+    report(source, current, total) {
+      if (stopped || !state.has(source)) return;
+      state.set(source, { current, total });
+      if (!tty) {
+        const now = Date.now();
+        if (now - lastPlainRender > 1000) {
+          console.log(render());
+          lastPlainRender = now;
+        }
+      }
+    },
+    stop() {
+      if (stopped) return;
+      stopped = true;
+      if (timer) clearInterval(timer);
+      clear();
+    },
+  };
+}

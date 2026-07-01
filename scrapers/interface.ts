@@ -27,6 +27,6 @@ export interface ScraperAdapter {
   scrape(
     queries: SourceQuery[],
     keep?: (job: ScrapedJob) => boolean,
-    onProgress?: (msg: string) => void,
+    onProgress?: (current: number, total: number) => void,
   ): Promise<ScrapedJob[]>;
 }
