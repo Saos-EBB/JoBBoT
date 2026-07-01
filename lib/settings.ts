@@ -4,6 +4,7 @@ export type FilterMode = 'llm' | 'regex';
 
 export interface Settings {
   filterMode: FilterMode;
+  filterModel: string;
 }
 
 export function loadSettings(): Settings {
@@ -14,5 +15,9 @@ export function loadSettings(): Settings {
   } catch {
     throw new Error('config/settings.json fehlt.');
   }
-  return JSON.parse(raw) as Settings;
+  const parsed = JSON.parse(raw) as Partial<Settings>;
+  return {
+    filterMode: parsed.filterMode ?? 'llm',
+    filterModel: parsed.filterModel ?? 'llama3.2:3b',
+  };
 }
