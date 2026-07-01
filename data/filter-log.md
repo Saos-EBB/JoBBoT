@@ -869,3 +869,204 @@
 - Software Engineer - Early Career — Dynatrace GmbH — Linz
 
 ---
+
+## Filter-Lauf 2026-07-01 17:47  (7 sicher, 73 unsicher, 34 raus)
+
+
+### Raus (34)
+
+- Frontend Developer (m/w/d) — VectaCore — rausgeflogen an: Erfahrung
+- Full-Stack Entwickler .NET/Angular (w/m/div.) — Bosch Österreich — rausgeflogen an: Erfahrung
+- Junior Projektleiter:in (m/w/d) —  — rausgeflogen an: Erfahrung
+- Junior/Senior C# Full Stack Web Developer für SaaS App, IT Firma (m/w/d) — impactit GmbH — rausgeflogen an: Seniorität (Titel)
+- Lehre Informationstechnologie - Systemtechnik — Molin Industrie - Inbetriebnahme & Montage Gmbh & Co.kg — rausgeflogen an: Lehre-Ausrichtung
+- Lehre IT-Systemtechniker — EREMA Group — rausgeflogen an: IT-Rolle
+- Lehrling IT-Systemtechnik — CANCOM a+d IT Solutions GmbH — rausgeflogen an: Lehre-Ausrichtung
+- Lehrling IT-Systemtechnik — Mann & Mouse IT-Services GmbH — rausgeflogen an: Lehre-Ausrichtung
+- Marketing &amp; Communications Manager 80-100 % (m/w/d) —  — rausgeflogen an: Erfahrung
+- Senior Database Architect (m/f/d) — CGM Clinical Österreich GmbH — rausgeflogen an: Seniorität (Titel)
+- Senior Database Architect (m/f/d) — CompuGroup Medical SE — rausgeflogen an: Seniorität (Titel)
+- Senior Frontend Developer (m/w/d) — 3 Banken IT GmbH — rausgeflogen an: Seniorität (Titel)
+- Senior Frontend Developer (w/m/x) — epunkt GmbH — rausgeflogen an: Seniorität (Titel)
+- Senior Full Stack Developer (m/f/d) – Hagenberg i. M., Wien / Vollzeit — ventopay gmbh — rausgeflogen an: Seniorität (Titel)
+- (Senior) Full Stack Developer* — KTM AG — rausgeflogen an: Seniorität (Titel)
+- Senior Fullstack Developer (d/m/w) — EBCONT — rausgeflogen an: Seniorität (Titel)
+- (Senior) Fullstack Developer (human) — All for One — rausgeflogen an: Seniorität (Titel)
+- Senior Java Backend Developer (m/w/d) — 3 Banken IT GmbH — rausgeflogen an: Seniorität (Titel)
+- Senior Java Developer (d/w/m) — EBCONT — rausgeflogen an: Seniorität (Titel)
+- Senior Java Developer (m/w/d) — EBCONT — rausgeflogen an: Seniorität (Titel)
+- Senior Java Developer Materialflusssystem (m/w/d) — Schachermayer GmbH — rausgeflogen an: Seniorität (Titel)
+- Senior Java Entwickler & Project Lead (w/m/x) — epunkt GmbH — rausgeflogen an: Seniorität (Titel)
+- Senior Java Entwickler (w/m/x) — epunkt GmbH — rausgeflogen an: Seniorität (Titel)
+- Senior Software Developer – Development Tools (w/m/d) — Fabasoft — rausgeflogen an: Seniorität (Titel)
+- Senior Software Developer mit Fokus auf Kotlin &amp; Java (m/w/d) — x-tention Informationstechnologie GmbH — rausgeflogen an: Seniorität (Titel)
+- Senior Software Engineer — TeamViewer GmbH — rausgeflogen an: Seniorität (Titel)
+- Senior Software Entwickler:in C# (m/w/d) — PDC GmbH — rausgeflogen an: Seniorität (Titel)
+- Senior Webentwickler (w/m/x) — epunkt GmbH — rausgeflogen an: Seniorität (Titel)
+- SOFTWARE DEVELOPER*IN Junior bis Senior JavaScript / PHP (m/w/d) — EI-TEA Partner GmbH — rausgeflogen an: Seniorität (Titel)
+- Software Engineer (w/m/d) — GE HealthCare — rausgeflogen an: Erfahrung
+- Software Entwickler C/C++ (m/w/d) — best4best consulting - Personalberatung & Talente Vermittlung — rausgeflogen an: Erfahrung
+- Student (m/w/d) für eine Studien- oder Abschlussarbeit im Bereich Elektronik, Softwareentwicklung, Mechatronik, Maschinenbau, Mobilhydraulik, Konstruktion — Wacker Neuson Linz GmbH — rausgeflogen an: IT-Rolle
+- System Engineer Datacenter Senior/Junior — Magistrat Linz - Personal und Zentrale Services — rausgeflogen an: Seniorität (Titel)
+- Team Lead, Software Development — TeamViewer — rausgeflogen an: Seniorität (Titel)
+
+### Unsicher (73)
+
+- AI Engineer (m/w/d) — AGILOX Services GmbH — unsicher an: Erfahrung
+  - URL: https://www.jobs.at/i/7887116
+- Back End Developer — Ahoi Kapptn! — unsicher an: Erfahrung
+  - URL: https://jobs.ams.at/public/emps/jobs/22376645
+- Backend Developer für Charging-Lösungen (m/w/d) — Fronius Österreich — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/backend-developer-f%C3%BCr-charging-l%C3%B6sungen-m-w-d-at-fronius-%C3%B6sterreich-4423234770
+- Backend Developer (m/w/d) - in Linz - Kotlin / Spring — Optimind — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/backend-developer-m-w-d-in-linz-kotlin-spring-at-optimind-4432250284
+- BACKEND WEB DEVELOPER (m/w/d) — eurofunk Kappacher GmbH — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/backend-web-developer-m-w-d-at-eurofunk-kappacher-gmbh-4321627839
+- Cross Platform Software Developer Flutter/MAUI (m/w/d) — Rosenbauer Group — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/cross-platform-software-developer-flutter-maui-m-w-d-at-rosenbauer-group-4420930401
+- Data Engineer / Developer Data Warehouse & SQL Server für Investmentfonds (m/w/d) — Oberbank — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/data-engineer-developer-data-warehouse-sql-server-f%C3%BCr-investmentfonds-m-w-d-at-oberbank-4402292770
+- Development Engineer (m/f/d) Embedded Software — BRP-Rotax — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/development-engineer-m-f-d-embedded-software-at-brp-rotax-4391096590
+- Elektronik Entwickler / Testingenieur — Akkodis — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/elektronik-entwickler-testingenieur-at-akkodis-4425779234
+- Embedded-Software-Entwickler (m/w/d) — E+E Elektronik Ges.m.b.H — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://www.karriere.at/jobs/10021401
+- Full Stack Developer Back End — Ahoi Kapptn! — unsicher an: Erfahrung
+  - URL: https://jobs.ams.at/public/emps/jobs/22376643
+- Full Stack Developer (m/w/d) — WITRON Gruppe — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-m-w-d-at-witron-group-4420147229
+- Full Stack Developer | SPORTS m/w/x — WINTERSTEIGER Inc. — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-sports-m-w-x-at-wintersteiger-inc-4418782654
+- Full­stack Engi­neer (m/w/d) — BWT Group — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/full%C2%ADstack-engi%C2%ADneer-m-w-d-at-bwt-group-4403615827
+- Full Stack / Web Developer (m/w/x) — EV Group — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/full-stack-web-developer-m-w-x-at-ev-group-4295645097
+- Fullstack-Entwickler:in mit Java Backend und Vue/Nuxt Frontend — STRABAG — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/fullstack-entwickler-in-mit-java-backend-und-vue-nuxt-frontend-at-strabag-4418142917
+- HTL Absolvent/in (m/w/d) — Rosenbauer Group — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/htl-absolvent-in-m-w-d-at-rosenbauer-group-4401792296
+- IT Cloud Division Lehrling — TOMORIS GmbH — unsicher an: Erfahrung
+  - URL: https://www.devjobs.at/job/b38889814a622aa01a5c6791738ab8b4
+- IT Enterprise Systems Lehrling — TOMORIS GmbH — unsicher an: Erfahrung
+  - URL: https://www.devjobs.at/job/250898269d8258f83709bcc5b3ff05c3
+- IT Field Service Lehrling — TOMORIS GmbH — unsicher an: IT-Rolle, Erfahrung, Lehre-Ausrichtung
+  - URL: https://www.devjobs.at/job/152166c9b5c53d92e9063ba8dc042d96
+- IT- Mitarbeiter (m/w/d) mit Schwerpunkt Softwareimplementierung-Digitalisierung — Hubers Landhendl GmbH — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/it-mitarbeiter-m-w-d-mit-schwerpunkt-softwareimplementierung-digitalisierung-at-hubers-landhendl-gmbh-4409057724
+- IT-Risk / IT-Governance Junior Manager — Partner Bank — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://www.devjobs.at/job/002438b43c9a4625a5dbdd52e4fa5551
+- Java Developer (f/m/d) — Mindbreeze — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/java-developer-f-m-d-at-mindbreeze-4391540796
+- Java Software Engineer — Noir — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/java-software-engineer-at-noir-4434427781
+- (Junior) Business Development Manager (m/w/d) —  — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://www.jobs.at/i/7880039
+- Junior Cloud Operations Engineer — CELUM GmbH — unsicher an: Erfahrung
+  - URL: https://www.devjobs.at/job/963ca8de53f70cdc3a7b033b8da7a21b
+- Junior Data Analyst — TD Trusted Decisions GmbH — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://www.devjobs.at/job/19e03d2e6851c58db0294944c6490f46
+- Junior Digitalisierungsexperte für erneuerbare Energien (m/w/d) — Ingenieurbüro mitPlan GmbH — unsicher an: IT-Rolle
+  - URL: https://at.linkedin.com/jobs/view/junior-digitalisierungsexperte-f%C3%BCr-erneuerbare-energien-m-w-d-at-engineering-office-mitplan-4428241067
+- Junior Inhouse Consultant (m/w/d) – SAP Commerce — Wacker Neuson — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://www.karriere.at/jobs/7723322
+- Junior IT Consultant — Hapeko — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://www.devjobs.at/job/3d66ba3ee1534c8a42358c45b5d3b620
+- Junior IT Techniker — Leyrer + Graf — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://www.devjobs.at/job/1e29a7a2f212c1751ada83f8fcbaf56d
+- Junior Javascript & Typescript Backend Engineer — Dynatrace Austria GmbH — unsicher an: Erfahrung
+  - URL: https://jobs.ams.at/public/emps/jobs/22231644
+- Junior Javascript & Typescript Backend Engineer — Dynatrace GmbH — unsicher an: Erfahrung
+  - URL: https://www.devjobs.at/job/3e23496f9c95e33aba673839b4611957
+- Junior Javascript & Typescript Backend Engineer — Dynatrace — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/junior-javascript-typescript-backend-engineer-at-dynatrace-4410787202
+- Junior Javascript & Typescript Engineer — Dynatrace GmbH — unsicher an: Erfahrung
+  - URL: https://www.devjobs.at/job/bccb82b32936c9cd958239c30d0d6cb2
+- Junior-Projektleiter Elektrotechnik (m/w/d) —  — unsicher an: IT-Rolle
+  - URL: https://www.jobs.at/i/7887256
+- Junior-Projektleiter Elektrotechnik (m/w/d) — ETZI-Group GmbH — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://www.karriere.at/jobs/10024285
+- (Junior) Projektleiter/in E-Mobilität — eww Gruppe — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://www.karriere.at/jobs/10023311
+- JUNIOR SOFTWARE ENGINEER (ELECTRICS & AUTOMATION) (M/W) — JK Engineering GmbH — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://jobs.ams.at/public/emps/jobs/21818947
+- Junior Softwareentwickler Für Intelligente Robotik (w/m/d) — KERN engineering careers GmbH — unsicher an: Erfahrung
+  - URL: https://www.karriere.at/jobs/7829963
+- Junior Specialist Information Security Governance — Plasser & Theurer — unsicher an: IT-Rolle
+  - URL: https://www.devjobs.at/job/6fe575ebbc3140a7bf7a163557a14f84
+- Lehre Applikationsentwickler - Coding — Starlim Spritzguss Gmbh — unsicher an: Erfahrung
+  - URL: https://www.devjobs.at/job/57bd5d5d2a4b4cc59a0512c5f9dd1b64
+- Lehre Informationstechnologie & Systemtechnik — Elektroanlagen G. Klampfer GmbH — unsicher an: IT-Rolle, Erfahrung, Lehre-Ausrichtung
+  - URL: https://www.devjobs.at/job/9f54809f83e56cc7260113b953c25b14
+- Lehre Informationstechnologie/Systemtechnik — Rubig — unsicher an: IT-Rolle, Erfahrung, Lehre-Ausrichtung
+  - URL: https://www.devjobs.at/job/b459ddd6526bb8a93d256e621c78dd94
+- Lehre Informationstechnologie/Systemtechnik — RÜBIG GmbH & Co KG — unsicher an: IT-Rolle, Erfahrung, Lehre-Ausrichtung
+  - URL: https://www.devjobs.at/job/b0689e6f0b75a5ba7d55f7e48a0c1e92
+- Lehrling Informationstechnologie - Schwerpunkt Systemtechnik — x-tention Informationstechnologie GmbH — unsicher an: IT-Rolle, Erfahrung, Lehre-Ausrichtung
+  - URL: https://www.devjobs.at/job/b985c63dab5d6058ff3820c7f0acccce
+- Machine Learning & Generative AI Engineer (m/w/d) — Miba Group — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/machine-learning-generative-ai-engineer-m-w-d-at-miba-group-4433329896
+- Mobile Engineer (d/f/m) — hello again — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/mobile-engineer-d-f-m-at-hello-again-4419292383
+- Praktikant Digitalisierung & Softwareentwicklung im Bereich E-Mobilität (w/m/x) — BMW Group — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/praktikant-digitalisierung-softwareentwicklung-im-bereich-e-mobilit%C3%A4t-w-m-x-at-bmw-group-4432252749
+- Praktikant — Ahoi Kapptn! — unsicher an: IT-Rolle
+  - URL: https://www.devjobs.at/job/f6a7b00a64408b75c3ddff6eb74f7caa
+- Praktikum Junior App Manager — hello again GmbH — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://www.devjobs.at/job/f2df89134ffb892d0c889cb853f9f6fa
+- React Native Developer (d/f/m) — hello again — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/react-native-developer-d-f-m-at-hello-again-4421105626
+- React Software Entwickler (f/m/d) — myflexbox — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/react-software-entwickler-f-m-d-at-myflexbox-4425488135
+- Sachbearbeiter/in Webentwicklung und IT-Koordination (m/w/d) — Land Oberösterreich, Amt der OÖ. Landesregierung — unsicher an: Erfahrung
+  - URL: https://www.jobs.at/i/7887837
+- Sachbearbeiter/in Webentwicklung und IT-Koordination — Land Oberösterreich — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://www.karriere.at/jobs/7835417
+- Simulation & Digital Solutions Scientist (m/w/x) — EV Group — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/simulation-digital-solutions-scientist-m-w-x-at-ev-group-4431083703
+- Software Developer/in (m/w/d). — TANNPAPIER GmbH — unsicher an: Erfahrung
+  - URL: https://jobs.ams.at/public/emps/jobs/22159324
+- Software Developer (M/F/D)* — TGW Logistics — unsicher an: IT-Rolle
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-f-d-at-tgw-logistics-4424889537
+- Software Developer (m/w/d) — efinio IT & Engineering — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-w-d-at-efinio-it-engineering-4268563514
+- Software Developer (m/w/d) — moveIT Software GmbH — unsicher an: Erfahrung
+  - URL: https://www.jobs.at/i/7888130
+- Software Developer mit Fokus Cyber Security (w/m/x) — BEKO Solutions GmbH — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/software-developer-mit-fokus-cyber-security-w-m-x-at-beko-solutions-gmbh-4428061189
+- Software Engineer AI-Agents (all genders) — msg — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-ai-agents-all-genders-at-msg-4374069743
+- Software Engineer - Early Career (m/f/x) — Dynatrace — unsicher an: IT-Rolle, Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-early-career-m-f-x-at-dynatrace-4421234524
+- Software Engineer - Early Career — Dynatrace GmbH — unsicher an: Erfahrung
+  - URL: https://www.devjobs.at/job/1e2ff4a9e9c8197c104b77953f2c6b47
+- Software Engineer (m/f/d) — GE HealthCare — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-m-f-d-at-ge-healthcare-4423011705
+- Software-Entwickler:in (M/W/D)* — TGW Logistics — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/software-entwickler-in-m-w-d-at-tgw-logistics-4424893494
+- Software Entwickler (m/w/d) — MAIT for business — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/software-entwickler-m-w-d-at-mait-for-business-4404197045
+- Software Entwickler (m/w/d) — World-Direct eBusiness solutions GmbH — unsicher an: Erfahrung
+  - URL: https://www.jobs.at/i/7888205
+- Software-Entwickler mit Schwerpunkt Embedded Linux (m/w/d) — MEC electronics GmbH — unsicher an: Erfahrung
+  - URL: https://www.jobs.at/i/7876987
+- Software Entwickler .NET-Bereich (m/f/d) – Hagenberg i. M. / Vollzeit — ventopay gmbh — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/software-entwickler-net-bereich-m-f-d-%E2%80%93-hagenberg-i-m-vollzeit-at-ventopay-gmbh-4390343867
+- Softwareentwickler (w/m/d) Robotik/Vision — TRUMPF Maschinen Austria — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-robotik-vision-at-trumpf-maschinen-austria-4390144343
+- System Engineer — Premedia GmbH — unsicher an: Erfahrung
+  - URL: https://www.devjobs.at/job/c26feb63ba5a5a0cab63e6f5ed0126c6
+- WebApp-Development (Linz, AT) — Develite GmbH & Co. KG — unsicher an: Erfahrung
+  - URL: https://at.linkedin.com/jobs/view/webapp-development-linz-at-at-develite-gmbh-co-kg-4434269433
+
+### Sicher (7)
+
+- Applikationsentwickler für C++ / Linux (m/w/d) — Fronius Österreich
+- Backend Deve­loper (m/w/d) — BWT Group
+- Embedded-Software-Entwickler (m/w/d) — E + E Elektronik Ges.m.b.H.
+- Frontend Developer @ APRO Kassensysteme GmbH — DEVjobs
+- Frontend Web Developer*in (m/w/d) — karriere.at GmbH
+- Junior Software Developer — TANNPAPIER GmbH
+- Junior Softwareentwickler - Java (w/m/d) — Kern Engineering Careers
+
+---
