@@ -55,15 +55,16 @@ async function fetchDetailPage(url: string): Promise<string> {
 
 export const linkedinAdapter: ScraperAdapter = {
   name: 'linkedin',
-  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (msg: string) => void) {
+  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (current: number, total: number) => void) {
     const byUrl = new Map<string, ScrapedJob>();
     for (const query of queries) {
       const keyword = query.keyword ?? '';
       const location = query.location ?? 'Österreich';
       if (!keyword) continue;
-      for (const start of PAGES) {
+      for (let pi = 0; pi < PAGES.length; pi++) {
+        const start = PAGES[pi];
         try {
-          onProgress?.(`linkedin — ${keyword} (${start}-${start + 25})...`);
+          onProgress?.(pi + 1, PAGES.length);
           const html = await fetchSearchPage(keyword, location, start);
           for (const job of parseSearchResults(html)) {
             if (!byUrl.has(job.url)) byUrl.set(job.url, job);
@@ -81,7 +82,7 @@ export const linkedinAdapter: ScraperAdapter = {
     const results: ScrapedJob[] = [];
     for (let i = 0; i < total; i++) {
       const job = candidates[i];
-      onProgress?.(`linkedin — Detail ${i + 1}/${total}: ${job.title.slice(0, 40)}`);
+      onProgress?.(i + 1, total);
       try {
         results.push(parseDetailPage(await fetchDetailPage(job.url), job));
       } catch (err) {
