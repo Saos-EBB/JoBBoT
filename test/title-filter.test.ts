@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkTitle } from '../lib/title-filter.ts';
+import { checkTitle, isLehre } from '../lib/title-filter.ts';
 
 test('checkTitle: "Senior Fullstack Developer" → excluded, term "senior"', () => {
   const v = checkTitle('Senior Fullstack Developer');
@@ -42,4 +42,16 @@ test('checkTitle: "Praktikum Junior App Manager" → NICHT excluded (Praktikum e
 
 test('checkTitle: "Junior Javascript & Typescript Backend Engineer" → NICHT excluded', () => {
   assert.strictEqual(checkTitle('Junior Javascript & Typescript Backend Engineer').excluded, false);
+});
+
+test('isLehre: "Lehre Applikationsentwickler" → true', () => {
+  assert.strictEqual(isLehre('Lehre Applikationsentwickler'), true);
+});
+
+test('isLehre: "Lehrling IT-Systemtechnik" → true', () => {
+  assert.strictEqual(isLehre('Lehrling IT-Systemtechnik'), true);
+});
+
+test('isLehre: "Junior Developer" → false', () => {
+  assert.strictEqual(isLehre('Junior Developer'), false);
 });

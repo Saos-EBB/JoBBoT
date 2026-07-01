@@ -18,3 +18,10 @@ export function checkTitle(title: string): TitleVerdict {
   }
   return { excluded: false };
 }
+
+const LEHRE_TERMS = ['lehre', 'lehrling', 'ausbildung'];
+
+export function isLehre(title: string): boolean {
+  const tokens = title.toLowerCase().split(/[^a-zäöüß]+/).filter(Boolean);
+  return tokens.some(token => LEHRE_TERMS.some(t => token.includes(t)));
+}
