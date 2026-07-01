@@ -173,8 +173,8 @@ test('writeFilterReport: schreibt Datei mit Aussortiert + reason', async (t) => 
 
   const job = sample();
   const decisions = [
-    { job, outcome: 'filtered_out' as const, reason: 'Senior-Rolle, >3 Jahre' },
-    { job: { ...job, title: 'Frontend Dev' }, outcome: 'matched' as const, reason: 'Junior ok' },
+    { job, outcome: 'filtered_out' as const, reason: 'Senior-Rolle, >3 Jahre', source: 'llm' as const },
+    { job: { ...job, title: 'Frontend Dev' }, outcome: 'matched' as const, reason: 'Junior ok', source: 'llm' as const },
   ];
 
   writeFilterReport(decisions, reportPath);
@@ -192,8 +192,8 @@ test('writeFilterReport: append-Modus (zwei Läufe → beide Header)', async (t)
   const reportPath = join(dir, 'filter-log.md');
 
   const job = sample();
-  writeFilterReport([{ job, outcome: 'matched', reason: 'ok' }], reportPath);
-  writeFilterReport([{ job, outcome: 'matched', reason: 'ok' }], reportPath);
+  writeFilterReport([{ job, outcome: 'matched', reason: 'ok', source: 'llm' }], reportPath);
+  writeFilterReport([{ job, outcome: 'matched', reason: 'ok', source: 'llm' }], reportPath);
 
   const content = readFileSync(reportPath, 'utf8');
   const matches = content.match(/## Filter-Lauf/g) ?? [];

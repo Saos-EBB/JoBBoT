@@ -1,6 +1,7 @@
 import type { Job } from '../scrapers/interface.ts';
 import type { Storage } from '../storage/index.ts';
 import { config } from '../config.ts';
+import { checkTitle } from './title-filter.ts';
 
 const SYSTEM = `Du bist ein Jobsuche-Assistent. Entscheide ob eine Stellenanzeige für einen Junior-Entwickler oder Berufseinsteiger geeignet ist.
 Antworte NUR mit einem JSON-Objekt, sonst nichts: {"match": true|false, "reason": "kurze Begründung (max 20 Wörter)"}`;
@@ -9,6 +10,8 @@ export interface FilterDecision {
   job: Job;
   outcome: 'matched' | 'filtered_out' | 'skipped';
   reason: string;
+  source: 'title-rule' | 'llm';
+  term?: string;
 }
 
 export function buildFilterPrompt(job: Job): string {
@@ -46,17 +49,17 @@ export async function filterJob(job: Job, storage: Storage, ollama = config.olla
       }),
     });
     if (!res.ok) {
-      return { job, outcome: 'skipped', reason: `Ollama HTTP ${res.status}` };
+      return { job, outcome: 'skipped', reason: `Ollama HTTP ${res.status}`, source: 'llm' };
     }
     const data = await res.json() as { message?: { content?: string } };
     raw = data?.message?.content ?? '';
   } catch (err) {
-    return { job, outcome: 'skipped', reason: `Netzwerkfehler: ${String(err)}` };
+    return { job, outcome: 'skipped', reason: `Netzwerkfehler: ${String(err)}`, source: 'llm' };
   }
 
   const parsed = parseFilterResponse(raw);
   if (!parsed) {
-    return { job, outcome: 'skipped', reason: 'LLM-Antwort nicht parsebar' };
+    return { job, outcome: 'skipped', reason: 'LLM-Antwort nicht parsebar', source: 'llm' };
   }
 
   job.match = { ok: parsed.match, reason: parsed.reason };
@@ -65,10 +68,25 @@ export async function filterJob(job: Job, storage: Storage, ollama = config.olla
   if (parsed.match) {
     job.status = 'matched';
     await storage.save(job);
-    return { job, outcome: 'matched', reason: parsed.reason };
+    return { job, outcome: 'matched', reason: parsed.reason, source: 'llm' };
   } else {
     job.status = 'filtered_out';
     await storage.delete(job.id);
-    return { job, outcome: 'filtered_out', reason: parsed.reason };
+    return { job, outcome: 'filtered_out', reason: parsed.reason, source: 'llm' };
   }
+}
+
+// Läuft dem LLM-Call vorweg: eindeutige Ausschlüsse (Senior, Lehre) spart den
+// Ollama-Roundtrip und ist deterministisch statt vom 3b-Modell abhängig.
+export async function decideJob(job: Job, storage: Storage, ollama = config.ollamaHost): Promise<FilterDecision> {
+  const titleVerdict = checkTitle(job.title);
+  if (titleVerdict.excluded) {
+    const reason = `Titel-Ausschluss: '${titleVerdict.term}'`;
+    job.match = { ok: false, reason };
+    job.status = 'filtered_out';
+    job.updatedAt = new Date().toISOString();
+    await storage.delete(job.id);
+    return { job, outcome: 'filtered_out', reason, source: 'title-rule', term: titleVerdict.term };
+  }
+  return filterJob(job, storage, ollama);
 }

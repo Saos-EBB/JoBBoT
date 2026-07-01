@@ -1,5 +1,5 @@
 import { createStorage } from '../storage/index.ts';
-import { filterJob } from '../lib/filter.ts';
+import { decideJob } from '../lib/filter.ts';
 import { writeFilterReport } from '../lib/filter-report.ts';
 import { sleep } from '../lib/fetch-page.ts';
 import type { FilterDecision } from '../lib/filter.ts';
@@ -22,11 +22,13 @@ console.log(`Filtere ${jobs.length} Job(s)...\n`);
 const decisions: FilterDecision[] = [];
 for (let i = 0; i < jobs.length; i++) {
   const job = jobs[i];
-  const d = await filterJob(job, storage);
+  const d = await decideJob(job, storage);
   decisions.push(d);
 
   if (d.outcome === 'matched') {
     console.log(green(`✓ matched      — ${d.job.title} — ${d.job.company}`));
+  } else if (d.outcome === 'filtered_out' && d.source === 'title-rule') {
+    console.log(red(`✗ Titel-Regel  — ${d.job.title} ('${d.term}')`));
   } else if (d.outcome === 'filtered_out') {
     console.log(red(`✗ filtered_out — ${d.job.title} — ${d.job.company} (${d.job.location ?? ''})`));
     console.log(`    Grund: ${d.reason}`);
@@ -35,7 +37,8 @@ for (let i = 0; i < jobs.length; i++) {
     console.log(yellow(`… skipped      — ${d.job.title} (${d.reason})`));
   }
 
-  if (i < jobs.length - 1) await sleep(500);
+  // Titel-Regel macht keinen Ollama-Call, keine Pause nötig
+  if (i < jobs.length - 1 && d.source !== 'title-rule') await sleep(500);
 }
 
 const matched  = decisions.filter(d => d.outcome === 'matched').length;
