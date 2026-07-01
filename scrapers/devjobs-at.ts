@@ -82,6 +82,7 @@ export async function fetchRemixContext(url: string): Promise<unknown> {
 
 export const devJobsAtAdapter: ScraperAdapter = {
   name: 'devjobs.at',
+  kind: 'browser',
   async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (current: number, total: number) => void) {
     const baseJobs: ScrapedJob[] = [];
     for (const query of queries) {

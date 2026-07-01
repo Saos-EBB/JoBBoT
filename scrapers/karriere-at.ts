@@ -71,6 +71,7 @@ async function fetchDetailPage(url: string): Promise<string> {
 
 export const karriereAtAdapter: ScraperAdapter = {
   name: 'karriere.at',
+  kind: 'fetch',
   async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (current: number, total: number) => void) {
     const byUrl = new Map<string, ScrapedJob>();
     for (let qi = 0; qi < queries.length; qi++) {

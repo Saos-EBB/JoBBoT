@@ -55,6 +55,7 @@ async function fetchDetailPage(url: string): Promise<string> {
 
 export const linkedinAdapter: ScraperAdapter = {
   name: 'linkedin',
+  kind: 'fetch', // nutzt fetchPage() (plain HTTP), kein Playwright-Browser
   async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (current: number, total: number) => void) {
     const byUrl = new Map<string, ScrapedJob>();
     for (const query of queries) {
