@@ -7,6 +7,7 @@ import type { ScrapedJob } from '../scrapers/interface.ts';
 const FIXTURES = 'test/fixtures/jobs-at';
 const searchHtml = readFileSync(`${FIXTURES}/search.html`, 'utf8');
 const detailHtml = readFileSync(`${FIXTURES}/detail.html`, 'utf8');
+const detailNoJsonLdHtml = readFileSync(`${FIXTURES}/detail-no-jsonld.html`, 'utf8');
 
 const baseJob: Partial<ScrapedJob> = {
   source: 'jobs.at',
@@ -66,6 +67,21 @@ test('parseDetailPage: "" → kein throw, baut aus base zusammen', () => {
   assert.strictEqual(job.title, baseJob.title);
   assert.strictEqual(job.company, baseJob.company);
   assert.strictEqual(job.description, '');
+});
+
+test('parseDetailPage: kein JSON-LD, aber c-job-detail-text-Artikel → description aus HTML-Fallback', () => {
+  const job = parseDetailPage(detailNoJsonLdHtml, {
+    source: 'jobs.at',
+    url: 'https://www.jobs.at/i/7881491',
+    title: 'Embedded-Software-Entwickler (m/w/d)',
+    company: 'E + E Elektronik Ges.m.b.H.',
+    location: 'Engerwitzdorf',
+  });
+  assert.ok(job.description.length > 0, 'description sollte aus dem HTML-Artikel kommen');
+  assert.ok(job.description.includes('E+E Elektronik'), 'erwarteter Inhalt fehlt');
+  // Titel/Firma/Ort kommen aus der base-Karte, da kein JSON-LD vorhanden ist
+  assert.strictEqual(job.title, 'Embedded-Software-Entwickler (m/w/d)');
+  assert.strictEqual(job.company, 'E + E Elektronik Ges.m.b.H.');
 });
 
 test('parseDetailPage: kaputtes HTML ohne JSON-LD → kein throw, Fallback auf base', () => {

@@ -84,6 +84,14 @@ export function parseDetailPage(html: string, base: Partial<ScrapedJob>): Scrape
       postedAt: ld.datePosted ?? null,
     };
   }
+
+  // Kein JSON-LD gefunden — in der Praxis der häufigere Fall, nicht die Ausnahme (nur
+  // ein Teil der Inserate hat strukturierte Daten). Tier-(d)-Fallback: Beschreibung aus
+  // dem plain-HTML-Artikel holen statt sie leer zu lassen.
+  const descMatch = html.match(/<article class="c-job-detail-text"[^>]*>([\s\S]*?)<\/article>/);
+  if (descMatch) {
+    return { ...fallback, description: descMatch[1].trim() };
+  }
   return fallback;
 }
 
