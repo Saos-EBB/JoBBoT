@@ -86,3 +86,12 @@ Fixture: `test/fixtures/jobs-at/detail.html` (182.326 Bytes).
 - `test/fixtures/jobs-at/detail.html` (182.326 Bytes)
 
 Insgesamt 3 Requests (robots.txt + Suche + Detail), UA wie vereinbart, ~2s Abstand, 10s Timeout.
+
+## Vergleich jobs.at vs. willhaben (siehe FINDINGS-willhaben.md)
+
+| Quelle | robots.txt | Bot-Schutz | Datenquelle | plain fetch? | Aufwand |
+|---|---|---|---|---|---|
+| jobs.at | erlaubt (`Disallow:` leer für `*`) | keiner | Suche: HTML-Karten mit `data-*`-Attributen · Detail: JSON-LD `JobPosting` | Ja | gering — 1:1 wie `karriere-at.ts` |
+| willhaben | Suche disallowed (`/jobs/suche?*`, `/*?*keyword=*`, `/jobs/webapi/`) + pauschales Bot-Verbot am Dateianfang | nicht getestet (gestoppt vor Suche) | nicht geprüft | nicht relevant | — nicht scrapbar |
+
+**Empfehlung:** jobs.at als nächsten Adapter bauen — reines `plain fetch` + Regex/JSON-Parsing, kein Playwright, gleiche Bauweise wie `scrapers/karriere-at.ts` (Suchseite für IDs, Detailseite für JSON-LD). willhaben komplett auslassen, robots.txt verbietet genau den Suchpfad, den der Bot bräuchte — kein Umgehen versucht.
