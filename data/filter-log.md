@@ -1,0 +1,138 @@
+
+## Filter-Lauf 2026-06-30 09:48  (matched: 7, aussortiert: 29, skipped: 1)
+
+
+### Aussortiert
+
+- **Embedded-Software-Entwickler (m/w/d)** — E+E Elektronik Ges.m.b.H — Engerwitzdorf
+  - Grund: Titel enthält keinen Hinweis auf Junior-/Berufseinsteiger-Stelle
+  - URL: https://www.karriere.at/jobs/10021401
+  - Snippet: <p>Willkommen bei <strong>E+E Elektronik</strong>! Wir sind die <strong>Spezialisten</strong> für Sensoren und Messgeräte für Feuchte, CO₂, Feuchte in
+- **IT Cloud Division Lehrling** — TOMORIS GmbH — Marchtrenk
+  - Grund: Titel enthält 'Lehrling', was eine Künstliche Intelligenz nicht als Junior/Entwickler-Position interpretieren kann.
+  - URL: https://www.devjobs.at/job/b38889814a622aa01a5c6791738ab8b4
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Du wirst Teil unserer Cloud Division, also jenes Teams, das Unternehmen in die moderne Arbeitswelt bringt - mit 
+- **IT Enterprise Systems Lehrling** — TOMORIS GmbH — Marchtrenk
+  - Grund: Titel enthält 'Lehrling', der Begriff bezieht sich auf eine Berufsausbildung und wäre für ein Junior/Einsteiger-Posten nicht angemessen.
+  - URL: https://www.devjobs.at/job/250898269d8258f83709bcc5b3ff05c3
+  - Snippet: <h2>Deine Rolle im Team</h2>  <p>Du wirst Teil unseres Network Intelligence Teams, einem Bereich, der hochspezialisierte IT-Infrastruktur betreibt und
+- **IT Field Service Lehrling** — TOMORIS GmbH — Marchtrenk
+  - Grund: Titel enthält 'Lehrjahr', aber keine spezifische Angabe zu Berufsniveau oder Erfahrungsausstattung.
+  - URL: https://www.devjobs.at/job/152166c9b5c53d92e9063ba8dc042d96
+  - Snippet: <h2>Deine Rolle im Team</h2>  <p>Du wirst Teil unseres Field-Service-Teams und arbeitest eng mit unseren Cloud-, Enterprise- und Networking-Engineers 
+- **IT-Risk / IT-Governance Junior Manager** — Partner Bank — Linz
+  - Grund: Titel beschreibt eine Rolle als Junior Manager, jedoch ist die Beschreibung nicht spezifisch für ein IT-Risk/Business Impact Analyst oder ISMS Expert post-Junior.
+  - URL: https://www.devjobs.at/job/002438b43c9a4625a5dbdd52e4fa5551
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Sie möchten unsere externe IT-Risk-Beratung in der Durchführung von Risikoanalysen, IT-Risk Assessments und Busi
+- **Junior Cloud Operations Engineer** — CELUM GmbH — Linz
+  - Grund: Titel enthält 'Junior', aber Beschreibung beinhaltet viele Kompetenzen und Aufgaben, die auch für eine Senior/Lead-Stelle zutreffen.
+  - URL: https://www.devjobs.at/job/963ca8de53f70cdc3a7b033b8da7a21b
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Als Cloud Operations Engineer bei CELUM bist du Teil unseres internen Operation-Teams und sorgst dafür, dass uns
+- **Junior Data Analyst** — TD Trusted Decisions GmbH — Wels
+  - Grund: Titel enthält 'Data Analyst', nicht 'Entwickler'; Firma fehlt; Qualifikationen erwarten Senior/Lead/-Developer-Empfänge
+  - URL: https://www.devjobs.at/job/19e03d2e6851c58db0294944c6490f46
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Du wirst Teil eines dynamischen Teams, das ausgereifte Applikationen für die Analyse von Unternehmensdaten entwi
+- **Junior Inhouse Consultant (m/w/d) – SAP Commerce** — Wacker Neuson — Hörsching
+  - Grund: Titel enthält 'Junior', aber beschäftigt sich mit SAP Commerce (nicht Java oder C++)
+  - URL: https://www.karriere.at/jobs/7723322
+  - Snippet: <p><strong>Willkommen bei Wacker Neuson</strong>, einem weltweit führenden Anbieter von Baugeräten und Kompaktmaschinen. In unserer Corporate IT entwi
+- **Junior IT Consultant** — Hapeko — Linz
+  - Grund: Titel enthält 'Junior' - könnte als Einsteiger-Stelle interpretiert werden
+  - URL: https://www.devjobs.at/job/3d66ba3ee1534c8a42358c45b5d3b620
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Unterstützung bei der Umsetzung von Softwareprojekten bei Industrieunternehmen im DACH-Raum.</li> <li>Mitarbeit 
+- **Junior IT Techniker** — Leyrer + Graf — Traun
+  - Grund: Titel endet mit 'Techniker' und nicht 'Entwickler', daher könnte es ein Junior/Entwickler-Stellenanzeige sein, aber die Beschreibung deutet eher auf eine IT-Technik-Stelle hin.
+  - URL: https://www.devjobs.at/job/1e29a7a2f212c1751ada83f8fcbaf56d
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Als Cloud Engineer sind Sie in einem modernen, hybriden IT-Umfeld tätig und leisten einen wesentlichen Beitrag z
+- **Junior-Projektleiter Elektrotechnik (m/w/d)** — ETZI-Group GmbH — Ried im Traunkreis
+  - Grund: Titel enthält 'Junior-Projektleiter', was als Verwendung für ein Junior-/Berufseinsteiger-Stellendesign erkannt wird.
+  - URL: https://www.karriere.at/jobs/10024285
+  - Snippet: <p>Wir sind ein seit mehr als 30 Jahren bestehendes, österreichisches Familienunternehmen. Durch unsere ausgezeichnete Qualität sind wir Marktführer i
+- **(Junior) Projektleiter/in E-Mobilität** — eww Gruppe — Wels
+  - Grund: Titel enthält 'Projektleiter/in', was eher an eine senioren Position als junior/berufseinsteiger angepasst erscheint
+  - URL: https://www.karriere.at/jobs/10023311
+  - Snippet: <p>Als umfassender Elektrotechnik-Dienstleister realisiert die eww Anlagentechnik GmbH mit der Marke emobil.link innovative Projekte in der E-Mobilitä
+- **Junior Specialist Information Security Governance** — Plasser & Theurer — Linz
+  - Grund: Titel beinhaltet 'Specialist' - könnte auf einen höheren Stellenrang hinweisen
+  - URL: https://www.devjobs.at/job/6fe575ebbc3140a7bf7a163557a14f84
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Unterstützung bei der Erstellung und Aktualisierung von ISM-Richtlinien, Standards und Vorgaben</li> <li>Vorbere
+- **Lehre Applikationsentwickler - Coding** — Starlim Spritzguss Gmbh — Marchtrenk
+  - Grund: Titel enthält 'Entwickler' und nicht 'Junior', Anforderungen sind höher als für einen Einsteiger
+  - URL: https://www.devjobs.at/job/57bd5d5d2a4b4cc59a0512c5f9dd1b64
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Als Applikationsentwickler (m/w/d) arbeitest du bei der Entwicklung und Wartung von Software-Systemen mit.</li> 
+- **Lehre Informationstechnologie/Systemtechnik** — Rubig — Wels
+  - Grund: Titel nicht spezifiziert als Junior/Einsteiger
+  - URL: https://www.devjobs.at/job/b459ddd6526bb8a93d256e621c78dd94
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Arbeiten und Lernen im Tagesgeschäft.</li> <li>Installation und Inbetriebnahme von IT-Hard- und Software.</li> <
+- **Lehrling Informationstechnologie - Schwerpunkt Systemtechnik** — x-tention Informationstechnologie GmbH — Wels
+  - Grund: Titel enthält 'Lehrling' - deutet darauf hin, dass dies eine Ausbildungs-/Berufsausbildungsstelle ist, nicht eine Junior-Stelle.
+  - URL: https://www.devjobs.at/job/b985c63dab5d6058ff3820c7f0acccce
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Automatisierte Installation und Konfiguration von Hardware.</li> <li>Softwareverteilung und Updatemanagement.</l
+- **Lehrling IT-Systemtechnik** — CANCOM a+d IT Solutions GmbH — Leonding
+  - Grund: Titel enthält Pflichtschule und Schüler_in, deutet darauf hin, dass es sich eher um eine Ausbildungs-/Lehrlingsposition handelt.
+  - URL: https://www.devjobs.at/job/11fbee9ef900a84cee67c907ee9b133b
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Kundenberatung zu Hardware, Software und Security</li> <li>Planen von Netzwerken, Server- und Datenspeicher</li>
+- **Lehrling IT-Systemtechnik** — Mann & Mouse IT-Services GmbH — Leonding
+  - Grund: Titel 'Lehrling IT-Systemtechnik' deutet auf eine Ausbildungsstelle hin und nicht auf eine Junior-/Berufseinsteiger-Stelle
+  - URL: https://www.devjobs.at/job/d05251de3fbedd70e574dc62156a25e0
+  - Snippet: <h2>Deine Rolle im Team</h2>  <p>In deiner Ausbildungszeit bist du Mitglied unseres Service Desks und unterstützt nach deiner Einarbeitungszeit das Te
+- **Praktikant** — Ahoi Kapptn! — Linz
+  - Grund: Titel enthält 'Pflichtpraktika', macht die Stelle nicht spezifisch für Junior/Entwickler
+  - URL: https://www.devjobs.at/job/f6a7b00a64408b75c3ddff6eb74f7caa
+  - Snippet: <h2>Deine Rolle im Team</h2>  <p>Setz mit uns die Segel Richtung Innovation: Bei Ahoi Kapptn! bist du der Zeit einen Schritt voraus. Wir integrieren K
+- **Praktikum Junior App Manager** — hello again GmbH — Leonding
+  - Grund: Titel enthält 'Praktikant' - könnte als Junior-Einsteiger-Stelle interpretiert werden, aber fehlen sind klarer Ausschlusskriterien wie Senior/Lead/Principal im Titel oder >3 Jahre Erfahrung gefordert.
+  - URL: https://www.devjobs.at/job/f2df89134ffb892d0c889cb853f9f6fa
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Als Praktikant:in im Fulfillment-Team bist du direkt im Maschinenraum unserer Systeme aktiv: Du arbeitest intens
+- **Senior Frontend Developer (w/m/x)** — epunkt GmbH — Wels
+  - Grund: Titel 'Senior Frontend Developer' deutet auf eine fortgeschrittene Position hin.
+  - URL: https://www.karriere.at/jobs/7806338
+  - Snippet: <h1>Senior Frontend Developer (w/m/x)</h1> <h3>im Bereich erneuerbarer Energien</h3> <p>Wels </p>  <p>4.500 EUR </p>  <p>1 Tag in der Woche </p> <p>Vo
+- **Senior Fullstack Developer (d/m/w)** — EBCONT — Linz
+  - Grund: Senior/Titel und keiner junior/einsteiger geeignet
+  - URL: https://www.karriere.at/jobs/7760867
+  - Snippet: <h1>Senior Fullstack Developer (d/m/w) *</h1> <p>Linz </p> <p>Vollzeit </p> <p>*Als internationales Familienunternehmen ist uns Diversität sehr wichti
+- **Senior Java Developer (d/w/m)** — EBCONT — Linz
+  - Grund: Senior im Titel und >3 Jahre Erfahrung gefordert
+  - URL: https://www.karriere.at/jobs/7760870
+  - Snippet: <h1>Senior Java Developer (d/w/m) *</h1> <p>Linz </p> <p>Vollzeit </p> <p>*Als internationales Familienunternehmen ist uns Diversität sehr wichtig. Fü
+- **Senior Java Entwickler & Project Lead (w/m/x)** — epunkt GmbH — Linz
+  - Grund: Senior/Titel und Fehlender Jobbereich
+  - URL: https://www.karriere.at/jobs/7777286
+  - Snippet: <h1>Senior Java Entwickler & Project Lead (w/m/x)</h1> <h3>Hier werden Innovationen für die weltweite Industrie geschaffen! #java #experts# weneedyou<
+- **Senior Software Developer – Development Tools (w/m/d)** — Fabasoft — Linz
+  - Grund: Titel 'Senior Software Developer' deutet auf eine fortgeschrittene Position hin
+  - URL: https://www.karriere.at/jobs/10024173
+  - Snippet: <p>Exzellente Software entsteht dort, wo talentierte Entwickler:innen auf die richtigen Werkzeuge treffen. Du möchtest genau diese Werkzeuge gestalten
+- **Software Entwickler:in (m/w/d)** — Hainzl Industriesysteme GmbH — Linz
+  - Grund: kein klar Hinweis auf Junior/Berufseinsteiger
+  - URL: https://www.karriere.at/jobs/7804202
+  - Snippet: <h2>Software Entwickler:in (m/w/d)</h2> <h3>Tech stack: C/C++, C# oder Java</h3> <p>Starten Sie Ihre Karriere im #Teamhainzl </p> <p>Uns und unsere Pr
+- **Softwareentwickler:in – Schwerpunkt AI (w/m/d)** — Fabasoft — Linz
+  - Grund: Titel enthält 'Softwareentwickler' und nicht 'Junior-Entwickler/Berufseinsteiger', die Erforderung von >3 Jahren ist fehlensetzend, aber keine direkten Ausschlusskriterien sind erreicht.
+  - URL: https://www.karriere.at/jobs/10019797
+  - Snippet: <p>Du begeisterst dich für Digitalisierung und Industrie 4.0 und suchst eine neue Herausforderung? Du möchtest Unternehmen dabei unterstützen, ihre Qu
+- **System Engineer** — Premedia GmbH — Linz
+  - Grund: Titel 'System Engineer' zeigt Erfahrung und Verantwortung an, was eher auf eine Stelle für einen Senior- oder Lead-Beruf hinweist.
+  - URL: https://www.devjobs.at/job/c26feb63ba5a5a0cab63e6f5ed0126c6
+  - Snippet: <h2>Deine Rolle im Team</h2>  <ul><li>Als System Engineer bei Premedia bist du Teil unseres IT Hub und sorgst gemeinsam mit deinem Team für einen stab
+- **Web-Developer:in & Softwarearchitekt:in** — Expertis Gruppe — Linz
+  - Grund: Titel beinhaltet 'Softwarearchitekt' - impliziert größere Erfahrung
+  - URL: https://www.karriere.at/jobs/7805927
+  - Snippet: <h2>Web-Developer:in & Softwarearchitekt:in</h2> <h3><strong>Linz | Muldenstraße | 37 Wochenstunden</strong></h3> <p>Wir entwickeln und betreiben Web-
+
+### Behalten
+
+- Junior Javascript & Typescript Backend Engineer — Dynatrace GmbH — Linz
+- Junior Javascript & Typescript Engineer — Dynatrace GmbH — Linz
+- Junior Software Developer — TANNPAPIER GmbH — Traun
+- Lehre Informationstechnologie & Systemtechnik — Elektroanlagen G. Klampfer GmbH — Leonding
+- Lehre Informationstechnologie/Systemtechnik — RÜBIG GmbH & Co KG — Marchtrenk
+- Lehre IT-Systemtechniker — EREMA Group — Ansfelden
+- Software Engineer - Early Career — Dynatrace GmbH — Linz
+
+### Skipped
+
+- Junior Softwareentwickler Für Intelligente Robotik (w/m/d) — KERN engineering careers GmbH  (Grund: LLM-Antwort nicht parsebar)
+
+---
