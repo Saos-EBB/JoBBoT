@@ -81,8 +81,8 @@ export async function generateAnschreiben(
   ollama = config.ollamaHost,
   anschreibenDir?: string,
 ): Promise<string | null> {
-  if (job.status !== 'matched') {
-    console.warn(`[anschreiben] job ${job.id} hat status "${job.status}", erwartet "matched"`);
+  if (job.status !== 'matched' && job.status !== 'uncertain') {
+    console.warn(`[anschreiben] job ${job.id} hat status "${job.status}", erwartet "matched" oder "uncertain"`);
     return null;
   }
 

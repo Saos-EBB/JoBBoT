@@ -151,6 +151,22 @@ test('generateAnschreiben: leerer Response → status bleibt "matched", path nul
   assert.strictEqual(path, null);
 });
 
+test('generateAnschreiben: status "uncertain" → wird auch verarbeitet (nicht nur "matched")', async (t) => {
+  const dir = await tmpDir();
+  const anschreibenDir = await tmpDir();
+  t.after(() => { rmTmp(dir); rmTmp(anschreibenDir); });
+  const storage = createStorage(dir);
+  const job = { ...sample(), status: 'uncertain' as const };
+  await storage.save(job);
+
+  const { url, close } = await mockChat(VALID_LETTER);
+  t.after(close);
+
+  const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir);
+  assert.strictEqual(job.status, 'generated');
+  assert.ok(path !== null, 'expected path to be returned');
+});
+
 test('generateAnschreiben: status !== "matched" → kein Ollama-Call', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
