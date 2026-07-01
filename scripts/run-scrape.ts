@@ -4,11 +4,10 @@ import { linkedinAdapter } from '../scrapers/linkedin.ts';
 import { amsAdapter } from '../scrapers/ams.ts';
 import { jobsAtAdapter } from '../scrapers/jobs-at.ts';
 import { createStorage } from '../storage/index.ts';
-import { toJob } from '../lib/normalize.ts';
-import { jobId } from '../lib/hash.ts';
 import { loadSources } from '../lib/sources.ts';
 import { loadLocationConfig, isInRange } from '../lib/location.ts';
 import { createAggregateProgress } from '../lib/progress.ts';
+import { runScrape } from '../lib/scrape-runner.ts';
 import type { ScraperAdapter, ScrapedJob } from '../scrapers/interface.ts';
 
 const registry: Record<string, ScraperAdapter> = {
@@ -49,39 +48,22 @@ if (activeNames.length === 0) {
   process.exit(0);
 }
 
-// STEP 1: alle Quellen parallel, allSettled statt Promise.all — eine gescheiterte
-// Quelle darf die anderen nicht abbrechen. Die 2s-Höflichkeitspausen + sequenziellen
-// Detail-Fetches INNERHALB jedes Adapters bleiben unverändert.
 const prog = createAggregateProgress(activeNames);
-const settled = await Promise.allSettled(
-  activeNames.map(name => registry[name].scrape(
-    sources[name].queries,
-    keep,
-    (current, total) => prog.report(name, current, total),
-  )),
-);
+const outcomes = await runScrape({
+  names: activeNames,
+  registry,
+  queriesFor: name => sources[name].queries,
+  keep,
+  storage,
+  onProgress: (name, current, total) => prog.report(name, current, total),
+});
 prog.stop();
 
-// STEP 2: erst NACH allSettled sequenziell dedup + save — verhindert Write-Races,
-// wenn dieselbe Stelle über zwei Quellen reinkommt (gleiche jobId).
 let newTotal = 0, skipTotal = 0;
-for (let i = 0; i < activeNames.length; i++) {
-  const name = activeNames[i];
-  const result = settled[i];
-
-  if (result.status === 'rejected') {
-    console.log(`✗ ${name}: Fehler — ${result.reason}`);
-    continue;
-  }
-
-  let newSrc = 0, skipSrc = 0;
-  for (const scraped of result.value) {
-    const id = jobId(scraped);
-    if (await storage.exists(id)) { skipSrc++; }
-    else { await storage.save(toJob(scraped)); newSrc++; }
-  }
-  console.log(`✓ ${name}: ${newSrc} neu, ${skipSrc} dedup`);
-  newTotal += newSrc; skipTotal += skipSrc;
+for (const o of outcomes) {
+  if (!o.ok) { console.log(`✗ ${o.name}: Fehler — ${o.error}`); continue; }
+  console.log(`✓ ${o.name}: ${o.newCount} neu, ${o.skipCount} dedup`);
+  newTotal += o.newCount; skipTotal += o.skipCount;
 }
 
 console.log(`\nGesamt: ${newTotal} neu, ${skipTotal} dedup.`);
