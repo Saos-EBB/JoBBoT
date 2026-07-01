@@ -1,53 +1,37 @@
 import type { Job } from '../scrapers/interface.ts';
 import { checkTitle, isLehre } from './title-filter.ts';
-import { buildStageInput } from './job-text.ts';
-import { judgeJob } from './filter-llm.ts';
-import type { FilterJudgment } from './filter-llm.ts';
-import { config } from '../config.ts';
+import { createLlmStrategy } from './filter-llm.ts';
+import { regexStrategy } from './filter-regex.ts';
+import { loadSettings } from './settings.ts';
+import type { FilterMode } from './settings.ts';
+import type { Decision, FilterStrategy } from './filter-types.ts';
 
-export interface Decision {
-  status: 'matched' | 'uncertain' | 'filtered_out';
-  rejectedBy?: string;
-  judgment?: FilterJudgment;
-}
-
-export type Judge = (jobInput: string, isLehre: boolean) => Promise<FilterJudgment | null>;
+export type { Decision, FilterStrategy } from './filter-types.ts';
+export type { FilterMode } from './settings.ts';
 
 export interface DecideOptions {
-  judge?: Judge;
+  strategy?: FilterStrategy;
+  mode?: FilterMode;
   ollama?: string;
 }
 
-function hasUnsicher(j: FilterJudgment): boolean {
-  return j.it_rolle === 'unsicher' || j.erfahrung_ab_3j_erforderlich === 'unsicher' || j.lehre_coding === 'unsicher';
+export function resolveStrategy(mode?: FilterMode, ollama?: string): FilterStrategy {
+  const m = mode ?? loadSettings().filterMode;
+  if (m === 'llm') return createLlmStrategy({ ollama });
+  if (m === 'regex') return regexStrategy;
+  throw new Error(`Ungültiger filterMode: "${m}". Gültige Werte: llm, regex`);
 }
 
-// Deterministische Gates vor dem 7b-Call: Titel-Seniorität spart den Call komplett.
-// Danach EIN strukturiertes Urteil, das Code auf drei Fächer mappt. "unsicher" bzw.
-// ein Parse-Fehler (judgment === null) zählt NIE als Reject — recall-sicher bleiben.
+// Deterministische Gates vor jeder Strategie: Titel-Seniorität spart den Call komplett,
+// isLehre wird für beide Modi einmal berechnet. Danach übernimmt die gewählte Strategie
+// (llm oder regex) — dieselbe Decision-Form, downstream unverändert.
 export async function decide(job: Job, options: DecideOptions = {}): Promise<Decision> {
-  const ollama = options.ollama ?? config.ollamaHost;
-  const judge: Judge = options.judge ?? ((input, lehre) => judgeJob(input, lehre, ollama));
-
   const titleVerdict = checkTitle(job.title);
   if (titleVerdict.excluded) {
     return { status: 'filtered_out', rejectedBy: 'Seniorität (Titel)' };
   }
 
   const lehre = isLehre(job.title);
-  const input = buildStageInput(job);
-  const judgment = await judge(input, lehre);
-
-  if (!judgment) {
-    return { status: 'uncertain' };
-  }
-
-  if (judgment.it_rolle === 'nein') return { status: 'filtered_out', rejectedBy: 'IT-Rolle', judgment };
-  if (judgment.erfahrung_ab_3j_erforderlich === 'ja') return { status: 'filtered_out', rejectedBy: 'Erfahrung ≥3J', judgment };
-  if (lehre && judgment.lehre_coding === 'nein') return { status: 'filtered_out', rejectedBy: 'Lehre nicht coding', judgment };
-
-  if (judgment.junior_signal === 'ja' && !hasUnsicher(judgment)) {
-    return { status: 'matched', judgment };
-  }
-  return { status: 'uncertain', judgment };
+  const strategy = options.strategy ?? resolveStrategy(options.mode, options.ollama);
+  return strategy.decide(job, lehre);
 }

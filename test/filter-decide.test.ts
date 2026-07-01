@@ -1,8 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { decide } from '../lib/filter-decide.ts';
-import type { Judge } from '../lib/filter-decide.ts';
-import type { FilterJudgment } from '../lib/filter-llm.ts';
+import { decide, resolveStrategy } from '../lib/filter-decide.ts';
+import type { FilterStrategy, Decision } from '../lib/filter-types.ts';
 import { toJob } from '../lib/normalize.ts';
 
 const sample = (title = 'Junior Developer') => toJob({
@@ -13,87 +12,68 @@ const sample = (title = 'Junior Developer') => toJob({
   description: 'Anforderungen: TypeScript-Kenntnisse.',
 });
 
-const judgment = (overrides: Partial<FilterJudgment> = {}): FilterJudgment => ({
-  it_rolle: 'ja',
-  erfahrung_ab_3j_erforderlich: 'nein',
-  lehre_coding: 'n/a',
-  junior_signal: 'ja',
-  ...overrides,
-});
-
-function mockJudge(result: FilterJudgment | null): { judge: Judge; calls: () => number } {
-  let calls = 0;
-  const judge: Judge = async () => { calls++; return result; };
-  return { judge, calls: () => calls };
+function mockStrategy(result: Decision): { strategy: FilterStrategy; calls: () => { job: unknown; isLehre: boolean }[] } {
+  const calls: { job: unknown; isLehre: boolean }[] = [];
+  const strategy: FilterStrategy = {
+    name: 'mock',
+    async decide(job, isLehre) {
+      calls.push({ job, isLehre });
+      return result;
+    },
+  };
+  return { strategy, calls: () => calls };
 }
 
-test('it_rolle "nein" → filtered_out', async () => {
-  const { judge } = mockJudge(judgment({ it_rolle: 'nein' }));
-  const result = await decide(sample(), { judge });
-  assert.equal(result.status, 'filtered_out');
-  assert.equal(result.rejectedBy, 'IT-Rolle');
-});
-
-test('erfahrung_ab_3j_erforderlich "ja" → filtered_out', async () => {
-  const { judge } = mockJudge(judgment({ erfahrung_ab_3j_erforderlich: 'ja' }));
-  const result = await decide(sample(), { judge });
-  assert.equal(result.status, 'filtered_out');
-  assert.equal(result.rejectedBy, 'Erfahrung ≥3J');
-});
-
-test('Lehre + lehre_coding "nein" → filtered_out', async () => {
-  const { judge } = mockJudge(judgment({ lehre_coding: 'nein' }));
-  const result = await decide(sample('Lehre Applikationsentwickler'), { judge });
-  assert.equal(result.status, 'filtered_out');
-  assert.equal(result.rejectedBy, 'Lehre nicht coding');
-});
-
-test('Nicht-Lehre-Job: lehre_coding "nein" wird ignoriert (kein Lehre-Gate)', async () => {
-  const { judge } = mockJudge(judgment({ lehre_coding: 'nein' }));
-  const result = await decide(sample('Junior Developer'), { judge });
-  assert.equal(result.status, 'matched');
-});
-
-test('alle Kriterien unsicher → uncertain, NICHT raus', async () => {
-  const { judge } = mockJudge(judgment({
-    it_rolle: 'unsicher',
-    erfahrung_ab_3j_erforderlich: 'unsicher',
-    junior_signal: 'nein',
-  }));
-  const result = await decide(sample(), { judge });
-  assert.equal(result.status, 'uncertain');
-  assert.notEqual(result.status, 'filtered_out');
-});
-
-test('it_rolle ja, erfahrung nein, junior_signal ja → matched', async () => {
-  const { judge } = mockJudge(judgment());
-  const result = await decide(sample(), { judge });
-  assert.equal(result.status, 'matched');
-});
-
-test('dito aber junior_signal nein → uncertain', async () => {
-  const { judge } = mockJudge(judgment({ junior_signal: 'nein' }));
-  const result = await decide(sample(), { judge });
-  assert.equal(result.status, 'uncertain');
-});
-
-test('junior_signal ja ABER ein Kriterium unsicher → uncertain', async () => {
-  const { judge } = mockJudge(judgment({ erfahrung_ab_3j_erforderlich: 'unsicher' }));
-  const result = await decide(sample(), { judge });
-  assert.equal(result.status, 'uncertain');
-});
-
-test('judgeJob liefert null (Parsefehler) → uncertain', async () => {
-  const { judge } = mockJudge(null);
-  const result = await decide(sample(), { judge });
-  assert.equal(result.status, 'uncertain');
-  assert.equal(result.judgment, undefined);
-});
-
-test('Titel "Senior…" → filtered_out, judgeJob NICHT aufgerufen', async () => {
-  const { judge, calls } = mockJudge(judgment());
-  const result = await decide(sample('Senior Fullstack Developer'), { judge });
+test('Titel "Senior…" → filtered_out, Strategie NICHT aufgerufen', async () => {
+  const { strategy, calls } = mockStrategy({ status: 'matched' });
+  const result = await decide(sample('Senior Fullstack Developer'), { strategy });
   assert.equal(result.status, 'filtered_out');
   assert.equal(result.rejectedBy, 'Seniorität (Titel)');
-  assert.equal(calls(), 0);
+  assert.equal(calls().length, 0);
+});
+
+test('kein Seniorität-Ausschluss → delegiert an die Strategie, Decision unverändert', async () => {
+  const { strategy } = mockStrategy({ status: 'matched' });
+  const result = await decide(sample(), { strategy });
+  assert.equal(result.status, 'matched');
+});
+
+test('isLehre wird korrekt an die Strategie durchgereicht', async () => {
+  const { strategy, calls } = mockStrategy({ status: 'uncertain' });
+  await decide(sample('Lehre Applikationsentwickler'), { strategy });
+  assert.equal(calls()[0].isLehre, true);
+
+  await decide(sample('Junior Developer'), { strategy });
+  assert.equal(calls()[1].isLehre, false);
+});
+
+test('resolveStrategy: mode "regex" → regexStrategy (name "regex")', () => {
+  const strategy = resolveStrategy('regex');
+  assert.equal(strategy.name, 'regex');
+});
+
+test('resolveStrategy: mode "llm" → llmStrategy (name "llm")', () => {
+  const strategy = resolveStrategy('llm');
+  assert.equal(strategy.name, 'llm');
+});
+
+test('resolveStrategy: ungültiger Modus → Fehler listet gültige Werte', () => {
+  assert.throws(
+    // @ts-expect-error absichtlich ungültiger Wert
+    () => resolveStrategy('yolo'),
+    /llm, regex/,
+  );
+});
+
+test('regex-Modus: judgeJob/Ollama wird NICHT aufgerufen (Spy)', async () => {
+  let called = false;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () => { called = true; throw new Error('sollte nicht aufgerufen werden'); }) as typeof fetch;
+  try {
+    const result = await decide(sample(), { mode: 'regex' });
+    assert.equal(called, false);
+    assert.ok(result.status);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

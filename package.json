@@ -14,6 +14,7 @@
     "test:watch": "node --import tsx --test --watch --test-reporter spec",
     "recon:karriere": "tsx scripts/recon-karriere.ts",
     "filter": "tsx scripts/run-filter.ts",
+    "filter:regex": "tsx scripts/run-filter.ts --filter=regex",
     "scrape": "tsx scripts/run-scrape.ts",
     "scrape:karriere": "tsx scripts/run-scrape.ts --source=karriere",
     "scrape:devjobs": "tsx scripts/run-scrape.ts --source=devjobs",
