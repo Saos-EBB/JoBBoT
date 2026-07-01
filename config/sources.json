@@ -20,5 +20,12 @@
       { "keyword": "junior software developer", "location": "Oberösterreich, Österreich" },
       { "keyword": "junior softwareentwickler", "location": "Oberösterreich, Österreich" }
     ]
+  },
+  "ams": {
+    "enabled": true,
+    "queries": [
+      { "keyword": "junior software developer", "location": "Linz", "vicinity": "40" },
+      { "keyword": "junior softwareentwickler", "location": "Linz", "vicinity": "40" }
+    ]
   }
 }

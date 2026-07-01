@@ -1,6 +1,7 @@
 import { karriereAtAdapter } from '../scrapers/karriere-at.ts';
 import { devJobsAtAdapter } from '../scrapers/devjobs-at.ts';
 import { linkedinAdapter } from '../scrapers/linkedin.ts';
+import { amsAdapter } from '../scrapers/ams.ts';
 import { createStorage } from '../storage/index.ts';
 import { toJob } from '../lib/normalize.ts';
 import { jobId } from '../lib/hash.ts';
@@ -13,10 +14,11 @@ const registry: Record<string, ScraperAdapter> = {
   'karriere.at': karriereAtAdapter,
   'devjobs.at': devJobsAtAdapter,
   'linkedin': linkedinAdapter,
+  'ams': amsAdapter,
 };
 
 const sourceArg = process.argv.find(a => a.startsWith('--source='))?.split('=')[1];
-const ALIASES: Record<string, string> = { karriere: 'karriere.at', devjobs: 'devjobs.at', linkedin: 'linkedin' };
+const ALIASES: Record<string, string> = { karriere: 'karriere.at', devjobs: 'devjobs.at', linkedin: 'linkedin', ams: 'ams' };
 
 let selectedKeys: string[];
 if (sourceArg) {

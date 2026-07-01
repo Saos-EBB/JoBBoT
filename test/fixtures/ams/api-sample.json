@@ -1,0 +1,1015 @@
+{
+  "totalResults": 1876,
+  "totalPages": 157,
+  "page": 1,
+  "pageSize": 12,
+  "results": [
+    {
+      "objectType": "searchJobOffer",
+      "id": 22025446,
+      "uuid": "a470069f-353e-3f67-a28f-f5bf4f150656",
+      "lastUpdatedAt": "2026-06-26T00:00:00Z",
+      "title": "Software Engineer",
+      "company": {
+        "name": "AGILOX Services GmbH",
+        "website": null,
+        "address": {
+          "countryCode": "AT",
+          "federalState": "Oberösterreich",
+          "zipCode": "4671",
+          "municipality": "Neukirchen bei Lambach",
+          "town": "Gewerbepark Neukirchen bei Lambach",
+          "street": "Gewerbepark 3",
+          "freeText": null,
+          "coordinates": [
+            {
+              "longitude": 13.849592447000077,
+              "latitude": 48.092152412000075
+            }
+          ],
+          "displayMap": null
+        }
+      },
+      "educationLevels": [
+        {
+          "code": "H*",
+          "description": "Matura",
+          "parent": null
+        },
+        {
+          "code": "U*",
+          "description": "Fachhochschule/Universität/pädagogische Hochschule",
+          "parent": null
+        }
+      ],
+      "jobOfferType": {
+        "code": "AMS",
+        "description": "Arbeitsmarktservice"
+      },
+      "workingTime": {
+        "code": "V",
+        "description": "Vollzeit"
+      },
+      "employmentRelationship": {
+        "code": "AA",
+        "description": "ArbeiterInnen/Angestellte"
+      },
+      "summary": "<p>ANSTELLUNGSART: Vollzeit<br />ORT: Neukirchen bei Lambach &#43; Linz<br />ABTEILUNG: Software Engineer<br />LEVEL: Mid-Level / Senior / Expert<br />GEHALT: ab 3.267,- € brutto</p>\n<ams-heading-1>DEIN JOB</ams-heading-1>\n<ul><li>Du spielst eine zentrale Rolle bei der Weiterentwicklung unserer mobilen Roboter, insbesondere im Bereich der Fahrzeugintelligenz und des User Interfaces</li><li>Gemeinsam mit deinem Team arbeitest du an der Logik und der Visualisierung unserer Roboter</li><li>In einem 12-köpfigen Team arbeitest du an der Konzeption und Umsetzung neuer Features im Backend (PHP, C&#43;&#43;) sowie im Frontend (HTML, JavaScript, CSS, Angular)</li><li>Du setzt dich für skalierbare Softwarearchitekturen im Embedded-Bereich ein und entwickelst unsere CI/CD-Pipeline – vom Build über automatisierte Tests bis hin zum Release – kontinuierlich weiter</li><li>Du begeisterst dich für neue Technologien und Methoden, die unsere Plattform schneller, stabiler und zukunftssicher machen</li></ul>\n<ams-heading-1>DEIN PROFIL</ams-heading-1>\n<ul><li>Abgeschlossene Ausbildung im Bereich Software Engineering (HTL, Uni/FH) oder eine vergleichbare Qualifikation</li><li>Erfahrung in objektorientierter Programmierung und erste Kenntnisse in der Entwicklung von APIs, idealerweise mit PHP</li><li>Du interessierst dich für die Frontend-Entwicklung und hast Kenntnisse in einem Web-Framework z.B. Angular, React</li><li>Du hast Erfahrung in der Entwicklung von REST-APIs und arbeitest sicher mit JSON</li><li>Du bist ein echter Teamplayer, hast Freude daran, dich kontinuierlich weiterzuentwickeln, und teilst dein Wissen gerne mit deinen Kollegen</li></ul>\n<p>Das kollektivvertragliche monatliche Mindestbruttoentgelt für diese Position beträgt € 3.267,00 (KV IT) auf Vollzeitbasis. Eine Überzahlung ist abhängig von Qualifikation und Berufserfahrung möglich. AGILOX bietet zahlreiche attraktive Benefits, die hier nicht vollständig aufgelistet sind. Diese können je nach Aufgabenbereich oder Standort variieren, wie z.B. Home Office ist in bestimmten Bereichen nicht realisierbar.</p>\n<ams-heading-1>Deine Benefits</ams-heading-1>\n<ul><li>flexible Arbeitszeiten</li><li>eigene Ideen umsetzen</li><li>Homeoffice-Möglichkeiten</li><li>Fortbildungsmöglichkeiten</li><li>günstiges Mittagessen</li><li>lustige Firmenevents</li></ul>\n<p>PASST FÜR DICH?<br />DANN BEWIRB DICH GLEICH JETZT! <a target=\"_blank\" href=\"https://agilox.pi-asp.de/bewerber-web/?company&#61;AGISE-FIRMA-ID&amp;tenant&#61;&amp;lang&#61;AT#position,id&#61;8548ea4b-7c52-4f41-a259-38454309c41a,jobportalid&#61;7d51b858-e466-400d-8696-5e01d3b26140\" rel=\"nofollow noopener noreferrer\">Bewerber Web</a><br /><br /><span class=\"fw-bold\">AGILOX Services GmbH</span>, A-4671 Neukirchen bei Lambach, Gewerbepark Neukirchen bei Lambach 3<br />Tel.: &#43;43 (7614) 93082<br /><a target=\"_blank\" href=\"mailto:office&#64;agilox.net\" rel=\"nofollow noopener noreferrer\">office&#64;agilox.net</a> | <a target=\"_blank\" href=\"https://www.agilox.net/\" rel=\"nofollow noopener noreferrer\">www.agilox.net</a></p>",
+      "occupations": [
+        {
+          "id": 388,
+          "bisNoteId": "622",
+          "name": "SoftwareentwicklerIn",
+          "parent": null
+        }
+      ],
+      "urlToJobOffer": null,
+      "jobPortalName": null,
+      "workingLocation": {
+        "countryCode": "AT",
+        "federalState": "Oberösterreich",
+        "zipCode": "4671",
+        "municipality": "Neukirchen bei Lambach",
+        "town": "Gewerbepark Neukirchen bei Lambach",
+        "street": "Gewerbepark 3",
+        "freeText": null,
+        "coordinates": [
+          {
+            "longitude": 13.849592447000077,
+            "latitude": 48.092152412000075
+          }
+        ],
+        "displayMap": true
+      },
+      "isPreselection": false,
+      "isBookmarked": null,
+      "isGreenJob": false
+    },
+    {
+      "objectType": "searchJobOffer",
+      "id": 21932599,
+      "uuid": "0fca321a-c544-3d43-a89a-e02fed0c5321",
+      "lastUpdatedAt": "2026-06-11T00:00:00Z",
+      "title": "Automation Software Engineer",
+      "company": {
+        "name": "AT&S  Austria Technologie & Systemtechnik AG",
+        "website": null,
+        "address": {
+          "countryCode": "AT",
+          "federalState": "Steiermark",
+          "zipCode": "8700",
+          "municipality": "Leoben",
+          "town": "Hinterberg",
+          "street": "Fabriksgasse 13",
+          "freeText": null,
+          "coordinates": [
+            {
+              "longitude": 15.06627073900006,
+              "latitude": 47.359407014000055
+            }
+          ],
+          "displayMap": null
+        }
+      },
+      "educationLevels": [
+        {
+          "code": "H*",
+          "description": "Matura",
+          "parent": null
+        }
+      ],
+      "jobOfferType": {
+        "code": "AMS",
+        "description": "Arbeitsmarktservice"
+      },
+      "workingTime": {
+        "code": "V",
+        "description": "Vollzeit"
+      },
+      "employmentRelationship": {
+        "code": "AA",
+        "description": "ArbeiterInnen/Angestellte"
+      },
+      "summary": "<p class=\"MsoNormal\">In this role, you will automate software tools, build workflows, and create digital environments to increase efficiency and reduce manual work. You will develop and maintain software solutions while integrating new tools into the AT&amp;S systems landscape. As part of the Electronics Service Hub, you will contribute to high-quality, reliable processes and enable new digital capabilities for internal and external customers.</p>\n<p class=\"MsoNormal\"> </p>\n<p class=\"MsoNormal\">Your Responsibilities</p>\n<p class=\"MsoNormal\"> </p>\n<ul><li class=\"MsoNormal\">Develop extensions, scripts, and automation solutions based on internal priorities to enable a more efficient workstyle.</li><li class=\"MsoNormal\">Maintain existing software tools and migrate them to new platforms in alignment with IT guidelines.</li><li class=\"MsoNormal\">Work within defined software development environments to ensure compatibility and seamless integration across departments.</li><li class=\"MsoNormal\">Optimize browser‑based graphical user interfaces to improve usability and operational efficiency.</li><li class=\"MsoNormal\">Define working environments according to IT guidelines and document integrations as part of standard business processes.</li><li class=\"MsoNormal\">Integrate newly developed tools into the AT&amp;S systems landscape to support streamlined workflows.</li><li class=\"MsoNormal\">Translate requirements into automation logic and support cross‑department digital workflows through robust software solutions.</li></ul>\n<p class=\"MsoNormal\"> </p>\n<p class=\"MsoNormal\"> </p>\n<p class=\"MsoNormal\">Your Profile</p>\n<p class=\"MsoNormal\"> </p>\n<ul><li class=\"MsoNormal\">Completed technical education (HTL or comparable)</li><li class=\"MsoNormal\">Proven experience in software development, scripting, automation engineering, or a similar technical field.</li><li class=\"MsoNormal\">Demonstrated expertise in AI technologies, including prompt engineering, Microsoft Copilot Studio, and related automation tools.</li><li class=\"MsoNormal\">Strong programming skills in Python, C, JavaScript, and Visual Basic, with experience in automation, system‑level tasks, UI development, or legacy integration.</li><li class=\"MsoNormal\">Experience with Microsoft Windows Server, basic Linux (SUSE), workflow tools (SharePoint, MSSQL, PowerShell, Microsoft Graph), and system integration.</li><li class=\"MsoNormal\">Familiarity with development environments, version control (e.g., Git), CI/CD processes, and AI‑assisted workflows.</li><li class=\"MsoNormal\">Strong problem‑solving mindset, self‑organized working style, and ability to work independently in a newly established service area.</li><li class=\"MsoNormal\">Excellent communication, documentation (ISO27001/ISO9001), and interpersonal skills, with intercultural competence.</li><li class=\"MsoNormal\">Fluency in German and English (minimum B2 level) and willingness to learn new programming languages or AI‑based environments.</li></ul>\n<p class=\"MsoNormal\"> </p>\n<p class=\"MsoNormal\"> </p>\n<p class=\"MsoNormal\">Our Offer</p>\n<p class=\"MsoNormal\"> </p>\n<ul><li class=\"MsoNormal\">A meaningful role with opportunities for long-term growth in an international environment </li><li class=\"MsoNormal\">Chance to actively contribute to AT&amp;S&#39; success and to create value </li><li class=\"MsoNormal\">A structured and tailor-made onboarding program along with continual training opportunities</li><li class=\"MsoNormal\">Modern company canteen with freshly prepared meals every day</li><li class=\"MsoNormal\">Free parking spaces and e-charging stations</li><li class=\"MsoNormal\">Diverse health measures and a wide range of employee benefits</li></ul>\n<p class=\"MsoNormal\"> </p>\n<p class=\"MsoNormal\"> </p>\n<p class=\"MsoNormal\">Ready for a new challenge to advance your career? It&#39;s just a click to apply online. We look forward to your application and your detailed resume. Your AT&amp;S Team!</p>\n<p class=\"MsoNormal\"> <a class=\"link-internal\" target=\"_blank\" href=\"https://career.ats.net/job/Leoben-Automation-Software-Engineer/1379271333/\" rel=\"nofollow noopener noreferrer\">https://career.ats.net/job/Leoben-Automation-Software-Engineer/1379271333/</a></p>\n<p class=\"MsoNormal\">AT&amp;S is an equal opportunity employer. We embrace diversity and are dedicated to empowering people to reach their potential by fostering their unique talents and strengths. The employment is in accordance with the Austrian Collective Agreement for the Electrical and Electronics Industry, employment group E-F, and we offer competitive salaries and additional benefits based on your performance, experience and qualification. </p>\n<p class=\"MsoNormal\"> </p>\n<p><br /><br /></p>\n\nHinweis: Dieses Stellenangebot wird automatisiert auf Basis des Berufes vom AMS als Green-Job eingestuft. Weitere Infos dazu finden Sie auf www.ams.at/greenjobs",
+      "occupations": [
+        {
+          "id": 388,
+          "bisNoteId": "622",
+          "name": "SoftwareentwicklerIn",
+          "parent": null
+        },
+        {
+          "id": 441,
+          "bisNoteId": "765",
+          "name": "AutomatisierungstechnikerIn",
+          "parent": null
+        }
+      ],
+      "urlToJobOffer": null,
+      "jobPortalName": null,
+      "workingLocation": {
+        "countryCode": "AT",
+        "federalState": "Steiermark",
+        "zipCode": "8700",
+        "municipality": "Leoben",
+        "town": "Hinterberg",
+        "street": "Fabriksgasse 13",
+        "freeText": null,
+        "coordinates": [
+          {
+            "longitude": 15.06627073900006,
+            "latitude": 47.359407014000055
+          }
+        ],
+        "displayMap": true
+      },
+      "isPreselection": false,
+      "isBookmarked": null,
+      "isGreenJob": true
+    },
+    {
+      "objectType": "searchJobOffer",
+      "id": 22168451,
+      "uuid": "a0232e86-28a6-36a6-b145-d8b54e38aa3e",
+      "lastUpdatedAt": "2026-06-26T00:00:00Z",
+      "title": "Software Engineer (all genders)",
+      "company": {
+        "name": "Lam Research AG",
+        "website": null,
+        "address": {
+          "countryCode": "AT",
+          "federalState": "Kärnten",
+          "zipCode": "9500",
+          "municipality": "Villach",
+          "town": "Villach-Lind",
+          "street": "SEZ Straße 1",
+          "freeText": null,
+          "coordinates": [
+            {
+              "longitude": 13.836180080000076,
+              "latitude": 46.619491975000074
+            }
+          ],
+          "displayMap": null
+        }
+      },
+      "educationLevels": [
+        {
+          "code": "U*",
+          "description": "Fachhochschule/Universität/pädagogische Hochschule",
+          "parent": null
+        }
+      ],
+      "jobOfferType": {
+        "code": "AMS",
+        "description": "Arbeitsmarktservice"
+      },
+      "workingTime": {
+        "code": "V",
+        "description": "Vollzeit"
+      },
+      "employmentRelationship": {
+        "code": "AA",
+        "description": "ArbeiterInnen/Angestellte"
+      },
+      "summary": "<p><span class=\"fw-bold\">LOCATION:</span> Villach, AT, 9500<br /><span class=\"fw-bold\">REQ ID:</span> 198751</p>\n<ams-heading-2>The impact you’ll make</ams-heading-2>\n<p>As a Software Engineer at Lam, you will be at the forefront of innovation by designing, developing, and troubleshooting, and debugging software programs. Your role is pivotal in developing software tools that support design, infrastructure, and technology platforms. Your expertise will determine hardware compatibility and influence design, ensuring seamless integration between software and hardware.</p>\n<p>In this role, you’ll make an impact across Lam’s entire product portfolio of equipment working within our centralized software engineering team, collaborating with some of the brightest minds in the industry.</p>\n<ams-heading-2>What you’ll do</ams-heading-2>\n<ul><li>Design, develop, troubleshoot, and debug software programs for enhancements and new products.</li><li>Implement new customer requirements and features in our existing application.</li><li>Maintain and enhance existing code base by investigating and resolving problem areas.</li><li>Demonstrate solutions through clear documentation, flowcharts, and well-structured code.</li><li>Collaborate with cross functional teams to design and develop software programs.</li><li>Provide technical guidance and mentoring for more junior engineers.</li><li>May visit customer site to provide support and have ability to travel (total is less than 10%).</li></ul>\n<ams-heading-1>Who we’re looking for</ams-heading-1>\n<ul><li>Bachelor’s degree in Computer Engineering, Electronics, Mechanical Engineering with 5&#43; years of experience; or Master’s degree with 3&#43; years’ experience; or a PhD with no previous professional experience; or equivalent experience.</li><li>Proficient in two programming languages (eg.: C, C#, C&#43;&#43;, Java, SmallTalk, Python or others)</li><li>Familiar with Network, Serial Device Control, and IO Control Systems</li><li>Knowledge of Object Oriented Software implementation and design e.g.: Design Patterns andFinite State Machines</li><li>Experience with industrial automation software would be a plus</li><li>Analytical approach to root cause analysis</li><li>Ability to troubleshoot complex systems in a fast paced manufacturing environment</li><li>Self-motivated and directed, with keen attention to detail</li><li>Strong communication skills with internal and external project stakeholders</li></ul>\n<ams-heading-2>What We&#39;re Offering</ams-heading-2>\n<p>This position will be occupied in Villach. It is subject to the <a target=\"_blank\" href=\"https://www.metalltechnischeindustrie.at/fileadmin/content/Dokumente/Kollektivvertrag/KV-2025_2026/FMTI_Mindesgehaltstabelle_2025.pdf\" title=\"\" rel=\"nofollow noopener noreferrer\">Austrian Collective Bargaining Agreement for Employees in the Metal Technology Industry</a> in occupation group F depending on educational background. A higher payment is negotiable depending on expertise and skills. The monthly salary is paid 14 times per year. Please follow the link on the below section &#34;Employment in Austria&#34; for further information.</p>\n<ams-heading-2>WORKING HOURS</ams-heading-2>\n<ul><li>Flexitime model 38,5 hours/week, Core hours (Mo-Th 9-15, Fr 9-11:30)</li></ul>\n<ams-heading-2>APPLICATION:</ams-heading-2>\n<p>If you are interested in this position, please apply ONLINE under: <a target=\"_blank\" href=\"https://careers.lamresearch.com/\" rel=\"nofollow noopener noreferrer\">https://careers.lamresearch.com</a></p>\n<ams-heading-2>OUR COMMITMENT</ams-heading-2>\n<p>We believe it is important for every person to feel valued, included, and empowered to achieve their full potential. By bringing unique individuals and viewpoints together, we achieve extraordinary results.</p>",
+      "occupations": [
+        {
+          "id": 388,
+          "bisNoteId": "622",
+          "name": "SoftwareentwicklerIn",
+          "parent": null
+        }
+      ],
+      "urlToJobOffer": null,
+      "jobPortalName": null,
+      "workingLocation": {
+        "countryCode": "AT",
+        "federalState": "Kärnten",
+        "zipCode": "9500",
+        "municipality": "Villach",
+        "town": "Villach-Lind",
+        "street": "SEZ Straße 1",
+        "freeText": null,
+        "coordinates": [
+          {
+            "longitude": 13.836180080000076,
+            "latitude": 46.619491975000074
+          }
+        ],
+        "displayMap": true
+      },
+      "isPreselection": false,
+      "isBookmarked": null,
+      "isGreenJob": false
+    },
+    {
+      "objectType": "searchJobOffer",
+      "id": 22074443,
+      "uuid": "3a83f9d7-f029-31b2-bf16-cd54c20ae223",
+      "lastUpdatedAt": "2026-06-19T00:00:00Z",
+      "title": "Software Engineer (w/m/d)",
+      "company": {
+        "name": "BRP-Rotax GmbH & Co.KG",
+        "website": null,
+        "address": {
+          "countryCode": "AT",
+          "federalState": "Oberösterreich",
+          "zipCode": "4623",
+          "municipality": "Gunskirchen",
+          "town": "Gunskirchen",
+          "street": "Rotaxstraße 1",
+          "freeText": null,
+          "coordinates": [
+            {
+              "longitude": 13.946075239000038,
+              "latitude": 48.13306287200004
+            }
+          ],
+          "displayMap": null
+        }
+      },
+      "educationLevels": [
+        {
+          "code": "U*",
+          "description": "Fachhochschule/Universität/pädagogische Hochschule",
+          "parent": null
+        }
+      ],
+      "jobOfferType": {
+        "code": "AMS",
+        "description": "Arbeitsmarktservice"
+      },
+      "workingTime": {
+        "code": "V",
+        "description": "Vollzeit"
+      },
+      "employmentRelationship": {
+        "code": "AA",
+        "description": "ArbeiterInnen/Angestellte"
+      },
+      "summary": "<ams-heading-1>Ihr neues Abenteuer</ams-heading-1>\n<ul><li>Entwurf und Definition der Softwarearchitektur für sicherheitskritische Systeme</li><li>Ausarbeitung, Analyse und Management komplexer Software Requirements</li><li>Design und Spezifikation von Funktionssoftware sowie zuverlässiger Safety-Software (Simulation und Codegenerierung mit Matlab/Simulink)</li><li>Sicherstellung der durchgängigen Traceability</li><li>Durchführung von Architektur- und Design-Reviews sowie enge Abstimmung mit Zulassungsbehörden und internen Stakeholdern</li></ul>\n<ams-heading-1>Ihre Erfahrungen und Fähigkeiten</ams-heading-1>\n<ul><li>Abgeschlossenes Studium der Informatik, Elektrotechnik, Luft- und Raumfahrttechnik oder vergleichbares</li><li>Erfahrung mit Prozessen der EASA oder DO-178C Standards von Vorteil</li><li>Fundierte Praxis im Bereich Software Requirements Engineering und im Umgang mit entsprechenden Tools</li><li>Sehr gutes Verständnis für die Entwicklung von Funktions- und Safety-Software in C/C&#43;&#43; sowie Erfahrung mit Modellierungstools</li><li>Fundierte Deutsch- und Englischkenntnisse</li><li>Proaktive, strukturierte Arbeitsweise mit ausgeprägten analytischen Fähigkeiten</li></ul>\n<ams-heading-1>Was wir bieten</ams-heading-1>\n<p>Eine spannende Position in einem internationalen <a target=\"_blank\" href=\"https://www.rotax.com/de/unternehmen/brp-rotax-vienna.html\" rel=\"nofollow noopener noreferrer\">Unternehmen</a>. Das Mindestgehalt für diese Position richtet sich nach dem Kollektivvertrag der außeruniversitären Forschung und beginnt bei EUR 68.152,00 brutto/ Jahr. Selbstverständlich hängt Ihr tatsächliches Gehalt von Ihrer Qualifikation und Erfahrung ab. </p>\n<p>Das BRP Rotax Team freut sich auf Ihre Online-Bewerbung<br /><br /><a class=\"link-internal\" target=\"_blank\" href=\"https://careers.brp.com/global/de/job/35396/Software-Engineer-m-w-d\" rel=\"nofollow noopener noreferrer\">Jetzt bewerben</a><br /><br />BRP-Rotax GmbH &amp; Co KG | Rotaxstraße 1 | 4623 Gunskirchen</p>",
+      "occupations": [
+        {
+          "id": 388,
+          "bisNoteId": "622",
+          "name": "SoftwareentwicklerIn",
+          "parent": null
+        }
+      ],
+      "urlToJobOffer": null,
+      "jobPortalName": null,
+      "workingLocation": {
+        "countryCode": "AT",
+        "federalState": "Oberösterreich",
+        "zipCode": "4623",
+        "municipality": "Gunskirchen",
+        "town": "Gunskirchen",
+        "street": "Rotaxstraße 1",
+        "freeText": null,
+        "coordinates": [
+          {
+            "longitude": 13.946075239000038,
+            "latitude": 48.13306287200004
+          }
+        ],
+        "displayMap": true
+      },
+      "isPreselection": false,
+      "isBookmarked": null,
+      "isGreenJob": false
+    },
+    {
+      "objectType": "searchJobOffer",
+      "id": 22358959,
+      "uuid": "b7433238-3a97-3fd8-957f-32d88a480e8b",
+      "lastUpdatedAt": "2026-06-24T00:00:00Z",
+      "title": "Software Engineer (m/w/d)",
+      "company": {
+        "name": "VACE Engineering GmbH",
+        "website": null,
+        "address": {
+          "countryCode": "AT",
+          "federalState": "Oberösterreich",
+          "zipCode": "4030",
+          "municipality": "Linz",
+          "town": "Linz",
+          "street": "Lunzerstraße 78/BG 33",
+          "freeText": null,
+          "coordinates": [
+            {
+              "longitude": 14.343982702000062,
+              "latitude": 48.267683849000036
+            }
+          ],
+          "displayMap": null
+        }
+      },
+      "educationLevels": [
+        {
+          "code": "U*",
+          "description": "Fachhochschule/Universität/pädagogische Hochschule",
+          "parent": null
+        }
+      ],
+      "jobOfferType": {
+        "code": "AMS",
+        "description": "Arbeitsmarktservice"
+      },
+      "workingTime": {
+        "code": "V",
+        "description": "Vollzeit"
+      },
+      "employmentRelationship": {
+        "code": "AA",
+        "description": "ArbeiterInnen/Angestellte"
+      },
+      "summary": "<p>IT Security | Vollzeit  Linz  </p>\n<p>Entwickle robuste Softwarelösungen für komplexe Industrieanlagen und bringe Cyber Security von Anfang an ins System. Arbeite in einem internationalen Umfeld an langlebigen Produkten, die Digitalisierung und Nachhaltigkeit vorantreiben – mit modernen Technologien, echten Herausforderungen und viel Gestaltungsspielraum.</p>\n<ams-heading-1>Ihre Aufgaben:</ams-heading-1>\n<ul><li>Entwicklung von Softwaremodulen für industrielle Großanlagen</li><li>Berücksichtigung von Cyber-Security-Anforderungen im gesamten Entwicklungsprozess</li><li>Analyse bestehender Systeme hinsichtlich Sicherheitsstandards und Normenkonformität (z. B. IEC 62443, CRA)</li><li>Mitgestaltung von Modernisierungskonzepten sowie Sicherheitsarchitekturen</li><li>Mitarbeit über den gesamten Produktlebenszyklus hinsichtlich Planung, Design, Implementierung als auch Betrieb / Weiterentwicklung</li><li>Einsatz moderner Tech-Stacks: Java / .NET / C&#43;&#43;</li><li>Zusammenarbeit in agilen, interdisziplinären Teams</li></ul>\n<ams-heading-1>Unsere Anforderungen:</ams-heading-1>\n<ul><li>Abgeschlossenes Studium mit Schwerpunkt Informatik, Software Engineering oder IT-Security / Cyber Security</li><li>Erfahrung mit größeren Softwareprojekten</li><li>Know-how in Secure Software Development, gängigen Entwicklungs-Tools (z. B. Git, Build-Systeme), Datenbanken &amp; Testing</li><li>Kenntnisse von Security-Standards wünschenswert</li><li>Verhandlungssichere Englischkenntnisse sowie gute Deutschkenntnisse von Vorteil</li></ul>\n<ams-heading-1>Angebote &amp; Benefits:</ams-heading-1>\n<p>Das Bruttojahresgehalt gemäß Kollektivvertrag beträgt für diese Funktion mindestens € 53.000,- bzw. 62.000,- . Abhängig von Ausbildung, Qualifikation und Erfahrung ist eine deutliche Überzahlung möglich.</p>\n<ul><li>Anspruchsvolles &amp; abwechslungsreiches Aufgabengebiet</li><li>Weiterbildungsmöglichkeiten</li><li>Flexible Arbeitszeiten</li><li>Mitarbeiterrabatte (Kantine / Fitness / Events)</li><li>kostenlose Parkmöglichkeiten</li><li>Firmenhandy / Laptop</li><li>Mitarbeitervorsorge</li><li>Gute öffentliche Erreichbarkeit</li></ul>\n<p><br /><br />VACE shaping careers | Chancengleichheit und Diversität sind uns wichtig.<br /><br />IHRE ANSPRECHPERSON<br /><br />Herr Markus Fenninger<br /><a target=\"_blank\" href=\"mailto:petra.schaedle&#64;vace.at\" rel=\"nofollow noopener noreferrer\">markus.fenninger&#64;vace.at</a><br /><br />Haben wir Ihr Interesse geweckt?<br /><br />Dann freuen wir uns über Ihre aussagekräftige Bewerbung unter: <a target=\"_blank\" href=\"https://www.vace.at\" rel=\"nofollow noopener noreferrer\">www.vace.at</a> <br />Inserat Nummer: 15677<br /><br />bzw. gleich über den Link zum Online-Inserat:<br /><br /><a target=\"_blank\" href=\"https://www.vace.at/job/software-engineer-m-w-d/\" rel=\"nofollow noopener noreferrer\">Software Engineer (m/w/d) - Linz | VACE</a><br /><br /><br />VACE Engineering GmbH<br />Lunzerstraße 78<br />4030 Linz</p>",
+      "occupations": [
+        {
+          "id": 388,
+          "bisNoteId": "622",
+          "name": "SoftwareentwicklerIn",
+          "parent": null
+        }
+      ],
+      "urlToJobOffer": null,
+      "jobPortalName": null,
+      "workingLocation": {
+        "countryCode": "AT",
+        "federalState": "Oberösterreich",
+        "zipCode": "4030",
+        "municipality": "Linz",
+        "town": "Linz",
+        "street": "Lunzerstraße 78/BG 33",
+        "freeText": null,
+        "coordinates": [
+          {
+            "longitude": 14.343982702000062,
+            "latitude": 48.267683849000036
+          }
+        ],
+        "displayMap": true
+      },
+      "isPreselection": false,
+      "isBookmarked": null,
+      "isGreenJob": false
+    },
+    {
+      "objectType": "searchJobOffer",
+      "id": 22336302,
+      "uuid": "a48b949f-6719-37a1-8c83-d65317d4234c",
+      "lastUpdatedAt": "2026-06-19T00:00:00Z",
+      "title": "Senior Software Engineer - im Startup",
+      "company": {
+        "name": "WeJobbr GmbH",
+        "website": null,
+        "address": {
+          "countryCode": "AT",
+          "federalState": "Wien",
+          "zipCode": "1070",
+          "municipality": "Wien",
+          "town": "Wien,Neubau",
+          "street": "Neubaugasse 43/4",
+          "freeText": null,
+          "coordinates": [
+            {
+              "longitude": 16.348878538000065,
+              "latitude": 48.20240865900007
+            }
+          ],
+          "displayMap": null
+        }
+      },
+      "educationLevels": [
+        {
+          "code": "L*",
+          "description": "Lehre/Lehre mit Meisterprüfung",
+          "parent": null
+        },
+        {
+          "code": "H*",
+          "description": "Matura",
+          "parent": null
+        },
+        {
+          "code": "U*",
+          "description": "Fachhochschule/Universität/pädagogische Hochschule",
+          "parent": null
+        }
+      ],
+      "jobOfferType": {
+        "code": "AMS",
+        "description": "Arbeitsmarktservice"
+      },
+      "workingTime": {
+        "code": "V",
+        "description": "Vollzeit"
+      },
+      "employmentRelationship": {
+        "code": "AA",
+        "description": "ArbeiterInnen/Angestellte"
+      },
+      "summary": "<p>Unser kleines, schlagkräftiges IT-Team (aktuell 1 Senior &#43; 2 Junior Devs) entwickelt die Plattform, die das alles möglich macht — in Java, direkt und ohne großen Overhead.</p>\n<p><br /><span class=\"fw-bold\">Deine Rolle<br /></span><br />Du bist der zweite Senior im Team und übernimmst die operative Führung der täglichen<br />Entwicklungsarbeit. Du arbeitest eng mit unserem CTO zusammen, führst die beiden Junior-Entwickler<br />fachlich und sorgst dafür, dass Features sauber geplant und zuverlässig ausgeliefert werden.</p>\n<p><br /><span class=\"fw-bold\">Deine Aufgaben<br /></span><br />• Feature-Planung: Du übernimmst grobe Feature-Konzepte vom CTO und definierst daraus<br />konkrete Tasks mit realistischen Schätzungen. KI-Tools wie Claude sind ausdrücklich erwünscht.<br />• Feature-Entwicklung: Du implementierst Features im Backend (Java) — von der Schätzung bis<br />zum Deployment.<br />• Junior-Führung: Du bist erster Ansprechpartner für die beiden Juniors: Code Reviews, Mentoring,<br />technische Klärungen.<br />• Planung: Du bringst Verlässlichkeit in unsere Roadmap.<br /><br /><span class=\"fw-bold\">Was du NICHT tun musst:<br /><br /></span>• Keine Personalverantwortung im HR-Sinn<br />• Keine Architektur-Grundsatzentscheidungen: das machst du gemeinsam mit dem CTO<br />• Kein klassisches Projektmanagement gegenüber Fachabteilungen (wollen effizient bleiben)</p>\n<p><br /><span class=\"fw-bold\">Dein Profil</span><br /><br />Fachlich<br /><br />• Erfahrung in der professionellen Softwareentwicklung, mind. 3 Jahre in Java<br />• Gute Kenntnisse in Hibernate / JPA und relationalen Datenbanken<br />• Solide Kenntnisse in Test-Strategien (Unit, Integration)<br />• Erfahrung mit Frontend-Technologien ist ein Plus, aber kein Muss</p>\n<p><br />Persönlich<br /><br />• Verlässlich und beständig: du hältst Zusagen und bringst Stabilität ins Team<br />• Teamorientiert: du erklärst Juniors geduldig und siehst dich als Multiplier<br />• Lernbereit und neugierig: du verstehst erst, bevor du änderst<br />• Qualitätsbewusst, aber pragmatisch: du weißt, wann &#39;gut genug&#39; reicht<br />• Stabil unter Druck: Hotfixes bringen dich nicht aus der Ruhe<br /><br />Sprache<br /><br />• Deutsch verhandlungssicher<br />• Englisch für technische Dokumentation und KI-Tools</p>\n<p><br /><span class=\"fw-bold\">Wir bieten</span><br /><br />• Jahresbruttogehalt ab € 70.000 (Vollzeit, 38,5h), je nach Erfahrung verhandelbar<br />• Echte Gestaltungsmöglichkeit beim Aufbau eines strukturierten Engineering-Setups<br />• Flexible Arbeitszeiten und Home-Office-Möglichkeit<br />• KI-Tools (Claude, Claude Code) als selbstverständlicher Teil des Workflows<br />• Flache Hierarchien, kurze Entscheidungswege — direkter Draht zu den Foundern<br />• Cooles Office in Gaspoltshofen und in Wien und ein Team, das gemeinsam rockt und wächst</p>\n<p><br /><span class=\"fw-bold\">Wie wir dich kennenlernen</span><br /><br />• Erstes Kennenlernen (30–45 min, remote) mit dem CTO, gegenseitiges Abklopfen<br />• Technisches Gespräch (60–90 min), Code-Diskussion an realem Beispiel, keine Whiteboard-<br />Algorithmen<br />• Team-Treffen vor Ort, du lernst die Juniors und den CEO kennen<br />• Angebot, wir entscheiden schnell und ohne wochenlanges Taktieren</p>\n<p><br /><span class=\"fw-bold\">Klingt das nach dir?</span></p>\n<p><br />Schreib Thomas direkt, kein perfektes Anschreiben nötig. Ein paar Sätze, warum die Rolle passt, und ein<br />CV reichen völlig.<br /><br />Thomas Voraberger (CEO) · <a target=\"_blank\" href=\"mailto:thomas.voraberger&#64;wejobbr.com\" rel=\"nofollow noopener noreferrer\">thomas.voraberger&#64;wejobbr.com</a><br /><br />WeJobbr fördert Chancengleichheit und Vielfalt. Wir begrüßen Bewerbungen von allen qualifizierten<br />Personen, unabhängig von Geschlecht, Alter, ethnischer Herkunft, Religion, sexueller Orientierung oder<br />Behinderung.</p>",
+      "occupations": [
+        {
+          "id": 388,
+          "bisNoteId": "622",
+          "name": "SoftwareentwicklerIn",
+          "parent": null
+        }
+      ],
+      "urlToJobOffer": null,
+      "jobPortalName": null,
+      "workingLocation": {
+        "countryCode": "AT",
+        "federalState": "Oberösterreich",
+        "zipCode": "4673",
+        "municipality": "Gaspoltshofen",
+        "town": "Gaspoltshofen",
+        "street": null,
+        "freeText": null,
+        "coordinates": [
+          {
+            "longitude": 13.717315798000072,
+            "latitude": 48.147746675000064
+          },
+          {
+            "longitude": 13.717315798000072,
+            "latitude": 48.13223590900003
+          },
+          {
+            "longitude": 13.745458447000033,
+            "latitude": 48.13223590900003
+          },
+          {
+            "longitude": 13.745458447000033,
+            "latitude": 48.147746675000064
+          },
+          {
+            "longitude": 13.717315798000072,
+            "latitude": 48.147746675000064
+          }
+        ],
+        "displayMap": false
+      },
+      "isPreselection": false,
+      "isBookmarked": null,
+      "isGreenJob": false
+    },
+    {
+      "objectType": "searchJobOffer",
+      "id": 22353383,
+      "uuid": "8fe0da4c-ccc3-3802-9eb0-9cecf8fba200",
+      "lastUpdatedAt": "2026-06-11T00:00:00Z",
+      "title": "Software Engineer Frontend (m/w/d)",
+      "company": {
+        "name": "Doppelmayr Seilbahnen GmbH",
+        "website": null,
+        "address": {
+          "countryCode": "AT",
+          "federalState": "Vorarlberg",
+          "zipCode": "6922",
+          "municipality": "Wolfurt",
+          "town": "Wolfurt",
+          "street": "Konrad-Doppelmayr-Straße 1",
+          "freeText": null,
+          "coordinates": [
+            {
+              "longitude": 9.733985709000024,
+              "latitude": 47.450575635000064
+            }
+          ],
+          "displayMap": null
+        }
+      },
+      "educationLevels": [
+        {
+          "code": "H*",
+          "description": "Matura",
+          "parent": null
+        },
+        {
+          "code": "U*",
+          "description": "Fachhochschule/Universität/pädagogische Hochschule",
+          "parent": null
+        }
+      ],
+      "jobOfferType": {
+        "code": "AMS",
+        "description": "Arbeitsmarktservice"
+      },
+      "workingTime": {
+        "code": "V",
+        "description": "Vollzeit"
+      },
+      "employmentRelationship": {
+        "code": "AA",
+        "description": "ArbeiterInnen/Angestellte"
+      },
+      "summary": "<ams-heading-1>Deine Aufgaben</ams-heading-1>\n<ul><li>Eigenständiges Konzipieren, Entwickeln und Weiterentwickeln web-basierter Frontend-Anwendungen</li><li>Enge Zusammenarbeit im Entwicklungsteam (Product Owner, UX/UI Designer:innen, Backend-Entwickler:innen und DevOps)</li><li>Kontinuierliche Verbesserung von Code-Qualität und Testbarkeit</li><li>Sicherstellung von Performance, Wartbarkeit und Skalierbarkeit der Anwendungen</li><li>Aktive Mitgestaltung der Frontend-Architektur</li><li>Evaluierung, neuer Technologien und Tools im Frontend-Umfeld</li></ul>\n<ams-heading-1>Dein Profil</ams-heading-1>\n<ul><li>Matura und/oder abgeschlossenes Studium (z. B. Informatik, Softwareengineering o. Ä.)</li><li>Mehrjährige relevante Berufserfahrung im Frontend Development mit React</li><li>Kenntnisse im Backend Development mit .NET/C# von Vorteil</li><li>Erfahrungen mit agilen Prozessen</li><li>Teamfähigkeit, Einsatzbereitschaft und ausgeprägte Kommunikationsfähigkeiten</li><li>Verantwortungsbewusstsein und Flexibilität</li><li>Du sprichst fließend Deutsch und Englisch mindestens auf Niveau B2</li></ul>\n<ams-heading-1>Deine Vorteile</ams-heading-1>\n<ul><li> Weiterbildungsmöglichkeiten</li><li> Flexible Arbeitszeiten</li><li> Homeoffice</li><li> Internationales Arbeitsumfeld</li><li> Internationale und nationale Projekte</li><li> Jobticket</li></ul>\n<ams-heading-1>Du willst etwas bewegen?</ams-heading-1>\n<p>Dann bewirb dich direkt bei uns!</p>\n<p>https://doppelmayr.dvinci-hr.com/de/p/dgw/jobs/101373/software-engineer-frontend</p>\n<p>Fragen? Unser Recruiting-Team hilft dir gerne weiter</p>\n<p>Aleksander Pakic<br />Personalreferent<br />Tel: &#43;43 5574 604-225Doppelmayr Seilbahnen GmbH<br />Konrad-Doppelmayr-Straße 1<br />6922 Wolfurt</p>",
+      "occupations": [
+        {
+          "id": 388,
+          "bisNoteId": "622",
+          "name": "SoftwareentwicklerIn",
+          "parent": null
+        }
+      ],
+      "urlToJobOffer": null,
+      "jobPortalName": null,
+      "workingLocation": {
+        "countryCode": "AT",
+        "federalState": "Vorarlberg",
+        "zipCode": "6922",
+        "municipality": "Wolfurt",
+        "town": "Wolfurt",
+        "street": "Konrad-Doppelmayr-Straße 1",
+        "freeText": null,
+        "coordinates": [
+          {
+            "longitude": 9.733985709000024,
+            "latitude": 47.450575635000064
+          }
+        ],
+        "displayMap": true
+      },
+      "isPreselection": false,
+      "isBookmarked": null,
+      "isGreenJob": false
+    },
+    {
+      "objectType": "searchJobOffer",
+      "id": 21735074,
+      "uuid": "f3142f20-95b7-3961-b6b9-00ad4abca433",
+      "lastUpdatedAt": "2026-06-17T00:00:00Z",
+      "title": "SOFTWARE ENGINEER .NET (m/w/d)",
+      "company": {
+        "name": "VACE Engineering GmbH",
+        "website": null,
+        "address": {
+          "countryCode": "AT",
+          "federalState": "Oberösterreich",
+          "zipCode": "4030",
+          "municipality": "Linz",
+          "town": "Linz",
+          "street": "Lunzerstraße 78/BG 33",
+          "freeText": null,
+          "coordinates": [
+            {
+              "longitude": 14.343982702000062,
+              "latitude": 48.267683849000036
+            }
+          ],
+          "displayMap": null
+        }
+      },
+      "educationLevels": [
+        {
+          "code": "H*",
+          "description": "Matura",
+          "parent": null
+        },
+        {
+          "code": "U*",
+          "description": "Fachhochschule/Universität/pädagogische Hochschule",
+          "parent": null
+        }
+      ],
+      "jobOfferType": {
+        "code": "AMS",
+        "description": "Arbeitsmarktservice"
+      },
+      "workingTime": {
+        "code": "V",
+        "description": "Vollzeit"
+      },
+      "employmentRelationship": {
+        "code": "AA",
+        "description": "ArbeiterInnen/Angestellte"
+      },
+      "summary": "<p>Ihr Einsatzort/Gebiet: LINZ - Vollzeit</p>\n<p><br />IHRE AUFGABEN</p>\n<ul><li>Softwareentwicklung von Automationslösungen</li><li>Umsetzung von UI-/UX-Konzepten in enger Zusammenarbeit mit<br />interdisziplinären Projektteams</li><li>Mitarbeit bei der Konzeption, Entwicklung und Programmierung von<br />Softwarelösungen auf Basis von .NET-Technologien in C#</li><li>Mitgestaltung moderner Webanwendungen auf .NET-Basis unter Einsatz<br />aktueller Technologien</li></ul>\n<p><br />UNSERE ANFORDERUNGEN</p>\n<ul><li>Abgeschlossene technische Ausbildung (HTL, FH, Universität) im Bereich<br />Informatik, Software Engineering oder vergleichbar</li><li>Sehr gute Kenntnisse in der objektorientierten Programmierung (z.B. C#, Java)</li><li>Kenntnisse in Webtechnologien (HTML5, JavaScript) sowie Erfahrung mit<br />Web-Frameworks (z.B. Blazor) von Vorteil</li><li>Interesse an komplexen Softwaresystemen und Freude am Erlernen neuer Technologien</li><li>Fundierte Englischkenntnisse in Wort und Schrift</li><li>Solide Deutschkenntnisse wünschenswert</li></ul>\n<p><br />ANGEBOT &amp; BENEFITS<br /><br />Das Bruttojahresgehalt gemäß Kollektivvertrag beträgt für diese Funktion mindestens:<br /><span class=\"fw-bold\">EUR 47.546,94</span>. <br />Abhängig von Ausbildung, Qualifikation und Erfahrung ist eine deutliche Überzahlung möglich.<br /><br />VACE shaping careers | Chancengleichheit und Diversität sind uns wichtig.<br /><br /></p>\n<ul><li>Anspruchsvolles &amp; abwechslungsreiches Aufgabengebiet</li><li>Weiterbildungsmöglichkeiten</li><li>Flexible Arbeitszeiten</li><li>Mitarbeiterrabatte (Kantine / Fitness / Events)</li><li>Homeoffice-Möglichkeit</li><li>kostenlose Parkmöglichkeiten</li><li>Firmenhandy / Laptop</li><li>Mitarbeitervorsorge</li><li>gute öffentliche Erreichbarkeit</li></ul>\n<p><br />IHRE ANSPRECHPERSON<br /><br />Herr Markus Fenninger<br /><a target=\"_blank\" href=\"mailto:petra.schaedle&#64;vace.at\" rel=\"nofollow noopener noreferrer\">markus.fenninger&#64;vace.at</a><br /><br /><br />Haben wir Ihr Interesse geweckt?<br /><br />Dann freuen wir uns über Ihre aussagekräftige Bewerbung unter: <a target=\"_blank\" href=\"https://www.vace.at\" rel=\"nofollow noopener noreferrer\">www.vace.at</a> <br />Inserat Nummer: 15445<br /><br />bzw. gleich über den Link zum Online-Inserat:<br /><br /><a class=\"link-internal\" target=\"_blank\" href=\"https://www.vace.at/job/software-engineer-net-m-w/\" rel=\"nofollow noopener noreferrer\">https://www.vace.at/job/software-engineer-net-m-w/</a><br /><br />VACE Engineering GmbH<br />Lunzerstraße 78<br />4030 Linz</p>",
+      "occupations": [
+        {
+          "id": 388,
+          "bisNoteId": "622",
+          "name": "SoftwareentwicklerIn",
+          "parent": null
+        }
+      ],
+      "urlToJobOffer": null,
+      "jobPortalName": null,
+      "workingLocation": {
+        "countryCode": "AT",
+        "federalState": "Oberösterreich",
+        "zipCode": "4020",
+        "municipality": "Linz",
+        "town": "Linz",
+        "street": null,
+        "freeText": null,
+        "coordinates": [
+          {
+            "longitude": 14.245717459000048,
+            "latitude": 48.37869365000006
+          },
+          {
+            "longitude": 14.245717459000048,
+            "latitude": 48.211371186000065
+          },
+          {
+            "longitude": 14.409215327000027,
+            "latitude": 48.211371186000065
+          },
+          {
+            "longitude": 14.409215327000027,
+            "latitude": 48.37869365000006
+          },
+          {
+            "longitude": 14.245717459000048,
+            "latitude": 48.37869365000006
+          }
+        ],
+        "displayMap": false
+      },
+      "isPreselection": false,
+      "isBookmarked": null,
+      "isGreenJob": false
+    },
+    {
+      "objectType": "searchJobOffer",
+      "id": 22223369,
+      "uuid": "06710713-88b5-3fd3-843d-66f0d7eb679b",
+      "lastUpdatedAt": "2026-06-19T00:00:00Z",
+      "title": "Embedded Software Engineer (w/m/d)",
+      "company": {
+        "name": "BRP-Rotax GmbH & Co.KG",
+        "website": null,
+        "address": {
+          "countryCode": "AT",
+          "federalState": "Oberösterreich",
+          "zipCode": "4623",
+          "municipality": "Gunskirchen",
+          "town": "Gunskirchen",
+          "street": "Rotaxstraße 1",
+          "freeText": null,
+          "coordinates": [
+            {
+              "longitude": 13.946075239000038,
+              "latitude": 48.13306287200004
+            }
+          ],
+          "displayMap": null
+        }
+      },
+      "educationLevels": [
+        {
+          "code": "U*",
+          "description": "Fachhochschule/Universität/pädagogische Hochschule",
+          "parent": null
+        }
+      ],
+      "jobOfferType": {
+        "code": "AMS",
+        "description": "Arbeitsmarktservice"
+      },
+      "workingTime": {
+        "code": "V",
+        "description": "Vollzeit"
+      },
+      "employmentRelationship": {
+        "code": "AA",
+        "description": "ArbeiterInnen/Angestellte"
+      },
+      "summary": "<ams-heading-1>Ihr neues Abenteuer</ams-heading-1>\n<ul><li>Entwicklung von hardwarenahen Softwaremodulen</li><li>Integration der Funktionen am Prüfstand und im Fahrzeug</li><li>Softwareentwicklung in C/C&#43;&#43;</li><li>Arbeiten mit einer offenen und standardisierten Softwarearchitektur</li><li>Abteilungsübergreifende Projektabwicklung</li></ul>\n<ams-heading-1>Ihre Erfahrungen und Fähigkeiten</ams-heading-1>\n<ul><li>Abgeschlossenes Studium der Informatik, Elektrotechnik, Luft- und Raumfahrttechnik oder vergleichbares</li><li>Erfahrung mit Prozessen der EASA oder DO-178C Standards von Vorteil</li><li>Fundierte Praxis im Bereich Software Requirements Engineering und im Umgang mit entsprechenden Tools</li><li>Sehr gutes Verständnis für die Entwicklung von Funktions- und Safety-Software in C/C&#43;&#43; sowie Erfahrung mit Modellierungstools</li><li>Fundierte Deutsch- und Englischkenntnisse</li><li>Proaktive, strukturierte Arbeitsweise mit ausgeprägten analytischen Fähigkeiten</li></ul>\n<ams-heading-1>Was wir bieten</ams-heading-1>\n<p>Eine spannende Position in einem internationalen <a target=\"_blank\" href=\"https://www.rotax.com/de/unternehmen/brp-rotax-vienna.html\" rel=\"nofollow noopener noreferrer\">Unternehmen</a>. Das Mindestgehalt für diese Position richtet sich nach dem Kollektivvertrag der außeruniversitären Forschung und beginnt bei EUR 68.152,00 brutto/ Jahr. Selbstverständlich hängt Ihr tatsächliches Gehalt von Ihrer Qualifikation und Erfahrung ab. </p>\n<p>Die Mobilität verändern. Wir entwickeln Antriebstrangtechnologien, die intelligenter, sauberer, sicherer und leichter sind. Das ist es, was wir bei BRP-Rotax mit Leidenschaft tun, und wir tun es, indem wir Antriebsstrangsysteme von Weltklasse schaffen. Wir sind ein führender Erstausrüster in der weltweiten Powersports Industrie und verfügen über umfassende Kompetenzen in den Bereichen Design, Entwicklung, Prüfung und Herstellung komplexer Antriebsstrangsysteme. Unser Name steht für Qualität, Umweltbewusstsein und Sicherheit. Innovation ist unser Antrieb, und wir treiben Innovation voran. Träumen Sie groß und gestalten Sie die Zukunft der Mobilität bei BRP-Rotax.</p>\n<p>Das BRP Rotax Team freut sich auf Ihre Online-Bewerbung<br /><br /><a class=\"link-internal\" target=\"_blank\" href=\"https://careers.brp.com/global/de/job/35531/Embedded-Software-Engineer-m-w-d\" rel=\"nofollow noopener noreferrer\">Jetzt bewerben</a><br /><br />BRP-Rotax GmbH &amp; Co KG | Rotaxstraße 1 | 4623 Gunskirchen</p>",
+      "occupations": [
+        {
+          "id": 388,
+          "bisNoteId": "622",
+          "name": "SoftwareentwicklerIn",
+          "parent": null
+        }
+      ],
+      "urlToJobOffer": null,
+      "jobPortalName": null,
+      "workingLocation": {
+        "countryCode": "AT",
+        "federalState": "Oberösterreich",
+        "zipCode": "4623",
+        "municipality": "Gunskirchen",
+        "town": "Gunskirchen",
+        "street": "Rotaxstraße 1",
+        "freeText": null,
+        "coordinates": [
+          {
+            "longitude": 13.946075239000038,
+            "latitude": 48.13306287200004
+          }
+        ],
+        "displayMap": true
+      },
+      "isPreselection": false,
+      "isBookmarked": null,
+      "isGreenJob": false
+    },
+    {
+      "objectType": "searchJobOffer",
+      "id": 22122168,
+      "uuid": "a79d99ad-b27b-3304-9533-2ba32eb8932c",
+      "lastUpdatedAt": "2026-06-22T00:00:00Z",
+      "title": "Software Engineer (m/w/d)",
+      "company": {
+        "name": "Flextronics International Gesellschaft m.b.H.",
+        "website": null,
+        "address": {
+          "countryCode": "AT",
+          "federalState": "Kärnten",
+          "zipCode": "9330",
+          "municipality": "Althofen",
+          "town": "Althofen",
+          "street": "Friesacher Straße 3",
+          "freeText": null,
+          "coordinates": [
+            {
+              "longitude": 14.464623721000066,
+              "latitude": 46.87410890900003
+            }
+          ],
+          "displayMap": null
+        }
+      },
+      "educationLevels": [
+        {
+          "code": "H*",
+          "description": "Matura",
+          "parent": null
+        },
+        {
+          "code": "U*",
+          "description": "Fachhochschule/Universität/pädagogische Hochschule",
+          "parent": null
+        }
+      ],
+      "jobOfferType": {
+        "code": "AMS",
+        "description": "Arbeitsmarktservice"
+      },
+      "workingTime": {
+        "code": "V",
+        "description": "Vollzeit"
+      },
+      "employmentRelationship": {
+        "code": "AA",
+        "description": "ArbeiterInnen/Angestellte"
+      },
+      "summary": "<p>Du entwickelst Software-Konzepte für Produktions- und Testsysteme, die auch optische Prüfungen und Automatisierungen umfassen können. Dabei entwirfst und implementierst du effiziente Lösungen zur Optimierung unserer Prüf- und Herstellungsprozesse und optimierst zudem kontinuierlich bestehende Systeme.</p>\n<ams-heading-2><br />Diesen Bereich gestaltest du mit:<br /><br /></ams-heading-2>\n<ul><li>Entwicklung von Softwarelösungen für Produktions‑, Prüf‑ und Testsysteme in einem hochautomatisierten EMS‑Umfeld</li><li>Unterstützung bei der Automatisierung von Fertigungsprozessen mit Robotik, optischen Inspektionssystemen und vernetzten Anlagen</li><li>Einsatz moderner Technologien wie Python, KI‑Methoden und industrielle Schnittstellen im Shopfloor‑Umfeld</li><li>Betreuung bestehender Lösungen im Sinne von Qualität, Skalierbarkeit und Standardisierung</li><li>Du treibst die Software‑seitige Automatisierung von Produktionsprozessen voran, u. a. durch die Anbindung von Robotik, Vision‑Systemen und smarten Fertigungsanlagen</li></ul>\n<ams-heading-2><br />Das schätzen wir an dir:<br /><br /></ams-heading-2>\n<ul><li>Abgeschlossene technische Ausbildung (HTL, FH, Uni) im Bereich Informatik, Software Engineering, Elektronik oder einer vergleichbaren Fachrichtung</li><li>Sehr gute Programmierkenntnisse, insbesondere in Python (z. B. für Automatisierung, Datenanalyse, Bildverarbeitung oder KI-Anwendungen)</li><li>Erfahrung im Umgang mit Datenbanksystemen</li><li>Kenntnisse bzw. Erfahrung mit Low-Code/No-Code‑Plattformen, Schnittstellen (APIs) und industriellen Softwareumgebungen von Vorteil</li><li>Begeisterung dafür, neue Technologien in einem industriellen Umfeld einzusetzen und produktionsnahe Lösungen zu realisieren</li><li>Deutsch- und Englischkenntnisse in Wort und Schrift für die Zusammenarbeit in einem internationalen Umfeld</li></ul>\n<ams-heading-2><br />Das bieten wir dir:<br /><br /></ams-heading-2>\n<ul><li>Ein vielseitiges Aufgabengebiet mit großem Gestaltungsspielraum, in dem du deine innovativen Ideen aktiv einbringen und umsetzen kannst</li><li>Spannende technische Herausforderungen, an denen du tüfteln kannst – inklusive flexibler Arbeitszeitgestaltung</li><li>Abwechslungsreiche Projekte, bei denen du Verantwortung übernimmst und deine eigene Handschrift einbringen kannst</li><li>Wertschätzendes Arbeitsumfeld mit offener Feedbackkultur und Spaß an der Zusammenarbeit</li><li>Ein KV-Bruttomonatsgehalt laut der Beschäftigungsgruppe F lt. Kollektiv Elektro- und Elektronikindustrie mit der Bereitschaft zur Überzahlung je nach Qualifikation und Berufserfahrung<br /><br /></li></ul>\n<ams-heading-2>Wir freuen uns auf deine Bewerbung!</ams-heading-2>\n<p><a target=\"_blank\" href=\"https://flex.onlyfy.jobs/job/tii24i9n30hvirf0qsvf7upiw21e6bd\" rel=\"nofollow noopener noreferrer\">Software Engineer (m/w/d)</a></p>\n<ams-heading-2>Weitere Informationen:</ams-heading-2>\n<p>Gerda Reif | Talent Acquisition<br /><a target=\"_top\" href=\"mailto:gerda.reif&#64;flex.com\" rel=\"nofollow noopener noreferrer\">gerda.reif&#64;flex.com</a> | <a target=\"_top\">&#43;43 4262 2644 1159</a></p>\n<p>Flextronics International Gesellschaft m.b.H.<br />Friesacher Straße 3<br />9330 Althofen</p>",
+      "occupations": [
+        {
+          "id": 315,
+          "bisNoteId": "425",
+          "name": "InformatikerIn",
+          "parent": null
+        },
+        {
+          "id": 388,
+          "bisNoteId": "622",
+          "name": "SoftwareentwicklerIn",
+          "parent": null
+        }
+      ],
+      "urlToJobOffer": null,
+      "jobPortalName": null,
+      "workingLocation": {
+        "countryCode": "AT",
+        "federalState": "Kärnten",
+        "zipCode": "9330",
+        "municipality": "Althofen",
+        "town": "Althofen",
+        "street": "Friesacher Straße 3",
+        "freeText": null,
+        "coordinates": [
+          {
+            "longitude": 14.464623721000066,
+            "latitude": 46.87410890900003
+          }
+        ],
+        "displayMap": true
+      },
+      "isPreselection": false,
+      "isBookmarked": null,
+      "isGreenJob": false
+    },
+    {
+      "objectType": "searchJobOffer",
+      "id": 21781626,
+      "uuid": "f4ec2596-5a41-3385-9d09-305703d12918",
+      "lastUpdatedAt": "2026-06-19T00:00:00Z",
+      "title": "Software Engineer (w/m/d)",
+      "company": {
+        "name": "ManpowerGroup GmbH",
+        "website": null,
+        "address": {
+          "countryCode": "AT",
+          "federalState": "Oberösterreich",
+          "zipCode": "4020",
+          "municipality": "Linz",
+          "town": "Linz",
+          "street": "Garnisonstraße 17",
+          "freeText": null,
+          "coordinates": [
+            {
+              "longitude": 14.310513264000065,
+              "latitude": 48.30192159400008
+            }
+          ],
+          "displayMap": null
+        }
+      },
+      "educationLevels": [
+        {
+          "code": "H*",
+          "description": "Matura",
+          "parent": null
+        },
+        {
+          "code": "U*",
+          "description": "Fachhochschule/Universität/pädagogische Hochschule",
+          "parent": null
+        }
+      ],
+      "jobOfferType": {
+        "code": "AMS",
+        "description": "Arbeitsmarktservice"
+      },
+      "workingTime": {
+        "code": "V",
+        "description": "Vollzeit"
+      },
+      "employmentRelationship": {
+        "code": "AA",
+        "description": "ArbeiterInnen/Angestellte"
+      },
+      "summary": "<div class=\"label-content label-content--selectbox c-job-listing c-job-listing__description\">\n<div class=\"field field--name-field-job-selectbox field--type-string field--label-hidden field--entity-node field--items\">\n<div class=\"field-wrapper\">\n<div class=\"field--content\">\n<ams-heading-2>Ihre Aufgaben:</ams-heading-2>\n<ul><li>Konzeption neuer Features, Instandhaltung und Performance-Optimierung bestehender Software</li><li>Unterstützung bei der schrittweisen Portierung bestehender Software auf neue Plattformen</li><li>Gewährleistung hoher Codequalität und stabiler Architektur mittels Reviews und Leitlinien</li><li>Konzeption und Umsetzung einer modernen Softwarearchitektur inkl. Backend- und Frontend-Entwicklung sowie Einführung geeigneter Technologien im Team</li><li>Sicherstellung der Testbarkeit von Anwendungen</li><li>Kooperation im Team und Weiterentwicklung von Webentwicklungs-Kompetenzen</li></ul>\n</div>\n</div>\n<div class=\"field-wrapper\">\n<ams-heading-2>Ihr Profil:</ams-heading-2>\n<div class=\"field--content\">\n<ul><li>Min. 2-3 Jahre Erfahrung in der Softwareentwicklung</li><li>Versierter Umgang in C#, C&#43;&#43; wünschenswert</li><li>Praxis in der Entwicklung von APIs und modernen Anwendungsplattformen</li><li>Erfahrung im Umgang mit relationalen Datenbanksystemen</li><li>Kenntnisse in Softwarearchitektur</li><li>Praxis in der Anwendung automatisierter Testmethoden</li><li>Kompetenz zur fundierten technischen Entscheidungsfindung</li><li>Motivation zur Mitgestaltung von Architektur- und Qualitätsstandards</li><li>Kommunikationsstarke Persönlichkeit mit strukturierter und selbstständiger Arbeitsweise</li></ul>\n</div>\n</div>\n</div>\n</div>\n<div class=\"label-content label-content--entgelt c-job-listing c-job-listing__salary\">\n<div class=\"field-wrapper\">\n<ams-heading-2>Unser Kunde bietet:</ams-heading-2>\n<div class=\"field--content\">\n<ul><li>Vollzeitanstellung mit 38,5 h/Woche</li><li>Monatsbrutto ab € 4.100, - (Bereitschaft zur Überzahlung je nach Erfahrung)</li><li>Mehr Urlaub: Zusatztage alle 5 Jahre und extra Woche ab 42 Jahren</li><li>Sehr gutes Angebot an Weiterbildungs- und Entwicklungsmöglichkeiten</li><li>Stabiles Arbeitsumfeld mit langfristigen Perspektiven</li><li>Zahlreiche Sozialleistungen wie Betriebskantine, Gutscheinen, Fahrtkostenzuschuss &amp; Parkplatz, Job-Ticket, uvm.</li><li>Events und Feiern zur Förderung des Miteinanders</li></ul>\n</div>\n</div>\n</div>\n<p><br />Bitte bewerben Sie sich ausschließlich ONLINE unter Apply URL <a target=\"_blank\" href=\"https://easyapply.jobs/r/MEPKwmM261bgRM2h7jGe\" rel=\"nofollow noopener noreferrer\">https://easyapply.jobs/r/MEPKwmM261bgRM2h7jGe</a><br /><br />oder geben Sie die Referenznummer unter <a target=\"_blank\" href=\"https://www.ams.at/unternehmen\" rel=\"nofollow noopener noreferrer\">https://www.ams.at/unternehmen</a> &#61;&gt; JOB SUCHEN im Feld &#34;Beruf, Kompetenz, Unternehmen... &#34; ein.<br /><br /><br />MANPOWERGROUP Personaldienstleistungen<br />Lassallestraße 7a, 1020 Wien<br /><a target=\"_blank\" href=\"https://www.manpower.at\" rel=\"nofollow noopener noreferrer\">www.manpower.at</a><br />T: &#43;43-1-516 76-7000</p>",
+      "occupations": [
+        {
+          "id": 388,
+          "bisNoteId": "622",
+          "name": "SoftwareentwicklerIn",
+          "parent": null
+        }
+      ],
+      "urlToJobOffer": null,
+      "jobPortalName": null,
+      "workingLocation": {
+        "countryCode": "AT",
+        "federalState": "Oberösterreich",
+        "zipCode": "4060",
+        "municipality": "Leonding",
+        "town": "Leonding",
+        "street": null,
+        "freeText": null,
+        "coordinates": [
+          {
+            "longitude": 14.238899057000026,
+            "latitude": 48.28681939300003
+          },
+          {
+            "longitude": 14.238899057000026,
+            "latitude": 48.26881150500003
+          },
+          {
+            "longitude": 14.266405654000039,
+            "latitude": 48.26881150500003
+          },
+          {
+            "longitude": 14.266405654000039,
+            "latitude": 48.28681939300003
+          },
+          {
+            "longitude": 14.238899057000026,
+            "latitude": 48.28681939300003
+          }
+        ],
+        "displayMap": false
+      },
+      "isPreselection": false,
+      "isBookmarked": null,
+      "isGreenJob": false
+    },
+    {
+      "objectType": "searchJobOffer",
+      "id": 22068165,
+      "uuid": "abb1663b-7460-35a6-8e57-c383b44b57bf",
+      "lastUpdatedAt": "2026-06-10T00:00:00Z",
+      "title": "Advanced Software Engineer (m/f/d)",
+      "company": {
+        "name": "Palfinger AG",
+        "website": null,
+        "address": {
+          "countryCode": "AT",
+          "federalState": "Salzburg",
+          "zipCode": "5101",
+          "municipality": "Bergheim",
+          "town": "Lengfelden",
+          "street": "Lamprechtshausener Bundesstr.8",
+          "freeText": null,
+          "coordinates": [
+            {
+              "longitude": 13.046558617000073,
+              "latitude": 47.84311988400003
+            }
+          ],
+          "displayMap": null
+        }
+      },
+      "educationLevels": [
+        {
+          "code": "H*",
+          "description": "Matura",
+          "parent": null
+        }
+      ],
+      "jobOfferType": {
+        "code": "AMS",
+        "description": "Arbeitsmarktservice"
+      },
+      "workingTime": {
+        "code": "V",
+        "description": "Vollzeit"
+      },
+      "employmentRelationship": {
+        "code": "AA",
+        "description": "ArbeiterInnen/Angestellte"
+      },
+      "summary": "<p>The AI Projects team is part of PALFINGER’s global ICT organization and responsible for building and operating company-wide AI products and services. We develop and maintain PAIP — PALFINGER’s internal AI platform used by over 2,000 employees across the globe — as well as specialized AI agents, integrations with enterprise systems, and AI-powered automation. We also drive the rollout of AI coding tools across the engineering organization and run hands-on AI Coding Workshops to enable development teams. As a small, autonomous team we work end-to-end: from ideation and prototyping through implementation, deployment, and user support. </p>\n<p></p>\n<ams-heading-1>YOUR RESPONSIBILITIES</ams-heading-1>\n<p></p>\n<ul><li>Develop and evolve PAIP and other internal AI products — from new features and agents to platform improvements </li><li>Design, build, and operate applications powered by Large Language Models (LLMs) and other AI technologies, including retrieval-augmented generation (RAG) pipelines and multi-agent systems </li><li>Build and maintain backend services, APIs, and integrations connecting AI capabilities with enterprise systems </li><li>Own products end-to-end — from requirements gathering and stakeholder alignment through to production deployment and ongoing user support </li><li>Evaluate, prototype, and integrate emerging AI tools and technologies into the existing enterprise landscape </li></ul>\n<ams-heading-1>YOUR QUALIFICATIONS</ams-heading-1>\n<p></p>\n<ul><li>A degree (Bachelor’s or Master’s) in Computer Science, Data Science, Software Engineering, or a related field </li><li>At least 2 years of professional experience in software development </li><li>Strong skills in at least one backend technology (e.g. Python, C#, Node.js/TypeScript) </li><li>Hands-on experience with LLMs and generative AI — whether through work, academic projects, or personal exploration </li><li>Proficiency in using AI coding agents and AI-assisted development tools (e.g. Claude Code, GitHub Copilot, Cursor) as part of your daily workflow — you should be able to teach others how to get the most out of these tools </li></ul>\n<ams-heading-1>WHAT WE OFFER</ams-heading-1>\n<p></p>\n<ul><li>Flexible working hours with no core time and possibility to work from home</li><li>Further training and international career opportunities</li><li>Corporate health management &#34;PALfit&#34;</li><li>Company restaurant with freshly prepared meals and daily meal subsidy</li><li>Job ticket for travel to and from PALFINGER</li><li>Numerous employee discounts through Corporate Benefit</li></ul>\n<p></p>\n<p>Minimum yearly gross salary according to the Austrian metal industry collective agreement is EUR 52.197,04 based on full-time employment. According to experience and qualification, we offer a market-conforming overpayment.</p>\n<p>Curious about this position or want to learn more? Reach out.</p>\n<p> Apply: <a class=\"link-internal\" target=\"_blank\" href=\"https://jobs.palfinger.com/de/advanced-software-engineer-m/f/d_k_1818639\" rel=\"nofollow noopener noreferrer\">https://jobs.palfinger.com/de/advanced-software-engineer-m/f/d_k_1818639</a></p>",
+      "occupations": [
+        {
+          "id": 388,
+          "bisNoteId": "622",
+          "name": "SoftwareentwicklerIn",
+          "parent": null
+        }
+      ],
+      "urlToJobOffer": null,
+      "jobPortalName": null,
+      "workingLocation": {
+        "countryCode": "AT",
+        "federalState": "Salzburg",
+        "zipCode": "5101",
+        "municipality": "Bergheim",
+        "town": "Lengfelden",
+        "street": "Lamprechtshausener Bundesstr.8",
+        "freeText": null,
+        "coordinates": [
+          {
+            "longitude": 13.046558617000073,
+            "latitude": 47.84311988400003
+          }
+        ],
+        "displayMap": true
+      },
+      "isPreselection": false,
+      "isBookmarked": null,
+      "isGreenJob": false
+    }
+  ]
+}
