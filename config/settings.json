@@ -1,4 +1,4 @@
 {
-  "filterMode": "llama",
+  "filterMode": "regex",
   "filterModel": "llama3.2:3b"
 }
