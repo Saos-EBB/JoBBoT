@@ -29,7 +29,7 @@ function aggregate(decisions: FilterDecision[]): string {
   }).join('\n');
 }
 
-export function writeFilterReport(decisions: FilterDecision[], path = 'data/filter-log.md', mode: FilterMode = 'llm'): void {
+export function writeFilterReport(decisions: FilterDecision[], path = 'data/filter-log.md', mode: FilterMode = 'llama'): void {
   const raus = decisions.filter(d => d.status === 'filtered_out');
   const unsicher = decisions.filter(d => d.status === 'uncertain');
   const sicher = decisions.filter(d => d.status === 'matched');

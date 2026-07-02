@@ -7,11 +7,11 @@ import { loadSettings } from '../lib/settings.ts';
 import type { FilterMode } from '../lib/settings.ts';
 
 function parseModeOverride(argv: string[]): FilterMode | undefined {
-  const arg = argv.find(a => a.startsWith('--filter='));
+  const arg = argv.find(a => a.startsWith('--source='));
   if (!arg) return undefined;
-  const value = arg.slice('--filter='.length);
-  if (value !== 'llm' && value !== 'regex') {
-    throw new Error(`Ungültiger --filter Wert: "${value}". Gültige Werte: llm, regex`);
+  const value = arg.slice('--source='.length);
+  if (value !== 'llama' && value !== 'regex') {
+    throw new Error(`Ungültiger --source Wert: "${value}". Gültige Werte: llama, regex`);
   }
   return value;
 }
