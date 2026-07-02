@@ -17,7 +17,7 @@ export function loadSettings(): Settings {
   }
   const parsed = JSON.parse(raw) as Partial<Settings>;
   return {
-    filterMode: parsed.filterMode ?? 'llama',
+    filterMode: parsed.filterMode ?? 'regex',
     filterModel: parsed.filterModel ?? 'llama3.2:3b',
   };
 }
