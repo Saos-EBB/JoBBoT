@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 
-export type FilterMode = 'llm' | 'regex';
+export type FilterMode = 'llama' | 'regex';
 
 export interface Settings {
   filterMode: FilterMode;
@@ -17,7 +17,7 @@ export function loadSettings(): Settings {
   }
   const parsed = JSON.parse(raw) as Partial<Settings>;
   return {
-    filterMode: parsed.filterMode ?? 'llm',
+    filterMode: parsed.filterMode ?? 'llama',
     filterModel: parsed.filterModel ?? 'llama3.2:3b',
   };
 }

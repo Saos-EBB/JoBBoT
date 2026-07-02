@@ -111,7 +111,7 @@ export function createLlmStrategy(options: { ollama?: string; judge?: Judge } = 
   const judge: Judge = options.judge ?? ((input, lehre) => judgeJob(input, lehre, ollama));
 
   return {
-    name: 'llm',
+    name: 'llama',
     async decide(job, lehre) {
       const input = buildStageInput(job);
       const judgment = await judge(input, lehre);
