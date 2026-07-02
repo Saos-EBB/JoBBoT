@@ -53,10 +53,17 @@ export async function runScrape(options: RunScrapeOptions): Promise<SourceOutcom
   const totalSlot = createSlot(maxConcurrent);
   const browserSlot = createSlot(maxBrowsers);
 
+  // Reihenfolge WICHTIG: der Browser-Slot (der engere Engpass) wird zuerst
+  // erworben. Andersrum (totalSlot zuerst) kann ein Browser-Adapter einen
+  // allgemeinen Slot belegen während er noch auf den Browser-Slot wartet — das
+  // blockiert einen wartenden Fetch-Adapter unnötig, obwohl der sofort loslegen
+  // könnte (Starvation, beobachtet im Live-Lauf: ams hielt den zweiten
+  // Gesamt-Slot fest, während devjobs.at den Browser-Slot belegte, und jobs.at
+  // blieb hinter ams in der Gesamt-Slot-Queue stecken statt parallel zu laufen).
   const settled = await Promise.allSettled(names.map(async name => {
-    await totalSlot.acquire();
     const isBrowser = registry[name].kind === 'browser';
     if (isBrowser) await browserSlot.acquire();
+    await totalSlot.acquire();
     try {
       return await registry[name].scrape(
         queriesFor(name),
@@ -64,8 +71,8 @@ export async function runScrape(options: RunScrapeOptions): Promise<SourceOutcom
         (current, total) => onProgress?.(name, current, total),
       );
     } finally {
-      if (isBrowser) browserSlot.release();
       totalSlot.release();
+      if (isBrowser) browserSlot.release();
     }
   }));
 

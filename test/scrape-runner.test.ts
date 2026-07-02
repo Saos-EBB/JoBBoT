@@ -216,6 +216,51 @@ test('Scheduler: werfender Adapter blockiert die anderen nicht, auch unter Dross
   assert.equal(byName.b.ok, true);
 });
 
+function timedAdapter(name: string, kind: 'fetch' | 'browser', ms: number, starts: Record<string, number>, t0: number): ScraperAdapter {
+  return {
+    name,
+    kind,
+    async scrape() {
+      starts[name] = performance.now() - t0;
+      await delay(ms);
+      return [];
+    },
+  };
+}
+
+// Regression: im Live-Lauf blockierte ein Browser-Adapter (der auf den knapperen
+// Browser-Slot wartete) einen längst bereiten Fetch-Adapter, weil er zuerst einen
+// allgemeinen Slot ergattert hatte und ihn nutzlos festhielt. Fix: Browser-Slot
+// wird VOR dem allgemeinen Slot erworben, ein wartender Browser-Adapter belegt
+// also nie einen allgemeinen Slot ohne ihn zu nutzen.
+test('Scheduler: ein wartender Browser-Adapter blockiert einen bereiten Fetch-Adapter NICHT', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+
+  const t0 = performance.now();
+  const starts: Record<string, number> = {};
+  const registry: Record<string, ScraperAdapter> = {
+    browser1: timedAdapter('browser1', 'browser', 150, starts, t0),
+    browser2: timedAdapter('browser2', 'browser', 20, starts, t0),
+    fetch1: timedAdapter('fetch1', 'fetch', 20, starts, t0),
+    fetch2: timedAdapter('fetch2', 'fetch', 20, starts, t0),
+  };
+
+  await runScrape({
+    names: ['browser1', 'browser2', 'fetch1', 'fetch2'],
+    registry,
+    queriesFor: () => [],
+    storage,
+  });
+
+  // fetch2 muss starten, sobald fetch1 fertig ist (~20ms) — NICHT erst wenn
+  // browser1 nach 150ms fertig ist und browser2 aus der Browser-Queue entlässt.
+  assert.ok(starts.fetch2 < 100, `fetch2 sollte lange vor browser1s Ende starten, startete bei ${starts.fetch2}ms`);
+  // browser2 darf erst starten, nachdem browser1 den Browser-Slot freigegeben hat.
+  assert.ok(starts.browser2 >= 140, `browser2 sollte erst nach browser1 (150ms) starten, startete bei ${starts.browser2}ms`);
+});
+
 test('Scheduler: maxConcurrent/maxBrowsers per Option überschreibbar', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
