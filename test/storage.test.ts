@@ -251,3 +251,83 @@ test('delete(nichtExistente id) → kein throw', async (t) => {
   const store = createStorage(dir);
   await assert.doesNotReject(() => store.delete('000000000000dead'));
 });
+
+// ── Sortierte Unterordner sicher/unsicher ──────────────────────────────────
+
+test('save(status=matched) → Datei landet in <dir>/sicher/', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const store = createStorage(dir);
+  const job = toJob(fakeScraped());
+  job.status = 'matched';
+  await store.save(job);
+
+  const rootFiles = jobFiles(await readdir(dir));
+  const sicherFiles = jobFiles(await readdir(join(dir, 'sicher')));
+  assert.equal(rootFiles.length, 0);
+  assert.equal(sicherFiles.length, 1);
+});
+
+test('save(status=uncertain) → Datei landet in <dir>/unsicher/', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const store = createStorage(dir);
+  const job = toJob(fakeScraped());
+  job.status = 'uncertain';
+  await store.save(job);
+
+  const unsicherFiles = jobFiles(await readdir(join(dir, 'unsicher')));
+  assert.equal(unsicherFiles.length, 1);
+});
+
+test('updateStatus new→matched→generated: Datei wandert, kein Duplikat', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const store = createStorage(dir);
+  const job = toJob(fakeScraped());
+  await store.save(job);
+
+  await store.updateStatus(job.id, 'matched');
+  assert.equal(jobFiles(await readdir(dir)).length, 0);
+  assert.equal(jobFiles(await readdir(join(dir, 'sicher'))).length, 1);
+
+  await store.updateStatus(job.id, 'generated');
+  assert.equal(jobFiles(await readdir(join(dir, 'sicher'))).length, 0, 'alte Datei in sicher/ hätte entfernt werden müssen');
+  assert.equal(jobFiles(await readdir(dir)).length, 1, 'neue Datei sollte zurück im Basisordner liegen');
+});
+
+test('get/exists/delete finden Jobs unabhängig vom Unterordner', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const store = createStorage(dir);
+  const job = toJob(fakeScraped());
+  job.status = 'matched';
+  await store.save(job);
+
+  assert.equal(await store.exists(job.id), true);
+  assert.equal((await store.get(job.id))?.id, job.id);
+
+  await store.delete(job.id);
+  assert.equal(await store.exists(job.id), false);
+  assert.equal(jobFiles(await readdir(join(dir, 'sicher'))).length, 0);
+});
+
+test('list() findet Jobs aus Basisordner + beiden Unterordnern zusammen', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const store = createStorage(dir);
+  const jNew = toJob(fakeScraped('New Job', 'Corp N'));
+  const jMatched = toJob(fakeScraped('Matched Job', 'Corp M'));
+  const jUncertain = toJob(fakeScraped('Uncertain Job', 'Corp U'));
+  jMatched.status = 'matched';
+  jUncertain.status = 'uncertain';
+
+  await store.save(jNew);
+  await store.save(jMatched);
+  await store.save(jUncertain);
+
+  assert.equal((await store.list()).length, 3);
+  assert.equal((await store.list({ status: 'matched' })).length, 1);
+  assert.equal((await store.list({ status: 'uncertain' })).length, 1);
+  assert.equal((await store.list({ status: 'new' })).length, 1);
+});
