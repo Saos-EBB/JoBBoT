@@ -147,7 +147,12 @@ export const devJobsAtAdapter: ScraperAdapter = {
       for (let page = 2; page <= totalPages; page++) {
         await delay(2000);
         onProgress?.(page, totalPages);
-        baseJobs.push(...parseSearchResults(await fetchRemixContext(`${baseUrl}&page=${page}`)));
+        try {
+          baseJobs.push(...parseSearchResults(await fetchRemixContext(`${baseUrl}&page=${page}`)));
+        } catch (err) {
+          console.warn(`[devjobs.at] Suchseite ${page} fehlgeschlagen, breche Pagination ab (behalte ${baseJobs.length} Treffer)`, err);
+          break;
+        }
       }
     }
     const candidates = keep ? baseJobs.filter(keep) : baseJobs;
