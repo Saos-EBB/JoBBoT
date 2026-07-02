@@ -66,16 +66,23 @@ export function parseDetailResult(context: unknown, baseJob: ScrapedJob): Scrape
 
 // Findet den ersten window["__*"]-Global mit .state.loaderData — bekannte Keys
 // zuerst (schnellerer Treffer im Normalfall), dann generischer Scan als Fallback.
+// WICHTIG: page.evaluate() serialisiert die Callback-Funktion als reinen Quelltext
+// und führt ihn in der Browser-Seite aus — ein eigener JS-Realm ohne Zugriff auf
+// Node-/esbuild-Helfer. Ein const-gebundener benannter Arrow-Function-Ausdruck
+// (z.B. "const hasLoaderData = (v) => ...") wird von tsx/esbuild mit einem
+// __name(fn, "hasLoaderData")-Aufruf umschlossen (Stacktrace-Namenserhalt) —
+// dieser Helfer existiert im Browser nicht → ReferenceError. Deshalb hier
+// bewusst KEINE benannte Hilfsfunktion, sondern die Prüfung inline wiederholt.
 async function findStateKey(page: Page, knownKeys: string[]): Promise<string | null> {
   return page.evaluate((keys: string[]) => {
-    const hasLoaderData = (v: unknown): boolean =>
-      typeof v === 'object' && v !== null && (v as any).state?.loaderData != null;
     for (const k of keys) {
-      if (hasLoaderData((window as any)[k])) return k;
+      const v = (window as any)[k];
+      if (typeof v === 'object' && v !== null && v.state?.loaderData != null) return k;
     }
     for (const k of Object.keys(window)) {
       if (!k.startsWith('__')) continue;
-      if (hasLoaderData((window as any)[k])) return k;
+      const v = (window as any)[k];
+      if (typeof v === 'object' && v !== null && v.state?.loaderData != null) return k;
     }
     return null;
   }, knownKeys);
