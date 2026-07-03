@@ -27,14 +27,14 @@ ABSOLUTE REGELN — niemals brechen:
 export function buildAnschreibenPrompt(job: Job, profile: ProfileData): string {
   const desc = job.description.slice(0, 1200);
   const alleSkills = [
-    ...profile.programming_languages,
-    ...profile.frontend,
-    ...profile.backend,
-    ...profile.databases,
+    ...profile.skills.sprachen,
+    ...profile.skills.frontend,
+    ...profile.skills.backend,
+    ...profile.skills.datenbanken,
   ].join(', ');
   const projekteText = profile.projekte
     .slice(0, 2)
-    .map(p => `${p.name}: ${p.beschreibung}`)
+    .map(p => `${p.name}: ${p.beschreibung}${p.tech ? ` (Tech: ${p.tech.join(', ')})` : ''}`)
     .join('\n');
   return `Stelle: ${job.title}
 Firma: ${job.company}${job.location ? `, ${job.location}` : ''}
@@ -42,12 +42,12 @@ Stellenbeschreibung:
 ${desc}
 
 Bewerber-Profil:
-Ausbildung: ${profile.ausbildung.abschluss}
+Ausbildung: ${profile.quereinstieg.abschluss}
 Skills: ${alleSkills}
-Sprachen: ${profile.sprachen.join(', ')}
+Sprachen: ${profile.sprachkenntnisse.join(', ')}
 Projekte/Erfahrung:
 ${projekteText}
-Über mich: ${profile.ueber_mich}
+Hintergrund: ${profile.quereinstieg.hintergrund}
 
 Struktur (3 Absätze, ≤180 Wörter gesamt):
 Absatz 1 (~50 Wörter) — Anker: konkrete Rolle + Firma + EIN spezifisches Element aus der

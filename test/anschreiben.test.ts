@@ -21,15 +21,20 @@ const sample = () => toJob({
 const profile: ProfileData = {
   name: 'Max Mustermann',
   job_title: 'Junior Softwareentwickler',
-  ausbildung: { abschluss: 'HTL Informatik, Matura 2023', status: 'abgeschlossen' },
-  programming_languages: ['TypeScript', 'Python'],
-  frontend: ['React'],
-  backend: ['Node.js'],
-  databases: ['SQL'],
-  tools: ['Git'],
-  sprachen: ['Deutsch (Muttersprache)', 'Englisch (B2)'],
-  projekte: [{ name: 'TestBot', beschreibung: 'Automatisierungs-Tool in TypeScript.' }],
-  ueber_mich: 'Ich lerne schnell und arbeite gerne im Team.',
+  quereinstieg: {
+    bootcamp: 'TestBootcamp (6 Monate)',
+    abschluss: 'HTL Informatik, Matura 2023',
+    hintergrund: 'Quereinsteiger aus einem nicht-technischen Umfeld',
+  },
+  skills: {
+    sprachen: ['TypeScript', 'Python'],
+    frontend: ['React'],
+    backend: ['Node.js'],
+    datenbanken: ['SQL'],
+    tools: ['Git'],
+  },
+  sprachkenntnisse: ['Deutsch (Muttersprache)', 'Englisch (B2)'],
+  projekte: [{ name: 'TestBot', beschreibung: 'Automatisierungs-Tool in TypeScript.', tech: ['TypeScript'] }],
 };
 
 // kein "Sehr geehrte", kein "Mit freundlichen", keine Klammern, ≥ 50 Zeichen
@@ -70,9 +75,9 @@ test('buildAnschreibenPrompt: description wird auf 1200 Zeichen begrenzt', () =>
   assert.ok(!p.includes('x'.repeat(1201)));
 });
 
-test('buildAnschreibenPrompt: enthält profile.ausbildung.abschluss', () => {
+test('buildAnschreibenPrompt: enthält profile.quereinstieg.abschluss', () => {
   const p = buildAnschreibenPrompt(sample(), profile);
-  assert.ok(p.includes(profile.ausbildung.abschluss));
+  assert.ok(p.includes(profile.quereinstieg.abschluss));
 });
 
 test('buildAnschreibenPrompt: enthält Absatz-Strukturhinweis', () => {
