@@ -1,0 +1,15 @@
+{
+  "source": "devjobs.at",
+  "url": "https://www.devjobs.at/job/3e23496f9c95e33aba673839b4611957",
+  "title": "Junior Javascript & Typescript Backend Engineer",
+  "company": "Dynatrace GmbH",
+  "location": "Linz",
+  "description": "<h2>Deine Rolle im Team</h2>\n\n<ul><li>We build, maintain, and support the customer-facing JavaScript agent that collects web data for Real User Monitoring (RUM).</li>\n<li>You'll join a highly skilled team that owns the agent end-to-end.</li>\n<li>As an entry-level engineer, you'll contribute to real features, learn our codebase and practices, and grow quickly through mentorship-working on implementation, testing, performance, and maintainability together as one team.</li>\n<li>Implement and enhance features in our TypeScript-based web agent with guidance from senior engineers.</li>\n<li>Improve maintainability, performance, and footprint while keeping compatibility in mind.</li>\n<li>Write reliable tests (Vitest, Playwright) and use our toolchain (esbuild, ESLint, internal tooling).</li>\n<li>Participate in design discussions and code reviews; learn how we plan and deliver iteratively.</li>\n<li>Communicate progress proactively and ask questions early - curiosity is very welcome here.</li>\n</ul>\n\n<h2>Unser Angebot</h2>\n\n<ul><li>We offer attractive compensation packages and stock purchase options with numerous benefits and advantages.</li>\n<li>Due to legal reasons, we are obliged to list a salary range for this position, which is €46,000 up to €66,000 gross per year based on full-time employment (38.5 h/week).</li>\n<li>We've listed the salary range for transparency, but if your experience and skills bring unique value, we'd still love to hear from you-please apply even if you're outside the range.</li>\n</ul>\n\n<h2>Technologien und Skills</h2>\n\n<ul><li>TypeScript</li>\n<li>Esbuild</li>\n<li>ESLint</li>\n<li>Playwright</li>\n<li>Vitest</li>\n<li>JavaScript</li>\n</ul>\n\n<h2>Unsere Erwartungen an dich:</h2>\n\n<h3>Qualifikationen</h3>\n\n<ul><li>Solid JS/TS fundamentals.</li>\n<li>Basic understanding of unit/E2E testing and an interest in browser topics.</li>\n<li>A clean-code mindset and an eye for performance.</li>\n<li>Friendly, open communication and willingness to learn quickly.</li>\n<li>Language: English (German is a plus).</li>\n</ul>\n\n<h3>Erfahrung</h3>\n\n<ul><li>HTL graduate or similar background (or equivalent practical experience).</li>\n<li>Experience with Agile practices and drive continuously improve.</li>\n</ul>\n\n<h2>Benefits</h2>\n\n<ul><li>Team Events</li>\n<li>Home Office</li>\n<li>Klimaticket</li>\n</ul>\n\n",
+  "postedAt": "2026-06-25T08:02:17.711Z",
+  "salary": "46000–66000 €/Jahr",
+  "id": "1215a3a0b9f65de3",
+  "status": "matched",
+  "scrapedAt": "2026-07-03T06:35:36.364Z",
+  "updatedAt": "2026-07-03T06:40:50.667Z",
+  "match": null
+}
