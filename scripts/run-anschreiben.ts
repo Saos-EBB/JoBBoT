@@ -6,7 +6,13 @@ import { createProgress } from '../lib/progress.ts';
 
 const profile = loadProfile();
 const storage = createStorage();
-const jobs = [...await storage.list({ status: 'matched' }), ...await storage.list({ status: 'uncertain' })];
+let jobs = [...await storage.list({ status: 'matched' }), ...await storage.list({ status: 'uncertain' })];
+
+const limitArg = process.argv.find(a => a.startsWith('--limit'));
+if (limitArg) {
+  const limit = Number(limitArg.includes('=') ? limitArg.split('=')[1] : process.argv[process.argv.indexOf(limitArg) + 1]);
+  if (Number.isFinite(limit) && limit > 0) jobs = jobs.slice(0, limit);
+}
 
 if (jobs.length === 0) {
   console.log('Keine gematchten Jobs zum Verarbeiten.');
