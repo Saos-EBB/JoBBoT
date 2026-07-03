@@ -1581,3 +1581,642 @@
 - Software Engineer - Early Career (m/f/x) — Dynatrace
 
 ---
+
+## Filter-Lauf 2026-07-02 09:07  Modus: regex  (19 sicher, 1 unsicher, 20 raus)
+
+
+### Aggregat (Kriterien-Verteilung)
+
+- it_rolle → –
+- erfahrung_ab_3j_erforderlich → –
+- lehre_coding → –
+- junior_signal → –
+
+### Raus (20)
+
+- IT Cloud Division Lehrling — TOMORIS GmbH — Grund: Lehre nicht coding-nah
+- IT Enterprise Systems Lehrling — TOMORIS GmbH — Grund: Lehre nicht coding-nah
+- IT Field Service Lehrling — TOMORIS GmbH — Grund: Lehre nicht coding-nah
+- Lehre Informationstechnologie & Systemtechnik — Elektroanlagen G. Klampfer GmbH — Grund: Lehre nicht coding-nah
+- Lehre Informationstechnologie - Systemtechnik — Molin Industrie - Inbetriebnahme & Montage Gmbh & Co.kg — Grund: Lehre nicht coding-nah
+- Lehre Informationstechnologie/Systemtechnik — Rubig — Grund: Lehre nicht coding-nah
+- Lehre Informationstechnologie/Systemtechnik — RÜBIG GmbH & Co KG — Grund: Lehre nicht coding-nah
+- Lehre IT-Systemtechniker — EREMA Group — Grund: Lehre nicht coding-nah
+- Lehrling Informationstechnologie - Schwerpunkt Systemtechnik — x-tention Informationstechnologie GmbH — Grund: Lehre nicht coding-nah
+- Lehrling IT-Systemtechnik — Mann & Mouse IT-Services GmbH — Grund: Lehre nicht coding-nah
+- Senior Database Architect (m/f/d) — CGM Clinical Österreich GmbH — Grund: Seniorität (Titel)
+- Senior Database Architect (m/f/d) — CompuGroup Medical SE — Grund: Seniorität (Titel)
+- Senior Fullstack Developer (d/m/w) — Ebcont — Grund: Seniorität (Titel)
+- Senior Java Developer (d/w/m) — Ebcont — Grund: Seniorität (Titel)
+- Senior Java Entwickler & Project Lead (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior Java Entwickler (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior Software Engineer — TeamViewer GmbH — Grund: Seniorität (Titel)
+- Senior Webentwickler (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- SOFTWARE DEVELOPER*IN Junior bis Senior JavaScript / PHP (m/w/d) — EI-TEA Partner GmbH — Grund: Seniorität (Titel)
+- System Engineer Datacenter Senior/Junior — Magistrat Linz - Personal und Zentrale Services — Grund: Seniorität (Titel)
+
+### Unsicher (1)
+
+- Software Developer/in (m/w/d). — TANNPAPIER GmbH — kein Junior-Signal (Regex)
+  - URL: https://jobs.ams.at/public/emps/jobs/22159324
+
+### Sicher (19)
+
+- Full Stack Developer Back End — Ahoi Kapptn!
+- IT-Risk / IT-Governance Junior Manager — Partner Bank
+- Junior Cloud Operations Engineer — CELUM GmbH
+- Junior Data Analyst — TD Trusted Decisions GmbH
+- Junior IT Consultant — Hapeko
+- Junior IT Techniker — Leyrer + Graf
+- Junior Javascript & Typescript Backend Engineer — Dynatrace Austria GmbH
+- Junior Javascript & Typescript Backend Engineer — Dynatrace GmbH
+- Junior Javascript & Typescript Engineer — Dynatrace GmbH
+- Junior Software Developer — TANNPAPIER GmbH
+- JUNIOR SOFTWARE ENGINEER (ELECTRICS & AUTOMATION) (M/W) — JK Engineering GmbH
+- Junior Softwareentwickler - Java (w/m/d) — Kern Engineering Careers
+- Junior Specialist Information Security Governance — Plasser & Theurer
+- Lehre Applikationsentwickler - Coding — Starlim Spritzguss Gmbh
+- Lehrling IT-Systemtechnik — CANCOM a+d IT Solutions GmbH
+- Praktikant — Ahoi Kapptn!
+- Praktikum Junior App Manager — hello again GmbH
+- Software Engineer - Early Career — Dynatrace GmbH
+- System Engineer — Premedia GmbH
+
+---
+
+## Filter-Lauf 2026-07-02 09:33  Modus: llama  (1 sicher, 88 unsicher, 26 raus)
+
+
+### Aggregat (Kriterien-Verteilung)
+
+- it_rolle → ja:92
+- erfahrung_ab_3j_erforderlich → nein:89 ja:3
+- lehre_coding → n/a:69 unsicher:23
+- junior_signal → nein:91 ja:1
+
+### Raus (26)
+
+- Backend Developer für Charging-Lösungen (m/w/d) — Fronius Österreich — Grund: Erfahrung ≥3J
+- Frontend Web Developer*in (m/w/d) — karriere.at GmbH — Grund: Erfahrung ≥3J
+- Junior/Senior C# Full Stack Web Developer für SaaS App, IT Firma (m/w/d) — impactit GmbH — Grund: Seniorität (Titel)
+- Mobile Engineer (d/f/m) — hello again — Grund: Erfahrung ≥3J
+- Senior Database Architect (m/f/d) — CGM Clinical Österreich GmbH — Grund: Seniorität (Titel)
+- Senior Database Architect (m/f/d) — CompuGroup Medical SE — Grund: Seniorität (Titel)
+- Senior Frontend Developer (m/w/d) — 3 Banken IT GmbH — Grund: Seniorität (Titel)
+- Senior Frontend Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior Full Stack Developer (m/f/d) – Hagenberg i. M., Wien / Vollzeit — ventopay gmbh — Grund: Seniorität (Titel)
+- (Senior) Full Stack Developer* — KTM AG — Grund: Seniorität (Titel)
+- Senior Fullstack Developer (d/m/w) — EBCONT — Grund: Seniorität (Titel)
+- (Senior) Fullstack Developer (human) — All for One — Grund: Seniorität (Titel)
+- Senior Fullstack Engineer(m/w/d) — FiveSquare — Grund: Seniorität (Titel)
+- Senior Java Backend Developer (m/w/d) — 3 Banken IT GmbH — Grund: Seniorität (Titel)
+- Senior Java Developer (d/w/m) — EBCONT — Grund: Seniorität (Titel)
+- Senior Java Developer (m/w/d) — EBCONT — Grund: Seniorität (Titel)
+- Senior Java Developer Materialflusssystem (m/w/d) — Schachermayer GmbH — Grund: Seniorität (Titel)
+- Senior Java Entwickler & Project Lead (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior Java Entwickler (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior Software Developer mit Fokus auf Kotlin &amp; Java (m/w/d) — x-tention Informationstechnologie GmbH — Grund: Seniorität (Titel)
+- Senior Software Engineer — TeamViewer GmbH — Grund: Seniorität (Titel)
+- Senior Software Entwickler:in C# (m/w/d) — PDC GmbH — Grund: Seniorität (Titel)
+- Senior Webentwickler (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- SOFTWARE DEVELOPER*IN Junior bis Senior JavaScript / PHP (m/w/d) — EI-TEA Partner GmbH — Grund: Seniorität (Titel)
+- System Engineer Datacenter Senior/Junior — Magistrat Linz - Personal und Zentrale Services — Grund: Seniorität (Titel)
+- Team Lead, Software Development — TeamViewer — Grund: Seniorität (Titel)
+
+### Unsicher (88)
+
+- AI Engineer (m/w/d) — AGILOX Services GmbH — kein junior_signal
+  - URL: https://www.jobs.at/i/7887116
+- Applikationsentwickler für C++ / Linux (m/w/d) — Fronius Österreich — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/applikationsentwickler-f%C3%BCr-c%2B%2B-linux-m-w-d-at-fronius-%C3%B6sterreich-4357659322
+- Automatisierungstechniker Software (m/w/x) — EV Group — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/automatisierungstechniker-software-m-w-x-at-ev-group-4417208130
+- Back End Developer — Ahoi Kapptn! — lehre_coding
+  - URL: https://jobs.ams.at/public/emps/jobs/22376645
+- Backend Deve­loper (m/w/d) — BWT Group — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/backend-deve%C2%ADloper-m-w-d-at-bwt-group-4434165292
+- Backend Developer (m/w/d) - in Linz - Kotlin / Spring — Optimind — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/backend-developer-m-w-d-in-linz-kotlin-spring-at-optimind-4432250284
+- BACKEND WEB DEVELOPER (m/w/d) — eurofunk Kappacher GmbH — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/backend-web-developer-m-w-d-at-eurofunk-kappacher-gmbh-4321627839
+- Cross Platform Software Developer Flutter/MAUI (m/w/d) — Rosenbauer Group — lehre_coding
+  - URL: https://at.linkedin.com/jobs/view/cross-platform-software-developer-flutter-maui-m-w-d-at-rosenbauer-group-4420930401
+- Data Engineer / Developer Data Warehouse & SQL Server für Investmentfonds (m/w/d) — Oberbank — lehre_coding
+  - URL: https://at.linkedin.com/jobs/view/data-engineer-developer-data-warehouse-sql-server-f%C3%BCr-investmentfonds-m-w-d-at-oberbank-4402292770
+- Development Engineer (m/f/d) Embedded Software — BRP-Rotax — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/development-engineer-m-f-d-embedded-software-at-brp-rotax-4391096590
+- Elektronik Entwickler / Testingenieur — Akkodis — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/elektronik-entwickler-testingenieur-at-akkodis-4425779234
+- Embedded-Software-Entwickler (m/w/d) — E+E Elektronik Ges.m.b.H — lehre_coding
+  - URL: https://www.karriere.at/jobs/10021401
+- Embedded-Software-Entwickler (m/w/d) — E + E Elektronik Ges.m.b.H. — lehre_coding
+  - URL: https://www.jobs.at/i/7881491
+- Frontend Developer (m/w/d) — VectaCore — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/frontend-developer-m-w-d-at-vectacore-4434637455
+- Full Stack Developer Back End — Ahoi Kapptn! — lehre_coding
+  - URL: https://jobs.ams.at/public/emps/jobs/22376643
+- Full Stack Developer (m/w/d) — WITRON Gruppe — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-m-w-d-at-witron-group-4420147229
+- Full­stack Engi­neer (m/w/d) — BWT Group — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/full%C2%ADstack-engi%C2%ADneer-m-w-d-at-bwt-group-4403615827
+- Full Stack / Web Developer (m/w/x) — EV Group — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/full-stack-web-developer-m-w-x-at-ev-group-4295645097
+- Fullstack-Entwickler:in mit Java Backend und Vue/Nuxt Frontend — STRABAG — lehre_coding
+  - URL: https://at.linkedin.com/jobs/view/fullstack-entwickler-in-mit-java-backend-und-vue-nuxt-frontend-at-strabag-4418142917
+- HTL Absolvent/in (m/w/d) — Rosenbauer Group — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/htl-absolvent-in-m-w-d-at-rosenbauer-group-4401792296
+- IT Cloud Division Lehrling — TOMORIS GmbH — kein junior_signal
+  - URL: https://www.devjobs.at/job/b38889814a622aa01a5c6791738ab8b4
+- IT Enterprise Systems Lehrling — TOMORIS GmbH — kein junior_signal
+  - URL: https://www.devjobs.at/job/250898269d8258f83709bcc5b3ff05c3
+- IT Field Service Lehrling — TOMORIS GmbH — kein junior_signal
+  - URL: https://www.devjobs.at/job/152166c9b5c53d92e9063ba8dc042d96
+- IT- Mitarbeiter (m/w/d) mit Schwerpunkt Softwareimplementierung-Digitalisierung — Hubers Landhendl GmbH — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/it-mitarbeiter-m-w-d-mit-schwerpunkt-softwareimplementierung-digitalisierung-at-hubers-landhendl-gmbh-4409057724
+- IT-Risk / IT-Governance Junior Manager — Partner Bank — kein junior_signal
+  - URL: https://www.devjobs.at/job/002438b43c9a4625a5dbdd52e4fa5551
+- Java Developer (f/m/d) — Mindbreeze — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/java-developer-f-m-d-at-mindbreeze-4391540796
+- Java Software Engineer — Noir — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/java-software-engineer-at-noir-4434427781
+- (Junior) Business Development Manager (m/w/d) —  — kein junior_signal
+  - URL: https://www.jobs.at/i/7880039
+- Junior Cloud Operations Engineer — CELUM GmbH — kein junior_signal
+  - URL: https://www.devjobs.at/job/963ca8de53f70cdc3a7b033b8da7a21b
+- Junior Data Analyst — TD Trusted Decisions GmbH — lehre_coding
+  - URL: https://www.devjobs.at/job/19e03d2e6851c58db0294944c6490f46
+- Junior Digitalisierungsexperte für erneuerbare Energien (m/w/d) — Ingenieurbüro mitPlan GmbH — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/junior-digitalisierungsexperte-f%C3%BCr-erneuerbare-energien-m-w-d-at-engineering-office-mitplan-4428241067
+- Junior Hardware Entwickler (w/m/d) — Dynell GmbH — kein junior_signal
+  - URL: https://www.karriere.at/jobs/10024846
+- Junior Inhouse Consultant (m/w/d) – SAP Commerce — Wacker Neuson — kein junior_signal
+  - URL: https://www.karriere.at/jobs/7723322
+- Junior IT Consultant — Hapeko — kein junior_signal
+  - URL: https://www.devjobs.at/job/3d66ba3ee1534c8a42358c45b5d3b620
+- Junior IT Techniker — Leyrer + Graf — kein junior_signal
+  - URL: https://www.devjobs.at/job/1e29a7a2f212c1751ada83f8fcbaf56d
+- Junior Javascript & Typescript Backend Engineer — Dynatrace Austria GmbH — kein junior_signal
+  - URL: https://jobs.ams.at/public/emps/jobs/22231644
+- Junior Javascript & Typescript Backend Engineer — Dynatrace GmbH — kein junior_signal
+  - URL: https://www.devjobs.at/job/3e23496f9c95e33aba673839b4611957
+- Junior Javascript & Typescript Backend Engineer — Dynatrace — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/junior-javascript-typescript-backend-engineer-at-dynatrace-4410787202
+- Junior Javascript & Typescript Engineer — Dynatrace GmbH — kein junior_signal
+  - URL: https://www.devjobs.at/job/bccb82b32936c9cd958239c30d0d6cb2
+- Junior-Projektleiter Elektrotechnik (m/w/d) —  — kein junior_signal
+  - URL: https://www.jobs.at/i/7887256
+- Junior-Projektleiter Elektrotechnik (m/w/d) — ETZI-Group GmbH — kein junior_signal
+  - URL: https://www.karriere.at/jobs/10024285
+- (Junior) Projektleiter/in E-Mobilität — eww Gruppe — kein junior_signal
+  - URL: https://www.karriere.at/jobs/10023311
+- Junior Projektleiter:in (m/w/d) —  — kein junior_signal
+  - URL: https://www.jobs.at/i/7887875
+- Junior Software Developer — TANNPAPIER GmbH — kein junior_signal
+  - URL: https://www.devjobs.at/job/65be0a25eef8946dbb78384f9fab8e37
+- JUNIOR SOFTWARE ENGINEER (ELECTRICS & AUTOMATION) (M/W) — JK Engineering GmbH — kein junior_signal
+  - URL: https://jobs.ams.at/public/emps/jobs/21818947
+- Junior Softwareentwickler Für Intelligente Robotik (w/m/d) — KERN engineering careers GmbH — kein junior_signal
+  - URL: https://www.karriere.at/jobs/7829963
+- Junior Softwareentwickler - Java (w/m/d) — Kern Engineering Careers — kein junior_signal
+  - URL: https://jobs.ams.at/public/emps/jobs/21139581
+- Junior Specialist Information Security Governance — Plasser & Theurer — kein junior_signal
+  - URL: https://www.devjobs.at/job/6fe575ebbc3140a7bf7a163557a14f84
+- Lehre Applikationsentwickler - Coding — Starlim Spritzguss Gmbh — lehre_coding
+  - URL: https://www.devjobs.at/job/57bd5d5d2a4b4cc59a0512c5f9dd1b64
+- Lehre Informationstechnologie & Systemtechnik — Elektroanlagen G. Klampfer GmbH — kein junior_signal
+  - URL: https://www.devjobs.at/job/9f54809f83e56cc7260113b953c25b14
+- Lehre Informationstechnologie - Systemtechnik — Molin Industrie - Inbetriebnahme & Montage Gmbh & Co.kg — kein junior_signal
+  - URL: https://www.devjobs.at/job/54312ee6e4c8bd5f718401bb6e925abd
+- Lehre Informationstechnologie/Systemtechnik — Rubig — kein junior_signal
+  - URL: https://www.devjobs.at/job/b459ddd6526bb8a93d256e621c78dd94
+- Lehre Informationstechnologie/Systemtechnik — RÜBIG GmbH & Co KG — kein junior_signal
+  - URL: https://www.devjobs.at/job/b0689e6f0b75a5ba7d55f7e48a0c1e92
+- Lehre IT-Systemtechniker — EREMA Group — kein junior_signal
+  - URL: https://www.devjobs.at/job/6e96794026aef6d13544ff07ed6bd3ad
+- Lehrling Informationstechnologie - Schwerpunkt Systemtechnik — x-tention Informationstechnologie GmbH — kein junior_signal
+  - URL: https://www.devjobs.at/job/b985c63dab5d6058ff3820c7f0acccce
+- Lehrling IT-Systemtechnik — CANCOM a+d IT Solutions GmbH — kein junior_signal
+  - URL: https://www.devjobs.at/job/11fbee9ef900a84cee67c907ee9b133b
+- Lehrling IT-Systemtechnik — Mann & Mouse IT-Services GmbH — kein junior_signal
+  - URL: https://www.devjobs.at/job/d05251de3fbedd70e574dc62156a25e0
+- Machine Learning & Generative AI Engineer (m/w/d) — Miba Group — lehre_coding
+  - URL: https://at.linkedin.com/jobs/view/machine-learning-generative-ai-engineer-m-w-d-at-miba-group-4433329896
+- Marketing &amp; Communications Manager 80-100 % (m/w/d) —  — kein junior_signal
+  - URL: https://www.jobs.at/i/7885339
+- Praktikant Digitalisierung & Softwareentwicklung im Bereich E-Mobilität (w/m/x) — BMW Group — lehre_coding
+  - URL: https://at.linkedin.com/jobs/view/praktikant-digitalisierung-softwareentwicklung-im-bereich-e-mobilit%C3%A4t-w-m-x-at-bmw-group-4432252749
+- Praktikant — Ahoi Kapptn! — kein junior_signal
+  - URL: https://www.devjobs.at/job/f6a7b00a64408b75c3ddff6eb74f7caa
+- Praktikum Junior App Manager — hello again GmbH — kein junior_signal
+  - URL: https://www.devjobs.at/job/f2df89134ffb892d0c889cb853f9f6fa
+- React Software Entwickler (f/m/d) — myflexbox — lehre_coding
+  - URL: https://at.linkedin.com/jobs/view/react-software-entwickler-f-m-d-at-myflexbox-4425488135
+- Sachbearbeiter/in Webentwicklung und IT-Koordination (m/w/d) — Land Oberösterreich, Amt der OÖ. Landesregierung — lehre_coding
+  - URL: https://www.jobs.at/i/7887837
+- Sachbearbeiter/in Webentwicklung und IT-Koordination — Land Oberösterreich — lehre_coding
+  - URL: https://www.karriere.at/jobs/7835417
+- Simulation & Digital Solutions Scientist (m/w/x) — EV Group — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/simulation-digital-solutions-scientist-m-w-x-at-ev-group-4431083703
+- Software Developer/in (m/w/d). — TANNPAPIER GmbH — lehre_coding
+  - URL: https://jobs.ams.at/public/emps/jobs/22159324
+- Software Developer (M/F/D)* — TGW Logistics — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-f-d-at-tgw-logistics-4424889537
+- Software Developer (m/w/d) — efinio IT & Engineering — lehre_coding
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-w-d-at-efinio-it-engineering-4268563514
+- Software Developer (m/w/d) — moveIT Software GmbH — lehre_coding
+  - URL: https://www.jobs.at/i/7888130
+- Software Developer mit Fokus Cyber Security (w/m/x) — BEKO Solutions GmbH — lehre_coding
+  - URL: https://at.linkedin.com/jobs/view/software-developer-mit-fokus-cyber-security-w-m-x-at-beko-solutions-gmbh-4428061189
+- Software Engineer AI-Agents (all genders) — msg — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-ai-agents-all-genders-at-msg-4374069743
+- Software Engineer - Early Career — Dynatrace GmbH — kein junior_signal
+  - URL: https://www.devjobs.at/job/1e2ff4a9e9c8197c104b77953f2c6b47
+- Software Engineer (m/f/d) — GE HealthCare — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-m-f-d-at-ge-healthcare-4423011705
+- Software Engineer (w/m/d) — GE HealthCare — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-w-m-d-at-ge-healthcare-4398027091
+- Software Entwickler C/C++ (m/w/d) — best4best consulting - Personalberatung & Talente Vermittlung — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/software-entwickler-c-c%2B%2B-m-w-d-at-best4best-consulting-personalberatung-talente-vermittlung-4414200757
+- Software Entwickler:in (m/w/d) — Hainzl Industriesysteme GmbH — lehre_coding
+  - URL: https://www.karriere.at/jobs/7785683
+- Software-Entwickler:in (M/W/D)* — TGW Logistics — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/software-entwickler-in-m-w-d-at-tgw-logistics-4424893494
+- Software Entwickler (m/w/d) — MAIT for business — lehre_coding
+  - URL: https://at.linkedin.com/jobs/view/software-entwickler-m-w-d-at-mait-for-business-4404197045
+- Software Entwickler (m/w/d) — World-Direct eBusiness solutions GmbH — kein junior_signal
+  - URL: https://www.jobs.at/i/7888205
+- Software-Entwickler mit Schwerpunkt Embedded Linux (m/w/d) — MEC electronics GmbH — kein junior_signal
+  - URL: https://www.jobs.at/i/7876987
+- Software Entwickler .NET-Bereich (m/f/d) – Hagenberg i. M. / Vollzeit — ventopay gmbh — lehre_coding
+  - URL: https://at.linkedin.com/jobs/view/software-entwickler-net-bereich-m-f-d-%E2%80%93-hagenberg-i-m-vollzeit-at-ventopay-gmbh-4390343867
+- Software Tester & Automation Engineer C# (m/w/x) — DS Automotion GmbH — kein junior_signal
+  - URL: https://www.karriere.at/jobs/7710560
+- Softwareentwickler (w/m/d) Robotik/Vision — TRUMPF Maschinen Austria — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-robotik-vision-at-trumpf-maschinen-austria-4390144343
+- SPS-Programmierer (m/w/d) — efinio IT & Engineering — kein junior_signal
+  - URL: https://at.linkedin.com/jobs/view/sps-programmierer-m-w-d-at-efinio-it-engineering-4422886186
+- Student (m/w/d) für eine Studien- oder Abschlussarbeit im Bereich Elektronik, Softwareentwicklung, Mechatronik, Maschinenbau, Mobilhydraulik, Konstruktion — Wacker Neuson Linz GmbH — lehre_coding
+  - URL: https://www.jobs.at/i/7847742
+- System Engineer — Premedia GmbH — kein junior_signal
+  - URL: https://www.devjobs.at/job/c26feb63ba5a5a0cab63e6f5ed0126c6
+- WebApp-Development (Linz, AT) — Develite GmbH & Co. KG — lehre_coding
+  - URL: https://at.linkedin.com/jobs/view/webapp-development-linz-at-at-develite-gmbh-co-kg-4434269433
+
+### Sicher (1)
+
+- Software Engineer - Early Career (m/f/x) — Dynatrace
+
+---
+
+## Filter-Lauf 2026-07-02 18:46  Modus: regex  (48 sicher, 40 unsicher, 27 raus)
+
+
+### Aggregat (Kriterien-Verteilung)
+
+- it_rolle → –
+- erfahrung_ab_3j_erforderlich → –
+- lehre_coding → –
+- junior_signal → –
+
+### Raus (27)
+
+- Cloud Entwickler (w/m/x) — epunkt — Grund: Erfahrung ≥3J: 'mindestens 4'
+- Full Stack Developer C# / Vue.js – Fokus Backend (M/W/D)* — TGW Logistics — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Full-Stack Entwickler .NET/Angular (w/m/div.) — Bosch Österreich — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Fullstack Developer (m/w/d) mit Cloud-Fokus für Batterieladesysteme — Fronius Österreich — Grund: Erfahrung ≥3J: 'einschlägige'
+- Junior/Senior C# Full Stack Web Developer für SaaS App, IT Firma (m/w/d) — impactit GmbH — Grund: Seniorität (Titel)
+- Marketing &amp; Communications Manager 80-100 % (m/w/d) —  — Grund: Erfahrung ≥3J: '5+ years'
+- Mobile Engineer (d/f/m) — hello again — Grund: Erfahrung ≥3J: '4 years'
+- Senior Database Architect (m/f/d) — CGM Clinical Österreich GmbH — Grund: Seniorität (Titel)
+- Senior Database Architect (m/f/d) — CompuGroup Medical SE — Grund: Seniorität (Titel)
+- Senior Frontend Developer (m/w/d) — 3 Banken IT GmbH — Grund: Seniorität (Titel)
+- Senior Frontend Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior Fullstack Developer (d/m/w) — EBCONT — Grund: Seniorität (Titel)
+- Senior Fullstack Engineer(m/w/d) — FiveSquare — Grund: Seniorität (Titel)
+- Senior Java Backend Developer (m/w/d) — 3 Banken IT GmbH — Grund: Seniorität (Titel)
+- Senior Java Developer (d/w/m) — EBCONT — Grund: Seniorität (Titel)
+- Senior Java Developer (m/w/d) — EBCONT — Grund: Seniorität (Titel)
+- Senior Java Developer Materialflusssystem (m/w/d) — Schachermayer GmbH — Grund: Seniorität (Titel)
+- Senior Java Entwickler & Project Lead (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior Software Developer mit Fokus auf Kotlin &amp; Java (m/w/d) — x-tention Informationstechnologie GmbH — Grund: Seniorität (Titel)
+- (Senior) Software Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior Software Engineer — TeamViewer GmbH — Grund: Seniorität (Titel)
+- Senior Software Entwickler:in C# (m/w/d) — PDC GmbH — Grund: Seniorität (Titel)
+- SOFTWARE DEVELOPER*IN Junior bis Senior JavaScript / PHP (m/w/d) — EI-TEA Partner GmbH — Grund: Seniorität (Titel)
+- Software Entwickler C/C++ (m/w/d) — best4best consulting - Personalberatung & Talente Vermittlung — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Software Entwickler .NET-Bereich (m/f/d) – Hagenberg i. M. / Vollzeit — ventopay gmbh — Grund: Erfahrung ≥3J: '25 jahren'
+- System Engineer Datacenter Senior/Junior — Magistrat Linz - Personal und Zentrale Services — Grund: Seniorität (Titel)
+- Team Lead, Software Development — TeamViewer — Grund: Seniorität (Titel)
+
+### Unsicher (40)
+
+- AI Engineer (m/w/d) — AGILOX Services GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7887116
+- Applikationsentwickler für C++ / Linux (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/applikationsentwickler-f%C3%BCr-c%2B%2B-linux-m-w-d-at-fronius-%C3%B6sterreich-4357659322
+- Automatisierungstechniker Software (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/automatisierungstechniker-software-m-w-x-at-ev-group-4417208130
+- Backend Developer (m/w/d) - in Linz - Kotlin / Spring — Optimind — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/backend-developer-m-w-d-in-linz-kotlin-spring-at-optimind-4432250284
+- BACKEND WEB DEVELOPER (m/w/d) — eurofunk Kappacher GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/backend-web-developer-m-w-d-at-eurofunk-kappacher-gmbh-4321627839
+- Cross Platform Software Developer Flutter/MAUI (m/w/d) — Rosenbauer Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/cross-platform-software-developer-flutter-maui-m-w-d-at-rosenbauer-group-4420930401
+- Development Engineer (m/f/d) Embedded Software — BRP-Rotax — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/development-engineer-m-f-d-embedded-software-at-brp-rotax-4391096590
+- Embedded C++ Entwickler Solar & Energy (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-c%2B%2B-entwickler-solar-energy-m-w-d-at-fronius-%C3%B6sterreich-4412730762
+- Embedded-Software-Entwickler (m/w/d) — E+E Elektronik Ges.m.b.H — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/10021401
+- Embedded-Software-Entwickler (m/w/d) — E + E Elektronik Ges.m.b.H. — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7881491
+- Entwicklungsingenieur (m/w/d) Embedded Software — BRP-Rotax — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/entwicklungsingenieur-m-w-d-embedded-software-at-brp-rotax-4390851960
+- Frontend Web Developer*in (m/w/d) — karriere.at GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7877222
+- Full Stack Developer (m/w/d) — WITRON Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-m-w-d-at-witron-group-4420147229
+- Full Stack / Web Developer (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-web-developer-m-w-x-at-ev-group-4295645097
+- Fullstack-Entwickler:in mit Java Backend und Vue/Nuxt Frontend — STRABAG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/fullstack-entwickler-in-mit-java-backend-und-vue-nuxt-frontend-at-strabag-4418142917
+- Java Developer (f/m/d) — Mindbreeze — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/java-developer-f-m-d-at-mindbreeze-4391540796
+- Java Software Engineer — Noir — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/java-software-engineer-at-noir-4434427781
+- Pimcore/PHP Software-Entwickler (m/w/d) — high5it — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/pimcore-php-software-entwickler-m-w-d-at-high5it-4423619593
+- React Native Developer (d/f/m) — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/react-native-developer-d-f-m-at-hello-again-4421105626
+- SAP Fiori Entwickler (m/w/d) — INFORMATICS — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sap-fiori-entwickler-m-w-d-at-informatics-consulting-development-gmbh-4199712540
+- Site Integration Tester (M/F/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/site-integration-tester-m-f-d-at-tgw-logistics-4413346337
+- Software Consultant/ IT Consultant (m/w/d) — myneva — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-consultant-it-consultant-m-w-d-at-myneva-4427482543
+- Software Developer Embedded Systems (M/W/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-embedded-systems-m-w-d-at-tgw-logistics-4270124053
+- Software Developer Engineering Tools (M/F/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-engineering-tools-m-f-d-at-tgw-logistics-4413669910
+- Software Developer/in (m/w/d). — TANNPAPIER GmbH — kein Junior-Signal (Regex)
+  - URL: https://jobs.ams.at/public/emps/jobs/22159324
+- Software Developer (M/F/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-f-d-at-tgw-logistics-4424889537
+- Software Developer (m/w/d) — efinio IT & Engineering — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-w-d-at-efinio-it-engineering-4268563514
+- Software Developer (m/w/d) — moveIT Software GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7888130
+- Software Developer mit Fokus Cyber Security (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-mit-fokus-cyber-security-w-m-x-at-beko-solutions-gmbh-4428061189
+- Software Engineer (C#/.NET) für Solar & Energy (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-c%23-net-f%C3%BCr-solar-energy-m-w-d-at-fronius-%C3%B6sterreich-4423238746
+- Software Engineer C++ — TeamViewer — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-c%2B%2B-at-teamviewer-4429915029
+- Software Entwickler:in (m/w/d) — Hainzl Industriesysteme GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7785683
+- Software-Entwickler:in (M/W/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-entwickler-in-m-w-d-at-tgw-logistics-4424893494
+- Software Entwickler (m/w/d) — MAIT for business — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-entwickler-m-w-d-at-mait-for-business-4404197045
+- Software Entwickler (m/w/d) — World-Direct eBusiness solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7888205
+- Software-Entwickler mit Schwerpunkt Embedded Linux (m/w/d) — MEC electronics GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7876987
+- Softwareentwickler (w/m/d) Robotik/Vision — TRUMPF Maschinen Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-robotik-vision-at-trumpf-maschinen-austria-4390144343
+- SPS-Programmierer (m/w/d) — efinio IT & Engineering — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sps-programmierer-m-w-d-at-efinio-it-engineering-4422886186
+- Student (m/w/d) für eine Studien- oder Abschlussarbeit im Bereich Elektronik, Softwareentwicklung, Mechatronik, Maschinenbau, Mobilhydraulik, Konstruktion — Wacker Neuson Linz GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7847742
+- WebApp-Development (Linz, AT) — Develite GmbH & Co. KG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/webapp-development-linz-at-at-develite-gmbh-co-kg-4434269433
+
+### Sicher (48)
+
+- Back End Developer — Ahoi Kapptn!
+- Backend Deve­loper (m/w/d) — BWT Group
+- Full Stack Developer Back End — Ahoi Kapptn!
+- HTL-Absolvent:in / Berufseinsteiger:in (M/W/D)* — TGW Logistics
+- IT Cloud Division Lehrling — TOMORIS GmbH
+- IT Enterprise Systems Lehrling — TOMORIS GmbH
+- IT Field Service Lehrling — TOMORIS GmbH
+- IT-Risk / IT-Governance Junior Manager — Partner Bank
+- (Junior) Business Development Manager (m/w/d) — 
+- Junior Cloud Operations Engineer (m/w/d) — ENGEL AUSTRIA GmbH
+- Junior Cloud Operations Engineer — CELUM GmbH
+- Junior Data Analyst — TD Trusted Decisions GmbH
+- Junior Hardware Entwickler (w/m/d) — Dynell GmbH
+- Junior Inhouse Consultant (m/w/d) – SAP Commerce — Wacker Neuson
+- Junior IT Consultant — Hapeko
+- Junior IT Techniker — Leyrer + Graf
+- Junior Javascript & Typescript Backend Engineer — Dynatrace Austria GmbH
+- Junior Javascript & Typescript Backend Engineer — Dynatrace GmbH
+- Junior Javascript & Typescript Backend Engineer — Dynatrace
+- Junior Javascript & Typescript Engineer — Dynatrace GmbH
+- Junior-Projektleiter Elektrotechnik (m/w/d) — 
+- Junior-Projektleiter Elektrotechnik (m/w/d) — ETZI-Group GmbH
+- (Junior) Projektleiter/in E-Mobilität — eww Gruppe
+- Junior Projektleiter:in (m/w/d) — 
+- Junior Software Developer — TANNPAPIER GmbH
+- JUNIOR SOFTWARE ENGINEER (ELECTRICS & AUTOMATION) (M/W) — JK Engineering GmbH
+- Junior Softwareentwickler Für Intelligente Robotik (w/m/d) — KERN engineering careers GmbH
+- Junior Softwareentwickler - Java (w/m/d) — Kern Engineering Careers
+- Junior Specialist Information Security Governance — Plasser & Theurer
+- Junior System Administrator — MoreBit Technologies GmbH
+- Lehre Applikationsentwickler - Coding — Starlim Spritzguss Gmbh
+- Lehre Informationstechnologie & Systemtechnik — Elektroanlagen G. Klampfer GmbH
+- Lehre Informationstechnologie - Systemtechnik — Molin Industrie - Inbetriebnahme & Montage Gmbh & Co.kg
+- Lehre Informationstechnologie/Systemtechnik — Rubig
+- Lehre Informationstechnologie/Systemtechnik — RÜBIG GmbH & Co KG
+- Lehre IT-Systemtechniker — EREMA Group
+- Lehrling Informationstechnologie - Schwerpunkt Systemtechnik — x-tention Informationstechnologie GmbH
+- Lehrling IT-Systemtechnik — CANCOM a+d IT Solutions GmbH
+- Lehrling IT-Systemtechnik — Mann & Mouse IT-Services GmbH
+- Praktikant Digitalisierung & Softwareentwicklung im Bereich E-Mobilität (w/m/x) — BMW Group
+- Praktikant — Ahoi Kapptn!
+- Praktikum Junior App Manager — hello again GmbH
+- Praktikum: Junior App Manager — hello again
+- Sachbearbeiter/in Webentwicklung und IT-Koordination (m/w/d) — Land Oberösterreich, Amt der OÖ. Landesregierung
+- Sachbearbeiter/in Webentwicklung und IT-Koordination — Land Oberösterreich
+- Software Engineer - Early Career (m/f/x) — Dynatrace
+- Software Engineer - Early Career — Dynatrace GmbH
+- System Engineer — Premedia GmbH
+
+---
+
+## Filter-Lauf 2026-07-03 06:40  Modus: regex  (46 sicher, 41 unsicher, 26 raus)
+
+
+### Aggregat (Kriterien-Verteilung)
+
+- it_rolle → –
+- erfahrung_ab_3j_erforderlich → –
+- lehre_coding → –
+- junior_signal → –
+
+### Raus (26)
+
+- Angular Software Developer (m/w/d) — Fronius Österreich — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Full Stack Developer C# / Vue.js – Fokus Backend (M/W/D)* — TGW Logistics — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Full-Stack Entwickler .NET/Angular (w/m/div.) — Bosch Österreich — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Fullstack Developer (m/w/d) mit Cloud-Fokus für Batterieladesysteme — Fronius Österreich — Grund: Erfahrung ≥3J: 'einschlägige'
+- Junior/Senior C# Full Stack Web Developer für SaaS App, IT Firma (m/w/d) — impactit GmbH — Grund: Seniorität (Titel)
+- Marketing &amp; Communications Manager 80-100 % (m/w/d) —  — Grund: Erfahrung ≥3J: '5+ years'
+- Senior Database Architect (m/f/d) — CGM Clinical Österreich GmbH — Grund: Seniorität (Titel)
+- Senior Database Architect (m/f/d) — CompuGroup Medical SE — Grund: Seniorität (Titel)
+- Senior Developer:in (m/w/d) — Ubitec GmbH — Grund: Seniorität (Titel)
+- Senior Frontend Developer (m/w/d) — 3 Banken IT GmbH — Grund: Seniorität (Titel)
+- Senior Frontend Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior Full Stack Developer (m/f/d) – Hagenberg i. M., Wien / Vollzeit — ventopay gmbh — Grund: Seniorität (Titel)
+- Senior Fullstack Developer (d/m/w) — EBCONT — Grund: Seniorität (Titel)
+- (Senior) Fullstack Developer (human) — All for One — Grund: Seniorität (Titel)
+- Senior Fullstack Engineer(m/w/d) — FiveSquare — Grund: Seniorität (Titel)
+- Senior Java Backend Developer (m/w/d) — 3 Banken IT GmbH — Grund: Seniorität (Titel)
+- Senior Java Developer (d/w/m) — EBCONT — Grund: Seniorität (Titel)
+- Senior Java Developer (m/w/d) — EBCONT — Grund: Seniorität (Titel)
+- Senior Java Developer Materialflusssystem (m/w/d) — Schachermayer GmbH — Grund: Seniorität (Titel)
+- Senior Java Entwickler & Project Lead (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior Software Developer mit Fokus auf Kotlin &amp; Java (m/w/d) — x-tention Informationstechnologie GmbH — Grund: Seniorität (Titel)
+- Senior Software Engineer — TeamViewer GmbH — Grund: Seniorität (Titel)
+- Senior Software Entwickler:in C# (m/w/d) — PDC GmbH — Grund: Seniorität (Titel)
+- Senior Webentwickler (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Software Entwickler .NET-Bereich (m/f/d) – Hagenberg i. M. / Vollzeit — ventopay gmbh — Grund: Erfahrung ≥3J: '25 jahren'
+- System Engineer Datacenter Senior/Junior — Magistrat Linz - Personal und Zentrale Services — Grund: Seniorität (Titel)
+
+### Unsicher (41)
+
+- Applikationsentwickler für C++ / Linux (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/applikationsentwickler-f%C3%BCr-c%2B%2B-linux-m-w-d-at-fronius-%C3%B6sterreich-4357659322
+- BACKEND WEB DEVELOPER (m/w/d) — eurofunk Kappacher GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/backend-web-developer-m-w-d-at-eurofunk-kappacher-gmbh-4317419244
+- Cross Platform Software Developer Flutter/MAUI (m/w/d) — Rosenbauer Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/cross-platform-software-developer-flutter-maui-m-w-d-at-rosenbauer-group-4420930401
+- DevOps Engineer (m/w/d) + Hardware — Employer Brand Anchor — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/devops-engineer-m-w-d-%2B-hardware-at-employer-brand-anchor-4413458278
+- Embedded C++ Entwickler Solar & Energy (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-c%2B%2B-entwickler-solar-energy-m-w-d-at-fronius-%C3%B6sterreich-4412730762
+- Embedded-Software-Entwickler (m/w/d) — E+E Elektronik Ges.m.b.H — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/10021401
+- Embedded-Software-Entwickler (m/w/d) — E + E Elektronik Ges.m.b.H. — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7881491
+- Entwicklungsingenieur (m/w/d) Embedded Software — BRP-Rotax — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/entwicklungsingenieur-m-w-d-embedded-software-at-brp-rotax-4390851960
+- Frontend Web Developer*in (m/w/d) — karriere.at GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7877222
+- Full Stack Developer (M/F/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-m-f-d-at-tgw-logistics-4413345362
+- Full Stack Developer (M/W/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-m-w-d-at-tgw-logistics-4257632835
+- Full Stack Developer | SPORTS m/w/x — WINTERSTEIGER Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-sports-m-w-x-at-wintersteiger-inc-4418782654
+- Full­stack Engi­neer (m/w/d) — BWT Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full%C2%ADstack-engi%C2%ADneer-m-w-d-at-bwt-group-4403615827
+- Pimcore/PHP Software-Entwickler (m/w/d) — high5it — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/pimcore-php-software-entwickler-m-w-d-at-high5it-4423619593
+- React Entwickler (m/w/d) 90% Remote — Employer Brand Anchor — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/react-entwickler-m-w-d-90%25-remote-at-employer-brand-anchor-4429055712
+- React Software Entwickler (f/m/d) — myflexbox — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/react-software-entwickler-f-m-d-at-myflexbox-4425488135
+- SAP Inhouse Consultant PP (full time/f/m/d) — delfort — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sap-inhouse-consultant-pp-full-time-f-m-d-at-delfort-4419211184
+- Simulation & Digital Solutions Scientist (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/simulation-digital-solutions-scientist-m-w-x-at-ev-group-4431083703
+- Software Developer Embedded Systems (M/W/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-embedded-systems-m-w-d-at-tgw-logistics-4270124053
+- Software Developer Embedded Systems (New Product Line) (M/W/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-embedded-systems-new-product-line-m-w-d-at-tgw-logistics-4398412511
+- Software Developer Engineering Tools (M/F/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-engineering-tools-m-f-d-at-tgw-logistics-4413669910
+- Software Developer/in (m/w/d). — TANNPAPIER GmbH — kein Junior-Signal (Regex)
+  - URL: https://jobs.ams.at/public/emps/jobs/22159324
+- Software Developer (M/F/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-f-d-at-tgw-logistics-4424889537
+- Software Developer (m/w/d) — efinio IT & Engineering — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-w-d-at-efinio-it-engineering-4268563514
+- Software Developer (m/w/d) — moveIT Software GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7888130
+- Software Engineer AI-Agents (all genders) — msg — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-ai-agents-all-genders-at-msg-4374069743
+- Software Engineer (C#/.NET) für Solar & Energy (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-c%23-net-f%C3%BCr-solar-energy-m-w-d-at-fronius-%C3%B6sterreich-4423238746
+- Software Engineer C++ — TeamViewer — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-c%2B%2B-at-teamviewer-4429915029
+- Software Engineer (w/m/d) — GE HealthCare — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-w-m-d-at-ge-healthcare-4398027091
+- Software Entwickler:in (m/w/d) — Hainzl Industriesysteme GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7785683
+- Software-Entwickler:in (m/w/d)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7825490
+- Software Entwickler (m/w/d) — MAIT for business — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-entwickler-m-w-d-at-mait-for-business-4404197045
+- Software Entwickler (m/w/d) — World-Direct eBusiness solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7888205
+- Software-Entwickler mit Schwerpunkt Embedded Linux (m/w/d) — MEC electronics GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7876987
+- Softwareengineering SPS m/w/x — WINTERSTEIGER Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareengineering-sps-m-w-x-at-wintersteiger-inc-4412637870
+- Softwareentwickler Embedded Systems m/w/x — WINTERSTEIGER Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-embedded-systems-m-w-x-at-wintersteiger-inc-4423166351
+- Softwareentwickler (w/m/d) - Frontend — Nürnberg Digital Festival NUEDIGITAL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-frontend-at-n%C3%BCrnberg-digital-festival-nuedigital-4419174064
+- Softwareentwickler (w/m/d) Robotik/Vision — TRUMPF Maschinen Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-robotik-vision-at-trumpf-maschinen-austria-4390144343
+- Student (m/w/d) für eine Studien- oder Abschlussarbeit im Bereich Elektronik, Softwareentwicklung, Mechatronik, Maschinenbau, Mobilhydraulik, Konstruktion — Wacker Neuson Linz GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7847742
+- Web-Developer (w/m/d) CAD/CAM — TRUMPF Maschinen Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/web-developer-w-m-d-cad-cam-at-trumpf-maschinen-austria-4406569138
+- Web-Entwickler für schweißtechnische Anwendungen (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/web-entwickler-f%C3%BCr-schwei%C3%9Ftechnische-anwendungen-m-w-d-at-fronius-%C3%B6sterreich-4403364826
+
+### Sicher (46)
+
+- Back End Developer — Ahoi Kapptn!
+- Backend Deve­loper (m/w/d) — BWT Group
+- Full Stack Developer Back End — Ahoi Kapptn!
+- HTL-Absolvent:in / Berufseinsteiger:in (M/W/D)* — TGW Logistics
+- HTL Absolvent/in (m/w/d) — Rosenbauer Group
+- IT Cloud Division Lehrling — TOMORIS GmbH
+- IT Enterprise Systems Lehrling — TOMORIS GmbH
+- IT Field Service Lehrling — TOMORIS GmbH
+- IT-Risk / IT-Governance Junior Manager — Partner Bank
+- (Junior) Business Development Manager (m/w/d) — 
+- Junior Cloud Operations Engineer — CELUM GmbH
+- Junior Data Analyst — TD Trusted Decisions GmbH
+- Junior Hardware Entwickler (w/m/d) — Dynell GmbH
+- Junior Inhouse Consultant (m/w/d) – SAP Commerce — Wacker Neuson
+- Junior IT Consultant — Hapeko
+- Junior IT Techniker — Leyrer + Graf
+- Junior Javascript & Typescript Backend Engineer — Dynatrace Austria GmbH
+- Junior Javascript & Typescript Backend Engineer — Dynatrace GmbH
+- Junior Javascript & Typescript Engineer — Dynatrace GmbH
+- Junior-Projektleiter Elektrotechnik (m/w/d) — 
+- Junior-Projektleiter Elektrotechnik (m/w/d) — ETZI-Group GmbH
+- (Junior) Projektleiter/in E-Mobilität — eww Gruppe
+- Junior Projektleiter:in (m/w/d) — 
+- Junior Software Developer — TANNPAPIER GmbH
+- JUNIOR SOFTWARE ENGINEER (ELECTRICS & AUTOMATION) (M/W) — JK Engineering GmbH
+- Junior Softwareentwickler Für Intelligente Robotik (w/m/d) — KERN engineering careers GmbH
+- Junior Softwareentwickler - Java (w/m/d) — Kern Engineering Careers
+- Junior Specialist Information Security Governance — Plasser & Theurer
+- Lehre Applikationsentwickler - Coding — Starlim Spritzguss Gmbh
+- Lehre Informationstechnologie & Systemtechnik — Elektroanlagen G. Klampfer GmbH
+- Lehre Informationstechnologie - Systemtechnik — Molin Industrie - Inbetriebnahme & Montage Gmbh & Co.kg
+- Lehre Informationstechnologie/Systemtechnik — Rubig
+- Lehre Informationstechnologie/Systemtechnik — RÜBIG GmbH & Co KG
+- Lehre IT-Systemtechniker — EREMA Group
+- Lehrling Informationstechnologie - Schwerpunkt Systemtechnik — x-tention Informationstechnologie GmbH
+- Lehrling IT-Systemtechnik — CANCOM a+d IT Solutions GmbH
+- Lehrling IT-Systemtechnik — Mann & Mouse IT-Services GmbH
+- Praktikant — Ahoi Kapptn!
+- Praktikum Junior App Manager — hello again GmbH
+- Praktikum: Junior App Manager — hello again
+- Sachbearbeiter/in Webentwicklung und IT-Koordination (m/w/d) — Land Oberösterreich, Amt der OÖ. Landesregierung
+- Sachbearbeiter/in Webentwicklung und IT-Koordination — Land Oberösterreich
+- Software Engineer - Early Career (m/f/x) — Dynatrace
+- Software Engineer - Early Career — Dynatrace GmbH
+- System Engineer — Premedia GmbH
+- Web-Developer (m/w/d) — BWT Group
+
+---
+
+- Anschreiben-Skip 2026-07-03 08:42: Junior Javascript & Typescript Backend Engineer — Dynatrace GmbH — Grund: Absatz-Anzahl ist 4, erwartet 3
