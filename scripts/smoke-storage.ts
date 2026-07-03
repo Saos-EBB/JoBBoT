@@ -26,7 +26,7 @@ if (!await store.exists(id)) throw new Error('exists() returned false after save
 
 // 3. dedup: save again, still only 1 file
 await store.save(job);
-const files = (await readdir(config.dataDir)).filter(f => f === `${id}.json`);
+const files = (await readdir(config.dataDir)).filter(f => f.endsWith(`_${id.slice(0, 8)}.json`));
 if (files.length !== 1) throw new Error(`Dedup fail: ${files.length} files for same id`);
 
 // 4. get
