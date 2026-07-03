@@ -3,16 +3,11 @@ import { readFileSync } from 'node:fs';
 export interface ProfileData {
   name: string;
   job_title: string;
-  ausbildung: { abschluss: string; status: string };
-  programming_languages: string[];
-  frontend: string[];
-  backend: string[];
-  databases: string[];
-  tools: string[];
-  sprachen: string[];
-  links?: { portfolio?: string; github?: string };
-  projekte: Array<{ name: string; beschreibung: string }>;
-  ueber_mich: string;
+  quereinstieg: { bootcamp: string; abschluss: string; hintergrund: string; story_url?: string };
+  skills: { sprachen: string[]; frontend: string[]; backend: string[]; datenbanken: string[]; tools: string[] };
+  sprachkenntnisse: string[];
+  links?: { website?: string; github?: string };
+  projekte: Array<{ name: string; beschreibung: string; tech?: string[]; anchor?: boolean }>;
 }
 
 export function loadProfile(): ProfileData {
