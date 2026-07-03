@@ -58,6 +58,25 @@ function mockChat(content: string, onCall?: () => void): Promise<{ url: string; 
   });
 }
 
+// liefert pro Aufruf die nächste Antwort aus `contents` (bleibt auf der letzten, wenn erschöpft)
+function mockChatSequence(contents: string[]): Promise<{ url: string; close: () => void; calls: () => number }> {
+  return new Promise(resolve => {
+    let n = 0;
+    const server = createServer((_, res) => {
+      const content = contents[Math.min(n, contents.length - 1)];
+      n++;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: { role: 'assistant', content } }));
+    });
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address() as AddressInfo;
+      resolve({ url: `http://127.0.0.1:${port}`, close: () => server.close(), calls: () => n });
+    });
+  });
+}
+
+const EIN_ABSATZ = 'Das ist nur ein einziger Absatz ohne Zeilenumbruch, also ungültig laut Formel.';
+
 // ── pure ─────────────────────────────────────────────────────────────────────
 
 test('buildAnschreibenPrompt: enthält title', () => {
@@ -93,14 +112,24 @@ test('parseAnschreibenResponse: < 50 Zeichen → null', () => {
   assert.strictEqual(parseAnschreibenResponse('kurz'), null);
 });
 
-test('parseAnschreibenResponse: genau 50 Zeichen → string', () => {
-  const s = 'x'.repeat(50);
+test('parseAnschreibenResponse: 3 Absätze ≥ 50 Zeichen → string', () => {
+  const s = 'x'.repeat(20) + '\n\n' + 'y'.repeat(20) + '\n\n' + 'z'.repeat(20);
   assert.strictEqual(parseAnschreibenResponse(s), s);
 });
 
 test('parseAnschreibenResponse: trimmt whitespace', () => {
-  const s = '  ' + 'x'.repeat(50) + '  ';
-  assert.strictEqual(parseAnschreibenResponse(s), 'x'.repeat(50));
+  const inner = 'a'.repeat(20) + '\n\n' + 'b'.repeat(20) + '\n\n' + 'c'.repeat(20);
+  const s = '  ' + inner + '  ';
+  assert.strictEqual(parseAnschreibenResponse(s), inner);
+});
+
+test('parseAnschreibenResponse: nicht genau 3 Absätze → throws', () => {
+  assert.throws(() => parseAnschreibenResponse('x'.repeat(60)), /Absatz-Anzahl/);
+});
+
+test('parseAnschreibenResponse: Verbotswort "motiviert" → throws', () => {
+  const s = 'Erster Absatz mit genug Zeichen fuer den Test hier.\n\nZweiter Absatz ist auch lang genug an dieser Stelle.\n\nIch bin sehr motiviert und freue mich.';
+  assert.throws(() => parseAnschreibenResponse(s), /Verbotswort/);
 });
 
 test('parseAnschreibenResponse: Platzhalter [Dein Name] → null', () => {
@@ -187,4 +216,45 @@ test('generateAnschreiben: status !== "matched" → kein Ollama-Call', async (t)
   assert.strictEqual(called, false);
   assert.strictEqual(job.status, 'new');
   assert.strictEqual(path, null);
+});
+
+// ── Regenerierung bei Absatz-/Verbotswort-Verstoß ───────────────────────────
+
+test('generateAnschreiben: 1. Versuch ungültig (1 Absatz), 2. Versuch gültig → generiert', async (t) => {
+  const dir = await tmpDir();
+  const anschreibenDir = await tmpDir();
+  t.after(() => { rmTmp(dir); rmTmp(anschreibenDir); });
+  const storage = createStorage(dir);
+  const job = { ...sample(), status: 'matched' as const };
+  await storage.save(job);
+
+  const { url, close, calls } = await mockChatSequence([EIN_ABSATZ, VALID_LETTER]);
+  t.after(close);
+
+  const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir);
+  assert.strictEqual(job.status, 'generated');
+  assert.ok(path !== null, 'expected path to be returned');
+  assert.strictEqual(calls(), 2);
+});
+
+test('generateAnschreiben: dauerhaft ungültig → Regenerierungen erschöpft, skip + Log-Eintrag', async (t) => {
+  const dir = await tmpDir();
+  const logDir = await tmpDir();
+  t.after(() => { rmTmp(dir); rmTmp(logDir); });
+  const storage = createStorage(dir);
+  const job = { ...sample(), status: 'matched' as const };
+  await storage.save(job);
+
+  const { url, close, calls } = await mockChatSequence([EIN_ABSATZ]);
+  t.after(close);
+
+  const logPath = `${logDir}/anschreiben-skip.md`;
+  const path = await generateAnschreiben(job, storage, profile, url, undefined, undefined, logPath);
+  assert.strictEqual(path, null);
+  assert.strictEqual(job.status, 'matched');
+  assert.strictEqual(calls(), 3); // 1 Versuch + 2 Regenerierungen
+
+  const log = await readFile(logPath, 'utf8');
+  assert.ok(log.includes(job.title));
+  assert.ok(log.includes('Absatz-Anzahl'));
 });

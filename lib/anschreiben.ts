@@ -1,4 +1,5 @@
 import { mkdir, writeFile } from 'node:fs/promises';
+import { appendFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Job } from '../scrapers/interface.ts';
 import type { Storage } from '../storage/index.ts';
@@ -78,7 +79,23 @@ export function parseAnschreibenResponse(raw: string): string | null {
     console.warn('[anschreiben] Grußformel gefunden: "Mit freundlichen"');
     return null;
   }
+
+  const absaetze = trimmed.split(/\n\s*\n/).filter(p => p.trim());
+  if (absaetze.length !== 3) {
+    throw new Error(`Absatz-Anzahl ist ${absaetze.length}, erwartet 3`);
+  }
+
+  const verbotswort = /\b(motiviert|begeistert|entzückt|leidenschaftlich)\b/i.exec(trimmed);
+  if (verbotswort) {
+    throw new Error(`Verbotswort gefunden: "${verbotswort[0]}"`);
+  }
+
   return trimmed;
+}
+
+function logSkip(job: Job, reason: string, logPath: string): void {
+  const ts = new Date().toISOString().slice(0, 16).replace('T', ' ');
+  appendFileSync(logPath, `\n- Anschreiben-Skip ${ts}: ${job.title} — ${job.company} — Grund: ${reason}\n`);
 }
 
 export async function saveAnschreiben(job: Job, text: string, dir = config.anschreibenDir): Promise<string> {
@@ -88,6 +105,8 @@ export async function saveAnschreiben(job: Job, text: string, dir = config.ansch
   return path;
 }
 
+const MAX_REGENERATIONS = 2;
+
 export async function generateAnschreiben(
   job: Job,
   storage: Storage,
@@ -95,40 +114,58 @@ export async function generateAnschreiben(
   ollama = config.ollamaHost,
   anschreibenDir?: string,
   model = config.modelWriter,
+  logPath = 'data/filter-log.md',
 ): Promise<string | null> {
   if (job.status !== 'matched' && job.status !== 'uncertain') {
     console.warn(`[anschreiben] job ${job.id} hat status "${job.status}", erwartet "matched" oder "uncertain"`);
     return null;
   }
 
-  let raw = '';
-  try {
-    const res = await fetch(`${ollama}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: SYSTEM },
-          { role: 'user', content: buildAnschreibenPrompt(job, profile) },
-        ],
-        stream: false,
-      }),
-    });
-    if (!res.ok) {
-      console.warn(`[anschreiben] ollama ${res.status} für job ${job.id}`);
+  let result: string | null = null;
+  let lastError = '';
+
+  for (let attempt = 0; attempt <= MAX_REGENERATIONS; attempt++) {
+    let raw = '';
+    try {
+      const res = await fetch(`${ollama}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: SYSTEM },
+            { role: 'user', content: buildAnschreibenPrompt(job, profile) },
+          ],
+          stream: false,
+        }),
+      });
+      if (!res.ok) {
+        console.warn(`[anschreiben] ollama ${res.status} für job ${job.id}`);
+        return null;
+      }
+      const data = await res.json() as { message?: { content?: string } };
+      raw = data?.message?.content ?? '';
+    } catch (err) {
+      console.warn(`[anschreiben] netzwerk-fehler für job ${job.id}:`, err);
       return null;
     }
-    const data = await res.json() as { message?: { content?: string } };
-    raw = data?.message?.content ?? '';
-  } catch (err) {
-    console.warn(`[anschreiben] netzwerk-fehler für job ${job.id}:`, err);
-    return null;
+
+    try {
+      result = parseAnschreibenResponse(raw);
+      if (!result) {
+        console.warn(`[anschreiben] Parse-Fehler bei ${job.id}`);
+        return null;
+      }
+      break;
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err);
+      const label = attempt === 0 ? 'Versuch 1 fehlgeschlagen' : `Regenerierung ${attempt}/${MAX_REGENERATIONS}`;
+      console.warn(`[anschreiben] ${label} für ${job.id}: ${lastError}`);
+    }
   }
 
-  const result = parseAnschreibenResponse(raw);
   if (!result) {
-    console.warn(`[anschreiben] Parse-Fehler bei ${job.id}`);
+    logSkip(job, lastError, logPath);
     return null;
   }
 
