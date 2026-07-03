@@ -19,6 +19,8 @@ ABSOLUTE REGELN — niemals brechen:
 - Nur Fließtext — keine Aufzählungen, keine Überschriften
 - Antwort enthält NUR den Anschreiben-Text, absolut nichts sonst
 - Nur Skills/Erfahrungen nennen, die wörtlich im Bewerber-Profil stehen. Nichts erfinden.
+- Erfinde KEINE Technologie, Firma oder Produkt, das nicht wörtlich im Posting oder in profile.json
+  steht. Nur Begriffe aus diesen zwei Quellen.
 - Fordert die Stelle einen Skill, der im Profil fehlt: die Lücke offen benennen — seit wann mit dem
   verwandten Stack gearbeitet wird und die Lernbereitschaft dafür — NIE die Nähe als vorhandene
   Kompetenz verkaufen oder den geforderten Skill selbst behaupten.
