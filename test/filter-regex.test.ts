@@ -22,17 +22,16 @@ test('disqualifizierende Erfahrung → filtered_out mit Regel + matched-Text', a
   assert.match(result.rejectedBy ?? '', /Erfahrung ≥3J/);
 });
 
-test('Lehre ohne codingKeyword → filtered_out ("Lehre nicht coding-nah")', async () => {
+test('Lehre ohne codingKeyword → matched (Lehre selbst ist juniorSignal)', async () => {
   const job = sample('Lehre Elektrotechnik', 'Anforderungen: Interesse an Technik.');
   const result = await strategy.decide(job, true);
-  assert.equal(result.status, 'filtered_out');
-  assert.equal(result.rejectedBy, 'Lehre nicht coding-nah');
+  assert.equal(result.status, 'matched');
 });
 
-test('Lehre MIT codingKeyword → kein Lehre-Reject', async () => {
+test('Lehre MIT codingKeyword → matched', async () => {
   const job = sample('Lehre Applikationsentwicklung', 'Anforderungen: Coding, Teamarbeit.');
   const result = await strategy.decide(job, true);
-  assert.notEqual(result.rejectedBy, 'Lehre nicht coding-nah');
+  assert.equal(result.status, 'matched');
 });
 
 test('juniorSignal vorhanden, kein Reject → matched', async () => {

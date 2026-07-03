@@ -23,10 +23,6 @@ export function createRegexStrategy(cfg: ExperienceRules = loadExperienceRules()
         return { status: 'filtered_out', rejectedBy: `Erfahrung ≥${cfg.minYears}J: '${exp.matched}'` };
       }
 
-      if (lehre && !hasAny(lower, cfg.codingKeywords)) {
-        return { status: 'filtered_out', rejectedBy: 'Lehre nicht coding-nah' };
-      }
-
       if (hasAny(lower, cfg.juniorSignals)) {
         return { status: 'matched' };
       }
