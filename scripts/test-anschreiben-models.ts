@@ -1,13 +1,20 @@
 import { readFile, mkdir, writeFile, appendFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { join } from 'node:path';
 import { buildAnschreibenPrompt, parseAnschreibenResponse, SYSTEM, readNdjsonContent } from '../lib/anschreiben.ts';
 import { loadProfile, type ProfileData } from '../lib/profile.ts';
 import { config } from '../config.ts';
 import type { Job } from '../scrapers/interface.ts';
 
+const execFileAsync = promisify(execFile);
+
 // Fairer Vergleich: dieselben 3 fixen Jobs durch alle Modelle, direkt gegen Ollama
 // (kein Storage-Zugriff, damit Jobs nicht durch Status-Wechsel aus sicher/ wandern).
-const MODELS = ['qwen3.5:9b', 'gemma3:12b', 'mistral-small3.2:latest', 'qwen3:30b'];
+// Retry nur der beiden Modelle, die beim ersten Lauf per OOM-Kill weggebrochen sind
+// (mistral-small3.2 lud, während gemma3:12b noch resident war). Fix: nach jedem
+// Modell explizit `ollama stop`, damit sich zwei große Modelle nie den RAM teilen.
+const MODELS = ['mistral-small3.2:latest', 'qwen3:30b'];
 const JOBS: Record<string, string> = {
   clean: 'data/jobs/sicher/junior-softwareentwickler-java-w-m-d_kern-engineering-careers_2026-06-25_1f8fd77c.json',
   offstack: 'data/jobs/unsicher/software-engineer-c_teamviewer_2026-06-17_8eb9f22d.json',
@@ -62,7 +69,7 @@ async function main() {
 
   await appendFile(
     LOG_PATH,
-    `\n# FAIR-COMPARE 4x3 think:false+ctx4096+temp0.3\n\nStart: ${ts()}\n\n` +
+    `\n# FAIR-COMPARE RETRY (mistral-small3.2 + qwen3:30b, nach OOM-Fix mit \`ollama stop\` zwischen Modellen)\n\nStart: ${ts()}\n\n` +
       `| Modell | Job | Zeit | Status | halluziniert? | Lücke ehrlich? |\n|---|---|---|---|---|---|\n`,
   );
 
@@ -106,6 +113,15 @@ async function main() {
     }
 
     modelTotals.push({ model, seconds: (Date.now() - modelStart) / 1000 });
+
+    // Modell explizit entladen, bevor das nächste (ggf. große) Modell lädt —
+    // ohne das würde Ollama bis zum keep_alive-Timeout (Default 5min) im RAM
+    // bleiben und sich mit dem nächsten Modell den Speicher teilen -> OOM.
+    try {
+      await execFileAsync('ollama', ['stop', model]);
+    } catch (err) {
+      console.warn(`ollama stop ${model} fehlgeschlagen:`, err instanceof Error ? err.message : err);
+    }
   }
 
   let summary = '\n';
