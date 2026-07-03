@@ -1,0 +1,60 @@
+JOBBOT — QUICKSTART
+===================
+(For the full picture see README.md and CLAUDE.md. This is the fast path.)
+
+1. INSTALL
+   npm install
+   npx playwright install chromium     # only needed for AMS + DevJobs.at scrapers
+
+2. START OLLAMA AND PULL MODELS
+   ollama pull qwen3.5:9b                 # filter model
+   ollama pull gemma3:12b                # cover-letter writer model
+
+3. SET UP YOUR PROFILE (gitignored, not committed)
+   cp config/profile.example.json config/profile.json
+   -> edit: name, education, skills, projects, links, "about me"
+
+4. CHECK CONFIG BEFORE FIRST RUN
+   config/sources.json           which portals to scrape + search keywords
+   config/location.json          allowed cities/regions (default: Upper Austria)
+   config/settings.json          filterMode: "regex" (offline/free) or "llama" (uses Ollama)
+   config/experience-rules.json  keyword lists driving the regex filter
+
+5. HEALTH CHECK
+   npm run check      Ollama reachable + required models installed?
+   npm run dev         same, plus current job count in storage
+   npm run smoke        exercises the JsonStore storage layer end-to-end
+
+6. RUN THE PIPELINE, IN ORDER
+   npm run scrape                pulls jobs from every enabled source -> data/jobs/
+   npm run scrape:karriere        single-source variant (karriere/devjobs/linkedin/ams/jobs)
+   npm run filter                  classifies every 'new' job -> matched / uncertain / filtered_out
+   npm run filter:regex            forces the regex strategy regardless of settings.json
+   npm run anschreiben              generates a German cover letter for matched + uncertain jobs
+
+7. WHERE THE OUTPUT LANDS
+   data/jobs/sicher/titel_firma_datum_id8.json       matched jobs
+   data/jobs/unsicher/titel_firma_datum_id8.json     uncertain jobs -> read these yourself, borderline calls
+   data/anschreiben/titel_firma_datum_id8.md         generated cover letters
+   data/filter-log.md                                 running log of every filter run (all modes, all runs)
+
+8. JOB STATUS LIFECYCLE
+   new -> filtered_out | matched -> generated -> reviewed -> drafted -> sent
+   Everything after "generated" is manual — there is no auto-send.
+
+GOTCHAS / THINGS TO REMEMBER
+-----------------------------
+- storage/ is the ONLY code that touches disk. Everything else goes through
+  the Storage interface — swap JsonStore for SQLite later without touching
+  scrapers, filters, or anschreiben code.
+- Job id = sha256(title + company)[:16]. Same job scraped twice never
+  duplicates — dedup is "does the file already exist", not a database query.
+- scripts/anschreiben-model-bench.ts is a DEV-ONLY benchmarking script (runs
+  a fixed set of jobs through multiple Ollama models to compare quality/
+  speed). It is NOT part of the real pipeline — don't wire it into scrape/
+  filter/anschreiben.
+- Ollama must be running locally before scrape (AMS/DevJobs use Playwright,
+  not Ollama, but filter:llama and anschreiben both call the local Ollama
+  API at OLLAMA_HOST, default http://localhost:11434).
+- npm test never touches real Ollama or real data/jobs/ — it's all temp
+  dirs + an in-process mock HTTP server (test/helpers.ts).
