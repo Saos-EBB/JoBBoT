@@ -108,6 +108,36 @@ export async function saveAnschreiben(job: Job, text: string, dir = config.ansch
   return path;
 }
 
+// Ollama streamt bei stream:true NDJSON (ein JSON-Objekt pro Zeile). Konkateniert
+// die message.content-Fragmente zum vollständigen Text.
+async function readNdjsonContent(res: Response): Promise<string> {
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let content = '';
+
+  const consumeLine = (line: string) => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+    const chunk = JSON.parse(trimmed) as { message?: { content?: string } };
+    content += chunk?.message?.content ?? '';
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let idx: number;
+    while ((idx = buffer.indexOf('\n')) >= 0) {
+      consumeLine(buffer.slice(0, idx));
+      buffer = buffer.slice(idx + 1);
+    }
+  }
+  if (buffer.trim()) consumeLine(buffer);
+
+  return content;
+}
+
 const MAX_REGENERATIONS = 2;
 
 export async function generateAnschreiben(
@@ -130,6 +160,9 @@ export async function generateAnschreiben(
   for (let attempt = 0; attempt <= MAX_REGENERATIONS; attempt++) {
     let raw = '';
     try {
+      // stream: true, damit Ollama sofort HTTP-Header schickt statt erst nach voller
+      // Generierung — sonst reißt undicis headersTimeout bei langsamen/großen Modellen
+      // (z.B. Reasoning-Modelle mit verstecktem "thinking"-Anteil vor dem Content).
       const res = await fetch(`${ollama}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -139,15 +172,14 @@ export async function generateAnschreiben(
             { role: 'system', content: SYSTEM },
             { role: 'user', content: buildAnschreibenPrompt(job, profile) },
           ],
-          stream: false,
+          stream: true,
         }),
       });
       if (!res.ok) {
         console.warn(`[anschreiben] ollama ${res.status} für job ${job.id}`);
         return null;
       }
-      const data = await res.json() as { message?: { content?: string } };
-      raw = data?.message?.content ?? '';
+      raw = await readNdjsonContent(res);
     } catch (err) {
       console.warn(`[anschreiben] netzwerk-fehler für job ${job.id}:`, err);
       return null;
