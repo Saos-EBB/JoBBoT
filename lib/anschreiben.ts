@@ -16,7 +16,13 @@ ABSOLUTE REGELN — niemals brechen:
 - KEINE Floskeln: nicht "hiermit bewerbe ich mich", nicht "entzückt", nicht "fasziniert", nicht "auf den Weg begeben"
 - Genau 3 Absätze, maximal 180 Wörter gesamt
 - Nur Fließtext — keine Aufzählungen, keine Überschriften
-- Antwort enthält NUR den Anschreiben-Text, absolut nichts sonst`;
+- Antwort enthält NUR den Anschreiben-Text, absolut nichts sonst
+- Nur Skills/Erfahrungen nennen, die wörtlich im Bewerber-Profil stehen. Nichts erfinden.
+- Fordert die Stelle einen Skill, der im Profil fehlt: nächstliegende echte Erfahrung nennen und
+  die Nähe ehrlich benennen (z.B. "konzeptuell nah an X") — NIE den geforderten Skill selbst behaupten.
+- Kein Skill ohne Beleg: jede genannte Fähigkeit braucht ein konkretes Projekt/Kontext aus dem Profil,
+  nie eine nackte Aufzählung.
+- Keine vorgegebenen Satzanfänge — der Einstieg muss von Job zu Job variieren.`;
 
 export function buildAnschreibenPrompt(job: Job, profile: ProfileData): string {
   const desc = job.description.slice(0, 1200);
@@ -43,10 +49,18 @@ Projekte/Erfahrung:
 ${projekteText}
 Über mich: ${profile.ueber_mich}
 
-Struktur:
-Absatz 1: Warum genau diese Stelle bei genau dieser Firma — konkret und spezifisch, nicht generisch.
-Absatz 2: Was der Bewerber konkret mitbringt — passend zu den Anforderungen der Stelle.
-Absatz 3: Kurzer, direkter Abschluss mit Gesprächswunsch.`;
+Struktur (3 Absätze, ≤180 Wörter gesamt):
+Absatz 1 (~50 Wörter) — Anker: konkrete Rolle + Firma + EIN spezifisches Element aus der
+  Stellenbeschreibung (Stack, Produkt oder Domäne). Dazu ein Satz, wer der Bewerber ist
+  (Quereinsteiger in die Softwareentwicklung). Kein "Hiermit bewerbe ich mich".
+Absatz 2 (~70 Wörter) — Beleg: die 2 stärksten Überschneidungen zwischen Stellenanforderungen
+  und Profil. Jeder genannte Skill braucht einen Beleg — ein konkretes Projekt aus dem Profil,
+  keine nackte Aufzählung. Fehlt ein geforderter Skill im Profil: nächstliegende echte Erfahrung
+  nennen und die Nähe benennen, nie den geforderten Skill selbst behaupten.
+Absatz 3 (~50 Wörter) — Ausblick statt Floskel-Abschluss: keine "warum ich passe"-Aussage.
+  Stattdessen eine konkrete Aufgabe aus den Anforderungen/Verantwortlichkeiten der Stelle
+  aufgreifen, an der der Bewerber mitarbeiten will. Optional ein Satz ehrliche Junior-Haltung
+  ohne Floskel ("motiviert", "engagiert" etc. vermeiden).`;
 }
 
 export function parseAnschreibenResponse(raw: string): string | null {
