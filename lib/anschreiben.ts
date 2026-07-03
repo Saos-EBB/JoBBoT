@@ -94,6 +94,7 @@ export async function generateAnschreiben(
   profile: ProfileData,
   ollama = config.ollamaHost,
   anschreibenDir?: string,
+  model = config.modelWriter,
 ): Promise<string | null> {
   if (job.status !== 'matched' && job.status !== 'uncertain') {
     console.warn(`[anschreiben] job ${job.id} hat status "${job.status}", erwartet "matched" oder "uncertain"`);
@@ -106,7 +107,7 @@ export async function generateAnschreiben(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: config.modelWriter,
+        model,
         messages: [
           { role: 'system', content: SYSTEM },
           { role: 'user', content: buildAnschreibenPrompt(job, profile) },

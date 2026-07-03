@@ -3,6 +3,7 @@ import { generateAnschreiben } from '../lib/anschreiben.ts';
 import { loadProfile } from '../lib/profile.ts';
 import { sleep } from '../lib/fetch-page.ts';
 import { createProgress } from '../lib/progress.ts';
+import { config } from '../config.ts';
 
 const profile = loadProfile();
 const storage = createStorage();
@@ -14,18 +15,22 @@ if (limitArg) {
   if (Number.isFinite(limit) && limit > 0) jobs = jobs.slice(0, limit);
 }
 
+const sourceArg = process.argv.find(a => a.startsWith('--source='));
+const model = sourceArg ? sourceArg.slice('--source='.length) : config.modelWriter;
+
 if (jobs.length === 0) {
   console.log('Keine gematchten Jobs zum Verarbeiten.');
   process.exit(0);
 }
 
+console.log(`Modell: ${model}`);
 const prog = createProgress(`Anschreiben — 0/${jobs.length}...`);
 let generated = 0;
 
 for (let i = 0; i < jobs.length; i++) {
   const job = jobs[i];
   prog.update(`Anschreiben — ${i + 1}/${jobs.length}: ${job.title.slice(0, 40)}`);
-  const path = await generateAnschreiben(job, storage, profile);
+  const path = await generateAnschreiben(job, storage, profile, undefined, undefined, model);
   if (path) generated++;
   if (i < jobs.length - 1) await sleep(1000);
 }
