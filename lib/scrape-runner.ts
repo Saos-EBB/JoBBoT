@@ -22,48 +22,58 @@ export interface RunScrapeOptions {
   maxBrowsers?: number;
 }
 
-// Simple Zähl-Semaphore, kein neues Runtime-Dep. acquire() löst sofort auf wenn
-// noch Platz ist, sonst wartet der Aufrufer in der FIFO-Queue auf release().
-function createSlot(max: number) {
+// Ein Scheduler statt zwei unabhängiger Semaphoren: acquire() prüft BEIDE Limits
+// atomar und committet nur, wenn beide Platz haben — sonst wird gewartet, ohne
+// eines der beiden Kontingente teilweise zu belegen. Zwei getrennte Semaphoren
+// (erst Browser-Slot, dann Gesamt-Slot) führten im Live-Lauf zu Starvation: ein
+// Browser-Adapter griff sich zuerst den knappen Browser-Slot, hing dann aber in
+// der Gesamt-Slot-Queue fest — und blockierte damit den zweiten Browser-Adapter
+// von seinem eigentlich freien Browser-Slot, teils minutenlang. release() weckt
+// alle Wartenden; nur wer beide Limits jetzt erfüllt, kommt tatsächlich durch.
+function createScheduler(maxConcurrent: number, maxBrowsers: number) {
   let active = 0;
-  const queue: (() => void)[] = [];
-  return {
-    acquire(): Promise<void> {
-      if (active < max) { active++; return Promise.resolve(); }
-      return new Promise<void>(resolve => queue.push(resolve));
-    },
-    release(): void {
-      active--;
-      const next = queue.shift();
-      if (next) { active++; next(); }
-    },
-  };
+  let activeBrowsers = 0;
+  let queue: (() => void)[] = [];
+
+  function tryAcquire(isBrowser: boolean): boolean {
+    if (active >= maxConcurrent) return false;
+    if (isBrowser && activeBrowsers >= maxBrowsers) return false;
+    active++;
+    if (isBrowser) activeBrowsers++;
+    return true;
+  }
+
+  async function acquire(isBrowser: boolean): Promise<void> {
+    while (!tryAcquire(isBrowser)) {
+      await new Promise<void>(resolve => queue.push(resolve));
+    }
+  }
+
+  function release(isBrowser: boolean): void {
+    active--;
+    if (isBrowser) activeBrowsers--;
+    const waiting = queue;
+    queue = [];
+    waiting.forEach(resolve => resolve());
+  }
+
+  return { acquire, release };
 }
 
 // Alle Quellen parallel, aber gedrosselt: max `maxConcurrent` Adapter gleichzeitig
-// insgesamt, UND max `maxBrowsers` kind:"browser"-Adapter gleichzeitig (eigener
-// Slot zusätzlich zum globalen) — nie zwei Playwright-Browser parallel, die sich
-// lokal um CPU/Netzwerk streiten. allSettled bleibt: ein Adapter-Fehler stoppt
-// die anderen nicht. Dedup+Save erst NACH allen Ergebnissen sequenziell
-// (verhindert Write-Races, wenn dieselbe Stelle auf zwei Quellen mit gleicher
-// jobId auftaucht).
+// insgesamt, UND max `maxBrowsers` kind:"browser"-Adapter gleichzeitig — nie zwei
+// Playwright-Browser parallel, die sich lokal um CPU/Netzwerk streiten. allSettled
+// bleibt: ein Adapter-Fehler stoppt die anderen nicht. Dedup+Save erst NACH allen
+// Ergebnissen sequenziell (verhindert Write-Races, wenn dieselbe Stelle auf zwei
+// Quellen mit gleicher jobId auftaucht).
 export async function runScrape(options: RunScrapeOptions): Promise<SourceOutcome[]> {
   const { names, registry, queriesFor, keep, storage, onProgress, maxConcurrent = 2, maxBrowsers = 1 } = options;
 
-  const totalSlot = createSlot(maxConcurrent);
-  const browserSlot = createSlot(maxBrowsers);
+  const scheduler = createScheduler(maxConcurrent, maxBrowsers);
 
-  // Reihenfolge WICHTIG: der Browser-Slot (der engere Engpass) wird zuerst
-  // erworben. Andersrum (totalSlot zuerst) kann ein Browser-Adapter einen
-  // allgemeinen Slot belegen während er noch auf den Browser-Slot wartet — das
-  // blockiert einen wartenden Fetch-Adapter unnötig, obwohl der sofort loslegen
-  // könnte (Starvation, beobachtet im Live-Lauf: ams hielt den zweiten
-  // Gesamt-Slot fest, während devjobs.at den Browser-Slot belegte, und jobs.at
-  // blieb hinter ams in der Gesamt-Slot-Queue stecken statt parallel zu laufen).
   const settled = await Promise.allSettled(names.map(async name => {
     const isBrowser = registry[name].kind === 'browser';
-    if (isBrowser) await browserSlot.acquire();
-    await totalSlot.acquire();
+    await scheduler.acquire(isBrowser);
     try {
       return await registry[name].scrape(
         queriesFor(name),
@@ -71,8 +81,7 @@ export async function runScrape(options: RunScrapeOptions): Promise<SourceOutcom
         (current, total) => onProgress?.(name, current, total),
       );
     } finally {
-      totalSlot.release();
-      if (isBrowser) browserSlot.release();
+      scheduler.release(isBrowser);
     }
   }));
 
