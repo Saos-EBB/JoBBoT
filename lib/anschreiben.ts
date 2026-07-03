@@ -7,7 +7,7 @@ import type { ProfileData } from './profile.ts';
 import { jobBasename } from './slugify.ts';
 import { config } from '../config.ts';
 
-const SYSTEM = `Du bist ein erfahrener Karriereberater. Du schreibst präzise, authentische Bewerbungsanschreiben auf Deutsch.
+export const SYSTEM = `Du bist ein erfahrener Karriereberater. Du schreibst präzise, authentische Bewerbungsanschreiben auf Deutsch.
 ABSOLUTE REGELN — niemals brechen:
 - KEINE Anrede (nicht "Sehr geehrte Damen und Herren", nicht "Hallo")
 - KEINE Grußformel (nicht "Mit freundlichen Grüßen", nicht "Hochachtungsvoll")
@@ -110,7 +110,7 @@ export async function saveAnschreiben(job: Job, text: string, dir = config.ansch
 
 // Ollama streamt bei stream:true NDJSON (ein JSON-Objekt pro Zeile). Konkateniert
 // die message.content-Fragmente zum vollständigen Text.
-async function readNdjsonContent(res: Response): Promise<string> {
+export async function readNdjsonContent(res: Response): Promise<string> {
   const reader = res.body!.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
