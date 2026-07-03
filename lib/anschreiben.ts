@@ -19,8 +19,9 @@ ABSOLUTE REGELN — niemals brechen:
 - Nur Fließtext — keine Aufzählungen, keine Überschriften
 - Antwort enthält NUR den Anschreiben-Text, absolut nichts sonst
 - Nur Skills/Erfahrungen nennen, die wörtlich im Bewerber-Profil stehen. Nichts erfinden.
-- Fordert die Stelle einen Skill, der im Profil fehlt: nächstliegende echte Erfahrung nennen und
-  die Nähe ehrlich benennen (z.B. "konzeptuell nah an X") — NIE den geforderten Skill selbst behaupten.
+- Fordert die Stelle einen Skill, der im Profil fehlt: die Lücke offen benennen — seit wann mit dem
+  verwandten Stack gearbeitet wird und die Lernbereitschaft dafür — NIE die Nähe als vorhandene
+  Kompetenz verkaufen oder den geforderten Skill selbst behaupten.
 - Kein Skill ohne Beleg: jede genannte Fähigkeit braucht ein konkretes Projekt/Kontext aus dem Profil,
   nie eine nackte Aufzählung.
 - Keine vorgegebenen Satzanfänge — der Einstieg muss von Job zu Job variieren.`;
