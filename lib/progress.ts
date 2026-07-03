@@ -1,5 +1,15 @@
 const FRAMES = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
 
+// \r springt nur an den Anfang der AKTUELLEN (ggf. umgebrochenen) Terminal-Zeile,
+// nicht an den Anfang der ganzen Nachricht. Ist die Zeile breiter als das
+// Terminal, bricht sie um — jeder Frame überschreibt dann nur die letzte
+// Umbruch-Zeile, während der Rest stehen bleibt und sich Frame für Frame
+// dupliziert. Deshalb hart auf die Terminalbreite kürzen.
+export function fitToWidth(line: string): string {
+  const width = process.stdout.columns || 80;
+  return line.length >= width ? line.slice(0, width - 2) + '…' : line;
+}
+
 export interface Progress {
   update(message: string): void;
   succeed(message: string): void;
@@ -17,7 +27,7 @@ export function createProgress(initial = ''): Progress {
 
   if (tty) {
     timer = setInterval(() => {
-      const line = `${FRAMES[frameIdx++ % FRAMES.length]} ${message}`;
+      const line = fitToWidth(`${FRAMES[frameIdx++ % FRAMES.length]} ${message}`);
       process.stdout.write(`\r${line}`);
       prevLen = line.length;
     }, 80);
@@ -87,7 +97,7 @@ export function createAggregateProgress(sources: string[]): AggregateProgress {
   }
 
   const timer = tty ? setInterval(() => {
-    const line = `${FRAMES[frameIdx++ % FRAMES.length]} ${render()}`;
+    const line = fitToWidth(`${FRAMES[frameIdx++ % FRAMES.length]} ${render()}`);
     process.stdout.write(`\r${line}`);
     prevLen = line.length;
   }, 80) : null;
