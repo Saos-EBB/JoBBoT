@@ -7,7 +7,22 @@ import { config } from '../config.ts';
 
 const profile = loadProfile();
 const storage = createStorage();
-let jobs = [...await storage.list({ status: 'matched' }), ...await storage.list({ status: 'uncertain' })];
+
+// --data=save    -> nur data/jobs/sicher/   (status "matched")
+// --data=unsave  -> nur data/jobs/unsicher/ (status "uncertain")
+// ohne --data    -> beide Ordner, wie bisher
+const dataArg = process.argv.find(a => a.startsWith('--data='));
+const dataFilter = dataArg?.slice('--data='.length);
+if (dataFilter && dataFilter !== 'save' && dataFilter !== 'unsave') {
+  console.error(`Unbekannter --data Wert: "${dataFilter}" (erwartet: save | unsave)`);
+  process.exit(1);
+}
+
+let jobs = dataFilter === 'save'
+  ? await storage.list({ status: 'matched' })
+  : dataFilter === 'unsave'
+  ? await storage.list({ status: 'uncertain' })
+  : [...await storage.list({ status: 'matched' }), ...await storage.list({ status: 'uncertain' })];
 
 const limitArg = process.argv.find(a => a.startsWith('--limit'));
 if (limitArg) {
