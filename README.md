@@ -1,5 +1,7 @@
 # JobBot
 
+*[English](README.en.md)*
+
 Lokaler Job-Scraper mit LLM-Anschreiben-Generator. Läuft komplett offline/lokal
 (Ollama), keine Cloud-Abhängigkeit. Pipeline: **Scrape → Filter → Anschreiben
 → Review** (Review/Versand sind aktuell manuell).
@@ -9,8 +11,7 @@ Lokaler Job-Scraper mit LLM-Anschreiben-Generator. Läuft komplett offline/lokal
 ```bash
 npm install
 npx playwright install chromium   # nur für AMS/DevJobs.at (Browser-Scraper)
-ollama pull qwen3.5:9b            # Filter-Modell
-ollama pull gemma3:12b            # Anschreiben-Modell
+ollama pull mistral-small3.2:latest   # Filter- und Anschreiben-Modell
 cp config/profile.example.json config/profile.json   # eigene Daten eintragen
 ```
 
@@ -25,7 +26,29 @@ Projekte und Links, die in jedes generierte Anschreiben einfließen.
 | `sources.json` | Welche Portale aktiv sind (karriere.at, devjobs.at, LinkedIn, AMS, jobs.at) + Suchqueries pro Portal |
 | `location.json` | Whitelist an Städten/Regionen (Oberösterreich) + Remote-Keywords |
 | `experience-rules.json` | Keyword-/Phrasenlisten für den Regex-Filter (Erfahrungsjahre, Junior-Signale, Ausschluss-/Negationswörter) |
-| `settings.json` | `filterMode` (`regex` oder `llama`) und Fallback-`filterModel` |
+| `settings.json` | `filterMode` (`regex` oder `llm`) und Fallback-`filterModel` |
+
+### Config anpassen
+
+- **`sources.json`**: Portale ein-/ausschalten und Suchqueries pro Portal
+  ändern, wenn zu wenig/zu viele Treffer reinkommen.
+- **`location.json`**: Städte/Regionen zur Whitelist hinzufügen, Remote-
+  Keywords ergänzen, wenn passende Jobs rausgefiltert werden.
+- **`experience-rules.json`**: Keyword-Listen (Erfahrungsjahre, Junior-
+  Signale, Ausschlusswörter) nachschärfen, wenn `data/filter-log.md` zeigt,
+  dass der Regex-Filter falsch klassifiziert (zu streng → raus, zu lasch →
+  unsicher).
+- **`settings.json`**: `filterMode` auf `llm` stellen, um statt Regex den
+  Ollama-Filter zu nutzen (braucht laufendes Ollama + `filterModel`).
+
+## Performance
+
+Getestet auf 6 CPU-Kernen, kein GPU-Support unter Ollama. CPU-Temperatur
+unter Last: Peak ~81°C, im Schnitt ~70°C. Ein Anschreiben dauert ~3-4 Min,
+abhängig davon wie gut Job und Profil zusammenpassen (vgl. die Testfälle
+`clean`/`offstack`/`brutal` in `scripts/anschreiben-model-bench.ts` — clean
+= guter fachlicher Fit, offstack = Tech-Stack weicht ab, brutal = großer
+fachlicher Mismatch, mehr Text zu Lücken/Ehrlichkeit nötig).
 
 ## Commands
 
@@ -94,5 +117,5 @@ manuelle Schritte — es gibt (noch) keinen Auto-Send.
 | Variable | Default |
 |---|---|
 | `OLLAMA_HOST` | `http://localhost:11434` |
-| `JOBBOT_MODEL_FILTER` | `qwen3.5:9b` |
-| `JOBBOT_MODEL_WRITER` | `gemma3:12b` |
+| `JOBBOT_MODEL_FILTER` | `mistral-small3.2:latest` |
+| `JOBBOT_MODEL_WRITER` | `mistral-small3.2:latest` |
