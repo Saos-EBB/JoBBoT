@@ -62,19 +62,29 @@ npm run typecheck
 ### Pipeline
 
 ```bash
-npm run scrape             # all sources enabled in sources.json
-npm run scrape:karriere    # single source: karriere | devjobs | linkedin | ams | jobs
+npm run scrape                       # all sources enabled in sources.json
+npm run scrape:karriere              # single source: karriere | devjobs | linkedin | ams | jobs
+npm run scrape -- --source=karriere  # equivalent, directly via flag
 
-npm run filter             # filter all 'new' jobs (mode from settings.json)
-npm run filter:regex       # force the regex strategy (offline, no Ollama needed)
+npm run filter                    # filter all 'new' jobs (mode from settings.json)
+npm run filter:regex              # force the regex strategy (offline, no Ollama needed)
+npm run filter -- --source=llm    # force the mode directly via flag (llm | regex)
 
-npm run anschreiben        # generate cover letters for all matched/uncertain jobs
+npm run anschreiben                       # generate cover letters for all matched/uncertain jobs
+npm run anschreiben -- --data=save        # only data/jobs/sicher/   (status "matched")
+npm run anschreiben -- --data=unsave      # only data/jobs/unsicher/ (status "uncertain")
+npm run anschreiben -- --limit=5          # only the first N jobs of the selection
+npm run anschreiben -- --source=<model>   # override the Ollama model for this run
 ```
+
+Flags go after `--` (npm convention, otherwise npm parses them itself) and
+can be combined, e.g. `npm run anschreiben -- --data=save --limit=3`.
 
 `npm run scrape` writes new jobs to `data/jobs/`. `npm run filter` sets each
 job's status (see lifecycle below) and writes a report to
 `data/filter-log.md`. `npm run anschreiben` places finished letters under
-`data/anschreiben/title_company_date_id8.md`.
+`data/anschreiben/title_company_date_id8.md` and logs every run (model,
+`--data` filter, count) to `data/anschreiben/AnschreibenLog.md`.
 
 `scripts/anschreiben-model-bench.ts` is not a pipeline step — it's a dev
 tool for comparing several Ollama models on the same test jobs.

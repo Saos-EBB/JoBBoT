@@ -62,19 +62,29 @@ npm run typecheck
 ### Pipeline
 
 ```bash
-npm run scrape             # alle aktivierten Quellen aus sources.json
-npm run scrape:karriere    # einzelne Quelle: karriere | devjobs | linkedin | ams | jobs
+npm run scrape                       # alle aktivierten Quellen aus sources.json
+npm run scrape:karriere              # einzelne Quelle: karriere | devjobs | linkedin | ams | jobs
+npm run scrape -- --source=karriere  # äquivalent, direkt per Flag
 
-npm run filter             # alle 'new' Jobs filtern (Modus aus settings.json)
-npm run filter:regex       # Regex-Strategie erzwingen (offline, kein Ollama nötig)
+npm run filter                    # alle 'new' Jobs filtern (Modus aus settings.json)
+npm run filter:regex              # Regex-Strategie erzwingen (offline, kein Ollama nötig)
+npm run filter -- --source=llm    # Modus direkt per Flag erzwingen (llm | regex)
 
-npm run anschreiben        # Anschreiben für alle matched/uncertain Jobs generieren
+npm run anschreiben                       # Anschreiben für alle matched/uncertain Jobs generieren
+npm run anschreiben -- --data=save        # nur data/jobs/sicher/    (Status "matched")
+npm run anschreiben -- --data=unsave      # nur data/jobs/unsicher/  (Status "uncertain")
+npm run anschreiben -- --limit=5          # nur die ersten N Jobs der Auswahl
+npm run anschreiben -- --source=<modell>  # Ollama-Modell für diesen Lauf überschreiben
 ```
+
+Flags stehen hinter `--` (npm-Konvention, sonst parst npm sie selbst) und
+lassen sich kombinieren, z. B. `npm run anschreiben -- --data=save --limit=3`.
 
 `npm run scrape` schreibt neue Jobs nach `data/jobs/`. `npm run filter` setzt
 den Status jedes Jobs (siehe Lifecycle unten) und schreibt einen Report nach
 `data/filter-log.md`. `npm run anschreiben` legt fertige Briefe unter
-`data/anschreiben/titel_firma_datum_id8.md` ab.
+`data/anschreiben/titel_firma_datum_id8.md` ab und protokolliert jeden Lauf
+(Modell, `--data`-Filter, Anzahl) in `data/anschreiben/AnschreibenLog.md`.
 
 `scripts/anschreiben-model-bench.ts` ist kein Pipeline-Schritt, sondern ein
 Dev-Tool zum Vergleichen mehrerer Ollama-Modelle auf denselben Test-Jobs.
