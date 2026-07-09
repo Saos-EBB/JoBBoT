@@ -2,6 +2,7 @@ node_modules
 .playwright/
 data/jobs/*.json
 data/anschreiben/*.md
+data/backup-*/
 config/profile.json
 .env
 *.log
