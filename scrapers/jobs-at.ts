@@ -1,5 +1,6 @@
 import { sleep } from '../lib/fetch-page.ts';
 import { slugify } from '../lib/slugify.ts';
+import { normalizeDescription } from '../lib/normalize-description.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 
 const BASE = 'https://www.jobs.at';
@@ -80,7 +81,7 @@ export function parseDetailPage(html: string, base: Partial<ScrapedJob>): Scrape
       title: ld.title ?? base.title ?? '',
       company: ld.hiringOrganization?.name ?? base.company ?? '',
       location,
-      description: ld.description ?? '',
+      description: normalizeDescription(ld.description ?? ''),
       postedAt: ld.datePosted ?? null,
     };
   }
@@ -90,7 +91,7 @@ export function parseDetailPage(html: string, base: Partial<ScrapedJob>): Scrape
   // dem plain-HTML-Artikel holen statt sie leer zu lassen.
   const descMatch = html.match(/<article class="c-job-detail-text"[^>]*>([\s\S]*?)<\/article>/);
   if (descMatch) {
-    return { ...fallback, description: descMatch[1].trim() };
+    return { ...fallback, description: normalizeDescription(descMatch[1].trim()) };
   }
   return fallback;
 }

@@ -1,5 +1,6 @@
 import { chromium, type Page } from 'playwright';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
+import { normalizeDescription } from '../lib/normalize-description.ts';
 
 const BASE = 'https://jobs.ams.at/public/emps';
 const MAX_PAGES = 10;
@@ -28,7 +29,7 @@ export function parseAmsResult(r: AmsSearchResult): ScrapedJob {
     title: r.title,
     company: r.company?.name ?? '',
     location: r.company?.address?.municipality || r.company?.address?.federalState || 'Österreich',
-    description: r.summary ?? '',
+    description: normalizeDescription(r.summary ?? ''),
     postedAt: r.lastUpdatedAt ?? null,
   };
 }
