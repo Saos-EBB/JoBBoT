@@ -1,4 +1,5 @@
 import { fetchPage, sleep } from '../lib/fetch-page.ts';
+import { normalizeDescription } from '../lib/normalize-description.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 
 const BASE = 'https://www.karriere.at';
@@ -29,7 +30,7 @@ export function parseSearchPage(html: string): ScrapedJob[] {
         title: j.title as string,
         company: (j.company?.name as string) ?? '',
         location: (j.locations?.[0]?.name ?? j.company?.mainLocation) as string | undefined,
-        description: (j.snippet as string | null) ?? '',
+        description: normalizeDescription((j.snippet as string | null) ?? ''),
         salary: (j.salary as string | null) ?? null,
         postedAt: null,
       } satisfies ScrapedJob];
@@ -47,7 +48,7 @@ export function parseDetailPage(html: string, baseJob: ScrapedJob): ScrapedJob {
       if (ld['@type'] !== 'JobPosting') continue;
       return {
         ...baseJob,
-        ...(ld.description ? { description: ld.description } : {}),
+        ...(ld.description ? { description: normalizeDescription(ld.description) } : {}),
         ...(ld.datePosted ? { postedAt: ld.datePosted } : {}),
       };
     }

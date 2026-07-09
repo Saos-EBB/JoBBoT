@@ -59,9 +59,9 @@ test('parseDetailResult: description nicht leer', () => {
   assert.ok(result.description.length > 50, `description zu kurz: ${result.description.length}`);
 });
 
-test('parseDetailResult: description enthält HTML-Tags', () => {
+test('parseDetailResult: description ist normalisiert, keine HTML-Tags mehr', () => {
   const result = parseDetailResult(detailCtx, baseJob);
-  assert.ok(result.description.includes('<'), `kein HTML in description`);
+  assert.ok(!result.description.includes('<'), `HTML-Tag in description gefunden: ${result.description.slice(0, 100)}`);
 });
 
 test('parseDetailResult: {} → baseJob unverändert zurück', () => {

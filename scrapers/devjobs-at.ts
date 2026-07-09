@@ -1,4 +1,5 @@
 import { chromium, type Page } from 'playwright';
+import { normalizeDescription } from '../lib/normalize-description.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 
 const BASE = 'https://www.devjobs.at';
@@ -36,7 +37,7 @@ export function parseSearchResults(context: unknown): ScrapedJob[] {
           title,
           company,
           location: model.metaOsmLocations?.[0]?.title ?? 'Österreich',
-          description: (model.responsibilitiesExcerpt as string | null) ?? '',
+          description: normalizeDescription((model.responsibilitiesExcerpt as string | null) ?? ''),
           postedAt: (model.sortedAt ?? model.createdAt) as string | null,
           salary: from && to ? `${from}–${to} €/Jahr` : null,
         });
@@ -56,7 +57,7 @@ export function parseDetailResult(context: unknown, baseJob: ScrapedJob): Scrape
     const postedAt: string | undefined = job.sortedAt ?? job.createdAt;
     return {
       ...baseJob,
-      ...(html ? { description: html } : {}),
+      ...(html ? { description: normalizeDescription(html) } : {}),
       ...(postedAt ? { postedAt } : {}),
     };
   } catch {

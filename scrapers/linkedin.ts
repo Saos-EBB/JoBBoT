@@ -1,4 +1,5 @@
 import { fetchPage, sleep } from '../lib/fetch-page.ts';
+import { normalizeDescription } from '../lib/normalize-description.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 
 const SEARCH_BASE = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search';
@@ -36,7 +37,7 @@ export function parseDetailPage(html: string, baseJob: ScrapedJob): ScrapedJob {
   if (!html) return baseJob;
   const match = html.match(/show-more-less-html__markup[^>]*>([\s\S]*?)<button/);
   if (!match) return baseJob;
-  return { ...baseJob, description: match[1].trim() };
+  return { ...baseJob, description: normalizeDescription(match[1].trim()) };
 }
 
 async function fetchSearchPage(keyword: string, location: string, start: number): Promise<string> {
