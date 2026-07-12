@@ -41,9 +41,27 @@ projects and links that flow into every generated cover letter.
 - **`settings.json`**: set `filterMode` to `llm` to use the Ollama filter
   instead of regex (needs Ollama running + `filterModel` set).
 
+## Model selection
+
+Several local Ollama models were benchmarked for cover-letter generation
+(full raw data: `data/anschreiben/test/`), so others can skip re-running
+the comparison:
+
+| Model | Result |
+|---|---|
+| `qwen2.5:7b` | Quality unsatisfactory — dropped |
+| `qwen3.5:9b` | Fastest (~115s/job), but hallucinated skills not in the profile in several test jobs |
+| `qwen3:30b` | Too big for this CPU-only setup — every test job timed out (>10min) |
+| `gemma3:12b` | Decent quality, but the only model that needed repeated retries; RAM usage grew continuously with no plateau over a test run (~15→23GB) — a real OOM risk on longer batches |
+| `mistral-small3.2:latest` | Best quality (most honest about missing skills, no invented parallels), most stable RAM usage, no retries — **current choice** for both filter and cover letters |
+
+The temperature and duration numbers in the "Performance" section below
+refer to `mistral-small3.2`, the model actually used in production.
+
 ## Performance
 
-Tested on 6 CPU cores, no GPU support under Ollama. CPU temperature under
+Tested on a Lenovo T14 (AMD Ryzen 7 PRO 5850U), 6 CPU cores, no GPU support
+under Ollama. CPU temperature under
 load: peak ~81°C, ~70°C on average. One cover letter takes ~3-4 min,
 depending on how well the job matches the profile (see the `clean`/
 `offstack`/`brutal` test fixtures in `scripts/anschreiben-model-bench.ts` —
@@ -75,6 +93,8 @@ npm run anschreiben -- --data=save        # only data/jobs/sicher/   (status "ma
 npm run anschreiben -- --data=unsave      # only data/jobs/unsicher/ (status "uncertain")
 npm run anschreiben -- --limit=5          # only the first N jobs of the selection
 npm run anschreiben -- --source=<model>   # override the Ollama model for this run
+
+npm run ui   # job browser + Gmail integration, http://localhost:3000
 ```
 
 Flags go after `--` (npm convention, otherwise npm parses them itself) and
@@ -83,11 +103,35 @@ can be combined, e.g. `npm run anschreiben -- --data=save --limit=3`.
 `npm run scrape` writes new jobs to `data/jobs/`. `npm run filter` sets each
 job's status (see lifecycle below) and writes a report to
 `data/filter-log.md`. `npm run anschreiben` places finished letters under
-`data/anschreiben/title_company_date_id8.md` and logs every run (model,
-`--data` filter, count) to `data/anschreiben/AnschreibenLog.md`.
+`data/anschreiben/title_company_date_id8.md`, also tries to find an
+application email address (regex on the listing, then a firmenabc.at
+fallback), and logs every run (model, `--data` filter, count, emails found)
+to `data/anschreiben/AnschreibenLog.md`.
 
 `scripts/anschreiben-model-bench.ts` is not a pipeline step — it's a dev
 tool for comparing several Ollama models on the same test jobs.
+
+### Gmail integration
+
+`npm run ui` shows an editable email preview (To/Subject/Body) for each job
+once its status is `reviewed`, with two actions: **Create draft** (lands as
+a real, editable draft in Gmail) or **Send directly** (with a confirmation
+dialog). Both go through a Gmail App Password, not OAuth:
+
+1. Turn on 2-Step Verification on your Google account (if not already on).
+2. Generate an App Password: `myaccount.google.com/apppasswords` (no longer
+   linked from the normal Security menu — Google hid the link; go there
+   directly or search for it inside your Google Account).
+3. Create `.env` (see `.env.example`, gitignored):
+   ```
+   GMAIL_USER=your-address@gmail.com
+   GMAIL_APP_PASSWORD=the-16-character-app-password
+   ```
+4. `npm run ui` — loads `.env` automatically (`--env-file-if-exists`, needs
+   Node ≥21.7).
+
+If `.env` is missing, the UI still runs — only draft/send fail with a clear
+error message instead of the page not loading at all.
 
 ## Tests
 
@@ -119,8 +163,10 @@ new → filtered_out | matched → generated → reviewed → drafted → sent
 ```
 
 `scrape` creates `new`, `filter` sets `filtered_out`/`matched`/`uncertain`,
-`anschreiben` sets `generated`. Review, drafting and sending are currently
-manual steps — there is no auto-send (yet).
+`anschreiben` sets `generated`. `reviewed` is set manually in the UI (status
+dropdown) — only then does the UI unlock draft/send. `drafted`/`sent` are
+set by the UI itself, only on an actually successful Gmail call (no status
+change on failure). There is still no auto-send without that explicit click.
 
 ## Environment variables
 
@@ -129,3 +175,6 @@ manual steps — there is no auto-send (yet).
 | `OLLAMA_HOST` | `http://localhost:11434` |
 | `JOBBOT_MODEL_FILTER` | `mistral-small3.2:latest` |
 | `JOBBOT_MODEL_WRITER` | `mistral-small3.2:latest` |
+| `GMAIL_USER` | — (see [Gmail integration](#gmail-integration)) |
+| `GMAIL_APP_PASSWORD` | — (see [Gmail integration](#gmail-integration)) |
+| `UI_PORT` | `3000` |
