@@ -41,9 +41,27 @@ Projekte und Links, die in jedes generierte Anschreiben einfließen.
 - **`settings.json`**: `filterMode` auf `llm` stellen, um statt Regex den
   Ollama-Filter zu nutzen (braucht laufendes Ollama + `filterModel`).
 
+## Modellwahl
+
+Mehrere lokale Ollama-Modelle wurden für die Anschreiben-Generierung
+durchgetestet (volle Rohdaten: `data/anschreiben/test/`), damit andere sich
+den Vergleich sparen können:
+
+| Modell | Ergebnis |
+|---|---|
+| `qwen2.5:7b` | Qualität nicht befriedigend — aussortiert |
+| `qwen3.5:9b` | Am schnellsten (~115s/Job), aber halluzinierte in mehreren Testjobs Skills, die nicht im Profil stehen |
+| `qwen3:30b` | Zu groß fürs CPU-only-Setup — jeder Testjob lief in Timeout (>10min) |
+| `gemma3:12b` | Ordentliche Qualität, aber als einziges Modell mehrfach Retries nötig; RAM-Verbrauch stieg über eine Testreihe kontinuierlich ohne Plateau (~15→23GB) — reales OOM-Risiko bei längeren Batches |
+| `mistral-small3.2:latest` | Beste Qualität (am ehrlichsten bei fehlenden Skills, keine erfundenen Parallelen), stabilster RAM-Verbrauch, keine Retries — **aktuelle Wahl** für Filter und Anschreiben |
+
+Die Temperatur- und Dauer-Werte im Abschnitt „Performance" unten beziehen
+sich auf `mistral-small3.2`, das produktiv eingesetzte Modell.
+
 ## Performance
 
-Getestet auf 6 CPU-Kernen, kein GPU-Support unter Ollama. CPU-Temperatur
+Getestet auf einem Lenovo T14 (AMD Ryzen 7 PRO 5850U), 6 CPU-Kernen, kein
+GPU-Support unter Ollama. CPU-Temperatur
 unter Last: Peak ~81°C, im Schnitt ~70°C. Ein Anschreiben dauert ~3-4 Min,
 abhängig davon wie gut Job und Profil zusammenpassen (vgl. die Testfälle
 `clean`/`offstack`/`brutal` in `scripts/anschreiben-model-bench.ts` — clean
@@ -75,6 +93,8 @@ npm run anschreiben -- --data=save        # nur data/jobs/sicher/    (Status "ma
 npm run anschreiben -- --data=unsave      # nur data/jobs/unsicher/  (Status "uncertain")
 npm run anschreiben -- --limit=5          # nur die ersten N Jobs der Auswahl
 npm run anschreiben -- --source=<modell>  # Ollama-Modell für diesen Lauf überschreiben
+
+npm run ui   # Job-Browser + Gmail-Anbindung, http://localhost:3000
 ```
 
 Flags stehen hinter `--` (npm-Konvention, sonst parst npm sie selbst) und
@@ -83,11 +103,36 @@ lassen sich kombinieren, z. B. `npm run anschreiben -- --data=save --limit=3`.
 `npm run scrape` schreibt neue Jobs nach `data/jobs/`. `npm run filter` setzt
 den Status jedes Jobs (siehe Lifecycle unten) und schreibt einen Report nach
 `data/filter-log.md`. `npm run anschreiben` legt fertige Briefe unter
-`data/anschreiben/titel_firma_datum_id8.md` ab und protokolliert jeden Lauf
-(Modell, `--data`-Filter, Anzahl) in `data/anschreiben/AnschreibenLog.md`.
+`data/anschreiben/titel_firma_datum_id8.md` ab, versucht dabei zusätzlich
+eine Bewerbungs-E-Mail-Adresse zu finden (Regex im Inserat, sonst Fallback
+über firmenabc.at) und protokolliert jeden Lauf (Modell, `--data`-Filter,
+Anzahl, gefundene E-Mails) in `data/anschreiben/AnschreibenLog.md`.
 
 `scripts/anschreiben-model-bench.ts` ist kein Pipeline-Schritt, sondern ein
 Dev-Tool zum Vergleichen mehrerer Ollama-Modelle auf denselben Test-Jobs.
+
+### Gmail-Anbindung
+
+`npm run ui` zeigt pro Job (sobald Status `reviewed` ist) eine editierbare
+E-Mail-Vorschau (An/Betreff/Text) mit zwei Aktionen: **Entwurf erstellen**
+(landet als echter, editierbarer Entwurf in Gmail) oder **Direkt senden**
+(mit Bestätigungsdialog). Beide laufen über ein Gmail App-Passwort, nicht
+über OAuth:
+
+1. 2-Step-Verification im Google-Konto aktivieren (falls noch nicht an).
+2. App-Passwort erzeugen: `myaccount.google.com/apppasswords` (im normalen
+   Security-Menü nicht mehr verlinkt — Google hat den Link versteckt, direkt
+   aufrufen oder über die Suche im Google-Konto finden).
+3. `.env` anlegen (siehe `.env.example`, gitignored):
+   ```
+   GMAIL_USER=deine-adresse@gmail.com
+   GMAIL_APP_PASSWORD=das-16-stellige-app-passwort
+   ```
+4. `npm run ui` — lädt `.env` automatisch (`--env-file-if-exists`, braucht
+   Node ≥21.7).
+
+Fehlt `.env`, läuft die UI trotzdem — nur Entwurf/Senden schlagen mit einer
+klaren Fehlermeldung fehl statt die Seite zu blockieren.
 
 ## Tests
 
@@ -119,8 +164,11 @@ new → filtered_out | matched → generated → reviewed → drafted → sent
 ```
 
 `scrape` erzeugt `new`, `filter` setzt `filtered_out`/`matched`/`uncertain`,
-`anschreiben` setzt `generated`. Review, Drafting und Versand sind aktuell
-manuelle Schritte — es gibt (noch) keinen Auto-Send.
+`anschreiben` setzt `generated`. `reviewed` wird manuell in der UI gesetzt
+(Status-Dropdown) — erst danach schaltet die UI Entwurf/Versand frei.
+`drafted`/`sent` setzt die UI selbst, und zwar nur bei tatsächlich
+erfolgreichem Gmail-Aufruf (kein Statuswechsel bei Fehlern). Es gibt weiterhin
+keinen Auto-Send ohne diesen expliziten Klick.
 
 ## Umgebungsvariablen
 
@@ -129,3 +177,6 @@ manuelle Schritte — es gibt (noch) keinen Auto-Send.
 | `OLLAMA_HOST` | `http://localhost:11434` |
 | `JOBBOT_MODEL_FILTER` | `mistral-small3.2:latest` |
 | `JOBBOT_MODEL_WRITER` | `mistral-small3.2:latest` |
+| `GMAIL_USER` | — (siehe [Gmail-Anbindung](#gmail-anbindung)) |
+| `GMAIL_APP_PASSWORD` | — (siehe [Gmail-Anbindung](#gmail-anbindung)) |
+| `UI_PORT` | `3000` |
