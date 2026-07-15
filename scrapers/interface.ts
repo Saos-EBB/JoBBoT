@@ -18,6 +18,7 @@ export interface Job extends ScrapedJob {
   scrapedAt: string;
   updatedAt: string;
   match?: { ok: boolean; reason: string } | null;
+  email?: string | null;
 }
 
 export type SourceQuery = Record<string, string>;

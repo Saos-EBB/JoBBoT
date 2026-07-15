@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=21.7"
   },
   "scripts": {
     "check": "tsx scripts/check-ollama.ts",
@@ -22,12 +22,18 @@
     "scrape:ams": "tsx scripts/run-scrape.ts --source=ams",
     "scrape:jobs": "tsx scripts/run-scrape.ts --source=jobs",
     "anschreiben": "tsx scripts/run-anschreiben.ts",
+    "ui": "tsx --env-file-if-exists=.env scripts/ui-server.ts",
     "install:browsers": "playwright install chromium"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/nodemailer": "^8.0.1",
     "playwright": "^1.61.1",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "imapflow": "^1.4.6",
+    "nodemailer": "^9.0.3"
   }
 }
