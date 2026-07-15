@@ -1,5 +1,10 @@
 node_modules
 .playwright/
+.claude/
+.agents/
+agent/
+data/skills/
+.understand-anything/
 data/jobs/*.json
 data/anschreiben/*.md
 data/backup-*/
