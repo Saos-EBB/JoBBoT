@@ -7,8 +7,7 @@ JOBBOT — QUICKSTART
    npx playwright install chromium     # only needed for AMS + DevJobs.at scrapers
 
 2. START OLLAMA AND PULL MODELS
-   ollama pull qwen3.5:9b                 # filter model
-   ollama pull gemma3:12b                # cover-letter writer model
+   ollama pull mistral-small3.2:latest   # filter and cover-letter writer model
 
 3. SET UP YOUR PROFILE (gitignored, not committed)
    cp config/profile.example.json config/profile.json
@@ -17,7 +16,7 @@ JOBBOT — QUICKSTART
 4. CHECK CONFIG BEFORE FIRST RUN
    config/sources.json           which portals to scrape + search keywords
    config/location.json          allowed cities/regions (default: Upper Austria)
-   config/settings.json          filterMode: "regex" (offline/free) or "llama" (uses Ollama)
+   config/settings.json          filterMode: "regex" (offline/free) or "llm" (uses Ollama)
    config/experience-rules.json  keyword lists driving the regex filter
 
 5. HEALTH CHECK
@@ -54,7 +53,7 @@ GOTCHAS / THINGS TO REMEMBER
   speed). It is NOT part of the real pipeline — don't wire it into scrape/
   filter/anschreiben.
 - Ollama must be running locally before scrape (AMS/DevJobs use Playwright,
-  not Ollama, but filter:llama and anschreiben both call the local Ollama
-  API at OLLAMA_HOST, default http://localhost:11434).
+  not Ollama, but filter in "llm" mode and anschreiben both call the local
+  Ollama API at OLLAMA_HOST, default http://localhost:11434).
 - npm test never touches real Ollama or real data/jobs/ — it's all temp
   dirs + an in-process mock HTTP server (test/helpers.ts).

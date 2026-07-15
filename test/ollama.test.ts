@@ -5,8 +5,8 @@ import type { AddressInfo } from 'node:net';
 import { checkOllama } from '../lib/ollama.ts';
 import { mockOllama } from './helpers.ts';
 
-const FILTER = 'qwen2.5:3b';
-const WRITER = 'qwen2.5:7b';
+const FILTER = 'qwen3.5:9b';
+const WRITER = 'mistral-small3.2:latest';
 
 test('both models present → ok:true, missing:[]', async (t) => {
   const mock = await mockOllama([FILTER, WRITER]);
@@ -25,7 +25,7 @@ test('one model missing → ok:false, missing contains it', async (t) => {
   assert.ok(result.found.includes(FILTER));
 });
 
-test('startsWith match: "qwen2.5:3b-instruct" counts for "qwen2.5:3b"', async (t) => {
+test('startsWith match: "qwen3.5:9b-instruct" counts for "qwen3.5:9b"', async (t) => {
   const mock = await mockOllama([`${FILTER}-instruct`, WRITER]);
   t.after(mock.close);
   const result = await checkOllama(mock.url);
