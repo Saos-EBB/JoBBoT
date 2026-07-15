@@ -17,20 +17,6 @@ function esc(s: string): string {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 }
 
-// gray = erledigt/verworfen, gelb = unsicher, indigo (hell) = in Arbeit,
-// indigo (voll) = reviewed/drafted (Versand freigeschaltet bzw. schon unterwegs), grün = gesendet
-function pillClass(status: JobStatus): string {
-  switch (status) {
-    case 'uncertain': return 'uncertain';
-    case 'matched':
-    case 'generated': return 'progress';
-    case 'freigegeben':
-    case 'postausgang': return 'gate';
-    case 'gesendet': return 'done';
-    default: return 'neutral';
-  }
-}
-
 function layout(body: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><title>JobBot</title>
 <style>
@@ -53,13 +39,6 @@ body { font-family: var(--sans); background: var(--paper); color: var(--ink); ma
 a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
 h1 { font-size: 1.7rem; margin: 0.2rem 0 0; } h3 { font-size: 1.05rem; margin: 2.2rem 0 0.7rem; }
 .meta-label { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.job { border: 1px solid var(--line); border-radius: 6px; padding: .75rem 1rem; margin-bottom: .5rem; display: flex; justify-content: space-between; gap: 1rem; background: var(--paper-raised); }
-.pill { display: inline-flex; align-items: center; font-family: var(--mono); font-size: 0.72rem; padding: 0.22rem 0.6rem; border-radius: 100px; white-space: nowrap; }
-.pill.neutral { background: var(--paper); border: 1px solid var(--line); color: var(--muted); }
-.pill.uncertain { background: var(--amber-bg); color: var(--amber); }
-.pill.progress { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
-.pill.gate { background: var(--accent); color: var(--accent-ink); }
-.pill.done { background: var(--success-bg); color: var(--success); }
 pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--paper-raised); border: 1px solid var(--line); padding: 1rem; border-radius: 6px; }
 form { margin-top: 1rem; }
 select, input[type="email"] { font-family: var(--sans); font-size: 0.9rem; color: var(--ink); background: var(--paper-raised); border: 1px solid var(--line); border-radius: 6px; padding: 0.4rem 0.6rem; }
@@ -148,14 +127,27 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
 
   if (req.method === 'GET' && url.pathname === '/') {
-    const jobs = (await storage.list()).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-    const rows = jobs.map(j => `
-      <div class="job">
-        <div><a href="/job/${j.id}">${esc(j.title)}</a> — ${esc(j.company)}</div>
-        <span class="pill ${pillClass(j.status)}">${j.status}</span>
-      </div>`).join('');
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(layout(`<div class="meta-label">jobbot — übersicht</div><h1>${jobs.length} Jobs</h1>${rows || '<p>Keine Jobs.</p>'}`));
+    res.end('<!doctype html><html><head><meta charset="utf-8"><title>JobBot</title></head>'
+      + '<body><div id="root"></div><script type="module" src="/app.js"></script></body></html>');
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/jobs') {
+    const jobs = await storage.list();
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(jobs));
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname === '/app.js') {
+    try {
+      const js = await readFile(join(import.meta.dirname, '..', 'ui', 'dist', 'app.js'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' });
+      res.end(js);
+    } catch {
+      res.writeHead(404).end('app.js nicht gebaut — npm run build:ui');
+    }
     return;
   }
 
