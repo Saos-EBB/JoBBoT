@@ -9,7 +9,7 @@ import { composeEmail, createDraft, sendMail, logMailAction, type ComposedEmail 
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 
 const PORT = Number(process.env.UI_PORT ?? 3000);
-const STATUSES: JobStatus[] = ['new', 'filtered_out', 'uncertain', 'matched', 'generated', 'reviewed', 'drafted', 'sent'];
+const STATUSES: JobStatus[] = ['new', 'filtered_out', 'uncertain', 'matched', 'generated', 'freigegeben', 'postausgang', 'gesendet', 'geloescht', 'fehler'];
 const storage = createStorage();
 const profile = loadProfile();
 
@@ -24,9 +24,9 @@ function pillClass(status: JobStatus): string {
     case 'uncertain': return 'uncertain';
     case 'matched':
     case 'generated': return 'progress';
-    case 'reviewed':
-    case 'drafted': return 'gate';
-    case 'sent': return 'done';
+    case 'freigegeben':
+    case 'postausgang': return 'gate';
+    case 'gesendet': return 'done';
     default: return 'neutral';
   }
 }
@@ -100,14 +100,14 @@ function renderLetter(email: ComposedEmail): string {
 async function renderMailSection(job: Job, error: string | null): Promise<string> {
   const errorBanner = error ? `<div class="banner-error">${esc(error)}</div>` : '';
 
-  if (job.status === 'sent') {
+  if (job.status === 'gesendet') {
     return `<h3>E-Mail</h3><div class="banner-done">Gesendet an ${esc(job.email ?? '')}.</div>${errorBanner}`;
   }
-  if (job.status === 'drafted') {
+  if (job.status === 'postausgang') {
     return `<h3>E-Mail</h3><div class="banner-done">Als Gmail-Entwurf gespeichert (an ${esc(job.email ?? '')}). Versand erfolgt manuell in Gmail.</div>${errorBanner}`;
   }
-  if (job.status !== 'reviewed') {
-    return `<h3>E-Mail</h3><div class="locked">Versand gesperrt, bis der Status auf <code>reviewed</code> gesetzt ist.</div>${errorBanner}`;
+  if (job.status !== 'freigegeben') {
+    return `<h3>E-Mail</h3><div class="locked">Versand gesperrt, bis der Status auf <code>freigegeben</code> gesetzt ist.</div>${errorBanner}`;
   }
 
   const emailForm = `<form class="field-row" method="post" action="/job/${job.id}/email">
@@ -213,7 +213,7 @@ const server = createServer(async (req, res) => {
     try {
       const email = await composeEmail(job, profile);
       await createDraft(email);
-      await storage.updateStatus(job.id, 'drafted');
+      await storage.updateStatus(job.id, 'postausgang');
       await logMailAction(job, 'drafted');
       res.writeHead(302, { Location: `/job/${job.id}` });
     } catch (err) {
@@ -231,7 +231,7 @@ const server = createServer(async (req, res) => {
     try {
       const email = await composeEmail(job, profile);
       await sendMail(email);
-      await storage.updateStatus(job.id, 'sent');
+      await storage.updateStatus(job.id, 'gesendet');
       await logMailAction(job, 'sent');
       res.writeHead(302, { Location: `/job/${job.id}` });
     } catch (err) {

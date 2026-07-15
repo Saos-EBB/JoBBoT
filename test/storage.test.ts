@@ -79,8 +79,8 @@ test('updateStatus sets status correctly', async (t) => {
   const job = toJob(fakeScraped());
   await store.save(job);
 
-  const updated = await store.updateStatus(job.id, 'sent');
-  assert.equal(updated.status, 'sent');
+  const updated = await store.updateStatus(job.id, 'gesendet');
+  assert.equal(updated.status, 'gesendet');
 });
 
 // ── Dedup / Atomik ──────────────────────────────────────────────────────────
@@ -148,14 +148,14 @@ test('update unknown id throws', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const store = createStorage(dir);
-  await assert.rejects(() => store.update('000000000000dead', { status: 'sent' }));
+  await assert.rejects(() => store.update('000000000000dead', { status: 'gesendet' }));
 });
 
 test('updateStatus unknown id throws', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const store = createStorage(dir);
-  await assert.rejects(() => store.updateStatus('000000000000dead', 'sent'));
+  await assert.rejects(() => store.updateStatus('000000000000dead', 'gesendet'));
 });
 
 // ── Nebenläufigkeit ─────────────────────────────────────────────────────────
@@ -194,7 +194,7 @@ test('get() returns independent copy — mutation does not affect stored data', 
   await store.save(job);
 
   const copy = await store.get(job.id);
-  copy!.status = 'sent'; // mutate returned object
+  copy!.status = 'gesendet'; // mutate returned object
 
   const again = await store.get(job.id);
   assert.equal(again!.status, 'new'); // file unchanged
