@@ -96,9 +96,16 @@ export function parseAnschreibenResponse(raw: string): string | null {
   return trimmed;
 }
 
+export const ANSCHREIBEN_LOG_PATH = 'data/anschreiben/AnschreibenLog.md';
+
 function logSkip(job: Job, reason: string, logPath: string): void {
   const ts = new Date().toISOString().slice(0, 16).replace('T', ' ');
   appendFileSync(logPath, `\n- Anschreiben-Skip ${ts}: ${job.title} — ${job.company} — Grund: ${reason}\n`);
+}
+
+function logSuccess(job: Job, model: string, path: string, logPath: string): void {
+  const ts = new Date().toISOString().slice(0, 16).replace('T', ' ');
+  appendFileSync(logPath, `\n- Anschreiben-OK ${ts}: ${job.title} — ${job.company} — Modell: ${model} — ${path}\n`);
 }
 
 export async function saveAnschreiben(job: Job, text: string, dir = config.anschreibenDir): Promise<string> {
@@ -140,6 +147,16 @@ export async function readNdjsonContent(res: Response): Promise<string> {
 
 const MAX_REGENERATIONS = 2;
 
+// Ein Eintrag pro Versuch (Index = attempt), gekoppelt an MAX_REGENERATIONS+1 Versuche
+// insgesamt: die ersten beiden Versuche mit voller Thread-Zahl und knapperem Timeout,
+// der letzte Versuch mit weniger Threads (mehr Luft für den Rest vom System) und
+// entsprechend mehr Zeit, bevor endgültig übersprungen wird.
+const RETRY_CONFIG = [
+  { numThread: 6, timeoutMs: 600_000 },
+  { numThread: 6, timeoutMs: 600_000 },
+  { numThread: 4, timeoutMs: 1_000_000 },
+];
+
 export async function generateAnschreiben(
   job: Job,
   storage: Storage,
@@ -147,7 +164,7 @@ export async function generateAnschreiben(
   ollama = config.ollamaHost,
   anschreibenDir?: string,
   model = config.modelWriter,
-  logPath = 'data/filter-log.md',
+  logPath = ANSCHREIBEN_LOG_PATH,
 ): Promise<string | null> {
   if (job.status !== 'matched' && job.status !== 'uncertain') {
     console.warn(`[anschreiben] job ${job.id} hat status "${job.status}", erwartet "matched" oder "uncertain"`);
@@ -158,6 +175,9 @@ export async function generateAnschreiben(
   let lastError = '';
 
   for (let attempt = 0; attempt <= MAX_REGENERATIONS; attempt++) {
+    const { numThread, timeoutMs } = RETRY_CONFIG[attempt];
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     let raw = '';
     try {
       // stream: true, damit Ollama sofort HTTP-Header schickt statt erst nach voller
@@ -166,6 +186,7 @@ export async function generateAnschreiben(
       const res = await fetch(`${ollama}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           model,
           messages: [
@@ -173,6 +194,7 @@ export async function generateAnschreiben(
             { role: 'user', content: buildAnschreibenPrompt(job, profile) },
           ],
           stream: true,
+          options: { num_thread: numThread },
         }),
       });
       if (!res.ok) {
@@ -181,8 +203,13 @@ export async function generateAnschreiben(
       }
       raw = await readNdjsonContent(res);
     } catch (err) {
-      console.warn(`[anschreiben] netzwerk-fehler für job ${job.id}:`, err);
-      return null;
+      lastError = err instanceof Error && err.name === 'AbortError'
+        ? `Timeout nach ${timeoutMs / 1000}s (${numThread} Threads)`
+        : err instanceof Error ? err.message : String(err);
+      console.warn(`[anschreiben] Netzwerk-Fehler für job ${job.id} (Versuch ${attempt + 1}/${MAX_REGENERATIONS + 1}): ${lastError}`);
+      continue;
+    } finally {
+      clearTimeout(timer);
     }
 
     try {
@@ -208,5 +235,6 @@ export async function generateAnschreiben(
   job.status = 'generated';
   job.updatedAt = new Date().toISOString();
   await storage.save(job);
+  logSuccess(job, model, path, logPath);
   return path;
 }
