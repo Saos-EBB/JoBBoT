@@ -1,0 +1,14 @@
+{
+  "source": "ams",
+  "url": "https://jobs.ams.at/public/emps/jobs/22386619",
+  "title": "Systems Engineer (m/w/d) – Microsoft Infrastruktur - Active Directory | Entra ID | PKI",
+  "company": "Schulmeister Management Consulting GmbH",
+  "location": "Österreich",
+  "description": "Unser Kunde steht für eine jahrzehntelange Erfolgsgeschichte und ist heute in mehr als 20 Ländern aktiv. Dabei blieben, auch in der Größenordnung von mehreren tausend Kolleg:innen, der direkte Austausch über alle Abteilungen und Hierarchien sowie ein zielorientierter, pragmatischer Geschäftszugang Teil der Unternehmens-DNA. In einer modernen, hybriden IT-Landschaft mit Microsoft als dominierender Technologie verantwortet das IT Infrastruktur-Team eine komplexe Domain über dutzende Standorte, tausende Mitarbeiter:innen und mehrere hundert Applikationen.Aufgaben Planung, Implementierung und Weiterentwicklung unserer Microsoft-Infrastruktur Konzeption und technische Leitung von Infrastruktur- und Migrationsprojekten Administration und Optimierung von Active Directory und Microsoft Entra ID in hybriden Umgebungen Fachliche Unterstützung sowie Einarbeitung und Mentoring von Junior Systems Engineers Konzeption und Betrieb von Identitäts- und Zugriffsmanagement-Lösungen Verantwortung für unsere Public Key Infrastructure (PKI) und das Management von Zertifikaten (TLS/SSL, Client- und Serverzertifikate) Planung, Implementierung und Erneuerung von Zertifikatslösungen sowie Automatisierung entsprechender Prozesse Analyse und Behebung komplexer Störungen im 2nd- und 3rd-Level-Support Profil Mehrjährige Berufserfahrung als Systems Engineer oder System Administrator im MS-Umfeld Sehr gute Kenntnisse in Microsoft Active Directory und MS Entra ID Fundierte Kenntnisse im Bereich PKI, Zertifikatsmanagement und TLS Erfahrung in der Planung und Umsetzung technischer Projekte Analytische und strukturierte Arbeitsweise Freude daran, Wissen weiterzugeben und Kollegen fachlich zu unterstützen Sehr gute Deutschkenntnisse sowie gute Englischkenntnisse Wir bieten Anspruchsvolle Infrastruktur- und Transformationsprojekte Hohe Eigenverantwortung und Gestaltungsspielraum Moderne Microsoft-Technologien und hybride IT-Landschaften Ein erfahrenes Team mit hohem Zusammenhalt Keine Bereitschaftsdienste am Abend oder an Wochenende Flexible Arbeitszeiten sowie bis zu 40% Home-Office Möglichkeit Abhängig von Erfahrung und Qualifikation bieten wir ein Jahresbruttogehalt ab € 63.000 und Bereitschaft zur Überzahlung bei entsprechender Qualifikation und Erfahrung # Infrastructure # Azure # IAM # LDAP # DNS # DHCP # GPO # Domain # Forest # MFA # SSO # SAML # PowerShell # DFS # Load Balancing # Intune # Defender",
+  "postedAt": "2026-06-30T17:32:04Z",
+  "id": "7e18cf099e74be71",
+  "status": "uncertain",
+  "scrapedAt": "2026-07-14T11:44:34.713Z",
+  "updatedAt": "2026-07-14T13:06:52.121Z",
+  "match": null
+}
