@@ -2,9 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadSettings } from '../lib/settings.ts';
 
-test('loadSettings: liest config/settings.json, filterMode ist "llama" oder "regex"', () => {
+test('loadSettings: liest config/settings.json, filterMode ist "llm" oder "regex"', () => {
   const settings = loadSettings();
-  assert.ok(settings.filterMode === 'llama' || settings.filterMode === 'regex');
+  assert.ok(settings.filterMode === 'llm' || settings.filterMode === 'regex');
 });
 
 test('loadSettings: filterModel ist gesetzt (aus Config oder Default)', () => {

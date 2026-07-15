@@ -17,14 +17,14 @@ export interface DecideOptions {
 
 export function resolveStrategy(mode?: FilterMode, ollama?: string): FilterStrategy {
   const m = mode ?? loadSettings().filterMode;
-  if (m === 'llama') return createLlmStrategy({ ollama });
+  if (m === 'llm') return createLlmStrategy({ ollama });
   if (m === 'regex') return regexStrategy;
-  throw new Error(`Ungültiger filterMode: "${m}". Gültige Werte: llama, regex`);
+  throw new Error(`Ungültiger filterMode: "${m}". Gültige Werte: llm, regex`);
 }
 
 // Deterministische Gates vor jeder Strategie: Titel-Seniorität spart den Call komplett,
 // isLehre wird für beide Modi einmal berechnet. Danach übernimmt die gewählte Strategie
-// (llama oder regex) — dieselbe Decision-Form, downstream unverändert.
+// (llm oder regex) — dieselbe Decision-Form, downstream unverändert.
 export async function decide(job: Job, options: DecideOptions = {}): Promise<Decision> {
   const titleVerdict = checkTitle(job.title);
   if (titleVerdict.excluded) {

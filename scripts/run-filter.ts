@@ -10,8 +10,8 @@ function parseModeOverride(argv: string[]): FilterMode | undefined {
   const arg = argv.find(a => a.startsWith('--source='));
   if (!arg) return undefined;
   const value = arg.slice('--source='.length);
-  if (value !== 'llama' && value !== 'regex') {
-    throw new Error(`Ungültiger --source Wert: "${value}". Gültige Werte: llama, regex`);
+  if (value !== 'llm' && value !== 'regex') {
+    throw new Error(`Ungültiger --source Wert: "${value}". Gültige Werte: llm, regex`);
   }
   return value;
 }

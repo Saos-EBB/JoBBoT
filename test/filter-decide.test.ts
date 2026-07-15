@@ -52,16 +52,16 @@ test('resolveStrategy: mode "regex" → regexStrategy (name "regex")', () => {
   assert.equal(strategy.name, 'regex');
 });
 
-test('resolveStrategy: mode "llama" → llmStrategy (name "llama")', () => {
-  const strategy = resolveStrategy('llama');
-  assert.equal(strategy.name, 'llama');
+test('resolveStrategy: mode "llm" → llmStrategy (name "llm")', () => {
+  const strategy = resolveStrategy('llm');
+  assert.equal(strategy.name, 'llm');
 });
 
 test('resolveStrategy: ungültiger Modus → Fehler listet gültige Werte', () => {
   assert.throws(
     // @ts-expect-error absichtlich ungültiger Wert
     () => resolveStrategy('yolo'),
-    /llama, regex/,
+    /llm, regex/,
   );
 });
 
