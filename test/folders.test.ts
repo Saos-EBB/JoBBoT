@@ -9,9 +9,9 @@ function job(status: JobStatus, email: string | null = null): Job {
 }
 
 test('deriveStatus: Pipeline-Zone-Werte werden zusammengefasst', () => {
-  assert.equal(deriveStatus(job('new')), 'posteingang');
-  assert.equal(deriveStatus(job('uncertain')), 'posteingang');
-  assert.equal(deriveStatus(job('matched')), 'posteingang');
+  assert.equal(deriveStatus(job('new')), 'jobs');
+  assert.equal(deriveStatus(job('uncertain')), 'jobs');
+  assert.equal(deriveStatus(job('matched')), 'jobs');
   assert.equal(deriveStatus(job('generated')), 'entwurf');
   assert.equal(deriveStatus(job('filtered_out')), 'aussortiert');
 });
@@ -35,10 +35,10 @@ test('inFolder: postausgang ist immer mail/postausgang', () => {
   assert.equal(inFolder(job('postausgang', 'firma@example.com'), 'mail/postausgang'), true);
 });
 
-test('inFolder: posteingang ist ein eigener Ordner ohne mail/nomail-Split', () => {
-  assert.equal(inFolder(job('uncertain'), 'posteingang'), true);
-  assert.equal(inFolder(job('matched'), 'posteingang'), true);
-  assert.equal(inFolder(job('new'), 'posteingang'), true);
+test('inFolder: jobs ist ein eigener Ordner ohne mail/nomail-Split', () => {
+  assert.equal(inFolder(job('uncertain'), 'jobs'), true);
+  assert.equal(inFolder(job('matched'), 'jobs'), true);
+  assert.equal(inFolder(job('new'), 'jobs'), true);
 });
 
 test('inFolder: VERLAUF-Ordner ignorieren Mail-Status', () => {

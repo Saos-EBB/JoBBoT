@@ -4,13 +4,13 @@ import type { Job, JobStatus } from '../scrapers/interface.ts';
 // für den Ownership-Split der gespeicherten JobStatus-Werte). Pipeline-Zone-Werte werden
 // hier zusammengefasst, UI-Zone-Werte laufen 1:1 durch.
 export type Status =
-  | 'posteingang' | 'entwurf' | 'freigegeben' | 'postausgang'
+  | 'jobs' | 'entwurf' | 'freigegeben' | 'postausgang'
   | 'gesendet' | 'aussortiert' | 'geloescht' | 'fehler';
 
 const STATUS_MAP: Record<JobStatus, Status> = {
-  new: 'posteingang',
-  uncertain: 'posteingang',
-  matched: 'posteingang',
+  new: 'jobs',
+  uncertain: 'jobs',
+  matched: 'jobs',
   generated: 'entwurf',
   filtered_out: 'aussortiert',
   freigegeben: 'freigegeben',
@@ -28,11 +28,12 @@ function hasMail(job: Job): boolean {
   return job.email != null;
 }
 
-// posteingang/aussortiert/gesendet/geloescht/fehler sind je ein einzelner Ordner
-// (Mail-Status ist dort irrelevant); nur entwurf/freigegeben splitten nach Mail;
-// postausgang ist per Definition immer mail/* (kein Draft ohne Empfängeradresse).
+// "jobs" (Triage-Warteschlange, kein Anschreiben) sowie aussortiert/gesendet/
+// geloescht/fehler sind je ein einzelner Ordner (Mail-Status ist dort irrelevant);
+// nur entwurf/freigegeben splitten nach Mail; postausgang ist per Definition
+// immer mail/* (kein Draft ohne Empfängeradresse).
 export const FOLDER_IDS = [
-  'posteingang',
+  'jobs',
   'mail/entwurf', 'mail/freigegeben', 'mail/postausgang',
   'nomail/entwurf', 'nomail/freigegeben',
   'log/gesendet', 'log/aussortiert', 'log/geloescht', 'log/fehler',
@@ -42,7 +43,7 @@ export type FolderId = (typeof FOLDER_IDS)[number];
 
 export function inFolder(job: Job, folderId: FolderId): boolean {
   const status = deriveStatus(job);
-  if (folderId === 'posteingang') return status === 'posteingang';
+  if (folderId === 'jobs') return status === 'jobs';
 
   const [scope, sub] = folderId.split('/') as [string, Status];
   if (status !== sub) return false;
