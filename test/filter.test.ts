@@ -57,7 +57,7 @@ test('filterJob: it_rolle ja, erfahrung nein, junior_signal ja → status "match
   const { url, close } = await mockChatSequence([judgmentJson()]);
   t.after(close);
 
-  const d = await filterJob(job, storage, url, 'llama');
+  const d = await filterJob(job, storage, url, 'llm');
   assert.equal(d.status, 'matched');
   assert.equal((await storage.get(job.id))?.status, 'matched');
 });
@@ -72,7 +72,7 @@ test('filterJob: it_rolle nein → status "filtered_out", Datei bleibt erhalten 
   const { url, close } = await mockChatSequence([judgmentJson({ it_rolle: 'nein' })]);
   t.after(close);
 
-  const d = await filterJob(job, storage, url, 'llama');
+  const d = await filterJob(job, storage, url, 'llm');
   assert.equal(d.status, 'filtered_out');
   assert.equal(d.rejectedBy, 'IT-Rolle');
   // Retain: Datei existiert noch, nichts gelöscht
@@ -98,7 +98,7 @@ test('filterJob: Titel-Regel ("Senior...") → status "filtered_out", KEIN Ollam
   const { port } = server.address() as AddressInfo;
   t.after(() => server.close());
 
-  const d = await filterJob(job, storage, `http://127.0.0.1:${port}`, 'llama');
+  const d = await filterJob(job, storage, `http://127.0.0.1:${port}`, 'llm');
   assert.equal(d.status, 'filtered_out');
   assert.equal(d.rejectedBy, 'Seniorität (Titel)');
   assert.equal(called, false);
@@ -115,7 +115,7 @@ test('filterJob: junior_signal nein → status "uncertain", Datei bleibt', async
   const { url, close } = await mockChatSequence([judgmentJson({ junior_signal: 'nein' })]);
   t.after(close);
 
-  const d = await filterJob(job, storage, url, 'llama');
+  const d = await filterJob(job, storage, url, 'llm');
   assert.equal(d.status, 'uncertain');
   assert.ok((await storage.get(job.id)) !== null);
 });
@@ -146,7 +146,7 @@ test('filterJob: 2× Müll → "uncertain" statt Absturz', async (t) => {
   const { url, close } = await mockChatSequence(['Müll 1', 'Müll 2']);
   t.after(close);
 
-  const d = await filterJob(job, storage, url, 'llama');
+  const d = await filterJob(job, storage, url, 'llm');
   assert.equal(d.status, 'uncertain');
 });
 
