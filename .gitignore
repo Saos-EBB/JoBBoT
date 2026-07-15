@@ -4,6 +4,7 @@ node_modules
 .agents/
 agent/
 data/skills/
+skills-lock.json
 .understand-anything/
 data/jobs/*.json
 data/anschreiben/**/*.md
