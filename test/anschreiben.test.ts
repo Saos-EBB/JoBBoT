@@ -154,7 +154,8 @@ test('parseAnschreibenResponse: valider Text ohne Floskeln → string', () => {
 test('generateAnschreiben: gültiger Response → status "generated", .md geschrieben', async (t) => {
   const dir = await tmpDir();
   const anschreibenDir = await tmpDir();
-  t.after(() => { rmTmp(dir); rmTmp(anschreibenDir); });
+  const logDir = await tmpDir();
+  t.after(() => { rmTmp(dir); rmTmp(anschreibenDir); rmTmp(logDir); });
   const storage = createStorage(dir);
   const job = { ...sample(), status: 'matched' as const };
   await storage.save(job);
@@ -162,7 +163,7 @@ test('generateAnschreiben: gültiger Response → status "generated", .md geschr
   const { url, close } = await mockChat(VALID_LETTER);
   t.after(close);
 
-  const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir);
+  const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir, undefined, `${logDir}/log.md`);
   assert.strictEqual(job.status, 'generated');
   assert.ok(path !== null, 'expected path to be returned');
   assert.strictEqual((await storage.get(job.id))?.status, 'generated');
@@ -188,7 +189,8 @@ test('generateAnschreiben: leerer Response → status bleibt "matched", path nul
 test('generateAnschreiben: status "uncertain" → wird auch verarbeitet (nicht nur "matched")', async (t) => {
   const dir = await tmpDir();
   const anschreibenDir = await tmpDir();
-  t.after(() => { rmTmp(dir); rmTmp(anschreibenDir); });
+  const logDir = await tmpDir();
+  t.after(() => { rmTmp(dir); rmTmp(anschreibenDir); rmTmp(logDir); });
   const storage = createStorage(dir);
   const job = { ...sample(), status: 'uncertain' as const };
   await storage.save(job);
@@ -196,7 +198,7 @@ test('generateAnschreiben: status "uncertain" → wird auch verarbeitet (nicht n
   const { url, close } = await mockChat(VALID_LETTER);
   t.after(close);
 
-  const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir);
+  const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir, undefined, `${logDir}/log.md`);
   assert.strictEqual(job.status, 'generated');
   assert.ok(path !== null, 'expected path to be returned');
 });
@@ -223,7 +225,8 @@ test('generateAnschreiben: status !== "matched" → kein Ollama-Call', async (t)
 test('generateAnschreiben: 1. Versuch ungültig (1 Absatz), 2. Versuch gültig → generiert', async (t) => {
   const dir = await tmpDir();
   const anschreibenDir = await tmpDir();
-  t.after(() => { rmTmp(dir); rmTmp(anschreibenDir); });
+  const logDir = await tmpDir();
+  t.after(() => { rmTmp(dir); rmTmp(anschreibenDir); rmTmp(logDir); });
   const storage = createStorage(dir);
   const job = { ...sample(), status: 'matched' as const };
   await storage.save(job);
@@ -231,7 +234,7 @@ test('generateAnschreiben: 1. Versuch ungültig (1 Absatz), 2. Versuch gültig �
   const { url, close, calls } = await mockChatSequence([EIN_ABSATZ, VALID_LETTER]);
   t.after(close);
 
-  const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir);
+  const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir, undefined, `${logDir}/log.md`);
   assert.strictEqual(job.status, 'generated');
   assert.ok(path !== null, 'expected path to be returned');
   assert.strictEqual(calls(), 2);

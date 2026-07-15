@@ -11,18 +11,15 @@ const execFileAsync = promisify(execFile);
 
 // Fairer Vergleich: dieselben 3 fixen Jobs durch alle Modelle, direkt gegen Ollama
 // (kein Storage-Zugriff, damit Jobs nicht durch Status-Wechsel aus sicher/ wandern).
-// Retry nur der beiden Modelle, die beim ersten Lauf per OOM-Kill weggebrochen sind
-// (mistral-small3.2 lud, während gemma3:12b noch resident war). Fix: nach jedem
-// Modell explizit `ollama stop`, damit sich zwei große Modelle nie den RAM teilen.
-const MODELS = ['mistral-small3.2:latest', 'qwen3:30b'];
+// Nach jedem Modell explizit `ollama stop`, damit sich zwei große Modelle nie
+// den RAM teilen (sonst Kernel-OOM-Kill beim Laden des nächsten Modells).
+const MODELS = ['qwen3.5:9b', 'gemma3:12b', 'mistral-small3.2:latest'];
 const JOBS: Record<string, string> = {
   clean: 'data/jobs/sicher/junior-softwareentwickler-java-w-m-d_kern-engineering-careers_2026-06-25_1f8fd77c.json',
   offstack: 'data/jobs/unsicher/software-engineer-c_teamviewer_2026-06-17_8eb9f22d.json',
   brutal: 'data/jobs/sicher/sachbearbeiter-in-webentwicklung-und-it_land-oberoesterreich_2026-06-30_806fb930.json',
 };
 const RETRIES = 3;
-const TIMEOUT_MODEL = 'qwen3:30b';
-const TIMEOUT_MS = 10 * 60 * 1000;
 const TEST_DIR = join(config.anschreibenDir, 'test', 'fair_compare');
 const LOG_PATH = join(config.anschreibenDir, 'test', 'AnschreibenTestLog.md');
 
@@ -30,34 +27,27 @@ const sanitize = (tag: string) => tag.replace(/[/:.]/g, '_');
 const ts = () => new Date().toISOString().slice(0, 19).replace('T', ' ');
 
 async function generateOnce(job: Job, profile: ProfileData, model: string): Promise<string> {
-  const controller = model === TIMEOUT_MODEL ? new AbortController() : undefined;
-  const timer = controller ? setTimeout(() => controller.abort(), TIMEOUT_MS) : undefined;
-  try {
-    const res = await fetch(`${config.ollamaHost}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: controller?.signal,
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: SYSTEM },
-          { role: 'user', content: buildAnschreibenPrompt(job, profile) },
-        ],
-        stream: true,
-        // think:false greift nur bei qwen3-Modellen; bei gemma/mistral wirkungslos
-        // (kein Fehler, kein Retry) — bewusst identisch für alle Modelle gesetzt.
-        think: false,
-        options: { num_ctx: 4096, temperature: 0.3 },
-      }),
-    });
-    if (!res.ok) throw new Error(`ollama HTTP ${res.status}`);
-    const raw = await readNdjsonContent(res);
-    const result = parseAnschreibenResponse(raw);
-    if (!result) throw new Error('Parse-Fehler (leer/Platzhalter/Floskel)');
-    return result;
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
+  const res = await fetch(`${config.ollamaHost}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: SYSTEM },
+        { role: 'user', content: buildAnschreibenPrompt(job, profile) },
+      ],
+      stream: true,
+      // think:false greift nur bei qwen3-Modellen; bei gemma/mistral wirkungslos
+      // (kein Fehler, kein Retry) — bewusst identisch für alle Modelle gesetzt.
+      think: false,
+      options: { num_ctx: 4096, temperature: 0.3 },
+    }),
+  });
+  if (!res.ok) throw new Error(`ollama HTTP ${res.status}`);
+  const raw = await readNdjsonContent(res);
+  const result = parseAnschreibenResponse(raw);
+  if (!result) throw new Error('Parse-Fehler (leer/Platzhalter/Floskel)');
+  return result;
 }
 
 async function main() {
@@ -69,7 +59,7 @@ async function main() {
 
   await appendFile(
     LOG_PATH,
-    `\n# FAIR-COMPARE RETRY (mistral-small3.2 + qwen3:30b, nach OOM-Fix mit \`ollama stop\` zwischen Modellen)\n\nStart: ${ts()}\n\n` +
+    `\n# FAIR-COMPARE (${MODELS.join(', ')})\n\nStart: ${ts()}\n\n` +
       `| Modell | Job | Zeit | Status | halluziniert? | Lücke ehrlich? |\n|---|---|---|---|---|---|\n`,
   );
 
@@ -89,10 +79,6 @@ async function main() {
         try {
           text = await generateOnce(job, profile, model);
         } catch (err) {
-          if (err instanceof Error && err.name === 'AbortError') {
-            lastErr = 'timeout>10min';
-            break; // kein Retry bei Timeout — direkt SKIP, Lauf geht weiter
-          }
           lastErr = err instanceof Error ? err.message : String(err);
         }
       }
