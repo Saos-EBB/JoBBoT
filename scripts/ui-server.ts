@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createStorage } from '../storage/index.ts';
 import { config } from '../config.ts';
@@ -143,6 +143,23 @@ const server = createServer(async (req, res) => {
     const withBriefs = await Promise.all(jobs.map(async job => ({ ...job, brief: await readCoverLetter(job) })));
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(withBriefs));
+    return;
+  }
+
+  const briefMatch = url.pathname.match(/^\/api\/jobs\/([a-f0-9]+)\/brief$/);
+  if (req.method === 'POST' && briefMatch) {
+    const job = await storage.get(briefMatch[1]);
+    if (!job) { res.writeHead(404).end('Job nicht gefunden'); return; }
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    const { text } = JSON.parse(body) as { text: string };
+    // Gegenstück zum Join in GET /api/jobs: brief lebt in data/anschreiben/{slug}.md,
+    // nicht im Job-JSON, also schreibt eine Bearbeitung dorthin statt über
+    // storage.update() — ein Status-Wechsel und eine Anschreiben-Bearbeitung sind zwei
+    // unabhängige Schreibpfade, die zufällig denselben Job betreffen.
+    await writeFile(join(config.anschreibenDir, `${jobBasename(job)}.md`), text, 'utf8');
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: true }));
     return;
   }
 

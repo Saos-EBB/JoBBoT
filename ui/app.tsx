@@ -386,9 +386,12 @@ export default function JobbotUI() {
     el.style.height = el.scrollHeight + 'px';
   }, [sel, tab, shown?.brief]);
 
-  // Noch rein lokaler State — echtes Schreiben zurück in die Job-JSON (POST /job/:id/status
-  // etc.) ist ein späterer Schritt (Aktionen entlang der Statusmaschine). Ein Reload verwirft
-  // hier gemachte Änderungen bis dahin, das ist erwartet und kein Bug dieses Schritts.
+  // patch() selbst ist nur lokaler State. Für `brief` reicht das nicht — siehe
+  // saveBrief() unten, das den Textarea-Inhalt zusätzlich persistiert. Für `status`
+  // (move()) und `fit` bleibt es bei lokalem State: echtes Schreiben zurück in die
+  // Job-JSON (POST /job/:id/status etc.) ist ein späterer Schritt (Aktionen entlang
+  // der Statusmaschine). Ein Reload verwirft Status-/Fit-Änderungen bis dahin, das
+  // ist erwartet und kein Bug dieses Schritts.
   const patch = (id: string, p: Partial<JobWithBrief>) =>
     setJobs(js => js.map(j => (j.id === id ? { ...j, ...p } : j)));
 
@@ -397,6 +400,20 @@ export default function JobbotUI() {
     say(msg);
     setDetailOpen(false);
   };
+
+  // Speichert erst beim Verlassen der Textarea (onBlur), nicht bei jedem Tastendruck —
+  // blur feuert im Browser garantiert vor dem onClick eines anderen Listeneintrags
+  // (mousedown blurred zuerst), also landet der letzte Stand immer beim richtigen
+  // Job, auch bei schnellem Wechsel. Kein Debounce-Timer nötig, keine Race Condition.
+  function saveBrief(id: string, text: string) {
+    fetch(`/api/jobs/${id}/brief`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    })
+      .then(r => { if (!r.ok) throw new Error(); say('Anschreiben gespeichert'); })
+      .catch(() => say('Speichern fehlgeschlagen'));
+  }
 
   // Gmail-Tastatur: j/k wandern, e gibt frei, # löscht.
   useEffect(() => {
@@ -618,6 +635,7 @@ export default function JobbotUI() {
                       className="paper__ta"
                       value={shown.brief}
                       onChange={e => patch(shown.id, { brief: e.target.value })}
+                      onBlur={e => saveBrief(shown.id, e.target.value)}
                       spellCheck
                       aria-label="Anschreiben bearbeiten"
                     />
