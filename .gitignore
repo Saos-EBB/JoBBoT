@@ -6,7 +6,7 @@ agent/
 data/skills/
 .understand-anything/
 data/jobs/*.json
-data/anschreiben/*.md
+data/anschreiben/**/*.md
 data/backup-*/
 config/profile.json
 .env
