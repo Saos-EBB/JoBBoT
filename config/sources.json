@@ -7,7 +7,8 @@
       { "keyword": "softwareentwickler" },
       { "keyword": "webentwickler" },
       { "keyword": "java-junior" },
-      { "keyword": "fullstack-junior" }
+      { "keyword": "fullstack-junior" },
+      { "keyword": "2nd-level-support" }
     ]
   },
   "devjobs.at": {
@@ -18,14 +19,16 @@
     "enabled": true,
     "queries": [
       { "keyword": "junior software developer", "location": "Oberösterreich, Österreich" },
-      { "keyword": "junior softwareentwickler", "location": "Oberösterreich, Österreich" }
+      { "keyword": "junior softwareentwickler", "location": "Oberösterreich, Österreich" },
+      { "keyword": "2nd level support", "location": "Oberösterreich, Österreich" }
     ]
   },
   "ams": {
     "enabled": true,
     "queries": [
       { "keyword": "junior software developer", "location": "Linz", "vicinity": "40" },
-      { "keyword": "junior softwareentwickler", "location": "Linz", "vicinity": "40" }
+      { "keyword": "junior softwareentwickler", "location": "Linz", "vicinity": "40" },
+      { "keyword": "2nd level support", "location": "Linz", "vicinity": "40" }
     ]
   },
   "jobs.at": {
@@ -35,7 +38,8 @@
       { "keyword": "junior-developer" },
       { "keyword": "softwareentwickler" },
       { "keyword": "webentwickler" },
-      { "keyword": "java-entwickler" }
+      { "keyword": "java-entwickler" },
+      { "keyword": "2nd-level-support" }
     ]
   }
 }
