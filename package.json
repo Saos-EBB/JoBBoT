@@ -23,6 +23,7 @@
     "scrape:jobs": "tsx scripts/run-scrape.ts --source=jobs",
     "anschreiben": "tsx scripts/run-anschreiben.ts",
     "ui": "tsx --env-file-if-exists=.env scripts/ui-server.ts",
+    "build:ui": "tsx scripts/build-ui.ts",
     "install:browsers": "playwright install chromium"
   },
   "devDependencies": {

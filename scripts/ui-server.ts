@@ -135,8 +135,14 @@ const server = createServer(async (req, res) => {
 
   if (req.method === 'GET' && url.pathname === '/api/jobs') {
     const jobs = await storage.list();
+    // brief lebt in data/anschreiben/{slug}.md, nicht im Job-JSON (siehe readCoverLetter
+    // oben) — hier server-seitig gejoint, damit die Liste im Client die Anschreiben-
+    // Vorschau zeigen kann, ohne 282 Einzel-Requests zu feuern. Der Join ist reines
+    // Lesen; SPEICHERN einer Bearbeitung ist ein eigener Schreibpfad (anderer Endpunkt,
+    // eigener Schritt), weil das Anschreiben nicht Teil des Job-Records ist.
+    const withBriefs = await Promise.all(jobs.map(async job => ({ ...job, brief: await readCoverLetter(job) })));
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(jobs));
+    res.end(JSON.stringify(withBriefs));
     return;
   }
 
