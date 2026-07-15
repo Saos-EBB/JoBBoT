@@ -35,8 +35,8 @@ Job status lifecycle: `new → filtered_out | matched → generated → reviewed
 ### LLM setup
 
 Two local Ollama models, configured via `config.ts`:
-- `JOBBOT_MODEL_FILTER` (default `qwen2.5:3b`) — cheap filter pass
-- `JOBBOT_MODEL_WRITER` (default `qwen2.5:7b`) — cover letter generation
+- `JOBBOT_MODEL_FILTER` (default `mistral-small3.2:latest`) — cheap filter pass
+- `JOBBOT_MODEL_WRITER` (default `mistral-small3.2:latest`) — cover letter generation
 - `OLLAMA_HOST` (default `http://localhost:11434`)
 
 `lib/ollama.ts` does model presence checks; actual inference is not yet wired up.
@@ -52,3 +52,17 @@ Only the interface is defined (`scrapers/interface.ts`). Concrete `ScraperAdapte
 ### Tests
 
 Use Node's built-in `node:test` + `node:assert/strict` — no Jest, no Vitest. Test helpers (`test/helpers.ts`) provide `tmpDir()`, `rmTmp()`, and `mockOllama()` (in-process HTTP server). Each test gets its own temp directory cleaned up with `t.after()`.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on `Saos-EBB/jobsuche-apply-bot` via the `gh` CLI; external PRs are not a triage surface. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Defaults used as-is (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the repo root (neither exists yet — created lazily by `/domain-modeling`). See `docs/agents/domain.md`.
