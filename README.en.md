@@ -1,4 +1,4 @@
-# JobBot
+# JoBBoT
 
 *[Deutsch](README.md)*
 
