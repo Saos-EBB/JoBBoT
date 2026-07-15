@@ -27,6 +27,10 @@ export interface Job extends ScrapedJob {
   updatedAt: string;
   match?: { ok: boolean; reason: string } | null;
   email?: string | null;
+  // Nur der Status "fehler" verweist hierauf. Noch niemand schreibt dieses Feld — der
+  // Runner-Umbau in run-anschreiben.ts/den Mail-Handlern ist ein separater Auftrag
+  // (siehe findings/HANDOFF-gmail-versand.md). Bis dahin ist es ehrlich immer leer.
+  error?: string | null;
 }
 
 export type SourceQuery = Record<string, string>;
