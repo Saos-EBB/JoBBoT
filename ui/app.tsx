@@ -15,6 +15,7 @@ import {
   Undo2,
   ListFilter,
   XCircle,
+  Paperclip,
 } from 'lucide-react';
 import type { Job, Fit } from '../scrapers/interface.ts';
 import { FOLDER_IDS, inFolder, type FolderId } from '../lib/folders.ts';
@@ -24,6 +25,7 @@ import { FOLDER_IDS, inFolder, type FolderId } from '../lib/folders.ts';
 // und nicht auf dem Job-Typ selbst: ein Feld, das nur diese Antwort hat, kein Feld,
 // das je zurückgeschrieben wird (Speichern einer Bearbeitung ist ein eigener Endpunkt).
 type JobWithBrief = Job & { brief: string | null };
+type AttachmentMeta = { filename: string; size: number; uploadedAt: string };
 
 /* ------------------------------------------------------------------ *
  * Design tokens
@@ -192,6 +194,16 @@ const CSS = `
 
 .dt__body { flex:1; min-height:0; overflow-y:auto; padding:22px 24px; }
 
+/* ---------- Anhang ---------- */
+.att { display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--ink); grid-column:span 2; }
+.dropzone {
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  margin-top:16px; padding:28px; border:1px dashed var(--line); border-radius:8px;
+  color:var(--dim); font-size:12.5px; cursor:pointer; max-width:420px;
+}
+.dropzone:hover { border-color:var(--dim); color:var(--muted); }
+.dropzone input { display:none; }
+
 /* Das Anschreiben: einzige helle Fläche der App. Es ist ein Brief, kein UI. */
 .paper {
   background:var(--paper); color:var(--paper-ink);
@@ -349,6 +361,10 @@ export default function JobbotUI() {
   const [tab, setTab] = useState<'brief' | 'inserat'>('brief');
   const [toast, setToast] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  // 'attachment' ist kein Ordner (kein FolderId, kein Job-Filter) — eigener,
+  // simpler UI-Modus, der Liste+Detail durch die Anhang-Ansicht ersetzt.
+  const [view, setView] = useState<'jobs' | 'attachment'>('jobs');
+  const [attachment, setAttachment] = useState<AttachmentMeta | null | undefined>(undefined);
   const ta = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -356,6 +372,26 @@ export default function JobbotUI() {
       .then(r => r.json())
       .then((data: JobWithBrief[]) => setJobs(data));
   }, []);
+
+  useEffect(() => {
+    if (view !== 'attachment') return;
+    fetch('/api/attachment')
+      .then(r => (r.ok ? r.json() : null))
+      .then(setAttachment);
+  }, [view]);
+
+  async function uploadAttachment(file: File) {
+    const res = await fetch('/api/attachment', { method: 'POST', body: file });
+    const body = await res.json().catch(() => null);
+    if (res.ok) { setAttachment(body); say('Anhang hochgeladen'); }
+    else say(body?.error ?? 'Upload fehlgeschlagen');
+  }
+
+  async function removeAttachment() {
+    await fetch('/api/attachment', { method: 'DELETE' });
+    setAttachment(null);
+    say('Anhang entfernt');
+  }
 
   const say = useCallback((m: string) => {
     setToast(m);
@@ -535,6 +571,7 @@ export default function JobbotUI() {
                     (f.err && (counts[f.id] ?? 0) > 0 ? ' fld--has' : '')
                   }
                   onClick={() => {
+                    setView('jobs');
                     setFolder(f.id);
                     setFit('alle');
                   }}
@@ -547,6 +584,14 @@ export default function JobbotUI() {
             </div>
           </React.Fragment>
         ))}
+
+        <div className="sb__rule" />
+        <div className="sb__group">
+          <button className={'fld' + (view === 'attachment' ? ' fld--on' : '')} onClick={() => setView('attachment')}>
+            <Paperclip />
+            <span className="fld__label">Anhang</span>
+          </button>
+        </div>
 
         <div className="sb__keys">
           <div className="key">
@@ -566,6 +611,61 @@ export default function JobbotUI() {
         </div>
       </nav>
 
+      {view === 'attachment' ? (
+        /* ---------- Anhang ---------- */
+        <section className="att">
+          <header className="dt__head">
+            <div className="dt__firma">Anhang</div>
+            <div className="dt__titel">Wird jedem Entwurf und jeder Direktversand-Mail automatisch angehängt.</div>
+          </header>
+          <div className="dt__body">
+            {attachment === undefined ? null : attachment ? (
+              <div className="paper" style={{ maxWidth: 420, padding: '18px 22px' }}>
+                <div className="paper__to">
+                  <span>{attachment.filename}</span>
+                  <span>{Math.round(attachment.size / 1024)} KB</span>
+                </div>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: '#9B9891' }}>
+                  Hochgeladen am {new Date(attachment.uploadedAt).toLocaleDateString('de-DE')}
+                </div>
+              </div>
+            ) : (
+              <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
+                <div className="empty__h">Kein Anhang</div>
+                PDF hochladen, damit jede Bewerbung automatisch den Lebenslauf mitschickt.
+              </div>
+            )}
+
+            <label
+              className="dropzone"
+              onDragOver={e => e.preventDefault()}
+              onDrop={e => {
+                e.preventDefault();
+                const f = e.dataTransfer.files[0];
+                if (f) uploadAttachment(f);
+              }}
+            >
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={e => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadAttachment(f);
+                }}
+              />
+              PDF hierher ziehen oder klicken zum Auswählen
+            </label>
+          </div>
+          {attachment && (
+            <footer className="bar">
+              <button className="btn btn--ghost btn--danger" onClick={removeAttachment}>
+                <Trash2 /> Entfernen
+              </button>
+            </footer>
+          )}
+        </section>
+      ) : (
+        <>
       {/* ---------- Liste ---------- */}
       <section className="ls">
         <div className="ls__top">
@@ -782,6 +882,8 @@ export default function JobbotUI() {
           </>
         )}
       </section>
+        </>
+      )}
 
       {toast && <div className="toast">{toast}</div>}
     </div>
