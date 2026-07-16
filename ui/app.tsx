@@ -386,20 +386,37 @@ export default function JobbotUI() {
     el.style.height = el.scrollHeight + 'px';
   }, [sel, tab, shown?.brief]);
 
-  // patch() selbst ist nur lokaler State. Für `brief` reicht das nicht — siehe
-  // saveBrief() unten, das den Textarea-Inhalt zusätzlich persistiert. Für `status`
-  // (move()) und `fit` bleibt es bei lokalem State: echtes Schreiben zurück in die
-  // Job-JSON (POST /job/:id/status etc.) ist ein späterer Schritt (Aktionen entlang
-  // der Statusmaschine). Ein Reload verwirft Status-/Fit-Änderungen bis dahin, das
-  // ist erwartet und kein Bug dieses Schritts.
+  // patch() bleibt der reine Lokal-State-Setter — für optimistisches Tippen in der
+  // Textarea (jeder Tastendruck) und als letzter Schritt NACH einem erfolgreichen
+  // Server-Schreiben unten. Es gibt bewusst keinen Weg, patch() direkt aus einem
+  // Button-Handler aufzurufen: jede Statusmaschinen-Aktion geht zuerst über den
+  // Server (pessimistisches Update) — sonst zeigt die UI einen Status, den die
+  // Job-JSON gar nicht hat, und genau das war über diese ganze Migration hinweg
+  // das eine, was nicht passieren darf (siehe postausgang/gesendet-Unterscheidung).
   const patch = (id: string, p: Partial<JobWithBrief>) =>
     setJobs(js => js.map(j => (j.id === id ? { ...j, ...p } : j)));
 
-  const move = (id: string, status: Job['status'], msg: string) => {
+  async function move(id: string, status: Job['status'], msg: string) {
+    const res = await fetch(`/api/jobs/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) { say('Speichern fehlgeschlagen'); return; }
     patch(id, { status });
     say(msg);
     setDetailOpen(false);
-  };
+  }
+
+  async function saveFit(id: string, fit: Fit) {
+    const res = await fetch(`/api/jobs/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fit }),
+    });
+    if (res.ok) patch(id, { fit });
+    else say('Speichern fehlgeschlagen');
+  }
 
   // Speichert erst beim Verlassen der Textarea (onBlur), nicht bei jedem Tastendruck —
   // blur feuert im Browser garantiert vor dem onClick eines anderen Listeneintrags
@@ -593,7 +610,7 @@ export default function JobbotUI() {
                     key={k}
                     className={'fitbtn' + (shown.fit === k ? ' fitbtn--on' : '')}
                     style={shown.fit === k ? { background: v.color + '1F', color: v.color } : undefined}
-                    onClick={() => patch(shown.id, { fit: k as Fit })}
+                    onClick={() => saveFit(shown.id, k as Fit)}
                   >
                     <span className="chip__dot" style={{ background: v.color }} />
                     {v.label}
