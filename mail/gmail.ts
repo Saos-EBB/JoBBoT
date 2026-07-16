@@ -2,6 +2,7 @@ import { readFile, appendFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ImapFlow } from 'imapflow';
 import nodemailer from 'nodemailer';
+import MailComposer from 'nodemailer/lib/mail-composer/index.js';
 import type { Job } from '../scrapers/interface.ts';
 import type { ProfileData } from '../lib/profile.ts';
 import { jobBasename } from '../lib/slugify.ts';
@@ -45,25 +46,12 @@ export async function composeEmail(job: Job, profile: ProfileData): Promise<Comp
   };
 }
 
-function encodeHeader(text: string): string {
-  return `=?UTF-8?B?${Buffer.from(text, 'utf8').toString('base64')}?=`;
-}
-
-// Handgebaute RFC822-Nachricht statt nodemailers interner (undokumentierter) MailComposer-
-// Klasse — unsere Mails sind immer reiner Text ohne Anhang, dafür reichen ein paar Header.
-function buildRawMessage(from: string, email: ComposedEmail): string {
-  const bodyBase64 = Buffer.from(email.text, 'utf8').toString('base64').replace(/(.{76})/g, '$1\r\n');
-  return [
-    `From: ${from}`,
-    `To: ${email.to}`,
-    `Subject: ${encodeHeader(email.subject)}`,
-    `Date: ${new Date().toUTCString()}`,
-    'MIME-Version: 1.0',
-    'Content-Type: text/plain; charset=utf-8',
-    'Content-Transfer-Encoding: base64',
-    '',
-    bodyBase64,
-  ].join('\r\n');
+// nodemailers eigene (undokumentierte, aber öffentlich importierbare) MailComposer-Klasse
+// statt Handgebautem — nötig, sobald ein Anhang dazukommt (multipart/mixed statt einteiliger
+// Nachricht), und die Klasse baut den einteiligen Text-Fall identisch, siehe SESSION-LOG.
+async function buildRawMessage(from: string, email: ComposedEmail): Promise<Buffer> {
+  const mail = new MailComposer({ from, to: email.to, subject: email.subject, text: email.text });
+  return mail.compile().build();
 }
 
 export async function createDraft(email: ComposedEmail): Promise<void> {
@@ -75,7 +63,7 @@ export async function createDraft(email: ComposedEmail): Promise<void> {
   const client = new ImapFlow({ host: 'imap.gmail.com', port: 993, secure: true, auth: { user, pass }, logger: false });
   await client.connect();
   try {
-    await client.append('[Gmail]/Drafts', buildRawMessage(user, email), ['\\Draft']);
+    await client.append('[Gmail]/Drafts', await buildRawMessage(user, email), ['\\Draft']);
   } finally {
     await client.logout();
   }
