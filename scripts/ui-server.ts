@@ -6,6 +6,7 @@ import { config } from '../config.ts';
 import { jobBasename } from '../lib/slugify.ts';
 import { loadProfile } from '../lib/profile.ts';
 import { composeEmail, createDraft, sendMail, logMailAction, type ComposedEmail } from '../mail/gmail.ts';
+import { ATTACHMENT_PATH, ATTACHMENT_FILENAME } from '../lib/attachment.ts';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 
 const PORT = Number(process.env.UI_PORT ?? 3000);
@@ -13,10 +14,6 @@ const STATUSES: JobStatus[] = ['new', 'filtered_out', 'uncertain', 'matched', 'g
 const storage = createStorage();
 const profile = loadProfile();
 
-// Ein einziger Anhang, fester Name, wird bei jedem Upload überschrieben — kein
-// Dateimanagement, keine Pro-Job-Auswahl (siehe Scope-Entscheidung im Prompt).
-const ATTACHMENT_PATH = join(config.attachmentsDir, 'lebenslauf.pdf');
-const ATTACHMENT_FILENAME = 'Lebenslauf.pdf';
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
 function esc(s: string): string {
