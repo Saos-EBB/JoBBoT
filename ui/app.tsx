@@ -305,6 +305,22 @@ const GROUPS: { head: string | null; icon: typeof Mail | null; folders: { id: Fo
   },
 ];
 
+// Sagt, was der leere Zustand bedeutet, nicht dass er leer ist — "Keine Einträge" ist für
+// jeden Ordner wahr und hilft nirgends. "jobs" ist der Posteingang: eine leere Triage-Queue
+// heißt "nichts Neues reingekommen", kein Fehlerzustand.
+const EMPTY_COPY: Record<FolderId, string> = {
+  'jobs': 'Nichts Neues.',
+  'mail/entwurf': 'Keine Entwürfe zu prüfen.',
+  'mail/freigegeben': 'Nichts wartet auf Versand.',
+  'mail/postausgang': 'Kein Entwurf unterwegs.',
+  'nomail/entwurf': 'Keine Entwürfe zu prüfen.',
+  'nomail/freigegeben': 'Nichts bereit zum Bewerben.',
+  'log/gesendet': 'Noch nichts gesendet.',
+  'log/aussortiert': 'Nichts aussortiert.',
+  'log/geloescht': 'Nichts gelöscht.',
+  'log/fehler': 'Keine Fehler.',
+};
+
 function firstLine(t: string | null): string {
   if (!t) return '—';
   const l = t.split('\n').filter(x => x.trim() && !/^Sehr geehrte/.test(x));
@@ -577,7 +593,7 @@ export default function JobbotUI() {
           {list.length === 0 ? (
             <div className="empty">
               <div className="empty__h">Nichts hier</div>
-              {q ? 'Suche anpassen oder Filter zurücksetzen.' : 'Alles abgearbeitet.'}
+              {q ? 'Suche anpassen oder Filter zurücksetzen.' : EMPTY_COPY[folder]}
             </div>
           ) : (
             list.map(j => (
