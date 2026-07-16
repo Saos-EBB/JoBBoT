@@ -7,4 +7,5 @@ export const config = {
   attachmentsDir: 'data/attachments',
   gmailUser: process.env.GMAIL_USER,
   gmailAppPassword: process.env.GMAIL_APP_PASSWORD,
+  mailDryRun: process.env.MAIL_DRY_RUN === 'true',
 };

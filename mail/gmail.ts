@@ -67,6 +67,10 @@ function buildRawMessage(from: string, email: ComposedEmail): string {
 }
 
 export async function createDraft(email: ComposedEmail): Promise<void> {
+  if (config.mailDryRun) {
+    console.log(`[MAIL_DRY_RUN] draft → ${email.to} — ${email.subject}`);
+    return;
+  }
   const { user, pass } = requireGmailCredentials();
   const client = new ImapFlow({ host: 'imap.gmail.com', port: 993, secure: true, auth: { user, pass }, logger: false });
   await client.connect();
@@ -78,6 +82,10 @@ export async function createDraft(email: ComposedEmail): Promise<void> {
 }
 
 export async function sendMail(email: ComposedEmail): Promise<void> {
+  if (config.mailDryRun) {
+    console.log(`[MAIL_DRY_RUN] send → ${email.to} — ${email.subject}`);
+    return;
+  }
   const { user, pass } = requireGmailCredentials();
   const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user, pass } });
   await transporter.sendMail({ from: user, to: email.to, subject: email.subject, text: email.text });
