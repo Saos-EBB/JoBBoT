@@ -194,6 +194,60 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  const jobPatchMatch = url.pathname.match(/^\/api\/jobs\/([a-f0-9]+)$/);
+  if (req.method === 'POST' && jobPatchMatch) {
+    const job = await storage.get(jobPatchMatch[1]);
+    if (!job) { res.writeHead(404).end('Job nicht gefunden'); return; }
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    // Nur status/fit sind hier gemeint (Aktionen entlang der Statusmaschine im UI) —
+    // keine serverseitige Allowlist, weil dieser Server nur lokal auf localhost läuft
+    // und der Client (ui/app.tsx) ohnehin nie andere Felder schickt.
+    const patch = JSON.parse(body) as Partial<Pick<Job, 'status' | 'fit'>>;
+    const updated = await storage.update(job.id, patch);
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(updated));
+    return;
+  }
+
+  const apiDraftMatch = url.pathname.match(/^\/api\/jobs\/([a-f0-9]+)\/draft$/);
+  if (req.method === 'POST' && apiDraftMatch) {
+    const job = await storage.get(apiDraftMatch[1]);
+    if (!job) { res.writeHead(404).end('Job nicht gefunden'); return; }
+    try {
+      const email = await composeEmail(job, profile);
+      await createDraft(email);
+      const updated = await storage.updateStatus(job.id, 'postausgang');
+      await logMailAction(job, 'drafted');
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(updated));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: `Entwurf fehlgeschlagen: ${message}` }));
+    }
+    return;
+  }
+
+  const apiSendMatch = url.pathname.match(/^\/api\/jobs\/([a-f0-9]+)\/send$/);
+  if (req.method === 'POST' && apiSendMatch) {
+    const job = await storage.get(apiSendMatch[1]);
+    if (!job) { res.writeHead(404).end('Job nicht gefunden'); return; }
+    try {
+      const email = await composeEmail(job, profile);
+      await sendMail(email);
+      const updated = await storage.updateStatus(job.id, 'gesendet');
+      await logMailAction(job, 'sent');
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(updated));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: `Versand fehlgeschlagen: ${message}` }));
+    }
+    return;
+  }
+
   const briefMatch = url.pathname.match(/^\/api\/jobs\/([a-f0-9]+)\/brief$/);
   if (req.method === 'POST' && briefMatch) {
     const job = await storage.get(briefMatch[1]);
