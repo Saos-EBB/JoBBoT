@@ -418,6 +418,39 @@ export default function JobbotUI() {
     else say('Speichern fehlgeschlagen');
   }
 
+  // "Entwurf erzeugen" heißt: echten Gmail-Entwurf per IMAP anlegen
+  // (POST /api/jobs/:id/draft, siehe ui-server.ts), nicht bloß den Status umbiegen —
+  // sonst würde die UI "postausgang" behaupten, ohne dass in Gmail je ein Entwurf
+  // liegt. Status kommt hier von der Server-Antwort, nicht optimistisch gesetzt.
+  async function createDraft(id: string, email: string) {
+    const res = await fetch(`/api/jobs/${id}/draft`, { method: 'POST' });
+    if (res.ok) {
+      patch(id, { status: 'postausgang' });
+      say(`Entwurf für ${email} erstellt`);
+      setDetailOpen(false);
+    } else {
+      const body = await res.json().catch(() => null);
+      say(body?.error ?? 'Entwurf fehlgeschlagen');
+    }
+  }
+
+  // "Direkt senden" ist die zweite Gabel neben "Entwurf erzeugen": SMTP-Versand
+  // ohne Zwischenstopp in Gmail-Entwürfen (POST /api/jobs/:id/send). Getrennter
+  // Button statt Parameter am bestehenden, weil beide Pfade zu unterschiedlichen
+  // Status-Endpunkten führen (postausgang vs. gesendet) und das im UI sichtbar
+  // zwei bewusste Aktionen sind, keine Variante derselben.
+  async function sendDirect(id: string) {
+    const res = await fetch(`/api/jobs/${id}/send`, { method: 'POST' });
+    if (res.ok) {
+      patch(id, { status: 'gesendet' });
+      say('Gesendet');
+      setDetailOpen(false);
+    } else {
+      const body = await res.json().catch(() => null);
+      say(body?.error ?? 'Versand fehlgeschlagen');
+    }
+  }
+
   // Speichert erst beim Verlassen der Textarea (onBlur), nicht bei jedem Tastendruck —
   // blur feuert im Browser garantiert vor dem onClick eines anderen Listeneintrags
   // (mousedown blurred zuerst), also landet der letzte Stand immer beim richtigen
@@ -684,9 +717,14 @@ export default function JobbotUI() {
               )}
               {shown.status === 'freigegeben' &&
                 (shown.email ? (
-                  <button className="btn btn--primary" onClick={() => move(shown.id, 'postausgang', `Entwurf für ${shown.email} erstellt`)}>
-                    <Send /> Senden
-                  </button>
+                  <>
+                    <button className="btn btn--primary" onClick={() => createDraft(shown.id, shown.email!)}>
+                      <Send /> Entwurf erzeugen
+                    </button>
+                    <button className="btn" onClick={() => sendDirect(shown.id)}>
+                      <Send /> Direkt senden
+                    </button>
+                  </>
                 ) : (
                   <>
                     <button className="btn btn--primary" onClick={() => window.open(shown.url, '_blank')}>
