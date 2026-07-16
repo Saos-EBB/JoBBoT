@@ -4,6 +4,7 @@ export const config = {
   modelWriter: process.env.JOBBOT_MODEL_WRITER ?? 'mistral-small3.2:latest',
   dataDir: 'data/jobs',
   anschreibenDir: 'data/anschreiben',
+  attachmentsDir: 'data/attachments',
   gmailUser: process.env.GMAIL_USER,
   gmailAppPassword: process.env.GMAIL_APP_PASSWORD,
 };

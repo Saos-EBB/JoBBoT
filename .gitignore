@@ -8,6 +8,7 @@ skills-lock.json
 .understand-anything/
 data/jobs/*.json
 data/anschreiben/**/*.md
+data/attachments/*.pdf
 data/backup-*/
 config/profile.json
 .env

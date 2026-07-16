@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, stat, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createStorage } from '../storage/index.ts';
 import { config } from '../config.ts';
@@ -12,6 +12,12 @@ const PORT = Number(process.env.UI_PORT ?? 3000);
 const STATUSES: JobStatus[] = ['new', 'filtered_out', 'uncertain', 'matched', 'generated', 'freigegeben', 'postausgang', 'gesendet', 'geloescht', 'fehler'];
 const storage = createStorage();
 const profile = loadProfile();
+
+// Ein einziger Anhang, fester Name, wird bei jedem Upload überschrieben — kein
+// Dateimanagement, keine Pro-Job-Auswahl (siehe Scope-Entscheidung im Prompt).
+const ATTACHMENT_PATH = join(config.attachmentsDir, 'lebenslauf.pdf');
+const ATTACHMENT_FILENAME = 'Lebenslauf.pdf';
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -143,6 +149,48 @@ const server = createServer(async (req, res) => {
     const withBriefs = await Promise.all(jobs.map(async job => ({ ...job, brief: await readCoverLetter(job) })));
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(withBriefs));
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/attachment') {
+    try {
+      const st = await stat(ATTACHMENT_PATH);
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ filename: ATTACHMENT_FILENAME, size: st.size, uploadedAt: st.mtime.toISOString() }));
+    } catch {
+      res.writeHead(404).end();
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/attachment') {
+    const chunks: Buffer[] = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const buf = Buffer.concat(chunks);
+    if (buf.length > MAX_ATTACHMENT_BYTES) {
+      res.writeHead(413, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: 'Datei zu groß (max. 10 MB)' }));
+      return;
+    }
+    // Magic Bytes statt Dateiendung/Content-Type — beide sind Client-Angaben und
+    // damit nicht vertrauenswürdig genug, um sie ungeprüft in einen Mail-Anhang
+    // zu übernehmen.
+    if (buf.subarray(0, 5).toString('latin1') !== '%PDF-') {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: 'Keine gültige PDF-Datei' }));
+      return;
+    }
+    await mkdir(config.attachmentsDir, { recursive: true });
+    await writeFile(ATTACHMENT_PATH, buf);
+    const st = await stat(ATTACHMENT_PATH);
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ filename: ATTACHMENT_FILENAME, size: st.size, uploadedAt: st.mtime.toISOString() }));
+    return;
+  }
+
+  if (req.method === 'DELETE' && url.pathname === '/api/attachment') {
+    await unlink(ATTACHMENT_PATH).catch(() => {});
+    res.writeHead(204).end();
     return;
   }
 
