@@ -66,3 +66,52 @@ already does it.
 
 **Open questions for Kevin:** None — the trailing-newline and header-encoding differences
 above are noted for completeness but don't need a decision; they're inert.
+
+## 2026-07-16T15:12:00Z — Step 3b + Step 4: feat(mail): auto-attach lebenslauf.pdf on draft and send, verified via dry-run
+
+Combined into one entry because the dry-run verification the prompt scoped as "Step 4" was
+done as this step's own pre-commit check, not deferred — there was nothing left to verify
+afterward that wasn't already covered here.
+
+**Did:** `createDraft()` and `sendMail()` in `mail/gmail.ts` now both call a small
+`attachmentIfPresent()` helper that `stat()`s `data/attachments/lebenslauf.pdf` and returns
+either `[{ filename: 'Lebenslauf.pdf', path: ATTACHMENT_PATH }]` or `[]` — no attachment is a
+normal state, not an error, commented in the code as such. `buildRawMessage()` (the draft
+path, via `MailComposer`) and `sendMail()`'s `transporter.sendMail()` call (the send path,
+via nodemailer's native `attachments` option) both consume this. Also extracted
+`ATTACHMENT_PATH`/`ATTACHMENT_FILENAME` out of `scripts/ui-server.ts` into a new
+`lib/attachment.ts`, since the upload endpoint and the mail path both need the exact same
+fixed path/filename and hardcoding it twice was a real risk of silent drift, not
+speculative — a one-line-changed filename in only one of the two places would have made
+uploads and mail attachments silently point at different files.
+
+**Files:** `lib/attachment.ts` (new), `mail/gmail.ts`, `scripts/ui-server.ts`
+
+**Commit:** `16ba118` — `feat(mail): auto-attach lebenslauf.pdf on draft and send`
+
+**Verified:**
+- `npm run typecheck` — clean.
+- `npm test` — 233/233 passing.
+- Dry-run, no attachment present (confirmed via `ls data/attachments/` — empty):
+  `test/gmail.test.ts` run in isolation printed
+  `[MAIL_DRY_RUN] draft → test@example.com — Test` and
+  `[MAIL_DRY_RUN] send → test@example.com — Test` — no `(Anhang: ...)` suffix, matching the
+  "absent is normal" behavior.
+- Dry-run, attachment present: wrote a synthetic file (`%PDF-1.4\n%% synthetic test pdf...`,
+  valid magic bytes, not a real résumé, never staged/committed) to
+  `data/attachments/lebenslauf.pdf`, re-ran the same test. Output:
+  `[MAIL_DRY_RUN] draft → test@example.com — Test (Anhang: Lebenslauf.pdf)` and the same for
+  send — confirms the attachment filename actually appears in the dry-run log line, not just
+  that the code compiles. Deleted the synthetic file immediately after (directory is
+  `data/attachments/*.pdf`-gitignored, but removed from disk too, not left for the next
+  person to trip over).
+- Did not attempt a live smoke test against real Gmail — that needs Kevin's explicit
+  go-ahead per the standing rule from earlier this session, and this run has no such
+  go-ahead to act on unattended.
+
+**Open questions for Kevin:**
+- The real, end-to-end check that a live Gmail draft actually carries a working attachment
+  (opens correctly, right filename, right bytes) has not been done and can't be done
+  unattended under the existing dry-run-only rule. Recommend: next time you're at the
+  keyboard, upload a real PDF via the Anhang tab, trigger one real "Entwurf erzeugen" against
+  a disposable/test address, and check the draft in Gmail directly.
