@@ -190,7 +190,7 @@ const CSS = `
 .tab:hover { color:var(--text); }
 .tab--on { color:var(--text); border-bottom-color:var(--text); font-weight:500; }
 
-.dt__body { flex:1; overflow-y:auto; padding:22px 24px; }
+.dt__body { flex:1; min-height:0; overflow-y:auto; padding:22px 24px; }
 
 /* Das Anschreiben: einzige helle Fläche der App. Es ist ein Brief, kein UI. */
 .paper {
