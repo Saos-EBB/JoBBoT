@@ -1,4 +1,4 @@
-import { readFile, appendFile } from 'node:fs/promises';
+import { readFile, appendFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ImapFlow } from 'imapflow';
 import nodemailer from 'nodemailer';
@@ -7,6 +7,7 @@ import type { Job } from '../scrapers/interface.ts';
 import type { ProfileData } from '../lib/profile.ts';
 import { jobBasename } from '../lib/slugify.ts';
 import { config } from '../config.ts';
+import { ATTACHMENT_PATH, ATTACHMENT_FILENAME } from '../lib/attachment.ts';
 
 export const MAIL_LOG_PATH = 'data/mail-log.md';
 
@@ -46,17 +47,37 @@ export async function composeEmail(job: Job, profile: ProfileData): Promise<Comp
   };
 }
 
+// Anhang ist an dieser Stelle optional, nicht Pflicht: "kein Lebenslauf hochgeladen" ist ein
+// gültiger, alltäglicher Zustand (siehe /api/attachment, GET liefert dafür regulär 404) — eine
+// Mail darf deswegen nie fehlschlagen. Wer das später zur Pflicht macht, sollte das bewusst
+// entscheiden, nicht als Nebeneffekt eines Refactors hier.
+async function attachmentIfPresent(): Promise<{ filename: string; path: string }[]> {
+  try {
+    await stat(ATTACHMENT_PATH);
+    return [{ filename: ATTACHMENT_FILENAME, path: ATTACHMENT_PATH }];
+  } catch {
+    return [];
+  }
+}
+
 // nodemailers eigene (undokumentierte, aber öffentlich importierbare) MailComposer-Klasse
 // statt Handgebautem — nötig, sobald ein Anhang dazukommt (multipart/mixed statt einteiliger
 // Nachricht), und die Klasse baut den einteiligen Text-Fall identisch, siehe SESSION-LOG.
 async function buildRawMessage(from: string, email: ComposedEmail): Promise<Buffer> {
-  const mail = new MailComposer({ from, to: email.to, subject: email.subject, text: email.text });
+  const mail = new MailComposer({
+    from,
+    to: email.to,
+    subject: email.subject,
+    text: email.text,
+    attachments: await attachmentIfPresent(),
+  });
   return mail.compile().build();
 }
 
 export async function createDraft(email: ComposedEmail): Promise<void> {
   if (config.mailDryRun) {
-    console.log(`[MAIL_DRY_RUN] draft → ${email.to} — ${email.subject}`);
+    const att = await attachmentIfPresent();
+    console.log(`[MAIL_DRY_RUN] draft → ${email.to} — ${email.subject}${att.length ? ` (Anhang: ${att[0].filename})` : ''}`);
     return;
   }
   const { user, pass } = requireGmailCredentials();
@@ -70,11 +91,12 @@ export async function createDraft(email: ComposedEmail): Promise<void> {
 }
 
 export async function sendMail(email: ComposedEmail): Promise<void> {
+  const att = await attachmentIfPresent();
   if (config.mailDryRun) {
-    console.log(`[MAIL_DRY_RUN] send → ${email.to} — ${email.subject}`);
+    console.log(`[MAIL_DRY_RUN] send → ${email.to} — ${email.subject}${att.length ? ` (Anhang: ${att[0].filename})` : ''}`);
     return;
   }
   const { user, pass } = requireGmailCredentials();
   const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user, pass } });
-  await transporter.sendMail({ from: user, to: email.to, subject: email.subject, text: email.text });
+  await transporter.sendMail({ from: user, to: email.to, subject: email.subject, text: email.text, attachments: att });
 }
