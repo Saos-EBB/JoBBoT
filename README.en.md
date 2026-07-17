@@ -1,10 +1,17 @@
 # JoBBoT
 
+<img src="docs/images/tschobbo.jpeg" alt="TschoBBo, the JoBBoT mascot" width="480">
+
 *[Deutsch](README.md)*
 
 Local job scraper with an LLM cover-letter generator. Runs fully offline/
 local (Ollama), no cloud dependency. Pipeline: **Scrape → Filter → Cover
 letter → Review** (review/sending are currently manual).
+
+This is **TschoBBo**, JoBBoT's mascot. The extra arms are the point: he's the
+one grabbing listings, filtering them, typing the cover letter, and filing
+the application, all at once — the goal is for the pipeline to feel less like
+dead script output and more like something is actually working for you.
 
 ## Setup
 

@@ -1,10 +1,18 @@
 # JoBBoT
 
+<img src="docs/images/tschobbo.jpeg" alt="TschoBBo, das JoBBoT-Maskottchen" width="480">
+
 *[English](README.en.md)*
 
 Lokaler Job-Scraper mit LLM-Anschreiben-Generator. Läuft komplett offline/lokal
 (Ollama), keine Cloud-Abhängigkeit. Pipeline: **Scrape → Filter → Anschreiben
 → Review** (Review/Versand sind aktuell manuell).
+
+Das ist **TschoBBo**, das Maskottchen von JoBBoT. Die vielen Arme sind Absicht:
+er ist es, der im Hintergrund gleichzeitig Inserate greift, sie filtert, das
+Anschreiben tippt und die Bewerbung in den Ordner einsortiert — die Pipeline
+soll sich weniger nach totem Skript-Output anfühlen und mehr danach, dass da
+jemand für dich arbeitet.
 
 ## Setup
 
