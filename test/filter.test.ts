@@ -59,7 +59,10 @@ test('filterJob: it_rolle ja, erfahrung nein, junior_signal ja → status "match
 
   const d = await filterJob(job, storage, url, 'llm');
   assert.equal(d.status, 'matched');
-  assert.equal((await storage.get(job.id))?.status, 'matched');
+  assert.equal(d.job.fit, 'match');
+  const stored = await storage.get(job.id);
+  assert.equal(stored?.status, 'matched');
+  assert.equal(stored?.fit, 'match');
 });
 
 test('filterJob: it_rolle nein → status "filtered_out", Datei bleibt erhalten (kein delete)', async (t) => {
@@ -117,7 +120,12 @@ test('filterJob: junior_signal nein → status "uncertain", Datei bleibt', async
 
   const d = await filterJob(job, storage, url, 'llm');
   assert.equal(d.status, 'uncertain');
-  assert.ok((await storage.get(job.id)) !== null);
+  // Kein geratenes fit für uncertain — der Filter kann offstack/brutal nicht
+  // unterscheiden, also bleibt fit null statt eines Rateversuchs.
+  assert.equal(d.job.fit, null);
+  const stored = await storage.get(job.id);
+  assert.ok(stored !== null);
+  assert.equal(stored?.fit, null);
 });
 
 test('filterJob: Regex-Modus, disqualifizierende Erfahrung → filtered_out, Datei bleibt (Retain)', async (t) => {
