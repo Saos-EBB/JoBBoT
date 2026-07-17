@@ -232,9 +232,12 @@ export async function generateAnschreiben(
   }
 
   const path = await saveAnschreiben(job, result, anschreibenDir);
-  job.status = 'generated';
-  job.updatedAt = new Date().toISOString();
-  await storage.save(job);
+  // storage.update() statt storage.save(job): die Generierung oben dauert
+  // 3-4 Minuten (siehe README, Performance) — ein weites Zeitfenster, in dem ein
+  // Browser-Edit (z.B. fit ändern) am selben Job passieren kann. update() merged
+  // nur `status` auf den AKTUELLEN Diskstand statt diesen ganzen, potenziell
+  // veralteten `job` zu überschreiben (gleiches Muster wie lib/filter.ts).
+  await storage.update(job.id, { status: 'generated' });
   logSuccess(job, model, path, logPath);
   return path;
 }
