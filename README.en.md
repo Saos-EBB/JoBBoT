@@ -140,6 +140,40 @@ dialog). Both go through a Gmail App Password, not OAuth:
 If `.env` is missing, the UI still runs — only draft/send fail with a clear
 error message instead of the page not loading at all.
 
+## UI & Server
+
+`npm run ui` starts `scripts/ui-server.ts` — a plain `node:http` server (no
+framework) that does two things at once:
+
+- **Static frontend**: `ui/app.tsx` (React) is bundled with `npm run
+  build:ui` (esbuild) into `ui/dist/app.js` and served at `/app.js`. Rebuild
+  after every change to `ui/app.tsx` — there's no hot reload.
+- **JSON API** the SPA talks to via `fetch`: `/api/jobs`, `/api/jobs/:id`
+  (change status/fit), `/api/jobs/:id/brief` (edit the cover letter),
+  `/api/jobs/:id/draft` / `/api/jobs/:id/send` (Gmail), `/api/attachment`
+  (résumé upload), and `/api/scrape/*` / `/api/filter/*` (see below).
+
+### Scrape/Filter from the UI
+
+The sidebar has its own "Pipeline" group with two entries — **Scrape** and
+**Filter** — that trigger `npm run scrape`/`npm run filter` from the browser
+instead of the terminal. Both follow the same pattern:
+
+1. `POST /api/scrape` (source selection) or `POST /api/filter` (`regex`/
+   `llm` mode) starts the run **in the background** inside the server
+   process and responds immediately with a `runId` — no waiting on a long
+   HTTP response.
+2. The SPA polls `GET /api/scrape/status` / `/api/filter/status` every
+   ~1.5s, regardless of which view is open — that's what keeps the progress
+   bar under the sidebar entry visible even while browsing the job list.
+3. If a run of the same kind is already active, a second `POST` gets a
+   `409` instead of starting a second run.
+4. On completion the UI shows a toast with a one-line summary (e.g. "14
+   new, 6 deduped") and automatically refetches the job list.
+
+The server keeps run state only in process memory (no restart recovery) —
+fine for a local single-user tool.
+
 ## Tests
 
 ```bash

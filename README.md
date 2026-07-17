@@ -142,6 +142,42 @@ E-Mail-Vorschau (An/Betreff/Text) mit zwei Aktionen: **Entwurf erstellen**
 Fehlt `.env`, läuft die UI trotzdem — nur Entwurf/Senden schlagen mit einer
 klaren Fehlermeldung fehl statt die Seite zu blockieren.
 
+## UI & Server
+
+`npm run ui` startet `scripts/ui-server.ts` — ein reiner `node:http`-Server
+(kein Framework), der zwei Dinge gleichzeitig macht:
+
+- **Statisches Frontend**: `ui/app.tsx` (React) wird per `npm run build:ui`
+  (esbuild) zu `ui/dist/app.js` gebaut und unter `/app.js` ausgeliefert. Nach
+  jeder Änderung an `ui/app.tsx` muss neu gebaut werden — kein Hot-Reload.
+- **JSON-API**, die das SPA per `fetch` anspricht: `/api/jobs`,
+  `/api/jobs/:id` (Status/Fit ändern), `/api/jobs/:id/brief` (Anschreiben
+  bearbeiten), `/api/jobs/:id/draft` bzw. `/api/jobs/:id/send` (Gmail),
+  `/api/attachment` (Lebenslauf-Upload) sowie `/api/scrape/*` und
+  `/api/filter/*` (siehe unten).
+
+### Scrape/Filter aus der UI
+
+Die Sidebar hat eine eigene „Pipeline"-Gruppe mit zwei Einträgen — **Scrape**
+und **Filter** —, die `npm run scrape`/`npm run filter` aus dem Browser statt
+vom Terminal aus anstoßen. Beide laufen nach demselben Muster:
+
+1. `POST /api/scrape` (Quellenauswahl) bzw. `POST /api/filter`
+   (`regex`-/`llm`-Modus) startet den Lauf **im Hintergrund** im
+   Server-Prozess und antwortet sofort mit einer `runId` — kein Warten auf
+   eine lange HTTP-Response.
+2. Das SPA pollt `GET /api/scrape/status` bzw. `/api/filter/status` alle
+   ~1,5s, unabhängig davon, welche Ansicht gerade offen ist — deshalb bleibt
+   der Fortschrittsbalken unter dem Sidebar-Eintrag sichtbar, auch wenn man
+   zwischendurch in die Job-Liste wechselt.
+3. Läuft bereits ein Lauf desselben Typs, antwortet ein zweiter `POST` mit
+   `409` statt einen zweiten Lauf zu starten.
+4. Nach Abschluss zeigt die UI einen Toast mit der Kurzbilanz (z. B. „14
+   neu, 6 dedup") und lädt die Job-Liste automatisch neu.
+
+Der Server hält den Lauf-Status nur im Prozessspeicher (kein
+Neustart-Recovery) — für ein lokales Einzelnutzer-Tool ausreichend.
+
 ## Tests
 
 ```bash
