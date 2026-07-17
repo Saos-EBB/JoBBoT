@@ -166,8 +166,8 @@ export async function generateAnschreiben(
   model = config.modelWriter,
   logPath = ANSCHREIBEN_LOG_PATH,
 ): Promise<string | null> {
-  if (job.status !== 'matched' && job.status !== 'uncertain') {
-    console.warn(`[anschreiben] job ${job.id} hat status "${job.status}", erwartet "matched" oder "uncertain"`);
+  if (job.status !== 'triaged' || job.fit === 'brutal') {
+    console.warn(`[anschreiben] job ${job.id} hat status "${job.status}"/fit "${job.fit}", erwartet "triaged" mit fit "matched" oder "offstack"`);
     return null;
   }
 

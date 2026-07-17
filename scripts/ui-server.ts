@@ -17,7 +17,7 @@ import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 
 const PORT = Number(process.env.UI_PORT ?? 3000);
-const STATUSES: JobStatus[] = ['new', 'filtered_out', 'uncertain', 'matched', 'generated', 'freigegeben', 'postausgang', 'gesendet', 'geloescht', 'fehler'];
+const STATUSES: JobStatus[] = ['new', 'triaged', 'generated', 'freigegeben', 'postausgang', 'gesendet', 'geloescht', 'fehler'];
 const storage = createStorage();
 const profile = loadProfile();
 
@@ -374,11 +374,11 @@ const server = createServer(async (req, res) => {
     }
 
     try {
-      // Nur matched/uncertain sind gültig (generateAnschreiben() prüft das selbst
+      // Nur triaged+nicht-brutal ist gültig (generateAnschreiben() prüft das selbst
       // nochmal) — hier vorab gefiltert, damit "skipped" korrekt zählt, statt
       // still Lücken aus fehlenden/ungeeigneten IDs zu übernehmen.
       const fetched = await Promise.all(jobIds.map(id => storage.get(id)));
-      const jobs = fetched.filter((j): j is Job => j !== null && (j.status === 'matched' || j.status === 'uncertain'));
+      const jobs = fetched.filter((j): j is Job => j !== null && j.status === 'triaged' && j.fit !== 'brutal');
       const preSkipped = jobIds.length - jobs.length;
 
       if (jobs.length === 0) {

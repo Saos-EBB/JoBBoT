@@ -7,12 +7,11 @@ export type Status =
   | 'jobs' | 'entwurf' | 'freigegeben' | 'postausgang'
   | 'gesendet' | 'aussortiert' | 'geloescht' | 'fehler';
 
-const STATUS_MAP: Record<JobStatus, Status> = {
+// "triaged" fehlt hier bewusst — sitzt weder fix auf "jobs" noch auf "aussortiert",
+// sondern hängt von fit ab (brutal → aussortiert, sonst → jobs), siehe deriveStatus().
+const STATUS_MAP: Record<Exclude<JobStatus, 'triaged'>, Status> = {
   new: 'jobs',
-  uncertain: 'jobs',
-  matched: 'jobs',
   generated: 'entwurf',
-  filtered_out: 'aussortiert',
   freigegeben: 'freigegeben',
   postausgang: 'postausgang',
   gesendet: 'gesendet',
@@ -21,6 +20,7 @@ const STATUS_MAP: Record<JobStatus, Status> = {
 };
 
 export function deriveStatus(job: Job): Status {
+  if (job.status === 'triaged') return job.fit === 'brutal' ? 'aussortiert' : 'jobs';
   return STATUS_MAP[job.status];
 }
 

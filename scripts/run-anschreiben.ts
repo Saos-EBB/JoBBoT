@@ -9,9 +9,9 @@ import { config } from '../config.ts';
 const profile = loadProfile();
 const storage = createStorage();
 
-// --data=save    -> nur data/jobs/sicher/   (status "matched")
-// --data=unsave  -> nur data/jobs/unsicher/ (status "uncertain")
-// ohne --data    -> beide Ordner, wie bisher
+// --data=save    -> nur data/jobs/sicher/   (fit "matched")
+// --data=unsave  -> nur data/jobs/unsicher/ (fit "offstack")
+// ohne --data    -> beide, wie bisher
 const dataArg = process.argv.find(a => a.startsWith('--data='));
 const dataFilter = dataArg?.slice('--data='.length);
 if (dataFilter && dataFilter !== 'save' && dataFilter !== 'unsave') {
@@ -19,11 +19,12 @@ if (dataFilter && dataFilter !== 'save' && dataFilter !== 'unsave') {
   process.exit(1);
 }
 
+const triaged = await storage.list({ status: 'triaged' });
 let jobs = dataFilter === 'save'
-  ? await storage.list({ status: 'matched' })
+  ? triaged.filter(j => j.fit === 'matched')
   : dataFilter === 'unsave'
-  ? await storage.list({ status: 'uncertain' })
-  : [...await storage.list({ status: 'matched' }), ...await storage.list({ status: 'uncertain' })];
+  ? triaged.filter(j => j.fit === 'offstack')
+  : triaged.filter(j => j.fit !== 'brutal');
 
 const limitArg = process.argv.find(a => a.startsWith('--limit'));
 if (limitArg) {

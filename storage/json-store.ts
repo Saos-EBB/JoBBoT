@@ -1,17 +1,18 @@
 import { mkdir, readdir, readFile, rename, writeFile, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
-import type { Job, JobStatus } from '../scrapers/interface.ts';
+import type { Fit, Job, JobStatus } from '../scrapers/interface.ts';
 import type { Storage } from './index.ts';
 import { jobBasename } from '../lib/slugify.ts';
 import { config } from '../config.ts';
 
-// Sortierte Unterordner für die beiden Filter-Ergebnisse. Alle anderen Status
-// (new, filtered_out, generated, reviewed, drafted, sent) bleiben im Basisordner
-// — nur explizit angefragt waren "sicher" (matched) und "unsicher" (uncertain).
-const STATUS_DIRS: Partial<Record<JobStatus, string>> = {
+// Sortierte Unterordner für die beiden Filter-Ergebnisse — nur für getriagte Jobs
+// (status "triaged") relevant, geroutet nach fit statt status: matched→sicher,
+// offstack→unsicher. brutal (abgelehnt) sowie alle anderen Status (new, generated,
+// freigegeben, postausgang, gesendet, geloescht, fehler) bleiben im Basisordner.
+const FIT_DIRS: Partial<Record<Fit, string>> = {
   matched: 'sicher',
-  uncertain: 'unsicher',
+  offstack: 'unsicher',
 };
 
 export class JsonStore implements Storage {
@@ -21,8 +22,9 @@ export class JsonStore implements Storage {
     return `${jobBasename(job)}.json`;
   }
 
-  private dirFor(status: JobStatus): string {
-    const sub = STATUS_DIRS[status];
+  private dirFor(job: Job): string {
+    if (job.status !== 'triaged' || job.fit == null) return this.dir;
+    const sub = FIT_DIRS[job.fit];
     return sub ? join(this.dir, sub) : this.dir;
   }
 
@@ -48,7 +50,7 @@ export class JsonStore implements Storage {
   }
 
   async save(job: Job): Promise<void> {
-    const targetDir = this.dirFor(job.status);
+    const targetDir = this.dirFor(job);
     await mkdir(targetDir, { recursive: true });
     const target = join(targetDir, this.getFilename(job));
     const tmp = join(targetDir, `.tmp-${randomBytes(6).toString('hex')}.json`);

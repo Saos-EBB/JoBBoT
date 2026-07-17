@@ -49,12 +49,12 @@ test('list() returns all; list({status}) filters', async (t) => {
 
   await store.save(j1);
   await store.save(j2);
-  await store.updateStatus(j2.id, 'matched');
+  await store.update(j2.id, { status: 'triaged', fit: 'matched' });
 
   assert.equal((await store.list()).length, 2);
-  const matched = await store.list({ status: 'matched' });
-  assert.equal(matched.length, 1);
-  assert.equal(matched[0].id, j2.id);
+  const triaged = await store.list({ status: 'triaged' });
+  assert.equal(triaged.length, 1);
+  assert.equal(triaged[0].id, j2.id);
 });
 
 test('update merges, bumps updatedAt, keeps scrapedAt', async (t) => {
@@ -65,9 +65,9 @@ test('update merges, bumps updatedAt, keeps scrapedAt', async (t) => {
   await store.save(job);
 
   await new Promise(r => setTimeout(r, 5)); // ensure clock advances
-  const updated = await store.update(job.id, { status: 'matched' });
+  const updated = await store.update(job.id, { status: 'triaged' });
 
-  assert.equal(updated.status, 'matched');
+  assert.equal(updated.status, 'triaged');
   assert.equal(updated.scrapedAt, job.scrapedAt);
   assert.ok(updated.updatedAt >= job.updatedAt);
 });
@@ -254,12 +254,13 @@ test('delete(nichtExistente id) → kein throw', async (t) => {
 
 // ── Sortierte Unterordner sicher/unsicher ──────────────────────────────────
 
-test('save(status=matched) → Datei landet in <dir>/sicher/', async (t) => {
+test('save(fit=matched) → Datei landet in <dir>/sicher/', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const store = createStorage(dir);
   const job = toJob(fakeScraped());
-  job.status = 'matched';
+  job.status = 'triaged';
+  job.fit = 'matched';
   await store.save(job);
 
   const rootFiles = jobFiles(await readdir(dir));
@@ -268,26 +269,27 @@ test('save(status=matched) → Datei landet in <dir>/sicher/', async (t) => {
   assert.equal(sicherFiles.length, 1);
 });
 
-test('save(status=uncertain) → Datei landet in <dir>/unsicher/', async (t) => {
+test('save(fit=offstack) → Datei landet in <dir>/unsicher/', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const store = createStorage(dir);
   const job = toJob(fakeScraped());
-  job.status = 'uncertain';
+  job.status = 'triaged';
+  job.fit = 'offstack';
   await store.save(job);
 
   const unsicherFiles = jobFiles(await readdir(join(dir, 'unsicher')));
   assert.equal(unsicherFiles.length, 1);
 });
 
-test('updateStatus new→matched→generated: Datei wandert, kein Duplikat', async (t) => {
+test('updateStatus new→triaged(matched)→generated: Datei wandert, kein Duplikat', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const store = createStorage(dir);
   const job = toJob(fakeScraped());
   await store.save(job);
 
-  await store.updateStatus(job.id, 'matched');
+  await store.update(job.id, { status: 'triaged', fit: 'matched' });
   assert.equal(jobFiles(await readdir(dir)).length, 0);
   assert.equal(jobFiles(await readdir(join(dir, 'sicher'))).length, 1);
 
@@ -301,7 +303,8 @@ test('get/exists/delete finden Jobs unabhängig vom Unterordner', async (t) => {
   t.after(() => rmTmp(dir));
   const store = createStorage(dir);
   const job = toJob(fakeScraped());
-  job.status = 'matched';
+  job.status = 'triaged';
+  job.fit = 'matched';
   await store.save(job);
 
   assert.equal(await store.exists(job.id), true);
@@ -319,15 +322,16 @@ test('list() findet Jobs aus Basisordner + beiden Unterordnern zusammen', async 
   const jNew = toJob(fakeScraped('New Job', 'Corp N'));
   const jMatched = toJob(fakeScraped('Matched Job', 'Corp M'));
   const jUncertain = toJob(fakeScraped('Uncertain Job', 'Corp U'));
-  jMatched.status = 'matched';
-  jUncertain.status = 'uncertain';
+  jMatched.status = 'triaged';
+  jMatched.fit = 'matched';
+  jUncertain.status = 'triaged';
+  jUncertain.fit = 'offstack';
 
   await store.save(jNew);
   await store.save(jMatched);
   await store.save(jUncertain);
 
   assert.equal((await store.list()).length, 3);
-  assert.equal((await store.list({ status: 'matched' })).length, 1);
-  assert.equal((await store.list({ status: 'uncertain' })).length, 1);
+  assert.equal((await store.list({ status: 'triaged' })).length, 2);
   assert.equal((await store.list({ status: 'new' })).length, 1);
 });

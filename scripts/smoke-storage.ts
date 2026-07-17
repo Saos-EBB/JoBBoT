@@ -34,13 +34,13 @@ const fetched = await store.get(id);
 if (fetched?.id !== id) throw new Error('get() returned wrong job');
 
 // 5. updateStatus
-const updated = await store.updateStatus(id, 'matched');
-if (updated.status !== 'matched') throw new Error('updateStatus() failed');
+const updated = await store.updateStatus(id, 'triaged');
+if (updated.status !== 'triaged') throw new Error('updateStatus() failed');
 if (updated.updatedAt === job.updatedAt) throw new Error('updatedAt not changed');
 
 // 6. list filter
-const matched = await store.list({ status: 'matched' });
-if (!matched.some(j => j.id === id)) throw new Error('list(matched) missing job');
+const triaged = await store.list({ status: 'triaged' });
+if (!triaged.some(j => j.id === id)) throw new Error('list(triaged) missing job');
 
 // cleanup
 await (store as JsonStore).delete(id);
