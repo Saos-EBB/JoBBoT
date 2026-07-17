@@ -24,7 +24,7 @@
     ]
   },
   "ams": {
-    "enabled": true,
+    "enabled": false,
     "queries": [
       { "keyword": "junior software developer", "location": "Linz", "vicinity": "40" },
       { "keyword": "junior softwareentwickler", "location": "Linz", "vicinity": "40" },
