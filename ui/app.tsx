@@ -16,6 +16,9 @@ import {
   ListFilter,
   XCircle,
   Paperclip,
+  Download,
+  Filter as FilterIcon,
+  Play,
 } from 'lucide-react';
 import type { Job, Fit } from '../scrapers/interface.ts';
 import { FOLDER_IDS, inFolder, type FolderId } from '../lib/folders.ts';
@@ -26,6 +29,25 @@ import { FOLDER_IDS, inFolder, type FolderId } from '../lib/folders.ts';
 // das je zurückgeschrieben wird (Speichern einer Bearbeitung ist ein eigener Endpunkt).
 type JobWithBrief = Job & { brief: string | null };
 type AttachmentMeta = { filename: string; size: number; uploadedAt: string };
+
+// Spiegeln die Server-Shapes aus scripts/ui-server.ts (ScrapeRunState/FilterRunState)
+// — kein gemeinsames Typ-Modul, weil der Server sonst Browser-untaugliche Imports
+// (node:fs via lib/settings.ts etc.) ins UI-Bundle ziehen würde.
+type ScrapeStatus = {
+  status: 'idle' | 'running' | 'done' | 'error';
+  runId: string | null;
+  sources: Record<string, { current: number; total: number }>;
+  result?: { newTotal: number; skipTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; error?: string }[] };
+  error?: string;
+};
+type FilterRunStatus = {
+  status: 'idle' | 'running' | 'done' | 'error';
+  runId: string | null;
+  current?: { i: number; total: number; title: string };
+  result?: { sicher: number; unsicher: number; raus: number };
+  error?: string;
+};
+type FilterMode = 'llm' | 'regex';
 
 /* ------------------------------------------------------------------ *
  * Design tokens
@@ -106,6 +128,22 @@ const CSS = `
 .fld__n { font-family:var(--mono); font-size:11px; font-variant-numeric:tabular-nums; color:var(--dim); }
 .fld--on .fld__n { color:var(--muted); }
 .fld--err.fld--has svg, .fld--err.fld--has .fld__n { color:var(--err); opacity:1; }
+
+.fld__bar { height:2px; margin:0 8px 6px; background:var(--line); border-radius:99px; overflow:hidden; }
+.fld__bar span { display:block; height:100%; background:var(--text); transition:width .3s ease; }
+
+/* .chip/.chip--on ist für die Fit-Filter gebaut, wo ein Farbpunkt die Auswahl
+   trägt — ohne Punkt (Regex/LLM) ist der Kontrast dort zu schwach, um überhaupt
+   wie ein Button auszusehen. Eigener, kontrastreicherer Toggle statt .chip.
+   ".jb " vorangestellt (statt nur .modebtn): ".jb button" resettet border/
+   background mit höherer Spezifität (Klasse+Element) als ein einzelner
+   Klassen-Selektor — ohne den Präfix gewinnt der Reset und der Toggle sieht
+   aus wie reiner Text (derselbe Effekt trifft übrigens auch .chip/.btn/.fitbtn
+   im Bestandscode, hier aber bewusst nur lokal für den neuen Toggle behoben). */
+.modetoggle { display:flex; gap:6px; padding:10px 0; }
+.jb .modebtn { padding:5px 14px; border-radius:6px; border:1px solid var(--line); color:var(--muted); font-size:12.5px; }
+.jb .modebtn:hover { border-color:var(--dim); color:var(--text); }
+.jb .modebtn--on { background:var(--text); color:var(--ink); border-color:var(--text); font-weight:600; }
 
 .sb__keys { margin-top:auto; padding:14px 16px; border-top:1px solid var(--line-soft); display:flex; flex-direction:column; gap:5px; }
 .key { display:flex; justify-content:space-between; font-size:11px; color:var(--dim); }
@@ -361,17 +399,104 @@ export default function JobbotUI() {
   const [tab, setTab] = useState<'brief' | 'inserat'>('brief');
   const [toast, setToast] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-  // 'attachment' ist kein Ordner (kein FolderId, kein Job-Filter) — eigener,
-  // simpler UI-Modus, der Liste+Detail durch die Anhang-Ansicht ersetzt.
-  const [view, setView] = useState<'jobs' | 'attachment'>('jobs');
+  // 'attachment'/'scrape'/'filter' sind keine Ordner (kein FolderId, kein Job-Filter)
+  // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
+  const [view, setView] = useState<'jobs' | 'attachment' | 'scrape' | 'filter'>('jobs');
   const [attachment, setAttachment] = useState<AttachmentMeta | null | undefined>(undefined);
+  const [scrapeSources, setScrapeSources] = useState<string[]>([]);
+  const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
+  const [filterMode, setFilterMode] = useState<FilterMode>('regex');
+  const [scrapeStatus, setScrapeStatus] = useState<ScrapeStatus | null>(null);
+  const [filterStatus, setFilterStatus] = useState<FilterRunStatus | null>(null);
+  const [scrapeStarting, setScrapeStarting] = useState(false);
+  const [filterStarting, setFilterStarting] = useState(false);
+  // Verhindert Toast/Refetch-Spam: der Server hält 'done' so lange, bis der
+  // nächste Lauf startet — ohne diesen Merker würde jeder Poll-Tick (alle 1.5s)
+  // erneut feiern, solange niemand einen neuen Lauf anstößt.
+  const lastSeenScrapeRunId = useRef<string | null>(null);
+  const lastSeenFilterRunId = useRef<string | null>(null);
   const ta = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
+  const say = useCallback((m: string) => {
+    setToast(m);
+    setTimeout(() => setToast(null), 1900);
+  }, []);
+
+  const refetchJobs = useCallback(() => {
     fetch('/api/jobs')
       .then(r => r.json())
       .then((data: JobWithBrief[]) => setJobs(data));
   }, []);
+
+  useEffect(() => { refetchJobs(); }, [refetchJobs]);
+
+  useEffect(() => {
+    fetch('/api/scrape/sources').then(r => r.json()).then((names: string[]) => {
+      setScrapeSources(names);
+      setSelectedSources(new Set(names));
+    });
+    fetch('/api/settings').then(r => r.json()).then((s: { filterMode: FilterMode }) => setFilterMode(s.filterMode));
+  }, []);
+
+  // Ein einziges, immer laufendes Poll-Intervall für die gesamte Lebensdauer der
+  // App (nicht an eine bestimmte Ansicht gebunden) — nur so bleibt die Fortschritts-
+  // anzeige in der Sidebar sichtbar, auch wenn man zu einer anderen Ansicht wechselt.
+  useEffect(() => {
+    const tick = async () => {
+      try {
+        const [s, f] = await Promise.all([
+          fetch('/api/scrape/status').then(r => r.json()) as Promise<ScrapeStatus>,
+          fetch('/api/filter/status').then(r => r.json()) as Promise<FilterRunStatus>,
+        ]);
+        setScrapeStatus(s);
+        setFilterStatus(f);
+
+        if ((s.status === 'done' || s.status === 'error') && s.runId && s.runId !== lastSeenScrapeRunId.current) {
+          lastSeenScrapeRunId.current = s.runId;
+          refetchJobs();
+          say(s.status === 'error' ? `Scrape fehlgeschlagen: ${s.error}` : `Scrape: ${s.result?.newTotal ?? 0} neu, ${s.result?.skipTotal ?? 0} dedup`);
+        }
+        if ((f.status === 'done' || f.status === 'error') && f.runId && f.runId !== lastSeenFilterRunId.current) {
+          lastSeenFilterRunId.current = f.runId;
+          refetchJobs();
+          say(f.status === 'error' ? `Filter fehlgeschlagen: ${f.error}` : `Filter: ${f.result?.sicher ?? 0} sicher, ${f.result?.unsicher ?? 0} unsicher, ${f.result?.raus ?? 0} raus`);
+        }
+      } catch {
+        // Server kurz nicht erreichbar — nächster Tick versucht's wieder
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1500);
+    return () => clearInterval(id);
+  }, [refetchJobs, say]);
+
+  async function runScrapeNow() {
+    setScrapeStarting(true);
+    try {
+      const res = await fetch('/api/scrape', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sources: [...selectedSources] }),
+      });
+      if (res.status === 409) say('Scrape läuft bereits');
+    } finally {
+      setScrapeStarting(false);
+    }
+  }
+
+  async function runFilterNow() {
+    setFilterStarting(true);
+    try {
+      const res = await fetch('/api/filter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: filterMode }),
+      });
+      if (res.status === 409) say('Filter läuft bereits');
+    } finally {
+      setFilterStarting(false);
+    }
+  }
 
   useEffect(() => {
     if (view !== 'attachment') return;
@@ -392,11 +517,6 @@ export default function JobbotUI() {
     setAttachment(null);
     say('Anhang entfernt');
   }
-
-  const say = useCallback((m: string) => {
-    setToast(m);
-    setTimeout(() => setToast(null), 1900);
-  }, []);
 
   const counts = useMemo(() => {
     const c: Partial<Record<FolderId, number>> = {};
@@ -537,6 +657,17 @@ export default function JobbotUI() {
     setDetailOpen(true);
   };
 
+  // Grobe Summen-Fraktion über alle Quellen statt Fortschritt pro Quelle exakt zu
+  // verrechnen (die "total"-Einheiten unterscheiden sich je Quelle) — reicht für
+  // eine dekorative "es tut sich was"-Anzeige, siehe Grilling-Runde 1.
+  const scrapeSourceEntries = scrapeStatus ? Object.entries(scrapeStatus.sources) : [];
+  const scrapeCurrentSum = scrapeSourceEntries.reduce((a, [, v]) => a + v.current, 0);
+  const scrapeTotalSum = scrapeSourceEntries.reduce((a, [, v]) => a + v.total, 0);
+  const scrapePct = scrapeTotalSum > 0 ? Math.min(100, Math.round((scrapeCurrentSum / scrapeTotalSum) * 100)) : 0;
+  const filterPct = filterStatus?.current && filterStatus.current.total > 0
+    ? Math.round((filterStatus.current.i / filterStatus.current.total) * 100)
+    : 0;
+
   return (
     <div className={'jb' + (detailOpen ? ' jb--detail' : '')}>
       <style>{CSS}</style>
@@ -591,6 +722,29 @@ export default function JobbotUI() {
             <Paperclip />
             <span className="fld__label">Anhang</span>
           </button>
+        </div>
+
+        <div className="sb__rule" />
+        <div className="sb__group">
+          <div className="sb__head">Pipeline</div>
+          <button className={'fld' + (view === 'scrape' ? ' fld--on' : '')} onClick={() => setView('scrape')}>
+            <Download />
+            <span className="fld__label">Scrape</span>
+          </button>
+          {scrapeStatus?.status === 'running' && (
+            <div className="fld__bar">
+              <span style={{ width: `${scrapePct}%` }} />
+            </div>
+          )}
+          <button className={'fld' + (view === 'filter' ? ' fld--on' : '')} onClick={() => setView('filter')}>
+            <FilterIcon />
+            <span className="fld__label">Filter</span>
+          </button>
+          {filterStatus?.status === 'running' && (
+            <div className="fld__bar">
+              <span style={{ width: `${filterPct}%` }} />
+            </div>
+          )}
         </div>
 
         <div className="sb__keys">
@@ -663,6 +817,93 @@ export default function JobbotUI() {
               </button>
             </footer>
           )}
+        </section>
+      ) : view === 'scrape' ? (
+        /* ---------- Scrape ---------- */
+        <section className="att">
+          <header className="dt__head">
+            <div className="dt__firma">Scrape</div>
+            <div className="dt__titel">Neue Jobs von den ausgewählten Quellen holen.</div>
+          </header>
+          <div className="dt__body">
+            {scrapeStatus?.status === 'running' ? (
+              <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
+                <div className="empty__h">Läuft…</div>
+                {scrapeSourceEntries.length === 0 ? (
+                  'Startet…'
+                ) : (
+                  scrapeSourceEntries.map(([name, p]) => (
+                    <div key={name} style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)', marginTop: 4 }}>
+                      {name}: {p.current}/{p.total}
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 9, maxWidth: 420 }}>
+                {scrapeSources.map(name => (
+                  <label key={name} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedSources.has(name)}
+                      onChange={e => setSelectedSources(prev => {
+                        const next = new Set(prev);
+                        if (e.target.checked) next.add(name); else next.delete(name);
+                        return next;
+                      })}
+                    />
+                    {name}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+          <footer className="bar">
+            <button
+              className="btn btn--primary"
+              disabled={scrapeStarting || scrapeStatus?.status === 'running' || selectedSources.size === 0}
+              onClick={runScrapeNow}
+            >
+              <Play /> Scrapen
+            </button>
+          </footer>
+        </section>
+      ) : view === 'filter' ? (
+        /* ---------- Filter ---------- */
+        <section className="att">
+          <header className="dt__head">
+            <div className="dt__firma">Filter</div>
+            <div className="dt__titel">Jobs mit Status "neu" filtern.</div>
+          </header>
+          <div className="dt__body">
+            {filterStatus?.status === 'running' ? (
+              <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
+                <div className="empty__h">Läuft…</div>
+                {filterStatus.current && (
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
+                    {filterStatus.current.i + 1}/{filterStatus.current.total}: {filterStatus.current.title}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="modetoggle">
+                {(['regex', 'llm'] as const).map(m => (
+                  <button key={m} className={'modebtn' + (filterMode === m ? ' modebtn--on' : '')} onClick={() => setFilterMode(m)}>
+                    {m === 'regex' ? 'Regex' : 'LLM'}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <footer className="bar">
+            <button
+              className="btn btn--primary"
+              disabled={filterStarting || filterStatus?.status === 'running'}
+              onClick={runFilterNow}
+            >
+              <Play /> Filtern
+            </button>
+          </footer>
         </section>
       ) : (
         <>
