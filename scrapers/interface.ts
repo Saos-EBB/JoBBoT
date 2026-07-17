@@ -2,11 +2,14 @@
 // lib/anschreiben.ts geschrieben, hier unangetastet. UI-Zone — nur vom UI geschrieben
 // (bisher scripts/ui-server.ts, komplett ersetzt); literal umbenannt statt derived,
 // weil kein anderer Code diese Werte je schreibt.
+// "triaged" ersetzt die vormals getrennten filtered_out/uncertain/matched — das Urteil
+// selbst lebt jetzt ausschließlich in `fit` (einheitliches Vokabular, kein zweites Feld
+// das dieselbe Aussage in anderen Worten trifft).
 export type JobStatus =
-  | 'new' | 'filtered_out' | 'uncertain' | 'matched' | 'generated'
+  | 'new' | 'triaged' | 'generated'
   | 'freigegeben' | 'postausgang' | 'gesendet' | 'geloescht' | 'fehler';
 
-export type Fit = 'match' | 'offstack' | 'brutal';
+export type Fit = 'matched' | 'offstack' | 'brutal';
 
 export interface ScrapedJob {
   source: string;

@@ -59,10 +59,10 @@ test('filterJob: it_rolle ja, erfahrung nein, junior_signal ja → status "match
 
   const d = await filterJob(job, storage, url, 'llm');
   assert.equal(d.status, 'matched');
-  assert.equal(d.job.fit, 'match');
+  assert.equal(d.job.fit, 'matched');
   const stored = await storage.get(job.id);
-  assert.equal(stored?.status, 'matched');
-  assert.equal(stored?.fit, 'match');
+  assert.equal(stored?.status, 'triaged');
+  assert.equal(stored?.fit, 'matched');
 });
 
 test('filterJob: it_rolle nein → status "filtered_out", Datei bleibt erhalten (kein delete)', async (t) => {
@@ -82,7 +82,7 @@ test('filterJob: it_rolle nein → status "filtered_out", Datei bleibt erhalten 
   // Retain: Datei existiert noch, nichts gelöscht
   const stored = await storage.get(job.id);
   assert.ok(stored !== null);
-  assert.equal(stored?.status, 'filtered_out');
+  assert.equal(stored?.status, 'triaged');
   assert.equal(stored?.fit, 'brutal');
 });
 
@@ -125,6 +125,7 @@ test('filterJob: junior_signal nein → status "uncertain", Datei bleibt', async
   assert.equal(d.job.fit, 'offstack');
   const stored = await storage.get(job.id);
   assert.ok(stored !== null);
+  assert.equal(stored?.status, 'triaged');
   assert.equal(stored?.fit, 'offstack');
 });
 
@@ -141,7 +142,8 @@ test('filterJob: Regex-Modus, disqualifizierende Erfahrung → filtered_out, Dat
   assert.match(d.rejectedBy ?? '', /Erfahrung ≥3J/);
   const stored = await storage.get(job.id);
   assert.ok(stored !== null);
-  assert.equal(stored?.status, 'filtered_out');
+  assert.equal(stored?.status, 'triaged');
+  assert.equal(stored?.fit, 'brutal');
 });
 
 test('filterJob: 2× Müll → "uncertain" statt Absturz', async (t) => {

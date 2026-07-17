@@ -71,7 +71,7 @@ type FilterMode = 'llm' | 'regex';
  * ------------------------------------------------------------------ */
 
 const FIT: Record<Fit, { label: string; color: string }> = {
-  match: { label: 'Match', color: '#35D0A5' },
+  matched: { label: 'Match', color: '#35D0A5' },
   offstack: { label: 'Offstack', color: '#E8B04B' },
   brutal: { label: 'Brutal', color: '#5F6875' },
 };
@@ -552,6 +552,25 @@ export default function JobbotUI() {
     }
   }
 
+  // generateAnschreiben() (lib/anschreiben.ts) generiert nur für status "triaged" mit
+  // fit !== "brutal" — ein bereits generierter Job (status "generated" o.ä.) muss also
+  // erst dorthin zurück, bevor der Lauf ihn wieder aufgreift.
+  async function regenerate(job: JobWithBrief) {
+    if (job.fit == null || job.fit === 'brutal') {
+      say('Neu generieren nicht möglich — kein Filter-Urteil bekannt');
+      return;
+    }
+    const status: Job['status'] = 'triaged';
+    const res = await fetch(`/api/jobs/${job.id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) { say('Zurücksetzen fehlgeschlagen'); return; }
+    patch(job.id, { status });
+    runAnschreibenNow([job.id]);
+  }
+
   useEffect(() => {
     if (view !== 'attachment') return;
     fetch('/api/attachment')
@@ -1001,7 +1020,7 @@ export default function JobbotUI() {
             />
           </div>
           <div className="chips" role="group" aria-label="Nach Fit filtern">
-            {(['alle', 'match', 'offstack', 'brutal', 'unbewertet'] as const).map(k => (
+            {(['alle', 'matched', 'offstack', 'brutal', 'unbewertet'] as const).map(k => (
               <button key={k} className={'chip' + (fit === k ? ' chip--on' : '')} onClick={() => setFit(k)}>
                 {k !== 'alle' && <span className="chip__dot" style={{ background: k === 'unbewertet' ? 'var(--line)' : FIT[k].color }} />}
                 {k === 'alle' ? 'Alle' : k === 'unbewertet' ? 'Unbewertet' : FIT[k].label}
@@ -1226,7 +1245,11 @@ export default function JobbotUI() {
                 </button>
               )}
               {shown.status !== 'gesendet' && (
-                <button className="btn btn--ghost" onClick={() => say('Generierung angestoßen')}>
+                <button
+                  className="btn btn--ghost"
+                  disabled={anschreibenStarting || anschreibenStatus?.status === 'running'}
+                  onClick={() => regenerate(shown)}
+                >
                   <RotateCw /> Neu generieren
                 </button>
               )}
