@@ -10,14 +10,14 @@ import type { Job } from '../scrapers/interface.ts';
 const execFileAsync = promisify(execFile);
 
 // Fairer Vergleich: dieselben 3 fixen Jobs durch alle Modelle, direkt gegen Ollama
-// (kein Storage-Zugriff, damit Jobs nicht durch Status-Wechsel aus sicher/ wandern).
+// (kein Storage-Zugriff, damit Jobs nicht durch fit-Wechsel aus matched/ wandern).
 // Nach jedem Modell explizit `ollama stop`, damit sich zwei große Modelle nie
 // den RAM teilen (sonst Kernel-OOM-Kill beim Laden des nächsten Modells).
 const MODELS = ['qwen3.5:9b', 'gemma3:12b', 'mistral-small3.2:latest'];
 const JOBS: Record<string, string> = {
-  clean: 'data/jobs/sicher/junior-softwareentwickler-java-w-m-d_kern-engineering-careers_2026-06-25_1f8fd77c.json',
-  offstack: 'data/jobs/unsicher/software-engineer-c_teamviewer_2026-06-17_8eb9f22d.json',
-  brutal: 'data/jobs/sicher/sachbearbeiter-in-webentwicklung-und-it_land-oberoesterreich_2026-06-30_806fb930.json',
+  clean: 'data/jobs/matched/junior-softwareentwickler-java-w-m-d_kern-engineering-careers_2026-06-25_1f8fd77c.json',
+  offstack: 'data/jobs/offstack/software-engineer-c_teamviewer_2026-06-17_8eb9f22d.json',
+  brutal: 'data/jobs/matched/sachbearbeiter-in-webentwicklung-und-it_land-oberoesterreich_2026-06-30_806fb930.json',
 };
 const RETRIES = 3;
 const TEST_DIR = join(config.anschreibenDir, 'test', 'fair_compare');

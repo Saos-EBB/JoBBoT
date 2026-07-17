@@ -9,8 +9,8 @@ import { config } from '../config.ts';
 const profile = loadProfile();
 const storage = createStorage();
 
-// --data=save    -> nur data/jobs/sicher/   (fit "matched")
-// --data=unsave  -> nur data/jobs/unsicher/ (fit "offstack")
+// --data=save    -> nur data/jobs/matched/  (fit "matched")
+// --data=unsave  -> nur data/jobs/offstack/ (fit "offstack")
 // ohne --data    -> beide, wie bisher
 const dataArg = process.argv.find(a => a.startsWith('--data='));
 const dataFilter = dataArg?.slice('--data='.length);
