@@ -1,5 +1,6 @@
 import { createServer } from 'node:http';
 import { readFile, writeFile, mkdir, stat, unlink } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { createStorage } from '../storage/index.ts';
 import { config } from '../config.ts';
@@ -7,6 +8,11 @@ import { jobBasename } from '../lib/slugify.ts';
 import { loadProfile } from '../lib/profile.ts';
 import { composeEmail, createDraft, sendMail, logMailAction, type ComposedEmail } from '../mail/gmail.ts';
 import { ATTACHMENT_PATH, ATTACHMENT_FILENAME } from '../lib/attachment.ts';
+import { loadSources } from '../lib/sources.ts';
+import { loadSettings, type FilterMode } from '../lib/settings.ts';
+import { buildScrapeSetup } from '../lib/scrape-setup.ts';
+import { runScrape } from '../lib/scrape-runner.ts';
+import { filterJob } from '../lib/filter.ts';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 
 const PORT = Number(process.env.UI_PORT ?? 3000);
@@ -15,6 +21,27 @@ const storage = createStorage();
 const profile = loadProfile();
 
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+
+// ---------- Scrape/Filter run state (in-memory, Prozesslebensdauer) ----------
+// Kein Persistieren auf Disk: Einzelnutzer-Lokaltool, ein Server-Neustart mitten
+// im Lauf verliert den Fortschritt (akzeptiert) — der Client erkennt das daran,
+// dass der Status auf 'idle' statt 'done'/'error' zurückfällt (siehe Client-Poll).
+interface ScrapeRunState {
+  status: 'idle' | 'running' | 'done' | 'error';
+  runId: string | null;
+  sources: Record<string, { current: number; total: number }>;
+  result?: { newTotal: number; skipTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; error?: string }[] };
+  error?: string;
+}
+interface FilterRunState {
+  status: 'idle' | 'running' | 'done' | 'error';
+  runId: string | null;
+  current?: { i: number; total: number; title: string };
+  result?: { sicher: number; unsicher: number; raus: number };
+  error?: string;
+}
+let scrapeRun: ScrapeRunState = { status: 'idle', runId: null, sources: {} };
+let filterRun: FilterRunState = { status: 'idle', runId: null };
 
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -188,6 +215,126 @@ const server = createServer(async (req, res) => {
   if (req.method === 'DELETE' && url.pathname === '/api/attachment') {
     await unlink(ATTACHMENT_PATH).catch(() => {});
     res.writeHead(204).end();
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/scrape/sources') {
+    const sources = loadSources();
+    const names = Object.entries(sources).filter(([, c]) => c.enabled).map(([name]) => name);
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(names));
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/settings') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ filterMode: loadSettings().filterMode }));
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/scrape/status') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(scrapeRun));
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/filter/status') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(filterRun));
+    return;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/scrape') {
+    // Lock synchron VOR dem ersten await setzen (der Body-Read ist async) — sonst
+    // könnten zwei fast gleichzeitige POSTs beide noch den alten Status sehen und
+    // beide einen Lauf starten (TOCTOU). Antwort geht sofort raus; der Rest läuft
+    // im Hintergrund weiter (Fire-and-Poll, siehe /api/scrape/status).
+    if (scrapeRun.status === 'running') {
+      res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ started: false, reason: 'already-running' }));
+      return;
+    }
+    const runId = randomUUID();
+    scrapeRun = { status: 'running', runId, sources: {} };
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ started: true, runId }));
+
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    let requested: string[] = [];
+    try {
+      requested = (JSON.parse(body) as { sources?: string[] }).sources ?? [];
+    } catch {
+      // leer bleiben — behandelt wie "keine Quelle ausgewählt"
+    }
+
+    const sourcesCfg = loadSources();
+    const enabled = new Set(Object.entries(sourcesCfg).filter(([, c]) => c.enabled).map(([name]) => name));
+    const names = requested.filter(name => enabled.has(name));
+
+    if (names.length === 0) {
+      scrapeRun = { status: 'done', runId, sources: {}, result: { newTotal: 0, skipTotal: 0, perSource: [] } };
+      return;
+    }
+
+    const { registry, keep } = buildScrapeSetup();
+    try {
+      const outcomes = await runScrape({
+        names,
+        registry,
+        queriesFor: name => sourcesCfg[name].queries,
+        keep,
+        storage,
+        onProgress: (name, current, total) => {
+          scrapeRun.sources[name] = { current, total };
+        },
+      });
+      let newTotal = 0, skipTotal = 0;
+      const perSource = outcomes.map(o => {
+        if (o.ok) { newTotal += o.newCount; skipTotal += o.skipCount; }
+        return { name: o.name, ok: o.ok, newCount: o.newCount, skipCount: o.skipCount, error: o.ok ? undefined : String(o.error) };
+      });
+      scrapeRun = { status: 'done', runId, sources: scrapeRun.sources, result: { newTotal, skipTotal, perSource } };
+    } catch (err) {
+      scrapeRun = { status: 'error', runId, sources: scrapeRun.sources, error: err instanceof Error ? err.message : String(err) };
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/filter') {
+    if (filterRun.status === 'running') {
+      res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ started: false, reason: 'already-running' }));
+      return;
+    }
+    const runId = randomUUID();
+    filterRun = { status: 'running', runId };
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ started: true, runId }));
+
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    let mode: FilterMode | undefined;
+    try {
+      mode = (JSON.parse(body) as { mode?: FilterMode }).mode;
+    } catch {
+      // undefined -> filterJob fällt auf config/settings.json zurück
+    }
+
+    try {
+      const jobs = await storage.list({ status: 'new' });
+      let sicher = 0, unsicher = 0, raus = 0;
+      for (let i = 0; i < jobs.length; i++) {
+        filterRun.current = { i, total: jobs.length, title: jobs[i].title };
+        const d = await filterJob(jobs[i], storage, undefined, mode);
+        if (d.status === 'matched') sicher++;
+        else if (d.status === 'uncertain') unsicher++;
+        else raus++;
+      }
+      filterRun = { status: 'done', runId, result: { sicher, unsicher, raus } };
+    } catch (err) {
+      filterRun = { status: 'error', runId, error: err instanceof Error ? err.message : String(err) };
+    }
     return;
   }
 

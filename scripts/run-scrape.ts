@@ -1,22 +1,10 @@
-import { karriereAtAdapter } from '../scrapers/karriere-at.ts';
-import { devJobsAtAdapter } from '../scrapers/devjobs-at.ts';
-import { linkedinAdapter } from '../scrapers/linkedin.ts';
-import { amsAdapter } from '../scrapers/ams.ts';
-import { jobsAtAdapter } from '../scrapers/jobs-at.ts';
 import { createStorage } from '../storage/index.ts';
 import { loadSources } from '../lib/sources.ts';
-import { loadLocationConfig, isInRange } from '../lib/location.ts';
 import { createAggregateProgress } from '../lib/progress.ts';
 import { runScrape } from '../lib/scrape-runner.ts';
-import type { ScraperAdapter, ScrapedJob } from '../scrapers/interface.ts';
+import { buildScrapeSetup } from '../lib/scrape-setup.ts';
 
-const registry: Record<string, ScraperAdapter> = {
-  'karriere.at': karriereAtAdapter,
-  'devjobs.at': devJobsAtAdapter,
-  'linkedin': linkedinAdapter,
-  'ams': amsAdapter,
-  'jobs.at': jobsAtAdapter,
-};
+const { registry, keep } = buildScrapeSetup();
 
 const sourceArg = process.argv.find(a => a.startsWith('--source='))?.split('=')[1];
 const ALIASES: Record<string, string> = { karriere: 'karriere.at', devjobs: 'devjobs.at', linkedin: 'linkedin', ams: 'ams', jobs: 'jobs.at' };
@@ -34,8 +22,6 @@ if (sourceArg) {
 }
 
 const sources = loadSources();
-const locCfg = loadLocationConfig();
-const keep = (job: ScrapedJob) => isInRange(job.location ?? '', locCfg);
 const storage = createStorage();
 
 const activeNames = selectedKeys.filter(name => {
