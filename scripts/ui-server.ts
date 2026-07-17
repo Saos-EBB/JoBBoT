@@ -13,6 +13,7 @@ import { loadSettings, type FilterMode } from '../lib/settings.ts';
 import { buildScrapeSetup } from '../lib/scrape-setup.ts';
 import { runScrape } from '../lib/scrape-runner.ts';
 import { filterJob } from '../lib/filter.ts';
+import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 
 const PORT = Number(process.env.UI_PORT ?? 3000);
@@ -40,8 +41,16 @@ interface FilterRunState {
   result?: { sicher: number; unsicher: number; raus: number };
   error?: string;
 }
+interface AnschreibenRunState {
+  status: 'idle' | 'running' | 'done' | 'error';
+  runId: string | null;
+  current?: { i: number; total: number; title: string };
+  result?: { generated: number; skipped: number; emailsFound: number };
+  error?: string;
+}
 let scrapeRun: ScrapeRunState = { status: 'idle', runId: null, sources: {} };
 let filterRun: FilterRunState = { status: 'idle', runId: null };
+let anschreibenRun: AnschreibenRunState = { status: 'idle', runId: null };
 
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -244,6 +253,12 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === 'GET' && url.pathname === '/api/anschreiben/status') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(anschreibenRun));
+    return;
+  }
+
   if (req.method === 'POST' && url.pathname === '/api/scrape') {
     // Lock synchron VOR dem ersten await setzen (der Body-Read ist async) — sonst
     // könnten zwei fast gleichzeitige POSTs beide noch den alten Status sehen und
@@ -334,6 +349,58 @@ const server = createServer(async (req, res) => {
       filterRun = { status: 'done', runId, result: { sicher, unsicher, raus } };
     } catch (err) {
       filterRun = { status: 'error', runId, error: err instanceof Error ? err.message : String(err) };
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/anschreiben') {
+    if (anschreibenRun.status === 'running') {
+      res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ started: false, reason: 'already-running' }));
+      return;
+    }
+    const runId = randomUUID();
+    anschreibenRun = { status: 'running', runId };
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ started: true, runId }));
+
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    let jobIds: string[] = [];
+    try {
+      jobIds = (JSON.parse(body) as { jobIds?: string[] }).jobIds ?? [];
+    } catch {
+      // leer bleiben — behandelt wie "keine Auswahl"
+    }
+
+    try {
+      // Nur matched/uncertain sind gültig (generateAnschreiben() prüft das selbst
+      // nochmal) — hier vorab gefiltert, damit "skipped" korrekt zählt, statt
+      // still Lücken aus fehlenden/ungeeigneten IDs zu übernehmen.
+      const fetched = await Promise.all(jobIds.map(id => storage.get(id)));
+      const jobs = fetched.filter((j): j is Job => j !== null && (j.status === 'matched' || j.status === 'uncertain'));
+      const preSkipped = jobIds.length - jobs.length;
+
+      if (jobs.length === 0) {
+        anschreibenRun = { status: 'done', runId, result: { generated: 0, skipped: preSkipped, emailsFound: 0 } };
+        return;
+      }
+
+      const { generated, skipped, emailsFound } = await runAnschreiben({
+        jobs,
+        storage,
+        profile,
+        onProgress: (i, total, title) => {
+          anschreibenRun.current = { i, total, title };
+        },
+      });
+      anschreibenRun = {
+        status: 'done',
+        runId,
+        result: { generated, skipped: skipped + preSkipped, emailsFound },
+      };
+    } catch (err) {
+      anschreibenRun = { status: 'error', runId, error: err instanceof Error ? err.message : String(err) };
     }
     return;
   }

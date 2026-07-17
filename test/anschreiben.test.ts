@@ -164,7 +164,6 @@ test('generateAnschreiben: gültiger Response → status "generated", .md geschr
   t.after(close);
 
   const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir, undefined, `${logDir}/log.md`);
-  assert.strictEqual(job.status, 'generated');
   assert.ok(path !== null, 'expected path to be returned');
   assert.strictEqual((await storage.get(job.id))?.status, 'generated');
   const content = await readFile(path!, 'utf8');
@@ -199,7 +198,7 @@ test('generateAnschreiben: status "uncertain" → wird auch verarbeitet (nicht n
   t.after(close);
 
   const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir, undefined, `${logDir}/log.md`);
-  assert.strictEqual(job.status, 'generated');
+  assert.strictEqual((await storage.get(job.id))?.status, 'generated');
   assert.ok(path !== null, 'expected path to be returned');
 });
 
@@ -235,7 +234,7 @@ test('generateAnschreiben: 1. Versuch ungültig (1 Absatz), 2. Versuch gültig �
   t.after(close);
 
   const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir, undefined, `${logDir}/log.md`);
-  assert.strictEqual(job.status, 'generated');
+  assert.strictEqual((await storage.get(job.id))?.status, 'generated');
   assert.ok(path !== null, 'expected path to be returned');
   assert.strictEqual(calls(), 2);
 });

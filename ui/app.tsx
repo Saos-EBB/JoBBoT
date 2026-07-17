@@ -47,6 +47,13 @@ type FilterRunStatus = {
   result?: { sicher: number; unsicher: number; raus: number };
   error?: string;
 };
+type AnschreibenRunStatus = {
+  status: 'idle' | 'running' | 'done' | 'error';
+  runId: string | null;
+  current?: { i: number; total: number; title: string };
+  result?: { generated: number; skipped: number; emailsFound: number };
+  error?: string;
+};
 type FilterMode = 'llm' | 'regex';
 
 /* ------------------------------------------------------------------ *
@@ -69,10 +76,12 @@ const FIT: Record<Fit, { label: string; color: string }> = {
   brutal: { label: 'Brutal', color: '#5F6875' },
 };
 
-// fit ist nullable (scrapers/interface.ts) und bekommt bewusst KEINEN Default — ein
-// grob geratener Fit sieht identisch aus wie ein echtes Urteil und ist damit
-// schlimmer als gar keiner (71 Jobs wurden absichtlich nicht auf "match" geraten).
-// null bekommt eine neutrale Haarlinie statt einer der drei Urteilsfarben.
+// fit ist nullable (scrapers/interface.ts) und bekommt bewusst KEINEN Default hier im
+// UI — lib/filter.ts setzt fit inzwischen zwar automatisch (1:1 an status gekoppelt,
+// siehe STATUS_FIT), aber manuell gesetzte/zurückgesetzte Jobs können weiterhin null
+// sein. Ein grob geratener Fit sähe identisch aus wie ein echtes Urteil und wäre damit
+// schlimmer als gar keiner — null bekommt eine neutrale Haarlinie statt einer der drei
+// Urteilsfarben.
 function fitColor(fit: Fit | null): string {
   return fit ? FIT[fit].color : 'var(--line)';
 }
@@ -175,9 +184,12 @@ const CSS = `
 
 .ls__scroll { flex:1; min-height:0; overflow-y:auto; }
 
+.row-wrap { display:flex; align-items:stretch; border-bottom:1px solid var(--line-soft); }
+.row__check { flex:none; align-self:center; margin-left:14px; accent-color:var(--text); cursor:pointer; }
+
 .row {
   position:relative; width:100%; display:block; text-align:left;
-  padding:11px 12px 11px 18px; border-bottom:1px solid var(--line-soft);
+  padding:11px 12px 11px 18px;
 }
 .row:hover { background:var(--raised); }
 .row--on { background:var(--raised); }
@@ -185,6 +197,14 @@ const CSS = `
 .row--dim { opacity:.58; }
 .row--dim:hover, .row--dim.row--on { opacity:1; }
 .rail { position:absolute; left:0; top:0; bottom:0; width:3px; }
+
+.selbar {
+  display:flex; align-items:center; gap:10px; padding:8px 12px;
+  border-bottom:1px solid var(--line-soft); background:var(--raised);
+  font-size:12px; color:var(--muted);
+}
+.selbar__n { font-weight:500; color:var(--text); }
+.selbar__spacer { flex:1; }
 
 .row__l1 { display:flex; align-items:baseline; gap:8px; margin-bottom:2px; }
 .row__firma { font-weight:600; font-size:13px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -408,13 +428,20 @@ export default function JobbotUI() {
   const [filterMode, setFilterMode] = useState<FilterMode>('regex');
   const [scrapeStatus, setScrapeStatus] = useState<ScrapeStatus | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterRunStatus | null>(null);
+  const [anschreibenStatus, setAnschreibenStatus] = useState<AnschreibenRunStatus | null>(null);
   const [scrapeStarting, setScrapeStarting] = useState(false);
   const [filterStarting, setFilterStarting] = useState(false);
+  const [anschreibenStarting, setAnschreibenStarting] = useState(false);
+  // Auswahl für die "Anschreiben erstellen"-Aktion — nur im "jobs"-Ordner relevant
+  // (matched/uncertain landen laut STATUS_MAP nirgendwo sonst), deshalb bei
+  // Ordnerwechsel zurückgesetzt statt über Ordner hinweg mitzuschleppen.
+  const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
   // Verhindert Toast/Refetch-Spam: der Server hält 'done' so lange, bis der
   // nächste Lauf startet — ohne diesen Merker würde jeder Poll-Tick (alle 1.5s)
   // erneut feiern, solange niemand einen neuen Lauf anstößt.
   const lastSeenScrapeRunId = useRef<string | null>(null);
   const lastSeenFilterRunId = useRef<string | null>(null);
+  const lastSeenAnschreibenRunId = useRef<string | null>(null);
   const ta = useRef<HTMLTextAreaElement>(null);
 
   const say = useCallback((m: string) => {
@@ -444,12 +471,14 @@ export default function JobbotUI() {
   useEffect(() => {
     const tick = async () => {
       try {
-        const [s, f] = await Promise.all([
+        const [s, f, a] = await Promise.all([
           fetch('/api/scrape/status').then(r => r.json()) as Promise<ScrapeStatus>,
           fetch('/api/filter/status').then(r => r.json()) as Promise<FilterRunStatus>,
+          fetch('/api/anschreiben/status').then(r => r.json()) as Promise<AnschreibenRunStatus>,
         ]);
         setScrapeStatus(s);
         setFilterStatus(f);
+        setAnschreibenStatus(a);
 
         if ((s.status === 'done' || s.status === 'error') && s.runId && s.runId !== lastSeenScrapeRunId.current) {
           lastSeenScrapeRunId.current = s.runId;
@@ -460,6 +489,11 @@ export default function JobbotUI() {
           lastSeenFilterRunId.current = f.runId;
           refetchJobs();
           say(f.status === 'error' ? `Filter fehlgeschlagen: ${f.error}` : `Filter: ${f.result?.sicher ?? 0} sicher, ${f.result?.unsicher ?? 0} unsicher, ${f.result?.raus ?? 0} raus`);
+        }
+        if ((a.status === 'done' || a.status === 'error') && a.runId && a.runId !== lastSeenAnschreibenRunId.current) {
+          lastSeenAnschreibenRunId.current = a.runId;
+          refetchJobs();
+          say(a.status === 'error' ? `Anschreiben fehlgeschlagen: ${a.error}` : `Anschreiben: ${a.result?.generated ?? 0} generiert, ${a.result?.skipped ?? 0} übersprungen, ${a.result?.emailsFound ?? 0} E-Mails gefunden`);
         }
       } catch {
         // Server kurz nicht erreichbar — nächster Tick versucht's wieder
@@ -495,6 +529,26 @@ export default function JobbotUI() {
       if (res.status === 409) say('Filter läuft bereits');
     } finally {
       setFilterStarting(false);
+    }
+  }
+
+  // Ein Aufruf für beides: die Mehrfachauswahl in der Liste UND den einzelnen
+  // "Neu generieren"-Button im Detail (der bisher ein reiner Toast-Stub war,
+  // ohne irgendetwas anzustoßen) — beide wollen dieselbe Aktion für eine Menge
+  // von Job-IDs, nur unterschiedlich groß.
+  async function runAnschreibenNow(jobIds: string[]) {
+    if (jobIds.length === 0) return;
+    setAnschreibenStarting(true);
+    try {
+      const res = await fetch('/api/anschreiben', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobIds }),
+      });
+      if (res.status === 409) say('Anschreiben-Lauf läuft bereits');
+      else setSelectedJobIds(new Set());
+    } finally {
+      setAnschreibenStarting(false);
     }
   }
 
@@ -547,6 +601,18 @@ export default function JobbotUI() {
   useEffect(() => {
     if (!list.some(j => j.id === sel)) setSel(list[0]?.id ?? null);
   }, [list, sel]);
+
+  // Auswahl nur im "jobs"-Ordner sinnvoll (siehe selectedJobIds oben) — beim
+  // Verlassen zurücksetzen, sonst überlebt eine Auswahl unsichtbar den Wechsel.
+  useEffect(() => { setSelectedJobIds(new Set()); }, [folder]);
+
+  function toggleSelect(id: string) {
+    setSelectedJobIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
 
   useEffect(() => setTab(shown?.status === 'fehler' ? 'inserat' : 'brief'), [sel, shown?.status]);
 
@@ -667,6 +733,9 @@ export default function JobbotUI() {
   const filterPct = filterStatus?.current && filterStatus.current.total > 0
     ? Math.round((filterStatus.current.i / filterStatus.current.total) * 100)
     : 0;
+  const anschreibenPct = anschreibenStatus?.current && anschreibenStatus.current.total > 0
+    ? Math.round((anschreibenStatus.current.i / anschreibenStatus.current.total) * 100)
+    : 0;
 
   return (
     <div className={'jb' + (detailOpen ? ' jb--detail' : '')}>
@@ -743,6 +812,18 @@ export default function JobbotUI() {
           {filterStatus?.status === 'running' && (
             <div className="fld__bar">
               <span style={{ width: `${filterPct}%` }} />
+            </div>
+          )}
+          {/* Kein eigener View/Klick: der Auslöser sitzt in der Jobs-Liste
+              (Mehrfachauswahl) bzw. im Detail ("Neu generieren") — diese Zeile
+              zeigt nur den Fortschritt des zuletzt gestarteten Laufs. */}
+          <div className="fld">
+            <FileText />
+            <span className="fld__label">Anschreiben</span>
+          </div>
+          {anschreibenStatus?.status === 'running' && (
+            <div className="fld__bar">
+              <span style={{ width: `${anschreibenPct}%` }} />
             </div>
           )}
         </div>
@@ -928,7 +1009,38 @@ export default function JobbotUI() {
               </button>
             ))}
           </div>
+          {folder === 'jobs' && list.length > 0 && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 0 4px', fontSize: 12, color: 'var(--muted)' }}>
+              <input
+                type="checkbox"
+                className="row__check"
+                style={{ marginLeft: 0 }}
+                checked={list.every(j => selectedJobIds.has(j.id))}
+                onChange={e => setSelectedJobIds(e.target.checked ? new Set(list.map(j => j.id)) : new Set())}
+              />
+              Alle sichtbaren auswählen ({list.length})
+            </label>
+          )}
         </div>
+
+        {/* Auswahl nur im "jobs"-Ordner: matched/uncertain (die einzigen für
+            Anschreiben geeigneten Status) landen laut STATUS_MAP nirgendwo sonst. */}
+        {folder === 'jobs' && selectedJobIds.size > 0 && (
+          <div className="selbar">
+            <span className="selbar__n">{selectedJobIds.size} ausgewählt</span>
+            <span className="selbar__spacer" />
+            <button className="btn btn--ghost" onClick={() => setSelectedJobIds(new Set())}>
+              Auswahl aufheben
+            </button>
+            <button
+              className="btn btn--primary"
+              disabled={anschreibenStarting || anschreibenStatus?.status === 'running'}
+              onClick={() => runAnschreibenNow([...selectedJobIds])}
+            >
+              <FileText /> Anschreiben erstellen
+            </button>
+          </div>
+        )}
 
         <div className="ls__scroll">
           {list.length === 0 ? (
@@ -938,24 +1050,35 @@ export default function JobbotUI() {
             </div>
           ) : (
             list.map(j => (
-              <button
-                key={j.id}
-                className={'row' + (sel === j.id ? ' row--on' : '') + (j.fit === 'brutal' ? ' row--dim' : '')}
-                onClick={() => open(j.id)}
-              >
-                <span className="rail" style={{ background: fitColor(j.fit) }} />
-                <span className="row__l1">
-                  <span className="row__firma">{j.company}</span>
-                  <span className="row__age">{daysAgo(j.scrapedAt)}d</span>
-                </span>
-                <span className="row__titel">{j.title}</span>
-                <span className="row__snip">{j.status === 'fehler' ? (j.error ?? '').split('\n')[0] : firstLine(j.brief)}</span>
-                <span className="row__meta">
-                  <span className={'tag' + (j.email ? '' : ' tag--nomail')}>{j.email ? 'MAIL' : 'PORTAL'}</span>
-                  <span className="tag">{j.source}</span>
-                  {j.status === 'fehler' && <span className="tag tag--err">FEHLER</span>}
-                </span>
-              </button>
+              <div key={j.id} className="row-wrap">
+                {folder === 'jobs' && (
+                  <input
+                    type="checkbox"
+                    className="row__check"
+                    checked={selectedJobIds.has(j.id)}
+                    onChange={() => toggleSelect(j.id)}
+                    onClick={e => e.stopPropagation()}
+                    aria-label={`${j.title} auswählen`}
+                  />
+                )}
+                <button
+                  className={'row' + (sel === j.id ? ' row--on' : '') + (j.fit === 'brutal' ? ' row--dim' : '')}
+                  onClick={() => open(j.id)}
+                >
+                  <span className="rail" style={{ background: fitColor(j.fit) }} />
+                  <span className="row__l1">
+                    <span className="row__firma">{j.company}</span>
+                    <span className="row__age">{daysAgo(j.scrapedAt)}d</span>
+                  </span>
+                  <span className="row__titel">{j.title}</span>
+                  <span className="row__snip">{j.status === 'fehler' ? (j.error ?? '').split('\n')[0] : firstLine(j.brief)}</span>
+                  <span className="row__meta">
+                    <span className={'tag' + (j.email ? '' : ' tag--nomail')}>{j.email ? 'MAIL' : 'PORTAL'}</span>
+                    <span className="tag">{j.source}</span>
+                    {j.status === 'fehler' && <span className="tag tag--err">FEHLER</span>}
+                  </span>
+                </button>
+              </div>
             ))
           )}
         </div>

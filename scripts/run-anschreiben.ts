@@ -1,12 +1,10 @@
 import { appendFile } from 'node:fs/promises';
-import { chromium } from 'playwright';
 import { createStorage } from '../storage/index.ts';
-import { generateAnschreiben, ANSCHREIBEN_LOG_PATH } from '../lib/anschreiben.ts';
+import { ANSCHREIBEN_LOG_PATH } from '../lib/anschreiben.ts';
+import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import { loadProfile } from '../lib/profile.ts';
-import { sleep } from '../lib/fetch-page.ts';
 import { createProgress } from '../lib/progress.ts';
 import { config } from '../config.ts';
-import { findEmail, FIRMENABC_USER_AGENT } from '../lib/find-email.ts';
 
 const profile = loadProfile();
 const storage = createStorage();
@@ -43,36 +41,16 @@ if (jobs.length === 0) {
 
 console.log(`Modell: ${model}`);
 const prog = createProgress(`Anschreiben — 0/${jobs.length}...`);
-let generated = 0;
-let emailsFound = 0;
 
-// Ein Browser für den ganzen Lauf statt pro Job — Chromium-Start ist der teure Teil,
-// eine neue Seite pro Suche ist billig.
-const browser = await chromium.launch({ headless: true });
-const emailPage = await browser.newPage({ userAgent: FIRMENABC_USER_AGENT });
+const { generated, skipped, emailsFound } = await runAnschreiben({
+  jobs,
+  storage,
+  profile,
+  model,
+  onProgress: (i, total, title) => prog.update(`Anschreiben — ${i + 1}/${total}: ${title.slice(0, 40)}`),
+});
 
-try {
-  for (let i = 0; i < jobs.length; i++) {
-    const job = jobs[i];
-    prog.update(`Anschreiben — ${i + 1}/${jobs.length}: ${job.title.slice(0, 40)}`);
-    const path = await generateAnschreiben(job, storage, profile, undefined, undefined, model);
-    if (path) generated++;
-
-    if (path && !job.email) {
-      const email = await findEmail(job, emailPage).catch(() => null);
-      if (email) {
-        await storage.update(job.id, { email });
-        emailsFound++;
-      }
-    }
-
-    if (i < jobs.length - 1) await sleep(1000);
-  }
-} finally {
-  await browser.close();
-}
-
-prog.succeed(`${generated} Anschreiben generiert, ${jobs.length - generated} übersprungen, ${emailsFound} E-Mail-Adressen gefunden`);
+prog.succeed(`${generated} Anschreiben generiert, ${skipped} übersprungen, ${emailsFound} E-Mail-Adressen gefunden`);
 
 const ts = new Date().toISOString().slice(0, 16).replace('T', ' ');
-await appendFile(ANSCHREIBEN_LOG_PATH, `\n## Anschreiben-Lauf ${ts} — Modell: ${model}${dataFilter ? `, --data=${dataFilter}` : ''}\n${generated} generiert, ${jobs.length - generated} übersprungen, ${emailsFound} E-Mail-Adressen gefunden (${jobs.length} gesamt)\n`);
+await appendFile(ANSCHREIBEN_LOG_PATH, `\n## Anschreiben-Lauf ${ts} — Modell: ${model}${dataFilter ? `, --data=${dataFilter}` : ''}\n${generated} generiert, ${skipped} übersprungen, ${emailsFound} E-Mail-Adressen gefunden (${jobs.length} gesamt)\n`);
