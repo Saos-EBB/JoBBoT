@@ -503,7 +503,6 @@ const server = createServer(async (req, res) => {
         <select name="status">${options}</select>
         <button type="submit">Status ändern</button>
       </form>
-      ${job.match ? `<h3>Match</h3><pre>${esc(JSON.stringify(job.match, null, 2))}</pre>` : ''}
       ${cover ? `<h3>Anschreiben</h3><pre>${esc(cover)}</pre>` : ''}
       ${await renderMailSection(job, error)}
       <h3>Beschreibung</h3>
