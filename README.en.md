@@ -95,9 +95,9 @@ npm run filter                    # filter all 'new' jobs (mode from settings.js
 npm run filter:regex              # force the regex strategy (offline, no Ollama needed)
 npm run filter -- --source=llm    # force the mode directly via flag (llm | regex)
 
-npm run anschreiben                       # generate cover letters for all matched/uncertain jobs
-npm run anschreiben -- --data=save        # only data/jobs/sicher/   (status "matched")
-npm run anschreiben -- --data=unsave      # only data/jobs/unsicher/ (status "uncertain")
+npm run anschreiben                       # generate cover letters for all triaged jobs (fit != brutal)
+npm run anschreiben -- --data=save        # only data/jobs/matched/  (fit "matched")
+npm run anschreiben -- --data=unsave      # only data/jobs/offstack/ (fit "offstack")
 npm run anschreiben -- --limit=5          # only the first N jobs of the selection
 npm run anschreiben -- --source=<model>   # override the Ollama model for this run
 
@@ -187,8 +187,8 @@ Ollama, no real `data/jobs/`.
 ## Storage
 
 One JSON file per job under `data/jobs/title_company_date_id8.json`
-(matched/uncertain additionally land in `data/jobs/sicher/` and
-`data/jobs/unsicher/` respectively). No global collection JSON, dedup via
+(triaged jobs additionally land in `data/jobs/matched/` or
+`data/jobs/offstack/`, depending on fit). No global collection JSON, dedup via
 file existence. The job `id` is a deterministic 16-character SHA-256 hash
 of title + company (the first 8 characters end up in the filename) — the
 same job is never added twice on a re-scrape.

@@ -252,9 +252,9 @@ test('delete(nichtExistente id) → kein throw', async (t) => {
   await assert.doesNotReject(() => store.delete('000000000000dead'));
 });
 
-// ── Sortierte Unterordner sicher/unsicher ──────────────────────────────────
+// ── Sortierte Unterordner matched/offstack ──────────────────────────────────
 
-test('save(fit=matched) → Datei landet in <dir>/sicher/', async (t) => {
+test('save(fit=matched) → Datei landet in <dir>/matched/', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const store = createStorage(dir);
@@ -264,12 +264,12 @@ test('save(fit=matched) → Datei landet in <dir>/sicher/', async (t) => {
   await store.save(job);
 
   const rootFiles = jobFiles(await readdir(dir));
-  const sicherFiles = jobFiles(await readdir(join(dir, 'sicher')));
+  const matchedFiles = jobFiles(await readdir(join(dir, 'matched')));
   assert.equal(rootFiles.length, 0);
-  assert.equal(sicherFiles.length, 1);
+  assert.equal(matchedFiles.length, 1);
 });
 
-test('save(fit=offstack) → Datei landet in <dir>/unsicher/', async (t) => {
+test('save(fit=offstack) → Datei landet in <dir>/offstack/', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const store = createStorage(dir);
@@ -278,8 +278,8 @@ test('save(fit=offstack) → Datei landet in <dir>/unsicher/', async (t) => {
   job.fit = 'offstack';
   await store.save(job);
 
-  const unsicherFiles = jobFiles(await readdir(join(dir, 'unsicher')));
-  assert.equal(unsicherFiles.length, 1);
+  const offstackFiles = jobFiles(await readdir(join(dir, 'offstack')));
+  assert.equal(offstackFiles.length, 1);
 });
 
 test('updateStatus new→triaged(matched)→generated: Datei wandert, kein Duplikat', async (t) => {
@@ -291,10 +291,10 @@ test('updateStatus new→triaged(matched)→generated: Datei wandert, kein Dupli
 
   await store.update(job.id, { status: 'triaged', fit: 'matched' });
   assert.equal(jobFiles(await readdir(dir)).length, 0);
-  assert.equal(jobFiles(await readdir(join(dir, 'sicher'))).length, 1);
+  assert.equal(jobFiles(await readdir(join(dir, 'matched'))).length, 1);
 
   await store.updateStatus(job.id, 'generated');
-  assert.equal(jobFiles(await readdir(join(dir, 'sicher'))).length, 0, 'alte Datei in sicher/ hätte entfernt werden müssen');
+  assert.equal(jobFiles(await readdir(join(dir, 'matched'))).length, 0, 'alte Datei in matched/ hätte entfernt werden müssen');
   assert.equal(jobFiles(await readdir(dir)).length, 1, 'neue Datei sollte zurück im Basisordner liegen');
 });
 
@@ -312,7 +312,7 @@ test('get/exists/delete finden Jobs unabhängig vom Unterordner', async (t) => {
 
   await store.delete(job.id);
   assert.equal(await store.exists(job.id), false);
-  assert.equal(jobFiles(await readdir(join(dir, 'sicher'))).length, 0);
+  assert.equal(jobFiles(await readdir(join(dir, 'matched'))).length, 0);
 });
 
 test('list() findet Jobs aus Basisordner + beiden Unterordnern zusammen', async (t) => {

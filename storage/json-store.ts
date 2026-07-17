@@ -1,20 +1,15 @@
 import { mkdir, readdir, readFile, rename, writeFile, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
-import type { Fit, Job, JobStatus } from '../scrapers/interface.ts';
+import type { Job, JobStatus } from '../scrapers/interface.ts';
 import type { Storage } from './index.ts';
 import { jobBasename } from '../lib/slugify.ts';
 import { config } from '../config.ts';
 
 // Sortierte Unterordner für die beiden Filter-Ergebnisse — nur für getriagte Jobs
-// (status "triaged") relevant, geroutet nach fit statt status: matched→sicher,
-// offstack→unsicher. brutal (abgelehnt) sowie alle anderen Status (new, generated,
-// freigegeben, postausgang, gesendet, geloescht, fehler) bleiben im Basisordner.
-const FIT_DIRS: Partial<Record<Fit, string>> = {
-  matched: 'sicher',
-  offstack: 'unsicher',
-};
-
+// (status "triaged") relevant, Ordnername === fit-Wert (matched/offstack). brutal
+// (abgelehnt) sowie alle anderen Status (new, generated, freigegeben, postausgang,
+// gesendet, geloescht, fehler) bleiben im Basisordner.
 export class JsonStore implements Storage {
   constructor(private dir: string = config.dataDir) {}
 
@@ -23,13 +18,12 @@ export class JsonStore implements Storage {
   }
 
   private dirFor(job: Job): string {
-    if (job.status !== 'triaged' || job.fit == null) return this.dir;
-    const sub = FIT_DIRS[job.fit];
-    return sub ? join(this.dir, sub) : this.dir;
+    if (job.status !== 'triaged' || job.fit == null || job.fit === 'brutal') return this.dir;
+    return join(this.dir, job.fit);
   }
 
   private allDirs(): string[] {
-    return [this.dir, join(this.dir, 'sicher'), join(this.dir, 'unsicher')];
+    return [this.dir, join(this.dir, 'matched'), join(this.dir, 'offstack')];
   }
 
   private async findFile(id: string): Promise<string | null> {
