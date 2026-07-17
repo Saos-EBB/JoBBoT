@@ -28,7 +28,6 @@ export interface Job extends ScrapedJob {
   fit: Fit | null;
   scrapedAt: string;
   updatedAt: string;
-  match?: { ok: boolean; reason: string } | null;
   email?: string | null;
   // Nur der Status "fehler" verweist hierauf. Noch niemand schreibt dieses Feld — der
   // Runner-Umbau in run-anschreiben.ts/den Mail-Handlern ist ein separater Auftrag

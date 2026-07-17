@@ -31,10 +31,6 @@ test('status === "new"', () => {
   assert.equal(toJob(base).status, 'new');
 });
 
-test('match === null', () => {
-  assert.equal(toJob(base).match, null);
-});
-
 test('scrapedAt === updatedAt on creation', () => {
   const job = toJob(base);
   assert.equal(job.scrapedAt, job.updatedAt);
