@@ -12,19 +12,22 @@ export interface FilterDecision {
   judgment?: FilterJudgment;
 }
 
+// status und fit sind jetzt 1:1 gekoppelt (User-Entscheidung, um die zwei parallelen
+// Taxonomien nicht mehr auseinanderlaufen zu lassen): matched=sicher/save→match,
+// uncertain=unsicher/unsave→offstack, filtered_out=aussortiert→brutal. fit bleibt
+// trotzdem ein eigenes, manuell überschreibbares Feld (fitpick in ui/app.tsx) — dieser
+// Filter-Lauf setzt nur den Startwert, spätere manuelle Korrektur bleibt möglich.
+const STATUS_FIT: Record<FilterDecision['status'], Job['fit']> = {
+  matched: 'match',
+  uncertain: 'offstack',
+  filtered_out: 'brutal',
+};
+
 // filtered_out wird NICHT gelöscht (kein storage.delete): verlustfrei und re-runnbar.
 // Ein abgelehnter Job bleibt als Datei erhalten, nur der Status ändert sich.
 export async function filterJob(job: Job, storage: Storage, ollama = config.ollamaHost, mode?: FilterMode): Promise<FilterDecision> {
   const result = await decide(job, { ollama, mode });
-
-  // Nur "matched" bekommt automatisch fit="match" — das ist das einzige Urteil,
-  // das der Filter (regex ODER llm) mit echter Sicherheit trifft. "uncertain"/
-  // "filtered_out" bleiben unangetastet (fit=null): der Filter kann Tech-Stack-
-  // Mismatch (offstack) nicht von großem Mismatch (brutal) unterscheiden — ein
-  // geratener Wert sähe identisch zu einem echten Urteil aus und wäre damit
-  // schlimmer als gar keiner (siehe ui/app.tsx, fitColor()).
-  const patch: Partial<Job> = { status: result.status };
-  if (result.status === 'matched') patch.fit = 'match';
+  const patch: Partial<Job> = { status: result.status, fit: STATUS_FIT[result.status] };
 
   // storage.update() re-reads the CURRENT on-disk job and merges the patch in,
   // instead of saving this whole (possibly stale) `job` object back — narrows
