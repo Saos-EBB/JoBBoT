@@ -6,10 +6,10 @@ import type { Storage } from './index.ts';
 import { jobBasename } from '../lib/slugify.ts';
 import { config } from '../config.ts';
 
-// Sortierte Unterordner für die beiden Filter-Ergebnisse — nur für getriagte Jobs
-// (status "triaged") relevant, Ordnername === fit-Wert (matched/offstack). brutal
-// (abgelehnt) sowie alle anderen Status (new, generated, freigegeben, postausgang,
-// gesendet, geloescht, fehler) bleiben im Basisordner.
+// Sortierte Unterordner für die drei Filter-Ergebnisse — nur für getriagte Jobs
+// (status "triaged") relevant, Ordnername === fit-Wert (matched/offstack/brutal).
+// Alle anderen Status (new, generated, freigegeben, postausgang, gesendet,
+// geloescht, fehler) bleiben im Basisordner.
 export class JsonStore implements Storage {
   constructor(private dir: string = config.dataDir) {}
 
@@ -18,12 +18,12 @@ export class JsonStore implements Storage {
   }
 
   private dirFor(job: Job): string {
-    if (job.status !== 'triaged' || job.fit == null || job.fit === 'brutal') return this.dir;
+    if (job.status !== 'triaged' || job.fit == null) return this.dir;
     return join(this.dir, job.fit);
   }
 
   private allDirs(): string[] {
-    return [this.dir, join(this.dir, 'matched'), join(this.dir, 'offstack')];
+    return [this.dir, join(this.dir, 'matched'), join(this.dir, 'offstack'), join(this.dir, 'brutal')];
   }
 
   private async findFile(id: string): Promise<string | null> {
