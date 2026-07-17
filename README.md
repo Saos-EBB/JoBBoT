@@ -191,7 +191,8 @@ kein echtes Ollama, kein echtes `data/jobs/`.
 ## Storage
 
 Ein JSON-File pro Job unter `data/jobs/titel_firma_datum_id8.json` (getriagte
-Jobs landen zusätzlich in `data/jobs/matched/` bzw. `data/jobs/offstack/`, je nach fit).
+Jobs landen zusätzlich in `data/jobs/matched/`, `data/jobs/offstack/` oder
+`data/jobs/brutal/`, je nach fit).
 Kein globales Sammel-JSON, Dedup via Datei-Existenz. Die Job-`id` ist ein
 deterministischer 16-stelliger SHA-256-Hash aus Titel + Firma (die ersten 8
 Zeichen davon stecken im Dateinamen) — derselbe Job wird beim erneuten

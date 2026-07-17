@@ -252,7 +252,7 @@ test('delete(nichtExistente id) → kein throw', async (t) => {
   await assert.doesNotReject(() => store.delete('000000000000dead'));
 });
 
-// ── Sortierte Unterordner matched/offstack ──────────────────────────────────
+// ── Sortierte Unterordner matched/offstack/brutal ───────────────────────────
 
 test('save(fit=matched) → Datei landet in <dir>/matched/', async (t) => {
   const dir = await tmpDir();
@@ -280,6 +280,21 @@ test('save(fit=offstack) → Datei landet in <dir>/offstack/', async (t) => {
 
   const offstackFiles = jobFiles(await readdir(join(dir, 'offstack')));
   assert.equal(offstackFiles.length, 1);
+});
+
+test('save(fit=brutal) → Datei landet in <dir>/brutal/', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const store = createStorage(dir);
+  const job = toJob(fakeScraped());
+  job.status = 'triaged';
+  job.fit = 'brutal';
+  await store.save(job);
+
+  const rootFiles = jobFiles(await readdir(dir));
+  const brutalFiles = jobFiles(await readdir(join(dir, 'brutal')));
+  assert.equal(rootFiles.length, 0);
+  assert.equal(brutalFiles.length, 1);
 });
 
 test('updateStatus new→triaged(matched)→generated: Datei wandert, kein Duplikat', async (t) => {
@@ -315,23 +330,27 @@ test('get/exists/delete finden Jobs unabhängig vom Unterordner', async (t) => {
   assert.equal(jobFiles(await readdir(join(dir, 'matched'))).length, 0);
 });
 
-test('list() findet Jobs aus Basisordner + beiden Unterordnern zusammen', async (t) => {
+test('list() findet Jobs aus Basisordner + allen drei Unterordnern zusammen', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
   const store = createStorage(dir);
   const jNew = toJob(fakeScraped('New Job', 'Corp N'));
   const jMatched = toJob(fakeScraped('Matched Job', 'Corp M'));
   const jUncertain = toJob(fakeScraped('Uncertain Job', 'Corp U'));
+  const jBrutal = toJob(fakeScraped('Brutal Job', 'Corp B'));
   jMatched.status = 'triaged';
   jMatched.fit = 'matched';
   jUncertain.status = 'triaged';
   jUncertain.fit = 'offstack';
+  jBrutal.status = 'triaged';
+  jBrutal.fit = 'brutal';
 
   await store.save(jNew);
   await store.save(jMatched);
   await store.save(jUncertain);
+  await store.save(jBrutal);
 
-  assert.equal((await store.list()).length, 3);
-  assert.equal((await store.list({ status: 'triaged' })).length, 2);
+  assert.equal((await store.list()).length, 4);
+  assert.equal((await store.list({ status: 'triaged' })).length, 3);
   assert.equal((await store.list({ status: 'new' })).length, 1);
 });

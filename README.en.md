@@ -187,8 +187,9 @@ Ollama, no real `data/jobs/`.
 ## Storage
 
 One JSON file per job under `data/jobs/title_company_date_id8.json`
-(triaged jobs additionally land in `data/jobs/matched/` or
-`data/jobs/offstack/`, depending on fit). No global collection JSON, dedup via
+(triaged jobs additionally land in `data/jobs/matched/`,
+`data/jobs/offstack/`, or `data/jobs/brutal/`, depending on fit). No global
+collection JSON, dedup via
 file existence. The job `id` is a deterministic 16-character SHA-256 hash
 of title + company (the first 8 characters end up in the filename) — the
 same job is never added twice on a re-scrape.

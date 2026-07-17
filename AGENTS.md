@@ -100,11 +100,11 @@ npm run anschreiben
   assuming the raw-id filename is a real, already-hit bug in this repo
   (`scripts/smoke-storage.ts`'s dedup check silently found 0 files for
   months before anyone noticed).
-- Triaged jobs (`status: 'triaged'`) live in `data/jobs/matched/` or
-  `data/jobs/offstack/`, keyed by `fit` (`brutal`-fit and every other status
-  stay in the base `data/jobs/` dir). `JsonStore.save()` moves the file
-  between these when `status`/`fit` change — don't assume a job's path is
-  stable across an update.
+- Triaged jobs (`status: 'triaged'`) live in `data/jobs/matched/`,
+  `data/jobs/offstack/`, or `data/jobs/brutal/`, keyed by `fit` (every other
+  status stays in the base `data/jobs/` dir). `JsonStore.save()` moves the
+  file between these when `status`/`fit` change — don't assume a job's path
+  is stable across an update.
 
 ## 7. Known gaps — don't assume finished
 
