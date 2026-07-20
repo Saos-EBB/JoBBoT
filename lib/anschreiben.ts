@@ -165,6 +165,7 @@ export async function generateAnschreiben(
   anschreibenDir?: string,
   model = config.modelWriter,
   logPath = ANSCHREIBEN_LOG_PATH,
+  signal?: AbortSignal,
 ): Promise<string | null> {
   if (job.status !== 'triaged' || job.fit === 'brutal') {
     console.warn(`[anschreiben] job ${job.id} hat status "${job.status}"/fit "${job.fit}", erwartet "triaged" mit fit "matched" oder "offstack"`);
@@ -175,6 +176,7 @@ export async function generateAnschreiben(
   let lastError = '';
 
   for (let attempt = 0; attempt <= MAX_REGENERATIONS; attempt++) {
+    if (signal?.aborted) { lastError = 'Abgebrochen'; break; }
     const { numThread, timeoutMs } = RETRY_CONFIG[attempt];
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -186,7 +188,10 @@ export async function generateAnschreiben(
       const res = await fetch(`${ollama}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
+        // Timeout- und Stop-Button-Abbruch sind zwei unabhängige Gründe, denselben
+        // Fetch abzubrechen — AbortSignal.any() statt eines zusätzlichen Listeners,
+        // der den controller manuell abort()en müsste.
+        signal: signal ? AbortSignal.any([controller.signal, signal]) : controller.signal,
         body: JSON.stringify({
           model,
           messages: [
@@ -204,7 +209,7 @@ export async function generateAnschreiben(
       raw = await readNdjsonContent(res);
     } catch (err) {
       lastError = err instanceof Error && err.name === 'AbortError'
-        ? `Timeout nach ${timeoutMs / 1000}s (${numThread} Threads)`
+        ? (signal?.aborted ? 'Abgebrochen' : `Timeout nach ${timeoutMs / 1000}s (${numThread} Threads)`)
         : err instanceof Error ? err.message : String(err);
       console.warn(`[anschreiben] Netzwerk-Fehler für job ${job.id} (Versuch ${attempt + 1}/${MAX_REGENERATIONS + 1}): ${lastError}`);
       continue;

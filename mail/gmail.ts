@@ -8,6 +8,7 @@ import type { ProfileData } from '../lib/profile.ts';
 import { jobBasename } from '../lib/slugify.ts';
 import { config } from '../config.ts';
 import { ATTACHMENT_PATH, ATTACHMENT_FILENAME } from '../lib/attachment.ts';
+import { loadCc } from '../lib/cc.ts';
 
 export const MAIL_LOG_PATH = 'data/mail-log.md';
 
@@ -67,6 +68,7 @@ async function buildRawMessage(from: string, email: ComposedEmail): Promise<Buff
   const mail = new MailComposer({
     from,
     to: email.to,
+    cc: (await loadCc()) ?? undefined,
     subject: email.subject,
     text: email.text,
     attachments: await attachmentIfPresent(),
@@ -77,7 +79,8 @@ async function buildRawMessage(from: string, email: ComposedEmail): Promise<Buff
 export async function createDraft(email: ComposedEmail): Promise<void> {
   if (config.mailDryRun) {
     const att = await attachmentIfPresent();
-    console.log(`[MAIL_DRY_RUN] draft → ${email.to} — ${email.subject}${att.length ? ` (Anhang: ${att[0].filename})` : ''}`);
+    const cc = await loadCc();
+    console.log(`[MAIL_DRY_RUN] draft → ${email.to} — ${email.subject}${att.length ? ` (Anhang: ${att[0].filename})` : ''}${cc ? ` (CC: ${cc})` : ''}`);
     return;
   }
   const { user, pass } = requireGmailCredentials();
@@ -92,11 +95,12 @@ export async function createDraft(email: ComposedEmail): Promise<void> {
 
 export async function sendMail(email: ComposedEmail): Promise<void> {
   const att = await attachmentIfPresent();
+  const cc = await loadCc();
   if (config.mailDryRun) {
-    console.log(`[MAIL_DRY_RUN] send → ${email.to} — ${email.subject}${att.length ? ` (Anhang: ${att[0].filename})` : ''}`);
+    console.log(`[MAIL_DRY_RUN] send → ${email.to} — ${email.subject}${att.length ? ` (Anhang: ${att[0].filename})` : ''}${cc ? ` (CC: ${cc})` : ''}`);
     return;
   }
   const { user, pass } = requireGmailCredentials();
   const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user, pass } });
-  await transporter.sendMail({ from: user, to: email.to, subject: email.subject, text: email.text, attachments: att });
+  await transporter.sendMail({ from: user, to: email.to, cc: cc ?? undefined, subject: email.subject, text: email.text, attachments: att });
 }

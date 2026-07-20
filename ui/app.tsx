@@ -19,6 +19,8 @@ import {
   Download,
   Filter as FilterIcon,
   Play,
+  Square,
+  Copy,
 } from 'lucide-react';
 import type { Job, Fit } from '../scrapers/interface.ts';
 import { FOLDER_IDS, inFolder, type FolderId } from '../lib/folders.ts';
@@ -48,7 +50,7 @@ type FilterRunStatus = {
   error?: string;
 };
 type AnschreibenRunStatus = {
-  status: 'idle' | 'running' | 'done' | 'error';
+  status: 'idle' | 'running' | 'done' | 'error' | 'stopped';
   runId: string | null;
   current?: { i: number; total: number; title: string };
   result?: { generated: number; skipped: number; emailsFound: number };
@@ -421,11 +423,20 @@ export default function JobbotUI() {
   const [detailOpen, setDetailOpen] = useState(false);
   // 'attachment'/'scrape'/'filter' sind keine Ordner (kein FolderId, kein Job-Filter)
   // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
-  const [view, setView] = useState<'jobs' | 'attachment' | 'scrape' | 'filter'>('jobs');
+  const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'anschreiben'>('jobs');
   const [attachment, setAttachment] = useState<AttachmentMeta | null | undefined>(undefined);
+  const [cc, setCc] = useState<string | null | undefined>(undefined);
+  const [ccInput, setCcInput] = useState('');
   const [scrapeSources, setScrapeSources] = useState<string[]>([]);
   const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
   const [filterMode, setFilterMode] = useState<FilterMode>('regex');
+  // Entspricht scripts/run-anschreiben.ts --data (matched/offstack) — "brutal" ist als
+  // Kästchen trotzdem wählbar (Symmetrie mit den Fit-Chips oben in der Liste), landet aber
+  // serverseitig immer bei "skipped" (generateAnschreiben() lehnt fit "brutal" grundsätzlich
+  // ab, siehe lib/anschreiben.ts). Default spiegelt den CLI-Default ohne --data: alle
+  // getriagten Jobs außer brutal.
+  const [anschreibenFits, setAnschreibenFits] = useState<Set<Fit>>(new Set(['matched', 'offstack']));
+  const [anschreibenLimit, setAnschreibenLimit] = useState('');
   const [scrapeStatus, setScrapeStatus] = useState<ScrapeStatus | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterRunStatus | null>(null);
   const [anschreibenStatus, setAnschreibenStatus] = useState<AnschreibenRunStatus | null>(null);
@@ -490,10 +501,14 @@ export default function JobbotUI() {
           refetchJobs();
           say(f.status === 'error' ? `Filter fehlgeschlagen: ${f.error}` : `Filter: ${f.result?.sicher ?? 0} sicher, ${f.result?.unsicher ?? 0} unsicher, ${f.result?.raus ?? 0} raus`);
         }
-        if ((a.status === 'done' || a.status === 'error') && a.runId && a.runId !== lastSeenAnschreibenRunId.current) {
+        if ((a.status === 'done' || a.status === 'error' || a.status === 'stopped') && a.runId && a.runId !== lastSeenAnschreibenRunId.current) {
           lastSeenAnschreibenRunId.current = a.runId;
           refetchJobs();
-          say(a.status === 'error' ? `Anschreiben fehlgeschlagen: ${a.error}` : `Anschreiben: ${a.result?.generated ?? 0} generiert, ${a.result?.skipped ?? 0} übersprungen, ${a.result?.emailsFound ?? 0} E-Mails gefunden`);
+          say(
+            a.status === 'error' ? `Anschreiben fehlgeschlagen: ${a.error}`
+            : a.status === 'stopped' ? `Anschreiben abgebrochen: ${a.result?.generated ?? 0} generiert, ${a.result?.emailsFound ?? 0} E-Mails gefunden`
+            : `Anschreiben: ${a.result?.generated ?? 0} generiert, ${a.result?.skipped ?? 0} übersprungen, ${a.result?.emailsFound ?? 0} E-Mails gefunden`
+          );
         }
       } catch {
         // Server kurz nicht erreichbar — nächster Tick versucht's wieder
@@ -552,6 +567,13 @@ export default function JobbotUI() {
     }
   }
 
+  async function stopAnschreibenNow() {
+    const res = await fetch('/api/anschreiben/stop', { method: 'POST' });
+    if (res.status === 409) say('Kein Anschreiben-Lauf aktiv');
+    // Erfolgsfall zeigt sich am Poll-Tick (status wechselt auf "stopped", eigener Toast
+    // dort) — kein zweiter Toast hier, der nur den Lauf-Abschluss vorwegnehmen würde.
+  }
+
   // generateAnschreiben() (lib/anschreiben.ts) generiert nur für status "triaged" mit
   // fit !== "brutal" — ein bereits generierter Job (status "generated" o.ä.) muss also
   // erst dorthin zurück, bevor der Lauf ihn wieder aufgreift.
@@ -589,6 +611,31 @@ export default function JobbotUI() {
     await fetch('/api/attachment', { method: 'DELETE' });
     setAttachment(null);
     say('Anhang entfernt');
+  }
+
+  useEffect(() => {
+    if (view !== 'cc') return;
+    fetch('/api/cc')
+      .then(r => r.json())
+      .then((d: { email: string | null }) => { setCc(d.email); setCcInput(d.email ?? ''); });
+  }, [view]);
+
+  async function saveCcNow(email: string) {
+    const res = await fetch('/api/cc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const body = await res.json().catch(() => null);
+    if (res.ok) { setCc(body.email); say('CC gespeichert'); }
+    else say(body?.error ?? 'Speichern fehlgeschlagen');
+  }
+
+  async function removeCc() {
+    await fetch('/api/cc', { method: 'DELETE' });
+    setCc(null);
+    setCcInput('');
+    say('CC entfernt');
   }
 
   const counts = useMemo(() => {
@@ -752,9 +799,21 @@ export default function JobbotUI() {
   const filterPct = filterStatus?.current && filterStatus.current.total > 0
     ? Math.round((filterStatus.current.i / filterStatus.current.total) * 100)
     : 0;
+  // i ist der Index des GERADE laufenden Jobs (0-basiert, vor dessen Start gesetzt) —
+  // i/total bliebe bei einem einzelnen Job die ganze Generierung über bei 0% (unsichtbarer
+  // Balken). (i+1)/total zeigt sofort sichtbaren Fortschritt für den laufenden Job.
   const anschreibenPct = anschreibenStatus?.current && anschreibenStatus.current.total > 0
-    ? Math.round((anschreibenStatus.current.i / anschreibenStatus.current.total) * 100)
+    ? Math.round(((anschreibenStatus.current.i + 1) / anschreibenStatus.current.total) * 100)
     : 0;
+
+  // Spiegelt scripts/run-anschreiben.ts: status "triaged" + fit aus den angehakten
+  // Kästchen, optional per Limit gekappt (gleiche Reihenfolge wie die Jobs-Liste,
+  // kein eigenes Sortierkriterium).
+  const anschreibenEligible = jobs.filter(j => j.status === 'triaged' && j.fit != null && anschreibenFits.has(j.fit));
+  const anschreibenLimitN = Number(anschreibenLimit);
+  const anschreibenSelection = anschreibenLimit && Number.isFinite(anschreibenLimitN) && anschreibenLimitN > 0
+    ? anschreibenEligible.slice(0, anschreibenLimitN)
+    : anschreibenEligible;
 
   return (
     <div className={'jb' + (detailOpen ? ' jb--detail' : '')}>
@@ -810,6 +869,10 @@ export default function JobbotUI() {
             <Paperclip />
             <span className="fld__label">Anhang</span>
           </button>
+          <button className={'fld' + (view === 'cc' ? ' fld--on' : '')} onClick={() => setView('cc')}>
+            <Copy />
+            <span className="fld__label">CC</span>
+          </button>
         </div>
 
         <div className="sb__rule" />
@@ -833,13 +896,10 @@ export default function JobbotUI() {
               <span style={{ width: `${filterPct}%` }} />
             </div>
           )}
-          {/* Kein eigener View/Klick: der Auslöser sitzt in der Jobs-Liste
-              (Mehrfachauswahl) bzw. im Detail ("Neu generieren") — diese Zeile
-              zeigt nur den Fortschritt des zuletzt gestarteten Laufs. */}
-          <div className="fld">
+          <button className={'fld' + (view === 'anschreiben' ? ' fld--on' : '')} onClick={() => setView('anschreiben')}>
             <FileText />
             <span className="fld__label">Anschreiben</span>
-          </div>
+          </button>
           {anschreibenStatus?.status === 'running' && (
             <div className="fld__bar">
               <span style={{ width: `${anschreibenPct}%` }} />
@@ -865,7 +925,56 @@ export default function JobbotUI() {
         </div>
       </nav>
 
-      {view === 'attachment' ? (
+      {view === 'cc' ? (
+        /* ---------- CC ---------- */
+        <section className="att">
+          <header className="dt__head">
+            <div className="dt__firma">CC</div>
+            <div className="dt__titel">Wird jedem Entwurf und jeder Direktversand-Mail automatisch als CC hinzugefügt.</div>
+          </header>
+          <div className="dt__body">
+            {cc === undefined ? null : cc ? (
+              <div className="paper" style={{ maxWidth: 420, padding: '18px 22px' }}>
+                <div className="paper__to">
+                  <span>{cc}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
+                <div className="empty__h">Kein CC gesetzt</div>
+                Adresse eintragen, damit jede Bewerbung automatisch eine Kopie mitschickt.
+              </div>
+            )}
+            <form
+              style={{ display: 'flex', gap: 8, marginTop: 16, maxWidth: 420 }}
+              onSubmit={e => {
+                e.preventDefault();
+                const value = ccInput.trim();
+                if (value) saveCcNow(value);
+              }}
+            >
+              <input
+                type="email"
+                value={ccInput}
+                onChange={e => setCcInput(e.target.value)}
+                placeholder="cc@example.com"
+                style={{
+                  flex: 1, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 5,
+                  color: 'var(--text)', font: 'inherit', padding: '6px 9px',
+                }}
+              />
+              <button type="submit" className="btn btn--primary">Speichern</button>
+            </form>
+          </div>
+          {cc && (
+            <footer className="bar">
+              <button className="btn btn--ghost btn--danger" onClick={removeCc}>
+                <Trash2 /> Entfernen
+              </button>
+            </footer>
+          )}
+        </section>
+      ) : view === 'attachment' ? (
         /* ---------- Anhang ---------- */
         <section className="att">
           <header className="dt__head">
@@ -1003,6 +1112,91 @@ export default function JobbotUI() {
             >
               <Play /> Filtern
             </button>
+          </footer>
+        </section>
+      ) : view === 'anschreiben' ? (
+        /* ---------- Anschreiben ---------- */
+        <section className="att">
+          <header className="dt__head">
+            <div className="dt__firma">Anschreiben</div>
+            <div className="dt__titel">Anschreiben für getriagte Jobs generieren — wie scripts/run-anschreiben.ts.</div>
+          </header>
+          <div className="dt__body">
+            {anschreibenStatus?.status === 'running' ? (
+              <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
+                <div className="empty__h">Läuft…</div>
+                {anschreibenStatus.current && (
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
+                    {anschreibenStatus.current.i + 1}/{anschreibenStatus.current.total}: {anschreibenStatus.current.title}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 420 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                    <input
+                      type="checkbox"
+                      checked={anschreibenFits.size === 3}
+                      onChange={e => setAnschreibenFits(e.target.checked ? new Set(['matched', 'offstack', 'brutal']) : new Set())}
+                    />
+                    Alle
+                  </label>
+                  {(['matched', 'offstack', 'brutal'] as const).map(f => (
+                    <label key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, paddingLeft: 18 }}>
+                      <input
+                        type="checkbox"
+                        checked={anschreibenFits.has(f)}
+                        onChange={e => setAnschreibenFits(prev => {
+                          const next = new Set(prev);
+                          if (e.target.checked) next.add(f); else next.delete(f);
+                          return next;
+                        })}
+                      />
+                      <span className="chip__dot" style={{ background: FIT[f].color }} />
+                      {FIT[f].label}
+                    </label>
+                  ))}
+                </div>
+                {anschreibenFits.has('brutal') && (
+                  <div style={{ fontSize: 11.5, color: 'var(--dim)' }}>
+                    Brutal wird vom Lauf immer übersprungen (fit "brutal" ist grundsätzlich ungeeignet).
+                  </div>
+                )}
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                  Limit
+                  <input
+                    type="number"
+                    min={1}
+                    value={anschreibenLimit}
+                    onChange={e => setAnschreibenLimit(e.target.value)}
+                    placeholder="alle"
+                    style={{
+                      width: 70, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 5,
+                      color: 'var(--text)', font: 'inherit', padding: '3px 7px',
+                    }}
+                  />
+                </label>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--dim)' }}>
+                  {anschreibenSelection.length} von {anschreibenEligible.length} passenden Jobs ausgewählt
+                </div>
+              </div>
+            )}
+          </div>
+          <footer className="bar">
+            {anschreibenStatus?.status === 'running' ? (
+              <button className="btn btn--danger" onClick={stopAnschreibenNow}>
+                <Square /> Abbrechen
+              </button>
+            ) : (
+              <button
+                className="btn btn--primary"
+                disabled={anschreibenStarting || anschreibenSelection.length === 0}
+                onClick={() => runAnschreibenNow(anschreibenSelection.map(j => j.id))}
+              >
+                <Play /> Anschreiben erstellen
+              </button>
+            )}
           </footer>
         </section>
       ) : (
