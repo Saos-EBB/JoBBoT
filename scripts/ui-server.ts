@@ -8,6 +8,7 @@ import { jobBasename } from '../lib/slugify.ts';
 import { loadProfile } from '../lib/profile.ts';
 import { composeEmail, createDraft, sendMail, logMailAction, type ComposedEmail } from '../mail/gmail.ts';
 import { ATTACHMENT_PATH, ATTACHMENT_FILENAME } from '../lib/attachment.ts';
+import { loadCc, saveCc, clearCc } from '../lib/cc.ts';
 import { loadSources } from '../lib/sources.ts';
 import { loadSettings, type FilterMode } from '../lib/settings.ts';
 import { buildScrapeSetup } from '../lib/scrape-setup.ts';
@@ -42,7 +43,7 @@ interface FilterRunState {
   error?: string;
 }
 interface AnschreibenRunState {
-  status: 'idle' | 'running' | 'done' | 'error';
+  status: 'idle' | 'running' | 'done' | 'error' | 'stopped';
   runId: string | null;
   current?: { i: number; total: number; title: string };
   result?: { generated: number; skipped: number; emailsFound: number };
@@ -51,6 +52,9 @@ interface AnschreibenRunState {
 let scrapeRun: ScrapeRunState = { status: 'idle', runId: null, sources: {} };
 let filterRun: FilterRunState = { status: 'idle', runId: null };
 let anschreibenRun: AnschreibenRunState = { status: 'idle', runId: null };
+// Nur für Anschreiben abbrechbar (Scrape/Filter sind schnell genug, dass ein Stop-Button
+// bisher niemand vermisst hat) — ein einzelner Lauf gleichzeitig, wie anschreibenRun selbst.
+let anschreibenAbort: AbortController | null = null;
 
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -227,6 +231,38 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === 'GET' && url.pathname === '/api/cc') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ email: await loadCc() }));
+    return;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/cc') {
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    let email = '';
+    try {
+      email = (JSON.parse(body) as { email?: string }).email?.trim() ?? '';
+    } catch {
+      // leer bleiben — unten als "fehlt" behandelt
+    }
+    if (!email) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: 'E-Mail-Adresse fehlt' }));
+      return;
+    }
+    await saveCc(email);
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ email }));
+    return;
+  }
+
+  if (req.method === 'DELETE' && url.pathname === '/api/cc') {
+    await clearCc();
+    res.writeHead(204).end();
+    return;
+  }
+
   if (req.method === 'GET' && url.pathname === '/api/scrape/sources') {
     const sources = loadSources();
     const names = Object.entries(sources).filter(([, c]) => c.enabled).map(([name]) => name);
@@ -361,6 +397,7 @@ const server = createServer(async (req, res) => {
     }
     const runId = randomUUID();
     anschreibenRun = { status: 'running', runId };
+    anschreibenAbort = new AbortController();
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ started: true, runId }));
 
@@ -390,18 +427,33 @@ const server = createServer(async (req, res) => {
         jobs,
         storage,
         profile,
+        signal: anschreibenAbort.signal,
         onProgress: (i, total, title) => {
           anschreibenRun.current = { i, total, title };
         },
       });
       anschreibenRun = {
-        status: 'done',
+        status: anschreibenAbort.signal.aborted ? 'stopped' : 'done',
         runId,
         result: { generated, skipped: skipped + preSkipped, emailsFound },
       };
     } catch (err) {
       anschreibenRun = { status: 'error', runId, error: err instanceof Error ? err.message : String(err) };
+    } finally {
+      anschreibenAbort = null;
     }
+    return;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/anschreiben/stop') {
+    if (anschreibenRun.status !== 'running' || !anschreibenAbort) {
+      res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ stopped: false, reason: 'not-running' }));
+      return;
+    }
+    anschreibenAbort.abort();
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ stopped: true }));
     return;
   }
 
