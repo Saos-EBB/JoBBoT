@@ -17,7 +17,14 @@ import { filterJob } from '../lib/filter.ts';
 import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 
-const PORT = Number(process.env.UI_PORT ?? 3000);
+function portFromArgs(): string | undefined {
+  const flag = process.argv.find(a => a === '--port' || a.startsWith('--port='));
+  if (!flag) return undefined;
+  if (flag.includes('=')) return flag.split('=')[1];
+  return process.argv[process.argv.indexOf(flag) + 1];
+}
+
+const PORT = Number(portFromArgs() ?? process.env.UI_PORT ?? 3000);
 const STATUSES: JobStatus[] = ['new', 'triaged', 'generated', 'freigegeben', 'postausgang', 'gesendet', 'geloescht', 'fehler'];
 const storage = createStorage();
 const profile = loadProfile();
