@@ -68,7 +68,7 @@ function esc(s: string): string {
 }
 
 function layout(body: string): string {
-  return `<!doctype html><html><head><meta charset="utf-8"><title>JobBot</title>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>JoBBoT</title>
 <style>
 :root {
   --paper: #f6f7fb; --paper-raised: #ffffff; --ink: #1b1f2a; --muted: #5b6272; --line: #dfe2ea;
@@ -178,7 +178,7 @@ const server = createServer(async (req, res) => {
 
   if (req.method === 'GET' && url.pathname === '/') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end('<!doctype html><html><head><meta charset="utf-8"><title>JobBot</title></head>'
+    res.end('<!doctype html><html><head><meta charset="utf-8"><title>JoBBoT</title></head>'
       + '<body><div id="root"></div><script type="module" src="/app.js"></script></body></html>');
     return;
   }
