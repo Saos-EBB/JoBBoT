@@ -53,7 +53,7 @@ interface AnschreibenRunState {
   status: 'idle' | 'running' | 'done' | 'error' | 'stopped';
   runId: string | null;
   current?: { i: number; total: number; title: string };
-  result?: { generated: number; skipped: number; emailsFound: number };
+  result?: { generated: number; skipped: number; emailsFound: number; mailGenerated: number; nomailGenerated: number };
   error?: string;
 }
 let scrapeRun: ScrapeRunState = { status: 'idle', runId: null, sources: {} };
@@ -426,11 +426,11 @@ const server = createServer(async (req, res) => {
       const preSkipped = jobIds.length - jobs.length;
 
       if (jobs.length === 0) {
-        anschreibenRun = { status: 'done', runId, result: { generated: 0, skipped: preSkipped, emailsFound: 0 } };
+        anschreibenRun = { status: 'done', runId, result: { generated: 0, skipped: preSkipped, emailsFound: 0, mailGenerated: 0, nomailGenerated: 0 } };
         return;
       }
 
-      const { generated, skipped, emailsFound } = await runAnschreiben({
+      const { generated, skipped, emailsFound, mailGenerated, nomailGenerated } = await runAnschreiben({
         jobs,
         storage,
         profile,
@@ -442,7 +442,7 @@ const server = createServer(async (req, res) => {
       anschreibenRun = {
         status: anschreibenAbort.signal.aborted ? 'stopped' : 'done',
         runId,
-        result: { generated, skipped: skipped + preSkipped, emailsFound },
+        result: { generated, skipped: skipped + preSkipped, emailsFound, mailGenerated, nomailGenerated },
       };
     } catch (err) {
       anschreibenRun = { status: 'error', runId, error: err instanceof Error ? err.message : String(err) };

@@ -53,7 +53,7 @@ type AnschreibenRunStatus = {
   status: 'idle' | 'running' | 'done' | 'error' | 'stopped';
   runId: string | null;
   current?: { i: number; total: number; title: string };
-  result?: { generated: number; skipped: number; emailsFound: number };
+  result?: { generated: number; skipped: number; emailsFound: number; mailGenerated: number; nomailGenerated: number };
   error?: string;
 };
 type FilterMode = 'llm' | 'regex';
@@ -97,7 +97,7 @@ const CSS = `
   --line:#2A323F; --line-soft:#212936;
   --text:#E6EAF0; --muted:#8A94A6; --dim:#5E6878;
   --paper:#F3F2EE; --paper-ink:#191C22; --paper-line:#DAD8D1;
-  --err:#E5484D;
+  --err:#E5484D; --ok:#35D0A5;
   --sans:'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   --mono:'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
   --serif:'IBM Plex Serif', Georgia, serif;
@@ -139,6 +139,7 @@ const CSS = `
 .fld__n { font-family:var(--mono); font-size:11px; font-variant-numeric:tabular-nums; color:var(--dim); }
 .fld--on .fld__n { color:var(--muted); }
 .fld--err.fld--has svg, .fld--err.fld--has .fld__n { color:var(--err); opacity:1; }
+.fld__dot { width:6px; height:6px; border-radius:50%; background:var(--ok); flex:none; }
 
 .fld__bar { height:2px; margin:0 8px 6px; background:var(--line); border-radius:99px; overflow:hidden; }
 .fld__bar span { display:block; height:100%; background:var(--text); transition:width .3s ease; }
@@ -310,7 +311,13 @@ const CSS = `
   position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
   background:var(--raised); border:1px solid var(--line); border-radius:6px;
   padding:8px 15px; font-size:12.5px; box-shadow:0 8px 24px rgba(0,0,0,.5); z-index:50;
+  display:flex; align-items:center; gap:7px;
 }
+.toast svg { width:14px; height:14px; flex:none; }
+.toast--ok { border-color:rgba(53,208,165,.4); }
+.toast--ok svg { color:var(--ok); }
+.toast--err { border-color:rgba(229,72,77,.4); }
+.toast--err svg { color:var(--err); }
 
 @media (prefers-reduced-motion:no-preference) {
   .toast { animation:rise .16s ease-out; }
@@ -419,7 +426,7 @@ export default function JobbotUI() {
   const [q, setQ] = useState('');
   const [sel, setSel] = useState<string | null>(null);
   const [tab, setTab] = useState<'brief' | 'inserat'>('brief');
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'err' } | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   // 'attachment'/'scrape'/'filter' sind keine Ordner (kein FolderId, kein Job-Filter)
   // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
@@ -447,6 +454,11 @@ export default function JobbotUI() {
   // (matched/uncertain landen laut STATUS_MAP nirgendwo sonst), deshalb bei
   // Ordnerwechsel zurückgesetzt statt über Ordner hinweg mitzuschleppen.
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
+  // Sidebar-Ordner mit frisch generierten Anschreiben, die noch nicht angesehen wurden —
+  // nur im Speicher (kein localStorage, bewusst so einfach wie möglich): ein Reload
+  // löscht die Markierung, das ist unkritisch, weil die betroffenen Jobs im Ordner
+  // ohnehin weiter sichtbar bleiben. Aus geht ausschließlich per Klick auf den Ordner.
+  const [highlightFolders, setHighlightFolders] = useState<Set<FolderId>>(new Set());
   // Verhindert Toast/Refetch-Spam: der Server hält 'done' so lange, bis der
   // nächste Lauf startet — ohne diesen Merker würde jeder Poll-Tick (alle 1.5s)
   // erneut feiern, solange niemand einen neuen Lauf anstößt.
@@ -455,8 +467,8 @@ export default function JobbotUI() {
   const lastSeenAnschreibenRunId = useRef<string | null>(null);
   const ta = useRef<HTMLTextAreaElement>(null);
 
-  const say = useCallback((m: string) => {
-    setToast(m);
+  const say = useCallback((m: string, kind: 'ok' | 'err' = 'ok') => {
+    setToast({ msg: m, kind });
     setTimeout(() => setToast(null), 1900);
   }, []);
 
@@ -494,12 +506,18 @@ export default function JobbotUI() {
         if ((s.status === 'done' || s.status === 'error') && s.runId && s.runId !== lastSeenScrapeRunId.current) {
           lastSeenScrapeRunId.current = s.runId;
           refetchJobs();
-          say(s.status === 'error' ? `Scrape fehlgeschlagen: ${s.error}` : `Scrape: ${s.result?.newTotal ?? 0} neu, ${s.result?.skipTotal ?? 0} dedup`);
+          say(
+            s.status === 'error' ? `Scrape fehlgeschlagen: ${s.error}` : `Scrape: ${s.result?.newTotal ?? 0} neu, ${s.result?.skipTotal ?? 0} dedup`,
+            s.status === 'error' ? 'err' : 'ok'
+          );
         }
         if ((f.status === 'done' || f.status === 'error') && f.runId && f.runId !== lastSeenFilterRunId.current) {
           lastSeenFilterRunId.current = f.runId;
           refetchJobs();
-          say(f.status === 'error' ? `Filter fehlgeschlagen: ${f.error}` : `Filter: ${f.result?.sicher ?? 0} sicher, ${f.result?.unsicher ?? 0} unsicher, ${f.result?.raus ?? 0} raus`);
+          say(
+            f.status === 'error' ? `Filter fehlgeschlagen: ${f.error}` : `Filter: ${f.result?.sicher ?? 0} sicher, ${f.result?.unsicher ?? 0} unsicher, ${f.result?.raus ?? 0} raus`,
+            f.status === 'error' ? 'err' : 'ok'
+          );
         }
         if ((a.status === 'done' || a.status === 'error' || a.status === 'stopped') && a.runId && a.runId !== lastSeenAnschreibenRunId.current) {
           lastSeenAnschreibenRunId.current = a.runId;
@@ -507,8 +525,20 @@ export default function JobbotUI() {
           say(
             a.status === 'error' ? `Anschreiben fehlgeschlagen: ${a.error}`
             : a.status === 'stopped' ? `Anschreiben abgebrochen: ${a.result?.generated ?? 0} generiert, ${a.result?.emailsFound ?? 0} E-Mails gefunden`
-            : `Anschreiben: ${a.result?.generated ?? 0} generiert, ${a.result?.skipped ?? 0} übersprungen, ${a.result?.emailsFound ?? 0} E-Mails gefunden`
+            : `Anschreiben: ${a.result?.generated ?? 0} generiert, ${a.result?.skipped ?? 0} übersprungen, ${a.result?.emailsFound ?? 0} E-Mails gefunden`,
+            a.status === 'error' ? 'err' : 'ok'
           );
+          // Nur den Entwürfe-Ordner markieren, der wirklich einen neuen Job bekommen
+          // hat — mailGenerated/nomailGenerated sind die Aufschlüsselung von `generated`
+          // nach Mail-Status am Ende des Laufs (siehe lib/anschreiben-runner.ts).
+          if (a.status !== 'error') {
+            setHighlightFolders(prev => {
+              const next = new Set(prev);
+              if ((a.result?.mailGenerated ?? 0) > 0) next.add('mail/entwurf');
+              if ((a.result?.nomailGenerated ?? 0) > 0) next.add('nomail/entwurf');
+              return next;
+            });
+          }
         }
       } catch {
         // Server kurz nicht erreichbar — nächster Tick versucht's wieder
@@ -527,7 +557,7 @@ export default function JobbotUI() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sources: [...selectedSources] }),
       });
-      if (res.status === 409) say('Scrape läuft bereits');
+      if (res.status === 409) say('Scrape läuft bereits', 'err');
     } finally {
       setScrapeStarting(false);
     }
@@ -541,7 +571,7 @@ export default function JobbotUI() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: filterMode }),
       });
-      if (res.status === 409) say('Filter läuft bereits');
+      if (res.status === 409) say('Filter läuft bereits', 'err');
     } finally {
       setFilterStarting(false);
     }
@@ -560,7 +590,7 @@ export default function JobbotUI() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jobIds }),
       });
-      if (res.status === 409) say('Anschreiben-Lauf läuft bereits');
+      if (res.status === 409) say('Anschreiben-Lauf läuft bereits', 'err');
       else setSelectedJobIds(new Set());
     } finally {
       setAnschreibenStarting(false);
@@ -569,7 +599,7 @@ export default function JobbotUI() {
 
   async function stopAnschreibenNow() {
     const res = await fetch('/api/anschreiben/stop', { method: 'POST' });
-    if (res.status === 409) say('Kein Anschreiben-Lauf aktiv');
+    if (res.status === 409) say('Kein Anschreiben-Lauf aktiv', 'err');
     // Erfolgsfall zeigt sich am Poll-Tick (status wechselt auf "stopped", eigener Toast
     // dort) — kein zweiter Toast hier, der nur den Lauf-Abschluss vorwegnehmen würde.
   }
@@ -579,7 +609,7 @@ export default function JobbotUI() {
   // erst dorthin zurück, bevor der Lauf ihn wieder aufgreift.
   async function regenerate(job: JobWithBrief) {
     if (job.fit == null || job.fit === 'brutal') {
-      say('Neu generieren nicht möglich — kein Filter-Urteil bekannt');
+      say('Neu generieren nicht möglich — kein Filter-Urteil bekannt', 'err');
       return;
     }
     const status: Job['status'] = 'triaged';
@@ -588,7 +618,7 @@ export default function JobbotUI() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     });
-    if (!res.ok) { say('Zurücksetzen fehlgeschlagen'); return; }
+    if (!res.ok) { say('Zurücksetzen fehlgeschlagen', 'err'); return; }
     patch(job.id, { status });
     runAnschreibenNow([job.id]);
   }
@@ -604,7 +634,7 @@ export default function JobbotUI() {
     const res = await fetch('/api/attachment', { method: 'POST', body: file });
     const body = await res.json().catch(() => null);
     if (res.ok) { setAttachment(body); say('Anhang hochgeladen'); }
-    else say(body?.error ?? 'Upload fehlgeschlagen');
+    else say(body?.error ?? 'Upload fehlgeschlagen', 'err');
   }
 
   async function removeAttachment() {
@@ -628,7 +658,7 @@ export default function JobbotUI() {
     });
     const body = await res.json().catch(() => null);
     if (res.ok) { setCc(body.email); say('CC gespeichert'); }
-    else say(body?.error ?? 'Speichern fehlgeschlagen');
+    else say(body?.error ?? 'Speichern fehlgeschlagen', 'err');
   }
 
   async function removeCc() {
@@ -706,7 +736,7 @@ export default function JobbotUI() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     });
-    if (!res.ok) { say('Speichern fehlgeschlagen'); return; }
+    if (!res.ok) { say('Speichern fehlgeschlagen', 'err'); return; }
     patch(id, { status });
     say(msg);
     setDetailOpen(false);
@@ -719,7 +749,7 @@ export default function JobbotUI() {
       body: JSON.stringify({ fit }),
     });
     if (res.ok) patch(id, { fit });
-    else say('Speichern fehlgeschlagen');
+    else say('Speichern fehlgeschlagen', 'err');
   }
 
   // "Entwurf erzeugen" heißt: echten Gmail-Entwurf per IMAP anlegen
@@ -734,7 +764,7 @@ export default function JobbotUI() {
       setDetailOpen(false);
     } else {
       const body = await res.json().catch(() => null);
-      say(body?.error ?? 'Entwurf fehlgeschlagen');
+      say(body?.error ?? 'Entwurf fehlgeschlagen', 'err');
     }
   }
 
@@ -751,7 +781,7 @@ export default function JobbotUI() {
       setDetailOpen(false);
     } else {
       const body = await res.json().catch(() => null);
-      say(body?.error ?? 'Versand fehlgeschlagen');
+      say(body?.error ?? 'Versand fehlgeschlagen', 'err');
     }
   }
 
@@ -766,7 +796,7 @@ export default function JobbotUI() {
       body: JSON.stringify({ text }),
     })
       .then(r => { if (!r.ok) throw new Error(); say('Anschreiben gespeichert'); })
-      .catch(() => say('Speichern fehlgeschlagen'));
+      .catch(() => say('Speichern fehlgeschlagen', 'err'));
   }
 
   // Gmail-Tastatur: j/k wandern, e gibt frei, # löscht.
@@ -852,10 +882,18 @@ export default function JobbotUI() {
                     setView('jobs');
                     setFolder(f.id);
                     setFit('alle');
+                    if (highlightFolders.has(f.id)) {
+                      setHighlightFolders(prev => {
+                        const next = new Set(prev);
+                        next.delete(f.id);
+                        return next;
+                      });
+                    }
                   }}
                 >
                   <f.icon />
                   <span className="fld__label">{f.label}</span>
+                  {highlightFolders.has(f.id) && <span className="fld__dot" />}
                   <span className="fld__n">{counts[f.id] ?? 0}</span>
                 </button>
               ))}
@@ -1466,7 +1504,12 @@ export default function JobbotUI() {
         </>
       )}
 
-      {toast && <div className="toast">{toast}</div>}
+      {toast && (
+        <div className={`toast toast--${toast.kind}`}>
+          {toast.kind === 'ok' ? <CheckCircle2 /> : <XCircle />}
+          {toast.msg}
+        </div>
+      )}
     </div>
   );
 }
