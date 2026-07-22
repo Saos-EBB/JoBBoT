@@ -26,6 +26,8 @@ ABSOLUTE REGELN — niemals brechen:
   Kompetenz verkaufen oder den geforderten Skill selbst behaupten.
 - Kein Skill ohne Beleg: jede genannte Fähigkeit braucht ein konkretes Projekt/Kontext aus dem Profil,
   nie eine nackte Aufzählung.
+- Stehen mehrere Projekte im Profil: nicht zweimal dasselbe Projekt als Beleg nutzen. Jedes
+  im Profil gelistete Projekt darf höchstens einmal vorkommen.
 - Keine vorgegebenen Satzanfänge — der Einstieg muss von Job zu Job variieren.`;
 
 export function buildAnschreibenPrompt(job: Job, profile: ProfileData): string {
@@ -36,7 +38,12 @@ export function buildAnschreibenPrompt(job: Job, profile: ProfileData): string {
     ...profile.skills.backend,
     ...profile.skills.datenbanken,
   ].join(', ');
-  const projekteText = profile.projekte
+  // Anchor-Projekte (aktuelle/wichtigste Projekte) haben Vorrang vor der reinen
+  // Array-Reihenfolge — sonst fällt z.B. das laufende JobBot-Projekt hinten runter,
+  // nur weil es nicht zufällig unter den ersten zwei Einträgen steht.
+  const anchors = profile.projekte.filter(p => p.anchor);
+  const rest = profile.projekte.filter(p => !p.anchor);
+  const projekteText = [...anchors, ...rest]
     .slice(0, 2)
     .map(p => `${p.name}: ${p.beschreibung}${p.tech ? ` (Tech: ${p.tech.join(', ')})` : ''}`)
     .join('\n');
@@ -59,8 +66,10 @@ Absatz 1 (~50 Wörter) — Anker: konkrete Rolle + Firma + EIN spezifisches Elem
   (Quereinsteiger in die Softwareentwicklung). Kein "Hiermit bewerbe ich mich".
 Absatz 2 (~70 Wörter) — Beleg: die 2 stärksten Überschneidungen zwischen Stellenanforderungen
   und Profil. Jeder genannte Skill braucht einen Beleg — ein konkretes Projekt aus dem Profil,
-  keine nackte Aufzählung. Fehlt ein geforderter Skill im Profil: nächstliegende echte Erfahrung
-  nennen und die Nähe benennen, nie den geforderten Skill selbst behaupten.
+  keine nackte Aufzählung. Stehen oben mehrere Projekte im Profil: die 2 Belege aus 2
+  verschiedenen Projekten nehmen, nicht zweimal dasselbe Projekt. Fehlt ein geforderter Skill
+  im Profil: nächstliegende echte Erfahrung nennen und die Nähe benennen, nie den geforderten
+  Skill selbst behaupten.
 Absatz 3 (~50 Wörter) — Ausblick statt Floskel-Abschluss: keine "warum ich passe"-Aussage.
   Stattdessen eine konkrete Aufgabe aus den Anforderungen/Verantwortlichkeiten der Stelle
   aufgreifen, an der der Bewerber mitarbeiten will. Optional ein Satz ehrliche Junior-Haltung
