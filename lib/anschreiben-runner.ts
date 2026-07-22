@@ -11,6 +11,11 @@ export interface AnschreibenOutcome {
   generated: number;
   skipped: number;
   emailsFound: number;
+  // Aufschlüsselung von `generated` nach Mail-Status am Ende des Laufs (job.email
+  // kann sich innerhalb dieser Schleife durch findEmail() ändern) — die UI markiert
+  // sonst blind beide Entwürfe-Ordner, egal ob dort überhaupt was Neues liegt.
+  mailGenerated: number;
+  nomailGenerated: number;
 }
 
 export interface RunAnschreibenOptions {
@@ -29,6 +34,7 @@ export async function runAnschreiben(options: RunAnschreibenOptions): Promise<An
   const { jobs, storage, profile, model = config.modelWriter, onProgress, signal } = options;
   let generated = 0;
   let emailsFound = 0;
+  let mailGenerated = 0;
   let processed = 0;
 
   const browser = await chromium.launch({ headless: true });
@@ -44,14 +50,20 @@ export async function runAnschreiben(options: RunAnschreibenOptions): Promise<An
       processed++;
       onProgress?.(i, jobs.length, job.title);
       const path = await generateAnschreiben(job, storage, profile, undefined, undefined, model, undefined, signal);
-      if (path) generated++;
+      if (path) {
+        generated++;
+        let hasMail = job.email != null;
 
-      if (path && !job.email && !signal?.aborted) {
-        const email = await findEmail(job, emailPage).catch(() => null);
-        if (email) {
-          await storage.update(job.id, { email });
-          emailsFound++;
+        if (!hasMail && !signal?.aborted) {
+          const email = await findEmail(job, emailPage).catch(() => null);
+          if (email) {
+            await storage.update(job.id, { email });
+            emailsFound++;
+            hasMail = true;
+          }
         }
+
+        if (hasMail) mailGenerated++;
       }
 
       if (i < jobs.length - 1 && !signal?.aborted) await sleep(1000);
@@ -60,5 +72,5 @@ export async function runAnschreiben(options: RunAnschreibenOptions): Promise<An
     await browser.close();
   }
 
-  return { generated, skipped: processed - generated, emailsFound };
+  return { generated, skipped: processed - generated, emailsFound, mailGenerated, nomailGenerated: generated - mailGenerated };
 }
