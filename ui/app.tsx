@@ -254,6 +254,12 @@ const CSS = `
 .lnk:hover { color:var(--text); }
 .lnk svg { width:10px; height:10px; }
 
+/* Babyblau statt Standard-Browserblau, Rosa statt Lila für besuchte Links — weniger
+   aggressiv auf dem dunklen Hintergrund. */
+.dup-lnk:link { color:#8ecae6; }
+.dup-lnk:visited { color:#e8a0c4; }
+.dup-lnk:hover { color:var(--text); }
+
 .fitpick { display:flex; align-items:center; gap:7px; margin-top:12px; }
 .fitpick__lbl { font-size:11px; color:var(--dim); }
 .fitbtn {
@@ -1307,7 +1313,7 @@ export default function JobbotUI() {
                         {g.jobs.map(job => (
                           <div key={job.id} style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
                             {job.scrapedAt.slice(0, 10)} · {job.status} ·{' '}
-                            <a href={job.url} target="_blank" rel="noreferrer">{job.url}</a>
+                            <a className="dup-lnk" href={job.url} target="_blank" rel="noreferrer">{job.url}</a>
                             {job.id === newestId
                               ? <span style={{ color: 'var(--ok)' }}> — bleibt (bekommt {g.jobs[0].scrapedAt.slice(0, 10)} als Pull-Datum)</span>
                               : <span style={{ color: 'var(--err)' }}> — wird gelöscht</span>}
