@@ -14,6 +14,7 @@ import { loadSettings, type FilterMode } from '../lib/settings.ts';
 import { buildScrapeSetup } from '../lib/scrape-setup.ts';
 import { runScrape } from '../lib/scrape-runner.ts';
 import { filterJob } from '../lib/filter.ts';
+import { findDuplicates } from '../lib/duplicates.ts';
 import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 
@@ -296,6 +297,14 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === 'GET' && url.pathname === '/api/duplicates') {
+    const jobs = await storage.list();
+    const groups = findDuplicates(jobs);
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(groups));
+    return;
+  }
+
   if (req.method === 'GET' && url.pathname === '/api/anschreiben/status') {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(anschreibenRun));
@@ -373,14 +382,18 @@ const server = createServer(async (req, res) => {
     let body = '';
     for await (const chunk of req) body += chunk;
     let mode: FilterMode | undefined;
+    let scope: 'new' | 'all' = 'new';
     try {
-      mode = (JSON.parse(body) as { mode?: FilterMode }).mode;
+      const parsed = JSON.parse(body) as { mode?: FilterMode; scope?: 'new' | 'all' };
+      mode = parsed.mode;
+      if (parsed.scope === 'all') scope = 'all';
     } catch {
       // undefined -> filterJob fällt auf config/settings.json zurück
     }
 
     try {
-      const jobs = await storage.list({ status: 'new' });
+      // scope "all" triaged jede vorhandene Job-Datei neu — siehe scripts/run-filter.ts --scope.
+      const jobs = await storage.list(scope === 'all' ? undefined : { status: 'new' });
       let sicher = 0, unsicher = 0, raus = 0;
       for (let i = 0; i < jobs.length; i++) {
         filterRun.current = { i, total: jobs.length, title: jobs[i].title };

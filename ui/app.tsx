@@ -21,6 +21,7 @@ import {
   Play,
   Square,
   Copy,
+  Layers,
 } from 'lucide-react';
 import type { Job, Fit } from '../scrapers/interface.ts';
 import { FOLDER_IDS, inFolder, type FolderId } from '../lib/folders.ts';
@@ -57,6 +58,9 @@ type AnschreibenRunStatus = {
   error?: string;
 };
 type FilterMode = 'llm' | 'regex';
+// Spiegelt lib/duplicates.ts DuplicateGroup — kein gemeinsames Modul aus demselben
+// Grund wie oben (Job-Typ selbst kommt weiterhin aus scrapers/interface.ts).
+type DuplicateGroup = { key: string; jobs: Job[] };
 
 /* ------------------------------------------------------------------ *
  * Design tokens
@@ -430,13 +434,14 @@ export default function JobbotUI() {
   const [detailOpen, setDetailOpen] = useState(false);
   // 'attachment'/'scrape'/'filter' sind keine Ordner (kein FolderId, kein Job-Filter)
   // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
-  const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'anschreiben'>('jobs');
+  const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben'>('jobs');
   const [attachment, setAttachment] = useState<AttachmentMeta | null | undefined>(undefined);
   const [cc, setCc] = useState<string | null | undefined>(undefined);
   const [ccInput, setCcInput] = useState('');
   const [scrapeSources, setScrapeSources] = useState<string[]>([]);
   const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
   const [filterMode, setFilterMode] = useState<FilterMode>('regex');
+  const [filterScope, setFilterScope] = useState<'new' | 'all'>('new');
   // Entspricht scripts/run-anschreiben.ts --data (matched/offstack) — "brutal" ist als
   // Kästchen trotzdem wählbar (Symmetrie mit den Fit-Chips oben in der Liste), landet aber
   // serverseitig immer bei "skipped" (generateAnschreiben() lehnt fit "brutal" grundsätzlich
@@ -446,6 +451,8 @@ export default function JobbotUI() {
   const [anschreibenLimit, setAnschreibenLimit] = useState('');
   const [scrapeStatus, setScrapeStatus] = useState<ScrapeStatus | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterRunStatus | null>(null);
+  const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[] | null>(null);
+  const [duplicatesLoading, setDuplicatesLoading] = useState(false);
   const [anschreibenStatus, setAnschreibenStatus] = useState<AnschreibenRunStatus | null>(null);
   const [scrapeStarting, setScrapeStarting] = useState(false);
   const [filterStarting, setFilterStarting] = useState(false);
@@ -569,13 +576,28 @@ export default function JobbotUI() {
       const res = await fetch('/api/filter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: filterMode }),
+        body: JSON.stringify({ mode: filterMode, scope: filterScope }),
       });
       if (res.status === 409) say('Filter läuft bereits', 'err');
     } finally {
       setFilterStarting(false);
     }
   }
+
+  const loadDuplicates = useCallback(() => {
+    setDuplicatesLoading(true);
+    fetch('/api/duplicates')
+      .then(r => r.json())
+      .then((groups: DuplicateGroup[]) => setDuplicateGroups(groups))
+      .finally(() => setDuplicatesLoading(false));
+  }, []);
+
+  // Nur beim Betreten der Ansicht laden (kein Polling wie bei Scrape/Filter/Anschreiben)
+  // — Duplikatsuche ist eine synchrone, sofort fertige Leseoperation ohne Fortschritt,
+  // der sich zu beobachten lohnt.
+  useEffect(() => {
+    if (view === 'duplicates') loadDuplicates();
+  }, [view, loadDuplicates]);
 
   // Ein Aufruf für beides: die Mehrfachauswahl in der Liste UND den einzelnen
   // "Neu generieren"-Button im Detail (der bisher ein reiner Toast-Stub war,
@@ -934,6 +956,11 @@ export default function JobbotUI() {
               <span style={{ width: `${filterPct}%` }} />
             </div>
           )}
+          <button className={'fld' + (view === 'duplicates' ? ' fld--on' : '')} onClick={() => setView('duplicates')}>
+            <Layers />
+            <span className="fld__label">Duplikate</span>
+            {duplicateGroups && duplicateGroups.length > 0 && <span className="fld__n">{duplicateGroups.length}</span>}
+          </button>
           <button className={'fld' + (view === 'anschreiben' ? ' fld--on' : '')} onClick={() => setView('anschreiben')}>
             <FileText />
             <span className="fld__label">Anschreiben</span>
@@ -1120,7 +1147,9 @@ export default function JobbotUI() {
         <section className="att">
           <header className="dt__head">
             <div className="dt__firma">Filter</div>
-            <div className="dt__titel">Jobs mit Status "neu" filtern.</div>
+            <div className="dt__titel">
+              {filterScope === 'all' ? 'Alle Jobs neu triagen.' : 'Jobs mit Status "neu" filtern.'}
+            </div>
           </header>
           <div className="dt__body">
             {filterStatus?.status === 'running' ? (
@@ -1133,12 +1162,21 @@ export default function JobbotUI() {
                 )}
               </div>
             ) : (
-              <div className="modetoggle">
-                {(['regex', 'llm'] as const).map(m => (
-                  <button key={m} className={'modebtn' + (filterMode === m ? ' modebtn--on' : '')} onClick={() => setFilterMode(m)}>
-                    {m === 'regex' ? 'Regex' : 'LLM'}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div className="modetoggle">
+                  {(['regex', 'llm'] as const).map(m => (
+                    <button key={m} className={'modebtn' + (filterMode === m ? ' modebtn--on' : '')} onClick={() => setFilterMode(m)}>
+                      {m === 'regex' ? 'Regex' : 'LLM'}
+                    </button>
+                  ))}
+                </div>
+                <div className="modetoggle">
+                  {(['new', 'all'] as const).map(s => (
+                    <button key={s} className={'modebtn' + (filterScope === s ? ' modebtn--on' : '')} onClick={() => setFilterScope(s)}>
+                      {s === 'new' ? 'Nur neue' : 'Alle Jobs'}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -1149,6 +1187,52 @@ export default function JobbotUI() {
               onClick={runFilterNow}
             >
               <Play /> Filtern
+            </button>
+          </footer>
+        </section>
+      ) : view === 'duplicates' ? (
+        /* ---------- Duplikate ---------- */
+        <section className="att">
+          <header className="dt__head">
+            <div className="dt__firma">Duplikate</div>
+            <div className="dt__titel">
+              Jobs, die nach Normalisierung (Klein­schreibung, Gender­marker, Rechtsform) auf dieselbe ID
+              zusammenfallen — reiner Report, es wird nichts gelöscht.
+            </div>
+          </header>
+          <div className="dt__body">
+            {duplicatesLoading ? (
+              <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
+                <div className="empty__h">Lädt…</div>
+              </div>
+            ) : !duplicateGroups || duplicateGroups.length === 0 ? (
+              <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
+                <div className="empty__h">Keine Duplikate gefunden.</div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                {duplicateGroups.map(g => (
+                  <div key={g.key}>
+                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+                      {g.jobs[0].title} — {g.jobs[0].company}
+                      <span style={{ color: 'var(--muted)', fontWeight: 400 }}> ({g.jobs.length}×)</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {g.jobs.map(job => (
+                        <div key={job.id} style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
+                          {job.scrapedAt.slice(0, 10)} · {job.status} ·{' '}
+                          <a href={job.url} target="_blank" rel="noreferrer">{job.url}</a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <footer className="bar">
+            <button className="btn btn--primary" disabled={duplicatesLoading} onClick={loadDuplicates}>
+              <RotateCw /> Neu prüfen
             </button>
           </footer>
         </section>
