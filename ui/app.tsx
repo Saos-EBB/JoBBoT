@@ -145,8 +145,16 @@ const CSS = `
 .fld--err.fld--has svg, .fld--err.fld--has .fld__n { color:var(--err); opacity:1; }
 .fld__dot { width:6px; height:6px; border-radius:50%; background:var(--ok); flex:none; }
 
-.fld__bar { height:2px; margin:0 8px 6px; background:var(--line); border-radius:99px; overflow:hidden; }
-.fld__bar span { display:block; height:100%; background:var(--text); transition:width .3s ease; }
+.fld__bar { height:3px; margin:0 8px 6px; background:var(--line); border-radius:99px; overflow:hidden; }
+.fld__bar span {
+  display:block; height:100%; border-radius:inherit; transition:width .3s ease;
+  background:linear-gradient(90deg, #5B8CFF, #35D0A5, #5B8CFF);
+  background-size:200% 100%;
+}
+@media (prefers-reduced-motion:no-preference) {
+  .fld__bar span { animation:fld-shimmer 1.6s linear infinite; }
+  @keyframes fld-shimmer { to { background-position:-200% 0; } }
+}
 
 /* .chip/.chip--on ist für die Fit-Filter gebaut, wo ein Farbpunkt die Auswahl
    trägt — ohne Punkt (Regex/LLM) ist der Kontrast dort zu schwach, um überhaupt
