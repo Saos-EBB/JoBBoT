@@ -1,0 +1,76 @@
+AddedForTryout — Änderungen auf diesem Branch (main @ ed0b8b5 -> tryout)
+========================================================================
+
+Experimentelle Features, nicht für main gedacht. Ein Commit pro Punkt,
+Hashes zum Nachschlagen mit "git show <hash>".
+
+1) Toasts rechts oben statt mittig unten (aaf4a42)
+   - Standard-Pattern, verdeckt nicht mehr den Content-Fokus.
+   - Mehrfach-Toast-Stacking NICHT gebaut (Toast-State ist noch ein
+     Einzelobjekt, nie mehrere gleichzeitig aktiv).
+
+2) Progressbar optisch lebendiger (1fc7b29)
+   - Blau-Türkis-Farbverlauf statt Flat-Color, Shimmer-Loop während
+     des Laufs, respektiert prefers-reduced-motion.
+
+3) Progressbar an echten Ollama-Streaming-Fortschritt gekoppelt (6e6cdf8)
+   - Vorher: kein Fake-Timer, aber grobkörnig (nur i/total pro Job,
+     stand bei Einzel-Job-Läufen bis zu 10 Minuten unbewegt still).
+   - Phasen-Modell (Prompt bauen / Generieren / Fertig) statt
+     Prozentschätzung, weil die Gesamt-Tokenzahl vorab unbekannt ist.
+   - Transport per SSE (GET /api/anschreiben/stream) — kein Build-Step
+     nötig, passt zum plain node:http-Server.
+   - Shimmer aus Punkt 2 ist jetzt an die "generating"-Phase gebunden
+     statt immer zu laufen sobald ein Lauf aktiv ist.
+
+4) Gmail-Inbox-Antworten fetchen und Bewerbungen zuordnen (86c8444)
+   - Recon ergab: keine Message-ID wird beim Senden gespeichert. Matching
+     läuft daher primär über die Firmen-Mailadresse (job.email), sekundär
+     über den aus title+company deterministisch rekonstruierten Betreff
+     (zur Disambiguierung bei geteilten Firmen-Inboxen).
+   - mail/gmail.ts: fetchInboxReplies() — derselbe ImapFlow-Zugang wie
+     der bestehende Draft-Versand, nur lesend auf INBOX.
+   - lib/mail-match.ts: matchReplies() — bei mehrdeutiger Domain ohne
+     eindeutigen Betreff-Treffer wird übersprungen statt geraten.
+   - Kein neuer JobStatus-Wert (hätte die Ordner-Verschiebung in
+     lib/folders.ts mitbetroffen) — stattdessen neues Feld
+     Job.replyReceivedAt, gesetzt über das generische storage.update().
+   - POST /api/mail/replies/fetch: manueller Trigger, kein Auto-Daemon.
+   - Verifiziert gegen die echte Gmail-Inbox: 5 von 16 geprüften Mails
+     korrekt zugeordnet (vom Nutzer bestätigt).
+
+5) UI: Badge "Antwort erhalten" + Filter (6f57714)
+   - Badge in der Job-Zeile, sobald replyReceivedAt gesetzt ist.
+   - Im "Gesendet"-Ordner (Verlauf): Checkbox "Nur mit Antwort" +
+     Button "Antworten abrufen".
+
+6) Duplikate: Zusammenführen-Button (6d0d862, gefixt in 8dd8f3b)
+   - lib/duplicates.ts: planMerge() — behält das neueste Inserat einer
+     Duplikat-Gruppe, übernimmt aber das scrapedAt (erstes Pull-Datum)
+     des ältesten. Ältere Duplikate werden gelöscht.
+   - UI: Checkbox je Gruppe, "Ausgewählte zusammenführen" oder
+     "Alle zusammenführen".
+   - Bugfix (8dd8f3b): bei einem echten Re-Scrape derselben Stelle
+     tragen beide Dateien dieselbe job.id (nur das Datum im Dateinamen
+     unterscheidet sich) — ein Vergleich über id hatte das Zusammen-
+     führen für genau diese Fälle stillschweigend wirkungslos gemacht
+     (nichts gelöscht, UI zeigte fälschlich beide als "bleibt"). Fix
+     vergleicht über Objektidentität statt id; neues Storage-Primitiv
+     deleteJob(job) löscht exakt die zu einem Objekt gehörende Datei
+     statt mehrdeutig per id-Präfix zu suchen.
+
+7) Link-Farbe im Duplikate-View (c902de2)
+   - Babyblau (#8ecae6) für ungeklickte, Rosa (#e8a0c4) für geklickte
+     Links, statt dem grellen Browser-Standardblau/-lila.
+
+Nicht gebaut (bewusst ausgelassen, YAGNI):
+- Mehrfach-Toast-Stacking (State ist ein Einzelobjekt)
+- Message-ID-Speicherung beim Mail-Versand (email+Betreff reichten als
+  Matching-Anker)
+- Auto-Polling-Daemon für Gmail-Antworten
+- Neuer JobStatus-Enum-Wert für Antworten (stattdessen eigenes Feld)
+
+Fremd-Commit auf diesem Branch (nicht von dieser Arbeit):
+- bd519d3 "docs(readme): dokumentiere --port, filter --scope und
+  Duplikate-Feature" — vom Nutzer bestätigt, dass das ein separates,
+  gewolltes README-Update war.
