@@ -470,6 +470,8 @@ export default function JobbotUI() {
   const [filterStatus, setFilterStatus] = useState<FilterRunStatus | null>(null);
   const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[] | null>(null);
   const [duplicatesLoading, setDuplicatesLoading] = useState(false);
+  const [selectedDupKeys, setSelectedDupKeys] = useState<Set<string>>(new Set());
+  const [merging, setMerging] = useState(false);
   const [replyOnly, setReplyOnly] = useState(false);
   const [repliesFetching, setRepliesFetching] = useState(false);
   const [anschreibenStatus, setAnschreibenStatus] = useState<AnschreibenRunStatus | null>(null);
@@ -646,6 +648,29 @@ export default function JobbotUI() {
   useEffect(() => {
     if (view === 'duplicates') loadDuplicates();
   }, [view, loadDuplicates]);
+
+  // Behält je Gruppe das neueste Inserat (frischerer Titel/Beschreibung/Status),
+  // übernimmt aber das erste Pull-Datum der älteren Duplikate ins JSON des Behaltenen
+  // (siehe lib/duplicates.ts planMerge) — die älteren Dateien werden dabei gelöscht.
+  async function mergeDuplicates(keys: string[] | 'all') {
+    setMerging(true);
+    try {
+      const res = await fetch('/api/duplicates/merge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(keys === 'all' ? { all: true } : { keys }),
+      });
+      const data = await res.json() as { merged?: number };
+      say(`${data.merged ?? 0} Duplikat-Gruppe(n) zusammengeführt`, 'ok');
+      setSelectedDupKeys(new Set());
+      loadDuplicates();
+      refetchJobs();
+    } catch (err) {
+      say(`Zusammenführen fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`, 'err');
+    } finally {
+      setMerging(false);
+    }
+  }
 
   // Ein Aufruf für beides: die Mehrfachauswahl in der Liste UND den einzelnen
   // "Neu generieren"-Button im Detail (der bisher ein reiner Toast-Stub war,
@@ -1246,7 +1271,8 @@ export default function JobbotUI() {
             <div className="dt__firma">Duplikate</div>
             <div className="dt__titel">
               Jobs, die nach Normalisierung (Klein­schreibung, Gender­marker, Rechtsform) auf dieselbe ID
-              zusammenfallen — reiner Report, es wird nichts gelöscht.
+              zusammenfallen. Zusammenführen behält das neueste Inserat je Gruppe, übernimmt aber
+              das erste Pull-Datum der älteren — die älteren Dateien werden dabei gelöscht.
             </div>
           </header>
           <div className="dt__body">
@@ -1260,28 +1286,58 @@ export default function JobbotUI() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                {duplicateGroups.map(g => (
-                  <div key={g.key}>
-                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-                      {g.jobs[0].title} — {g.jobs[0].company}
-                      <span style={{ color: 'var(--muted)', fontWeight: 400 }}> ({g.jobs.length}×)</span>
+                {duplicateGroups.map(g => {
+                  const newestId = g.jobs[g.jobs.length - 1].id;
+                  return (
+                    <div key={g.key}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedDupKeys.has(g.key)}
+                          onChange={e => setSelectedDupKeys(prev => {
+                            const next = new Set(prev);
+                            if (e.target.checked) next.add(g.key); else next.delete(g.key);
+                            return next;
+                          })}
+                        />
+                        {g.jobs[0].title} — {g.jobs[0].company}
+                        <span style={{ color: 'var(--muted)', fontWeight: 400 }}> ({g.jobs.length}×)</span>
+                      </label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingLeft: 22 }}>
+                        {g.jobs.map(job => (
+                          <div key={job.id} style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
+                            {job.scrapedAt.slice(0, 10)} · {job.status} ·{' '}
+                            <a href={job.url} target="_blank" rel="noreferrer">{job.url}</a>
+                            {job.id === newestId
+                              ? <span style={{ color: 'var(--ok)' }}> — bleibt (bekommt {g.jobs[0].scrapedAt.slice(0, 10)} als Pull-Datum)</span>
+                              : <span style={{ color: 'var(--err)' }}> — wird gelöscht</span>}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      {g.jobs.map(job => (
-                        <div key={job.id} style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
-                          {job.scrapedAt.slice(0, 10)} · {job.status} ·{' '}
-                          <a href={job.url} target="_blank" rel="noreferrer">{job.url}</a>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
           <footer className="bar">
             <button className="btn btn--primary" disabled={duplicatesLoading} onClick={loadDuplicates}>
               <RotateCw /> Neu prüfen
+            </button>
+            <span className="bar__spacer" />
+            <button
+              className="btn"
+              disabled={merging || selectedDupKeys.size === 0}
+              onClick={() => mergeDuplicates([...selectedDupKeys])}
+            >
+              Ausgewählte zusammenführen ({selectedDupKeys.size})
+            </button>
+            <button
+              className="btn btn--primary"
+              disabled={merging || !duplicateGroups || duplicateGroups.length === 0}
+              onClick={() => mergeDuplicates('all')}
+            >
+              Alle zusammenführen
             </button>
           </footer>
         </section>

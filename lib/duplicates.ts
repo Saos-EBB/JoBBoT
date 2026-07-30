@@ -25,3 +25,22 @@ export function findDuplicates(jobs: Job[]): DuplicateGroup[] {
       jobs: group.sort((a, b) => a.scrapedAt.localeCompare(b.scrapedAt)),
     }));
 }
+
+export interface MergePlan {
+  keepId: string;
+  scrapedAt: string;
+  removeIds: string[];
+}
+
+// Das neueste Inserat der Gruppe ersetzt die älteren (frischerer Titel/Beschreibung/
+// Status) — übernimmt aber deren scrapedAt (group.jobs ist aufsteigend sortiert,
+// also jobs[0]), damit das ursprüngliche Erst-Pull-Datum nicht beim Merge verloren geht.
+export function planMerge(group: DuplicateGroup): MergePlan {
+  const oldest = group.jobs[0];
+  const newest = group.jobs[group.jobs.length - 1];
+  return {
+    keepId: newest.id,
+    scrapedAt: oldest.scrapedAt,
+    removeIds: group.jobs.filter(j => j.id !== newest.id).map(j => j.id),
+  };
+}
