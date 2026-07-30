@@ -15,7 +15,7 @@ import { loadSettings, type FilterMode } from '../lib/settings.ts';
 import { buildScrapeSetup } from '../lib/scrape-setup.ts';
 import { runScrape } from '../lib/scrape-runner.ts';
 import { filterJob } from '../lib/filter.ts';
-import { findDuplicates } from '../lib/duplicates.ts';
+import { findDuplicates, planMerge } from '../lib/duplicates.ts';
 import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import type { AnschreibenPhase } from '../lib/anschreiben.ts';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
@@ -317,6 +317,32 @@ const server = createServer(async (req, res) => {
     const groups = findDuplicates(jobs);
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(groups));
+    return;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/duplicates/merge') {
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    let keys: string[] | 'all' = [];
+    try {
+      const parsed = JSON.parse(body) as { keys?: string[]; all?: boolean };
+      keys = parsed.all ? 'all' : (parsed.keys ?? []);
+    } catch {
+      // leer bleiben — behandelt wie "keine Auswahl"
+    }
+
+    const jobs = await storage.list();
+    const groups = findDuplicates(jobs);
+    const targets = keys === 'all' ? groups : groups.filter(g => keys.includes(g.key));
+
+    for (const group of targets) {
+      const plan = planMerge(group);
+      await storage.update(plan.keepId, { scrapedAt: plan.scrapedAt });
+      for (const id of plan.removeIds) await storage.delete(id);
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ merged: targets.length }));
     return;
   }
 
