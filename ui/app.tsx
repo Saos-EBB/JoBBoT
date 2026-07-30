@@ -151,8 +151,10 @@ const CSS = `
   background:linear-gradient(90deg, #5B8CFF, #35D0A5, #5B8CFF);
   background-size:200% 100%;
 }
+/* Shimmer nur während der echten Ollama-Streaming-Phase ("generating") — bei
+   "prompt" (Prompt bauen, noch keine Tokens) steht die Bar bewusst still. */
 @media (prefers-reduced-motion:no-preference) {
-  .fld__bar span { animation:fld-shimmer 1.6s linear infinite; }
+  .fld__bar--live span { animation:fld-shimmer 1.6s linear infinite; }
   @keyframes fld-shimmer { to { background-position:-200% 0; } }
 }
 
@@ -468,6 +470,7 @@ export default function JobbotUI() {
   const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[] | null>(null);
   const [duplicatesLoading, setDuplicatesLoading] = useState(false);
   const [anschreibenStatus, setAnschreibenStatus] = useState<AnschreibenRunStatus | null>(null);
+  const [anschreibenPhase, setAnschreibenPhase] = useState<'prompt' | 'generating' | 'done' | null>(null);
   const [scrapeStarting, setScrapeStarting] = useState(false);
   const [filterStarting, setFilterStarting] = useState(false);
   const [anschreibenStarting, setAnschreibenStarting] = useState(false);
@@ -569,6 +572,19 @@ export default function JobbotUI() {
     const id = setInterval(tick, 1500);
     return () => clearInterval(id);
   }, [refetchJobs, say]);
+
+  // SSE statt Polling für die Anschreiben-Phase (prompt/generating/done) — echte
+  // Streaming-Ticks aus Ollama statt eines an das 1.5s-Poll-Intervall gebundenen
+  // Fake-Fortschritts. Eine einzige, dauerhaft offene Verbindung (wie das Poll-Intervall
+  // oben), damit die Phase auch beim Ansichtswechsel weiterläuft.
+  useEffect(() => {
+    const es = new EventSource('/api/anschreiben/stream');
+    es.onmessage = (e) => {
+      const { phase } = JSON.parse(e.data) as { phase: 'prompt' | 'generating' | 'done' | null };
+      setAnschreibenPhase(phase);
+    };
+    return () => es.close();
+  }, []);
 
   async function runScrapeNow() {
     setScrapeStarting(true);
@@ -980,7 +996,7 @@ export default function JobbotUI() {
             <span className="fld__label">Anschreiben</span>
           </button>
           {anschreibenStatus?.status === 'running' && (
-            <div className="fld__bar">
+            <div className={'fld__bar' + (anschreibenPhase === 'generating' ? ' fld__bar--live' : '')}>
               <span style={{ width: `${anschreibenPct}%` }} />
             </div>
           )}
@@ -1260,7 +1276,15 @@ export default function JobbotUI() {
           <div className="dt__body">
             {anschreibenStatus?.status === 'running' ? (
               <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
-                <div className="empty__h">Läuft…</div>
+                <div className="empty__h">
+                  {anschreibenPhase === 'prompt' ? 'Prompt bauen…'
+                    : anschreibenPhase === 'generating' ? 'Generieren…'
+                    : anschreibenPhase === 'done' ? 'Fertig'
+                    : 'Läuft…'}
+                </div>
+                <div className={'fld__bar' + (anschreibenPhase === 'generating' ? ' fld__bar--live' : '')} style={{ margin: '8px 0' }}>
+                  <span style={{ width: `${anschreibenPct}%` }} />
+                </div>
                 {anschreibenStatus.current && (
                   <div style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
                     {anschreibenStatus.current.i + 1}/{anschreibenStatus.current.total}: {anschreibenStatus.current.title}

@@ -1,4 +1,4 @@
-import { createServer } from 'node:http';
+import { createServer, type ServerResponse } from 'node:http';
 import { readFile, writeFile, mkdir, stat, unlink } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
@@ -16,6 +16,7 @@ import { runScrape } from '../lib/scrape-runner.ts';
 import { filterJob } from '../lib/filter.ts';
 import { findDuplicates } from '../lib/duplicates.ts';
 import { runAnschreiben } from '../lib/anschreiben-runner.ts';
+import type { AnschreibenPhase } from '../lib/anschreiben.ts';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 
 function portFromArgs(): string | undefined {
@@ -54,6 +55,7 @@ interface AnschreibenRunState {
   status: 'idle' | 'running' | 'done' | 'error' | 'stopped';
   runId: string | null;
   current?: { i: number; total: number; title: string };
+  phase?: AnschreibenPhase;
   result?: { generated: number; skipped: number; emailsFound: number; mailGenerated: number; nomailGenerated: number };
   error?: string;
 }
@@ -63,6 +65,18 @@ let anschreibenRun: AnschreibenRunState = { status: 'idle', runId: null };
 // Nur für Anschreiben abbrechbar (Scrape/Filter sind schnell genug, dass ein Stop-Button
 // bisher niemand vermisst hat) — ein einzelner Lauf gleichzeitig, wie anschreibenRun selbst.
 let anschreibenAbort: AbortController | null = null;
+
+// SSE statt Polling für den Phasen-Fortschritt: der Server ist plain node:http ohne
+// Build-Step, SSE braucht dafür nur einen offen gehaltenen Response-Stream (kein
+// zusätzliches Protokoll/Library) — einfacher als Chunked-Transfer selbst zu parsen,
+// und die vorhandene /status-Route bleibt für den restlichen (i/total-)Zustand nutzbar.
+const anschreibenSseClients = new Set<ServerResponse>();
+
+function broadcastAnschreibenPhase(phase: AnschreibenPhase): void {
+  anschreibenRun.phase = phase;
+  const payload = `data: ${JSON.stringify({ phase })}\n\n`;
+  for (const client of anschreibenSseClients) client.write(payload);
+}
 
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -311,6 +325,18 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === 'GET' && url.pathname === '/api/anschreiben/stream') {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    });
+    res.write(`data: ${JSON.stringify({ phase: anschreibenRun.phase ?? null })}\n\n`);
+    anschreibenSseClients.add(res);
+    req.on('close', () => anschreibenSseClients.delete(res));
+    return;
+  }
+
   if (req.method === 'POST' && url.pathname === '/api/scrape') {
     // Lock synchron VOR dem ersten await setzen (der Body-Read ist async) — sonst
     // könnten zwei fast gleichzeitige POSTs beide noch den alten Status sehen und
@@ -451,6 +477,7 @@ const server = createServer(async (req, res) => {
         onProgress: (i, total, title) => {
           anschreibenRun.current = { i, total, title };
         },
+        onPhase: broadcastAnschreibenPhase,
       });
       anschreibenRun = {
         status: anschreibenAbort.signal.aborted ? 'stopped' : 'done',
