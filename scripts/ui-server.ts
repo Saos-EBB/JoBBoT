@@ -6,7 +6,8 @@ import { createStorage } from '../storage/index.ts';
 import { config } from '../config.ts';
 import { jobBasename } from '../lib/slugify.ts';
 import { loadProfile } from '../lib/profile.ts';
-import { composeEmail, createDraft, sendMail, logMailAction, type ComposedEmail } from '../mail/gmail.ts';
+import { composeEmail, createDraft, sendMail, logMailAction, fetchInboxReplies, type ComposedEmail } from '../mail/gmail.ts';
+import { matchReplies } from '../lib/mail-match.ts';
 import { ATTACHMENT_PATH, ATTACHMENT_FILENAME } from '../lib/attachment.ts';
 import { loadCc, saveCc, clearCc } from '../lib/cc.ts';
 import { loadSources } from '../lib/sources.ts';
@@ -501,6 +502,32 @@ const server = createServer(async (req, res) => {
     anschreibenAbort.abort();
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ stopped: true }));
+    return;
+  }
+
+  // Manuell auslösbarer Fetch statt Auto-Polling-Daemon (siehe Auftrag: Prototyp reicht
+  // ein Button/eine Route, systemd-Scheduling wäre ein separater Auftrag).
+  if (req.method === 'POST' && url.pathname === '/api/mail/replies/fetch') {
+    try {
+      const jobs = await storage.list();
+      const gesendetDates = jobs.filter(j => j.status === 'gesendet' && j.email).map(j => new Date(j.updatedAt).getTime());
+      if (gesendetDates.length === 0) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ checked: 0, matched: 0 }));
+        return;
+      }
+      const since = new Date(Math.min(...gesendetDates));
+      const replies = await fetchInboxReplies(since);
+      const matches = matchReplies(replies, jobs);
+      for (const { job, reply } of matches) {
+        await storage.update(job.id, { replyReceivedAt: reply.date.toISOString() });
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ checked: replies.length, matched: matches.length }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
+    }
     return;
   }
 

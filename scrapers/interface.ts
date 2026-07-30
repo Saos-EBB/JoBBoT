@@ -33,6 +33,11 @@ export interface Job extends ScrapedJob {
   // Runner-Umbau in run-anschreiben.ts/den Mail-Handlern ist ein separater Auftrag
   // (siehe findings/HANDOFF-gmail-versand.md). Bis dahin ist es ehrlich immer leer.
   error?: string | null;
+  // Kein eigener JobStatus-Wert: storage.updateStatus() beschränkt auf ein festes Enum
+  // und treibt darüber die Ordner-Verschiebung (lib/folders.ts) — eine Antwort ändert
+  // den Bewerbungsstatus nicht, sie ist nur eine zusätzliche Information dazu. Gesetzt
+  // über das generische storage.update(), wie job.email.
+  replyReceivedAt?: string | null;
 }
 
 export type SourceQuery = Record<string, string>;
