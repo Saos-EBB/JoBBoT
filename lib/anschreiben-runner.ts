@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 import type { Job } from '../scrapers/interface.ts';
 import type { Storage } from '../storage/index.ts';
 import type { ProfileData } from './profile.ts';
-import { generateAnschreiben } from './anschreiben.ts';
+import { generateAnschreiben, type AnschreibenPhase } from './anschreiben.ts';
 import { findEmail, FIRMENABC_USER_AGENT } from './find-email.ts';
 import { sleep } from './fetch-page.ts';
 import { config } from '../config.ts';
@@ -24,6 +24,7 @@ export interface RunAnschreibenOptions {
   profile: ProfileData;
   model?: string;
   onProgress?: (i: number, total: number, title: string) => void;
+  onPhase?: (phase: AnschreibenPhase) => void;
   signal?: AbortSignal;
 }
 
@@ -31,7 +32,7 @@ export interface RunAnschreibenOptions {
 // (ein Browser fürs Ganze statt pro Job, sequenziell mit 1s Pause zwischen Jobs)
 // wiederverwenden kann statt ihn zu duplizieren.
 export async function runAnschreiben(options: RunAnschreibenOptions): Promise<AnschreibenOutcome> {
-  const { jobs, storage, profile, model = config.modelWriter, onProgress, signal } = options;
+  const { jobs, storage, profile, model = config.modelWriter, onProgress, onPhase, signal } = options;
   let generated = 0;
   let emailsFound = 0;
   let mailGenerated = 0;
@@ -49,7 +50,7 @@ export async function runAnschreiben(options: RunAnschreibenOptions): Promise<An
       const job = jobs[i];
       processed++;
       onProgress?.(i, jobs.length, job.title);
-      const path = await generateAnschreiben(job, storage, profile, undefined, undefined, model, undefined, signal);
+      const path = await generateAnschreiben(job, storage, profile, undefined, undefined, model, undefined, signal, onPhase);
       if (path) {
         generated++;
         let hasMail = job.email != null;
