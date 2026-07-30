@@ -235,6 +235,7 @@ const CSS = `
 }
 .tag--nomail { border-style:dashed; }
 .tag--err { border-color:rgba(229,72,77,.4); color:var(--err); }
+.tag--reply { border-color:rgba(53,208,165,.4); color:var(--ok); }
 
 .empty { padding:56px 24px; text-align:center; color:var(--dim); }
 .empty__h { color:var(--muted); font-weight:500; margin-bottom:5px; font-size:13px; }
@@ -469,6 +470,8 @@ export default function JobbotUI() {
   const [filterStatus, setFilterStatus] = useState<FilterRunStatus | null>(null);
   const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[] | null>(null);
   const [duplicatesLoading, setDuplicatesLoading] = useState(false);
+  const [replyOnly, setReplyOnly] = useState(false);
+  const [repliesFetching, setRepliesFetching] = useState(false);
   const [anschreibenStatus, setAnschreibenStatus] = useState<AnschreibenRunStatus | null>(null);
   const [anschreibenPhase, setAnschreibenPhase] = useState<'prompt' | 'generating' | 'done' | null>(null);
   const [scrapeStarting, setScrapeStarting] = useState(false);
@@ -622,6 +625,21 @@ export default function JobbotUI() {
       .finally(() => setDuplicatesLoading(false));
   }, []);
 
+  async function fetchReplies() {
+    setRepliesFetching(true);
+    try {
+      const res = await fetch('/api/mail/replies/fetch', { method: 'POST' });
+      const data = await res.json() as { checked?: number; matched?: number; error?: string };
+      if (!res.ok) { say(`Antworten-Abruf fehlgeschlagen: ${data.error}`, 'err'); return; }
+      say(`Antworten-Abruf: ${data.matched ?? 0} von ${data.checked ?? 0} Mails zugeordnet`, 'ok');
+      if ((data.matched ?? 0) > 0) refetchJobs();
+    } catch (err) {
+      say(`Antworten-Abruf fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`, 'err');
+    } finally {
+      setRepliesFetching(false);
+    }
+  }
+
   // Nur beim Betreten der Ansicht laden (kein Polling wie bei Scrape/Filter/Anschreiben)
   // — Duplikatsuche ist eine synchrone, sofort fertige Leseoperation ohne Fortschritt,
   // der sich zu beobachten lohnt.
@@ -740,8 +758,9 @@ export default function JobbotUI() {
     return inCurrentFolder
       .filter(j => (fit === 'alle' ? true : fit === 'unbewertet' ? j.fit === null : j.fit === fit))
       .filter(j => !s || (j.company + ' ' + j.title + ' ' + (j.location ?? '')).toLowerCase().includes(s))
+      .filter(j => !(folder === 'log/gesendet' && replyOnly) || j.replyReceivedAt != null)
       .sort((a, b) => daysAgo(a.scrapedAt) - daysAgo(b.scrapedAt));
-  }, [inCurrentFolder, fit, q]);
+  }, [inCurrentFolder, fit, q, folder, replyOnly]);
 
   const job = jobs.find(j => j.id === sel) ?? null;
   const shown = list.some(j => j.id === sel) ? job : null;
@@ -1382,6 +1401,17 @@ export default function JobbotUI() {
               </button>
             ))}
           </div>
+          {folder === 'log/gesendet' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 4px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--muted)' }}>
+                <input type="checkbox" checked={replyOnly} onChange={e => setReplyOnly(e.target.checked)} />
+                Nur mit Antwort
+              </label>
+              <button className="btn btn--ghost" disabled={repliesFetching} onClick={fetchReplies}>
+                <Mail /> {repliesFetching ? 'Prüft…' : 'Antworten abrufen'}
+              </button>
+            </div>
+          )}
           {folder === 'jobs' && list.length > 0 && (
             <label style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 0 4px', fontSize: 12, color: 'var(--muted)' }}>
               <input
@@ -1449,6 +1479,7 @@ export default function JobbotUI() {
                     <span className={'tag' + (j.email ? '' : ' tag--nomail')}>{j.email ? 'MAIL' : 'PORTAL'}</span>
                     <span className="tag">{j.source}</span>
                     {j.status === 'fehler' && <span className="tag tag--err">FEHLER</span>}
+                    {j.replyReceivedAt && <span className="tag tag--reply">ANTWORT ERHALTEN</span>}
                   </span>
                 </button>
               </div>
