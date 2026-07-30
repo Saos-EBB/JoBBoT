@@ -311,10 +311,16 @@ const CSS = `
 .bar__spacer { flex:1; }
 .bar__hint { font-family:var(--mono); font-size:10.5px; color:var(--dim); }
 
+/* Rechts oben statt mittig unten — verdeckt so nicht den Content-Fokus in der Mitte.
+   Alternative (mittig auf Augenhöhe), falls gewünscht, wäre hier eine Ein-Zeilen-Änderung:
+   top:50%; left:50%; transform:translate(-50%,-50%); (position bleibt sonst gleich). */
+.toaststack {
+  position:fixed; top:20px; right:20px; z-index:50;
+  display:flex; flex-direction:column; gap:8px;
+}
 .toast {
-  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
   background:var(--raised); border:1px solid var(--line); border-radius:6px;
-  padding:8px 15px; font-size:12.5px; box-shadow:0 8px 24px rgba(0,0,0,.5); z-index:50;
+  padding:8px 15px; font-size:12.5px; box-shadow:0 8px 24px rgba(0,0,0,.5);
   display:flex; align-items:center; gap:7px;
 }
 .toast svg { width:14px; height:14px; flex:none; }
@@ -325,7 +331,7 @@ const CSS = `
 
 @media (prefers-reduced-motion:no-preference) {
   .toast { animation:rise .16s ease-out; }
-  @keyframes rise { from { opacity:0; transform:translate(-50%,6px); } }
+  @keyframes rise { from { opacity:0; transform:translateY(-6px); } }
 }
 
 /* ---------- Responsive ---------- */
@@ -1589,9 +1595,11 @@ export default function JobbotUI() {
       )}
 
       {toast && (
-        <div className={`toast toast--${toast.kind}`}>
-          {toast.kind === 'ok' ? <CheckCircle2 /> : <XCircle />}
-          {toast.msg}
+        <div className="toaststack">
+          <div className={`toast toast--${toast.kind}`}>
+            {toast.kind === 'ok' ? <CheckCircle2 /> : <XCircle />}
+            {toast.msg}
+          </div>
         </div>
       )}
     </div>
