@@ -16,17 +16,32 @@ function parseModeOverride(argv: string[]): FilterMode | undefined {
   return value;
 }
 
+type FilterScope = 'new' | 'all';
+
+function parseScope(argv: string[]): FilterScope {
+  const arg = argv.find(a => a.startsWith('--scope='));
+  if (!arg) return 'new';
+  const value = arg.slice('--scope='.length);
+  if (value !== 'new' && value !== 'all') {
+    throw new Error(`Ungültiger --scope Wert: "${value}". Gültige Werte: new, all`);
+  }
+  return value;
+}
+
 const mode = parseModeOverride(process.argv.slice(2)) ?? loadSettings().filterMode;
+const scope = parseScope(process.argv.slice(2));
 
 const storage = createStorage();
-const jobs = await storage.list({ status: 'new' });
+// scope "all" triaged jede vorhandene Job-Datei neu (z.B. nach einer Regel-/Normalisierungs-
+// Änderung), damit die Datenbank nicht dauerhaft auf einem alten Urteil sitzen bleibt.
+const jobs = await storage.list(scope === 'all' ? undefined : { status: 'new' });
 
 if (jobs.length === 0) {
-  console.log('Keine neuen Jobs zu filtern.');
+  console.log(scope === 'all' ? 'Keine Jobs vorhanden.' : 'Keine neuen Jobs zu filtern.');
   process.exit(0);
 }
 
-console.log(`Filtere ${jobs.length} Job(s)... (Modus: ${mode})\n`);
+console.log(`Filtere ${jobs.length} Job(s)... (Modus: ${mode}, Scope: ${scope})\n`);
 
 function logLine(d: FilterDecision): void {
   if (d.status === 'matched') {

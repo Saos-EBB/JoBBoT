@@ -46,3 +46,40 @@ test('format: /^[0-9a-f]{16}$/ — very long strings', () => {
 test('format: /^[0-9a-f]{16}$/ — unicode', () => {
   assert.match(jobId({ title: 'Softwareentwickler (ä/ö/ü)', company: '🚀 Startup GmbH' }), /^[0-9a-f]{16}$/);
 });
+
+test('company: legal-form suffix is stripped', () => {
+  const base = jobId({ title: 'Dev', company: 'Rubig' });
+  assert.equal(jobId({ title: 'Dev', company: 'Rubig GmbH' }), base);
+  assert.equal(jobId({ title: 'Dev', company: 'Rubig GmbH & Co KG' }), base);
+  assert.equal(jobId({ title: 'Dev', company: 'Rubig AG' }), base);
+});
+
+test('company: diacritics are stripped, so RÜBIG collapses onto Rubig', () => {
+  assert.equal(
+    jobId({ title: 'Dev', company: 'RÜBIG GmbH & Co KG' }),
+    jobId({ title: 'Dev', company: 'Rubig' }),
+  );
+});
+
+test('title: gender marker is stripped regardless of order/punctuation', () => {
+  const base = jobId({ title: 'Junior-Projektleiter Elektrotechnik', company: 'ACME' });
+  assert.equal(jobId({ title: 'Junior-Projektleiter Elektrotechnik (m/w/d)', company: 'ACME' }), base);
+  assert.equal(jobId({ title: 'Junior-Projektleiter Elektrotechnik (w/m/d)', company: 'ACME' }), base);
+  assert.equal(jobId({ title: 'Junior-Projektleiter Elektrotechnik m-w-d', company: 'ACME' }), base);
+  assert.equal(jobId({ title: 'Junior-Projektleiter Elektrotechnik (m/w/x)', company: 'ACME' }), base);
+});
+
+test('title: real near-duplicate pair collapses onto the same id (JKU frontend job)', () => {
+  const company = 'Johannes Kepler Universität';
+  assert.equal(
+    jobId({ title: 'Frontend Developer (Senior) (m/w/d) (unbefristete Einstellung)', company }),
+    jobId({ title: 'Frontend Developer (Senior) (w/m/d) (unbefristete Einstellung)', company }),
+  );
+});
+
+test('empty company is still distinct from a filled-in one — not a fixable case here', () => {
+  assert.notEqual(
+    jobId({ title: 'Junior-Projektleiter Elektrotechnik (m/w/d)', company: '' }),
+    jobId({ title: 'Junior-Projektleiter Elektrotechnik (m/w/d)', company: 'ETZI-Group GmbH' }),
+  );
+});
