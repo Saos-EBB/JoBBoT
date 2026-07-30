@@ -27,20 +27,25 @@ export function findDuplicates(jobs: Job[]): DuplicateGroup[] {
 }
 
 export interface MergePlan {
-  keepId: string;
+  keep: Job;
   scrapedAt: string;
-  removeIds: string[];
+  remove: Job[];
 }
 
 // Das neueste Inserat der Gruppe ersetzt die älteren (frischerer Titel/Beschreibung/
 // Status) — übernimmt aber deren scrapedAt (group.jobs ist aufsteigend sortiert,
 // also jobs[0]), damit das ursprüngliche Erst-Pull-Datum nicht beim Merge verloren geht.
+//
+// Arbeitet mit den vollen Job-Objekten (Objektidentität), nicht mit job.id: ein
+// echter Re-Scrape derselben Stelle trägt in beiden Dateien dieselbe id (nur der
+// Dateiname unterscheidet sich durchs Datum) — ein Vergleich über j.id würde dann
+// fälschlich BEIDE als "neuestes" erkennen bzw. gar keins zum Löschen übriglassen.
 export function planMerge(group: DuplicateGroup): MergePlan {
   const oldest = group.jobs[0];
   const newest = group.jobs[group.jobs.length - 1];
   return {
-    keepId: newest.id,
+    keep: newest,
     scrapedAt: oldest.scrapedAt,
-    removeIds: group.jobs.filter(j => j.id !== newest.id).map(j => j.id),
+    remove: group.jobs.filter(j => j !== newest),
   };
 }

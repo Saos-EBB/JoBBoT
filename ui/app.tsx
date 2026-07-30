@@ -1293,7 +1293,7 @@ export default function JobbotUI() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 {duplicateGroups.map(g => {
-                  const newestId = g.jobs[g.jobs.length - 1].id;
+                  const newestIndex = g.jobs.length - 1;
                   return (
                     <div key={g.key}>
                       <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
@@ -1310,11 +1310,14 @@ export default function JobbotUI() {
                         <span style={{ color: 'var(--muted)', fontWeight: 400 }}> ({g.jobs.length}×)</span>
                       </label>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingLeft: 22 }}>
-                        {g.jobs.map(job => (
-                          <div key={job.id} style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
+                        {g.jobs.map((job, i) => (
+                          // Index statt job.id als key/Vergleich: ein echter Re-Scrape derselben
+                          // Stelle trägt in beiden Dateien dieselbe id (siehe lib/duplicates.ts
+                          // planMerge) — job.id === newestId hätte hier fälschlich beide markiert.
+                          <div key={i} style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
                             {job.scrapedAt.slice(0, 10)} · {job.status} ·{' '}
                             <a className="dup-lnk" href={job.url} target="_blank" rel="noreferrer">{job.url}</a>
-                            {job.id === newestId
+                            {i === newestIndex
                               ? <span style={{ color: 'var(--ok)' }}> — bleibt (bekommt {g.jobs[0].scrapedAt.slice(0, 10)} als Pull-Datum)</span>
                               : <span style={{ color: 'var(--err)' }}> — wird gelöscht</span>}
                           </div>

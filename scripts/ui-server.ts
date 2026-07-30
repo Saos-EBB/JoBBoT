@@ -337,8 +337,13 @@ const server = createServer(async (req, res) => {
 
     for (const group of targets) {
       const plan = planMerge(group);
-      await storage.update(plan.keepId, { scrapedAt: plan.scrapedAt });
-      for (const id of plan.removeIds) await storage.delete(id);
+      for (const job of plan.remove) await storage.deleteJob(job);
+      // Alte Datei exakt löschen statt update() (das den Dateinamen aus dem
+      // gepatchten scrapedAt neu ableitet — bei gleichem Zielordner bliebe die
+      // alte Datei mit dem alten Namen sonst als Leiche liegen) und dann frisch
+      // unter dem übernommenen scrapedAt speichern.
+      await storage.deleteJob(plan.keep);
+      await storage.save({ ...plan.keep, scrapedAt: plan.scrapedAt, updatedAt: new Date().toISOString() });
     }
 
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
