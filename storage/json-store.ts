@@ -113,4 +113,13 @@ export class JsonStore implements Storage {
     const path = await this.findFile(id);
     if (path) try { await unlink(path); } catch { /* already gone */ }
   }
+
+  // delete(id) sucht per id-Präfix und ist mehrdeutig, sobald zwei Dateien dieselbe
+  // id tragen (z.B. zwei Re-Scrapes derselben Stelle, nur das Datum im Dateinamen
+  // unterscheidet sich) — deleteJob() zielt stattdessen exakt auf DIESES Objekt,
+  // über dieselbe dirFor()/getFilename()-Ableitung wie save().
+  async deleteJob(job: Job): Promise<void> {
+    const path = join(this.dirFor(job), this.getFilename(job));
+    try { await unlink(path); } catch { /* already gone */ }
+  }
 }
