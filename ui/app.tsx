@@ -154,12 +154,6 @@ const CSS = `
   background:linear-gradient(90deg, #5B8CFF, #35D0A5, #5B8CFF);
   background-size:200% 100%;
 }
-/* Shimmer nur während der echten Ollama-Streaming-Phase ("generating") — bei
-   "prompt" (Prompt bauen, noch keine Tokens) steht die Bar bewusst still. */
-@media (prefers-reduced-motion:no-preference) {
-  .fld__bar--live span { animation:fld-shimmer 1.6s linear infinite; }
-  @keyframes fld-shimmer { to { background-position:-200% 0; } }
-}
 
 .loadgrid { display:flex; flex-direction:column; gap:16px; }
 .loadgrid__head {
@@ -535,10 +529,6 @@ export default function JobbotUI() {
   const [replyOnly, setReplyOnly] = useState(false);
   const [repliesFetching, setRepliesFetching] = useState(false);
   const [anschreibenStatus, setAnschreibenStatus] = useState<AnschreibenRunStatus | null>(null);
-  // anschreibenPhase kommt nicht mehr über SSE (siehe anschreibenSections/EventSource
-  // unten) — bleibt bis Step 7 (alte Progressbar entfernen) stehen, damit der noch
-  // ungewechselte JSX-Block darunter kompiliert, ohne vorzeitig Toten Code zu jagen.
-  const anschreibenPhase: 'prompt' | 'generating' | 'done' | null = null;
   const [anschreibenSections, setAnschreibenSections] = useState<LoadGridSection[]>([]);
   const [scrapeStarting, setScrapeStarting] = useState(false);
   const [filterStarting, setFilterStarting] = useState(false);
@@ -1129,7 +1119,7 @@ export default function JobbotUI() {
             <span className="fld__label">Anschreiben</span>
           </button>
           {anschreibenStatus?.status === 'running' && (
-            <div className={'fld__bar' + (anschreibenPhase === 'generating' ? ' fld__bar--live' : '')}>
+            <div className="fld__bar">
               <span style={{ width: `${anschreibenPct}%` }} />
             </div>
           )}
@@ -1271,11 +1261,6 @@ export default function JobbotUI() {
                 ) : (
                   <LoadGrid sections={scrapeSections} />
                 )}
-                {scrapeSourceEntries.length > 0 && scrapeSourceEntries.map(([name, p]) => (
-                  <div key={name} style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)', marginTop: 4 }}>
-                    {name}: {p.current}/{p.total}
-                  </div>
-                ))}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 9, maxWidth: 420 }}>
@@ -1319,16 +1304,7 @@ export default function JobbotUI() {
             {filterStatus?.status === 'running' ? (
               <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
                 <div className="empty__h">Läuft…</div>
-                {filterStatus.current && (
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
-                    {filterStatus.current.i + 1}/{filterStatus.current.total}: {filterStatus.current.title}
-                  </div>
-                )}
-                {filterSections.length > 0 && (
-                  <div style={{ marginTop: 10 }}>
-                    <LoadGrid sections={filterSections} />
-                  </div>
-                )}
+                {filterSections.length === 0 ? 'Startet…' : <LoadGrid sections={filterSections} />}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -1449,25 +1425,8 @@ export default function JobbotUI() {
           <div className="dt__body">
             {anschreibenStatus?.status === 'running' ? (
               <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
-                <div className="empty__h">
-                  {anschreibenPhase === 'prompt' ? 'Prompt bauen…'
-                    : anschreibenPhase === 'generating' ? 'Generieren…'
-                    : anschreibenPhase === 'done' ? 'Fertig'
-                    : 'Läuft…'}
-                </div>
-                <div className={'fld__bar' + (anschreibenPhase === 'generating' ? ' fld__bar--live' : '')} style={{ margin: '8px 0' }}>
-                  <span style={{ width: `${anschreibenPct}%` }} />
-                </div>
-                {anschreibenStatus.current && (
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
-                    {anschreibenStatus.current.i + 1}/{anschreibenStatus.current.total}: {anschreibenStatus.current.title}
-                  </div>
-                )}
-                {anschreibenSections.length > 0 && (
-                  <div style={{ marginTop: 10 }}>
-                    <LoadGrid sections={anschreibenSections} />
-                  </div>
-                )}
+                <div className="empty__h">Läuft…</div>
+                {anschreibenSections.length === 0 ? 'Startet…' : <LoadGrid sections={anschreibenSections} />}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 420 }}>
