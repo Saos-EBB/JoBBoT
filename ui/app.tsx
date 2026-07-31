@@ -161,9 +161,17 @@ const CSS = `
   color:var(--muted); margin-bottom:7px;
 }
 .loadgrid__row { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:3px; }
-.loadgrid__sq { width:11px; height:11px; border-radius:3px; background:var(--line); flex:none; }
+.loadgrid__sq {
+  width:11px; height:11px; border-radius:3px; flex:none;
+  opacity:0; transform:scale(.4);
+  animation:loadgrid-pop .22s ease-out forwards;
+}
 .loadgrid__sq--done { background:var(--ok); }
 .loadgrid__sq--error { background:var(--err); }
+@keyframes loadgrid-pop { to { opacity:1; transform:scale(1); } }
+@media (prefers-reduced-motion:reduce) {
+  .loadgrid__sq { opacity:1; transform:none; animation:none; }
+}
 
 /* .chip/.chip--on ist für die Fit-Filter gebaut, wo ein Farbpunkt die Auswahl
    trägt — ohne Punkt (Regex/LLM) ist der Kontrast dort zu schwach, um überhaupt
@@ -469,8 +477,13 @@ function LoadGrid({ sections }: { sections: LoadGridSection[] }) {
           <div className="loadgrid__head">{s.label}</div>
           {s.rows.map(r => (
             <div className="loadgrid__row" key={r.key}>
-              {r.squares.map(sq => (
-                <span key={sq.id} className={'loadgrid__sq loadgrid__sq--' + sq.state} title={sq.tooltip} />
+              {r.squares.map((sq, i) => (
+                <span
+                  key={sq.id}
+                  className={'loadgrid__sq loadgrid__sq--' + sq.state}
+                  title={sq.tooltip}
+                  style={{ animationDelay: `${i * 45}ms` }}
+                />
               ))}
             </div>
           ))}
