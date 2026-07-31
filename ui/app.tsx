@@ -1445,6 +1445,11 @@ export default function JobbotUI() {
                     {anschreibenStatus.current.i + 1}/{anschreibenStatus.current.total}: {anschreibenStatus.current.title}
                   </div>
                 )}
+                {anschreibenSections.length > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    <LoadGrid sections={anschreibenSections} />
+                  </div>
+                )}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 420 }}>
