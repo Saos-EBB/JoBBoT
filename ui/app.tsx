@@ -171,13 +171,13 @@ const CSS = `
 .loadgrid__sq--done { animation-name:loadgrid-pop-done; }
 .loadgrid__sq--error { animation-name:loadgrid-pop-error; }
 @keyframes loadgrid-pop-done {
-  0% { opacity:0; transform:scale(.4); background:var(--line); }
-  55% { opacity:1; transform:scale(1); background:var(--line); }
+  0% { opacity:0; transform:scale(.4); background:var(--dim); }
+  55% { opacity:1; transform:scale(1); background:var(--dim); }
   100% { background:#5B8CFF; }
 }
 @keyframes loadgrid-pop-error {
-  0% { opacity:0; transform:scale(.4); background:var(--line); }
-  55% { opacity:1; transform:scale(1); background:var(--line); }
+  0% { opacity:0; transform:scale(.4); background:var(--dim); }
+  55% { opacity:1; transform:scale(1); background:var(--dim); }
   100% { background:#E8B04B; }
 }
 
