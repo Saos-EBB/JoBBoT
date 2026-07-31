@@ -1,6 +1,9 @@
 import { fetchPage, sleep } from '../lib/fetch-page.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
+import { createBatcher } from '../lib/grid-batch.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
+
+const GRID_BATCH_SIZE = 10;
 
 const BASE = 'https://www.karriere.at';
 
@@ -73,7 +76,12 @@ async function fetchDetailPage(url: string): Promise<string> {
 export const karriereAtAdapter: ScraperAdapter = {
   name: 'karriere.at',
   kind: 'fetch',
-  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (current: number, total: number) => void) {
+  async scrape(
+    queries: SourceQuery[],
+    keep?: (job: ScrapedJob) => boolean,
+    onProgress?: (current: number, total: number) => void,
+    onUnitDone?: (items: ScrapedJob[]) => void,
+  ) {
     const byUrl = new Map<string, ScrapedJob>();
     for (let qi = 0; qi < queries.length; qi++) {
       const query = queries[qi];
@@ -94,16 +102,20 @@ export const karriereAtAdapter: ScraperAdapter = {
     console.log(`[karriere.at] ${allJobs.length} Treffer, ${candidates.length} nach Location-Gate`);
     const total = candidates.length;
     const results: ScrapedJob[] = [];
+    const batcher = createBatcher(GRID_BATCH_SIZE, onUnitDone);
     for (let i = 0; i < total; i++) {
       const job = candidates[i];
       onProgress?.(i + 1, total);
+      let found = job;
       try {
-        results.push(parseDetailPage(await fetchDetailPage(job.url), job));
+        found = parseDetailPage(await fetchDetailPage(job.url), job);
       } catch (err) {
         console.warn(`[karriere.at] detail fehlgeschlagen: ${job.url}`, err);
-        results.push(job);
       }
+      results.push(found);
+      batcher.push(found);
     }
+    batcher.flush();
     return results;
   },
 };

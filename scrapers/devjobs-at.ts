@@ -133,7 +133,12 @@ export async function fetchRemixContext(url: string): Promise<unknown> {
 export const devJobsAtAdapter: ScraperAdapter = {
   name: 'devjobs.at',
   kind: 'browser',
-  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (current: number, total: number) => void) {
+  async scrape(
+    queries: SourceQuery[],
+    keep?: (job: ScrapedJob) => boolean,
+    onProgress?: (current: number, total: number) => void,
+    onUnitDone?: (items: ScrapedJob[]) => void,
+  ) {
     const baseJobs: ScrapedJob[] = [];
     for (const query of queries) {
       const qstring = query.params ?? 'jobLevel=junior-job-level';
@@ -144,12 +149,16 @@ export const devJobsAtAdapter: ScraperAdapter = {
         (firstCtx as any)?.state?.loaderData?.['routes/jobs/$canonical']?.totalPages ?? 1,
         MAX_PAGES
       );
-      baseJobs.push(...parseSearchResults(firstCtx));
+      const page1Jobs = parseSearchResults(firstCtx);
+      baseJobs.push(...page1Jobs);
+      onUnitDone?.(page1Jobs);
       for (let page = 2; page <= totalPages; page++) {
         await delay(2000);
         onProgress?.(page, totalPages);
         try {
-          baseJobs.push(...parseSearchResults(await fetchRemixContext(`${baseUrl}&page=${page}`)));
+          const pageJobs = parseSearchResults(await fetchRemixContext(`${baseUrl}&page=${page}`));
+          baseJobs.push(...pageJobs);
+          onUnitDone?.(pageJobs);
         } catch (err) {
           console.warn(`[devjobs.at] Suchseite ${page} fehlgeschlagen, breche Pagination ab (behalte ${baseJobs.length} Treffer)`, err);
           break;

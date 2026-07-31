@@ -87,6 +87,10 @@ function createSseChannel<T>() {
 }
 
 const anschreibenSse = createSseChannel<GridUnitEvent>();
+const scrapeSse = createSseChannel<GridUnitEvent>();
+// Zeilen-Zähler pro Quelle, nur für eindeutige Grid-Row-Keys — bei jedem neuen
+// Scrape-Lauf zurückgesetzt (siehe POST /api/scrape).
+let scrapeRowCounters: Record<string, number> = {};
 
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -377,6 +381,17 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === 'GET' && url.pathname === '/api/scrape/stream') {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    });
+    scrapeSse.clients.add(res);
+    req.on('close', () => scrapeSse.clients.delete(res));
+    return;
+  }
+
   if (req.method === 'POST' && url.pathname === '/api/scrape') {
     // Lock synchron VOR dem ersten await setzen (der Body-Read ist async) — sonst
     // könnten zwei fast gleichzeitige POSTs beide noch den alten Status sehen und
@@ -389,6 +404,7 @@ const server = createServer(async (req, res) => {
     }
     const runId = randomUUID();
     scrapeRun = { status: 'running', runId, sources: {} };
+    scrapeRowCounters = {};
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ started: true, runId }));
 
@@ -420,6 +436,19 @@ const server = createServer(async (req, res) => {
         storage,
         onProgress: (name, current, total) => {
           scrapeRun.sources[name] = { current, total };
+        },
+        onUnitDone: (name, items) => {
+          const n = (scrapeRowCounters[name] = (scrapeRowCounters[name] ?? 0) + 1);
+          scrapeSse.broadcast({
+            section: name,
+            sectionLabel: name,
+            row: `${name}-${n}`,
+            items: items.map(j => ({
+              id: j.url,
+              tooltip: `${j.title} — ${j.company}${j.location ? ' — ' + j.location : ''}`,
+              state: 'done',
+            })),
+          });
         },
       });
       let newTotal = 0, skipTotal = 0;

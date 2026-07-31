@@ -57,7 +57,12 @@ async function fetchDetailPage(url: string): Promise<string> {
 export const linkedinAdapter: ScraperAdapter = {
   name: 'linkedin',
   kind: 'fetch', // nutzt fetchPage() (plain HTTP), kein Playwright-Browser
-  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (current: number, total: number) => void) {
+  async scrape(
+    queries: SourceQuery[],
+    keep?: (job: ScrapedJob) => boolean,
+    onProgress?: (current: number, total: number) => void,
+    onUnitDone?: (items: ScrapedJob[]) => void,
+  ) {
     const byUrl = new Map<string, ScrapedJob>();
     for (const query of queries) {
       const keyword = query.keyword ?? '';
@@ -68,9 +73,11 @@ export const linkedinAdapter: ScraperAdapter = {
         try {
           onProgress?.(pi + 1, PAGES.length);
           const html = await fetchSearchPage(keyword, location, start);
-          for (const job of parseSearchResults(html)) {
+          const pageJobs = parseSearchResults(html);
+          for (const job of pageJobs) {
             if (!byUrl.has(job.url)) byUrl.set(job.url, job);
           }
+          onUnitDone?.(pageJobs);
         } catch (err) {
           console.warn(`[linkedin] search fehlgeschlagen: ${keyword}@${start}`, err);
         }

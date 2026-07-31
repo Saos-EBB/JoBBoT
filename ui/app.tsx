@@ -525,6 +525,7 @@ export default function JobbotUI() {
   const [anschreibenFits, setAnschreibenFits] = useState<Set<Fit>>(new Set(['matched', 'offstack']));
   const [anschreibenLimit, setAnschreibenLimit] = useState('');
   const [scrapeStatus, setScrapeStatus] = useState<ScrapeStatus | null>(null);
+  const [scrapeSections, setScrapeSections] = useState<LoadGridSection[]>([]);
   const [filterStatus, setFilterStatus] = useState<FilterRunStatus | null>(null);
   const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[] | null>(null);
   const [duplicatesLoading, setDuplicatesLoading] = useState(false);
@@ -653,8 +654,20 @@ export default function JobbotUI() {
     return () => es.close();
   }, []);
 
+  // Wie oben, fürs Scrape-Lade-Grid — ein Event pro fertiger Seite/Batch je Quelle
+  // (siehe scripts/ui-server.ts onUnitDone).
+  useEffect(() => {
+    const es = new EventSource('/api/scrape/stream');
+    es.onmessage = (e) => {
+      const event = JSON.parse(e.data) as GridUnitEvent;
+      setScrapeSections(prev => appendGridRow(prev, event));
+    };
+    return () => es.close();
+  }, []);
+
   async function runScrapeNow() {
     setScrapeStarting(true);
+    setScrapeSections([]);
     try {
       const res = await fetch('/api/scrape', {
         method: 'POST',
@@ -1240,15 +1253,16 @@ export default function JobbotUI() {
             {scrapeStatus?.status === 'running' ? (
               <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
                 <div className="empty__h">Läuft…</div>
-                {scrapeSourceEntries.length === 0 ? (
+                {scrapeSections.length === 0 ? (
                   'Startet…'
                 ) : (
-                  scrapeSourceEntries.map(([name, p]) => (
-                    <div key={name} style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)', marginTop: 4 }}>
-                      {name}: {p.current}/{p.total}
-                    </div>
-                  ))
+                  <LoadGrid sections={scrapeSections} />
                 )}
+                {scrapeSourceEntries.length > 0 && scrapeSourceEntries.map(([name, p]) => (
+                  <div key={name} style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)', marginTop: 4 }}>
+                    {name}: {p.current}/{p.total}
+                  </div>
+                ))}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 9, maxWidth: 420 }}>

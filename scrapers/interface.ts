@@ -49,5 +49,12 @@ export interface ScraperAdapter {
     queries: SourceQuery[],
     keep?: (job: ScrapedJob) => boolean,
     onProgress?: (current: number, total: number) => void,
+    // Fürs Lade-Grid im UI (siehe ui/app.tsx LoadGrid): eine abgeschlossene Zeile
+    // fertig gefundener Stellen. Bei Quellen mit echter Suchergebnis-Pagination
+    // (devjobs.at, ams, linkedin) ist das eine Seite; bei den übrigen (karriere.at,
+    // jobs.at, ohne echte Pagination) ein fester Batch aus dem Detail-Abruf
+    // (siehe lib/grid-batch.ts). Titel/Firma/Ort sind zu diesem Zeitpunkt schon
+    // bekannt (aus dem Such-Parse), unabhängig vom späteren Detail-Fetch.
+    onUnitDone?: (items: ScrapedJob[]) => void,
   ): Promise<ScrapedJob[]>;
 }
