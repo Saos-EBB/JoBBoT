@@ -681,7 +681,7 @@ const server = createServer(async (req, res) => {
     try {
       const email = await composeEmail(job, profile);
       await sendMail(email);
-      const updated = await storage.updateStatus(job.id, 'gesendet');
+      const updated = await storage.update(job.id, { status: 'gesendet', sentAt: new Date().toISOString() });
       await logMailAction(job, 'sent');
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify(updated));
@@ -792,7 +792,7 @@ const server = createServer(async (req, res) => {
     try {
       const email = await composeEmail(job, profile);
       await sendMail(email);
-      await storage.updateStatus(job.id, 'gesendet');
+      await storage.update(job.id, { status: 'gesendet', sentAt: new Date().toISOString() });
       await logMailAction(job, 'sent');
       res.writeHead(302, { Location: `/job/${job.id}` });
     } catch (err) {
