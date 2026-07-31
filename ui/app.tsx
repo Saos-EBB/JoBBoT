@@ -22,6 +22,7 @@ import {
   Square,
   Copy,
   Layers,
+  Calendar,
 } from 'lucide-react';
 import type { Job, Fit } from '../scrapers/interface.ts';
 import { FOLDER_IDS, inFolder, type FolderId } from '../lib/folders.ts';
@@ -64,6 +65,9 @@ type FilterMode = 'llm' | 'regex';
 // Spiegelt lib/duplicates.ts DuplicateGroup — kein gemeinsames Modul aus demselben
 // Grund wie oben (Job-Typ selbst kommt weiterhin aus scrapers/interface.ts).
 type DuplicateGroup = { key: string; jobs: Job[] };
+// Spiegelt die Ereignisliste von GET /api/calendar (scripts/ui-server.ts) — ein Eintrag
+// je gesetztem sentAt/replyReceivedAt, date als 'YYYY-MM-DD'.
+type CalendarEvent = { date: string; type: 'sent' | 'reply'; jobId: string; title: string; company: string };
 
 /* ------------------------------------------------------------------ *
  * Design tokens
@@ -387,6 +391,45 @@ const CSS = `
   @keyframes rise { from { opacity:0; transform:translateY(-6px); } }
 }
 
+/* ---------- Kalender ---------- */
+/* Eigene Ansicht (7-Spalten-Wochenraster), aber dieselben Farbtokens wie das Lade-Grid:
+   --fit-matched für "gesendet", --ok für "Antwort" (deckt sich mit .tag--reply, das
+   dieselbe Farbe für "hat geantwortet" in der Job-Liste nutzt). */
+.cal { display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--ink); grid-column:span 2; }
+.cal__body { flex:1; min-height:0; overflow-y:auto; padding:22px 24px; display:flex; flex-direction:column; gap:28px; }
+.cal__month-h { font-size:13px; font-weight:600; color:var(--text); margin-bottom:8px; text-transform:capitalize; }
+.cal__weekday-row, .cal__grid { display:grid; grid-template-columns:repeat(7, 34px); gap:4px; }
+.cal__weekday-row { font-family:var(--mono); font-size:9.5px; color:var(--dim); text-align:center; margin-bottom:4px; }
+.cal__sq {
+  width:34px; height:34px; border-radius:5px; border:1px solid var(--line);
+  display:flex; align-items:flex-end; justify-content:flex-end; padding:3px 4px;
+  font-family:var(--mono); font-size:10px; color:var(--dim);
+}
+.cal__sq--pad { visibility:hidden; }
+.cal__sq--sent { background:var(--fit-matched); border-color:transparent; color:var(--ink); }
+.cal__sq--reply { background:var(--ok); border-color:transparent; color:var(--ink); }
+.cal__sq--both { border-color:transparent; color:var(--ink); background:linear-gradient(135deg, var(--fit-matched) 50%, var(--ok) 50%); }
+.cal__sq--active { cursor:pointer; }
+.cal__sq--active:hover { filter:brightness(1.15); }
+
+.cal__hover {
+  position:fixed; z-index:60; pointer-events:none;
+  background:var(--raised); border:1px solid var(--line); border-radius:6px;
+  padding:6px 10px; font-size:11.5px; color:var(--text); box-shadow:0 8px 24px rgba(0,0,0,.5);
+  white-space:nowrap;
+}
+
+.cal__overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:70; display:flex; align-items:center; justify-content:center; }
+.cal__popup { width:380px; max-height:70vh; display:flex; flex-direction:column; background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+.cal__popup-head { padding:14px 18px; border-bottom:1px solid var(--line-soft); font-weight:600; font-size:13.5px; text-transform:capitalize; }
+.cal__popup-list { flex:1; min-height:0; overflow-y:auto; padding:6px 8px; }
+.cal__entry { display:flex; align-items:center; gap:9px; width:100%; padding:8px 10px; border-radius:5px; text-align:left; }
+.cal__entry:hover { background:var(--raised); }
+.cal__entry__dot { width:7px; height:7px; border-radius:99px; flex:none; }
+.cal__entry__firma { font-weight:500; font-size:12.5px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cal__entry__titel { font-size:11px; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px; }
+.cal__popup-foot { padding:8px 18px; border-top:1px solid var(--line-soft); font-family:var(--mono); font-size:10px; color:var(--dim); }
+
 /* ---------- Responsive ---------- */
 @media (max-width:1180px) { .jb { grid-template-columns:208px 320px 1fr; } }
 @media (max-width:960px) {
@@ -554,6 +597,153 @@ function LoadGridPanel({ running, sections, onClose }: { running: boolean; secti
   );
 }
 
+function formatDayLong(date: string): string {
+  return new Date(date + 'T00:00:00').toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+function formatDayShort(date: string): string {
+  return new Date(date + 'T00:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
+}
+function summarizeDay(date: string, sentN: number, replyN: number): string {
+  const parts: string[] = [];
+  if (sentN) parts.push(`${sentN} gesendet`);
+  if (replyN) parts.push(`${replyN} Antwort${replyN > 1 ? 'en' : ''}`);
+  return `${formatDayShort(date)} · ${parts.join(' · ')}`;
+}
+
+type DayBucket = { sent: CalendarEvent[]; reply: CalendarEvent[] };
+
+// Ein Monatsblock: Monatsüberschrift + 7-Spalten-Wochenraster (Mo–So), führende
+// Leerzellen für den Wochentags-Versatz des Monatsersten. Kein Auffüllen am Ende
+// der letzten Woche — optisch unauffällig, spart eine zweite Padding-Rechnung.
+function CalendarMonth({ month, byDate, onHover, onOpenDay }: {
+  month: string;
+  byDate: Map<string, DayBucket>;
+  onHover: (h: { x: number; y: number; text: string } | null) => void;
+  onOpenDay: (date: string) => void;
+}) {
+  const [year, mo] = month.split('-').map(Number);
+  const firstWeekday = (new Date(year, mo - 1, 1).getDay() + 6) % 7; // Mo=0..So=6
+  const daysInMonth = new Date(year, mo, 0).getDate();
+  const label = new Date(year, mo - 1, 1).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  const cells: (number | null)[] = [
+    ...Array(firstWeekday).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+
+  return (
+    <div>
+      <div className="cal__month-h">{label}</div>
+      <div className="cal__weekday-row">
+        {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(d => <span key={d}>{d}</span>)}
+      </div>
+      <div className="cal__grid">
+        {cells.map((day, i) => {
+          if (day == null) return <span key={'pad' + i} className="cal__sq cal__sq--pad" />;
+          const date = `${month}-${String(day).padStart(2, '0')}`;
+          const bucket = byDate.get(date);
+          const sentN = bucket?.sent.length ?? 0;
+          const replyN = bucket?.reply.length ?? 0;
+          const active = sentN > 0 || replyN > 0;
+          const cls = 'cal__sq'
+            + (sentN && replyN ? ' cal__sq--both' : sentN ? ' cal__sq--sent' : replyN ? ' cal__sq--reply' : '')
+            + (active ? ' cal__sq--active' : '');
+          return (
+            <span
+              key={date}
+              className={cls}
+              onClick={active ? () => onOpenDay(date) : undefined}
+              onMouseMove={active ? (e) => onHover({ x: e.clientX, y: e.clientY, text: summarizeDay(date, sentN, replyN) }) : undefined}
+              onMouseLeave={active ? () => onHover(null) : undefined}
+            >
+              {day}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Eigenes Hover-Element statt native title (Verzögerung/Optik, dieselbe Entscheidung
+// stand beim Lade-Grid noch offen) + Tages-Popup mit Pfeiltasten-Navigation über
+// activeDates (nur Tage mit Aktivität — leere Tage werden beim Wechseln übersprungen).
+function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; onOpenJob: (id: string) => void }) {
+  const byDate = useMemo(() => {
+    const m = new Map<string, DayBucket>();
+    for (const ev of events) {
+      const bucket = m.get(ev.date) ?? { sent: [], reply: [] };
+      bucket[ev.type].push(ev);
+      m.set(ev.date, bucket);
+    }
+    return m;
+  }, [events]);
+
+  const months = useMemo(() => {
+    const set = new Set<string>();
+    for (const date of byDate.keys()) set.add(date.slice(0, 7));
+    return [...set].sort().reverse();
+  }, [byDate]);
+
+  const activeDates = useMemo(() => [...byDate.keys()].sort(), [byDate]);
+
+  const [activeDay, setActiveDay] = useState<string | null>(null);
+  const [hover, setHover] = useState<{ x: number; y: number; text: string } | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!activeDay) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setActiveDay(null); return; }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        const i = activeDates.indexOf(activeDay);
+        const next = e.key === 'ArrowLeft' ? activeDates[i - 1] : activeDates[i + 1];
+        if (next) setActiveDay(next);
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        listRef.current?.scrollBy({ top: e.key === 'ArrowDown' ? 40 : -40 });
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [activeDay, activeDates]);
+
+  if (months.length === 0) {
+    return (
+      <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
+        <div className="empty__h">Noch keine Aktivität</div>
+        Sobald eine Bewerbung versendet wird oder eine Antwort eintrifft, erscheint sie hier.
+      </div>
+    );
+  }
+
+  const dayEntries = activeDay ? [...(byDate.get(activeDay)?.sent ?? []), ...(byDate.get(activeDay)?.reply ?? [])] : [];
+
+  return (
+    <>
+      {months.map(month => (
+        <CalendarMonth key={month} month={month} byDate={byDate} onHover={setHover} onOpenDay={setActiveDay} />
+      ))}
+      {hover && <div className="cal__hover" style={{ left: hover.x + 14, top: hover.y + 14 }}>{hover.text}</div>}
+      {activeDay && (
+        <div className="cal__overlay" onClick={() => setActiveDay(null)}>
+          <div className="cal__popup" onClick={e => e.stopPropagation()}>
+            <div className="cal__popup-head">{formatDayLong(activeDay)}</div>
+            <div className="cal__popup-list" ref={listRef}>
+              {dayEntries.map((ev, i) => (
+                <button key={ev.jobId + ev.type + i} className="cal__entry" onClick={() => onOpenJob(ev.jobId)}>
+                  <span className="cal__entry__dot" style={{ background: ev.type === 'sent' ? 'var(--fit-matched)' : 'var(--ok)' }} />
+                  <span className="cal__entry__firma">{ev.company}</span>
+                  <span className="cal__entry__titel">{ev.title}</span>
+                </button>
+              ))}
+            </div>
+            <div className="cal__popup-foot">← → Tag · ↑ ↓ scrollen · Esc</div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 // Hängt ein SSE-GridUnitEvent (eine fertige Zeile) an den bestehenden Sections-Baum an —
 // von Scrape/Filter/Anschreiben gleichermaßen genutzt, damit die Anhänge-Logik nicht
 // dreimal geschrieben wird.
@@ -577,7 +767,8 @@ export default function JobbotUI() {
   const [detailOpen, setDetailOpen] = useState(false);
   // 'attachment'/'scrape'/'filter' sind keine Ordner (kein FolderId, kein Job-Filter)
   // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
-  const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben'>('jobs');
+  const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben' | 'calendar'>('jobs');
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [attachment, setAttachment] = useState<AttachmentMeta | null | undefined>(undefined);
   const [cc, setCc] = useState<string | null | undefined>(undefined);
   const [ccInput, setCcInput] = useState('');
@@ -800,6 +991,12 @@ export default function JobbotUI() {
   useEffect(() => {
     if (view === 'duplicates') loadDuplicates();
   }, [view, loadDuplicates]);
+
+  // Wie Duplikate: nur beim Betreten laden, kein Polling — der Kalender liest einen
+  // Snapshot, keinen laufenden Prozess.
+  useEffect(() => {
+    if (view === 'calendar') fetch('/api/calendar').then(r => r.json()).then(setCalendarEvents);
+  }, [view]);
 
   // Behält je Gruppe das neueste Inserat (frischerer Titel/Beschreibung/Status),
   // übernimmt aber das erste Pull-Datum der älteren Duplikate ins JSON des Behaltenen
@@ -1160,6 +1357,10 @@ export default function JobbotUI() {
             <Copy />
             <span className="fld__label">CC</span>
           </button>
+          <button className={'fld' + (view === 'calendar' ? ' fld--on' : '')} onClick={() => setView('calendar')}>
+            <Calendar />
+            <span className="fld__label">Kalender</span>
+          </button>
         </div>
 
         <div className="sb__rule" />
@@ -1265,6 +1466,25 @@ export default function JobbotUI() {
               </button>
             </footer>
           )}
+        </section>
+      ) : view === 'calendar' ? (
+        /* ---------- Kalender ---------- */
+        <section className="cal">
+          <header className="dt__head">
+            <div className="dt__firma">Kalender</div>
+            <div className="dt__titel">Wann Bewerbungen rausgingen und wann Antworten zurückkamen.</div>
+          </header>
+          <div className="cal__body">
+            <CalendarView
+              events={calendarEvents}
+              onOpenJob={id => {
+                setView('jobs');
+                setFolder('log/gesendet');
+                setFit('alle');
+                open(id);
+              }}
+            />
+          </div>
         </section>
       ) : view === 'attachment' ? (
         /* ---------- Anhang ---------- */
