@@ -47,7 +47,7 @@ type FilterRunStatus = {
   status: 'idle' | 'running' | 'done' | 'error';
   runId: string | null;
   current?: { i: number; total: number; title: string };
-  result?: { sicher: number; unsicher: number; raus: number };
+  result?: { matched: number; offstack: number; brutal: number };
   error?: string;
 };
 type AnschreibenRunStatus = {
@@ -70,9 +70,10 @@ type DuplicateGroup = { key: string; jobs: Job[] };
  *
  * Ganze App ist bewusst entsättigt. Die EINZIGE Farbe im Interface ist
  * das Fit-Urteil (Match/Offstack/Brutal) — damit liest sich die Liste
- * als Streifen von Urteilen, bevor du ein Wort gelesen hast.
- * Rot ist exklusiv für Fehler reserviert, deshalb ist "brutal" Stahl
- * und nicht Rot: die Zeile soll zurücktreten, nicht schreien.
+ * als Streifen von Urteilen, bevor du ein Wort gelesen hast: Match blau,
+ * Offstack gelb, Brutal orange. Rot ist exklusiv für Fehler reserviert,
+ * deshalb bleibt "brutal" Orange und wird nie Rot, obwohl es das
+ * Aussortier-Urteil ist.
  *
  * Tiefe = 4 Stufen Elevation: ink < slate < panel < paper.
  * Das Anschreiben ist die einzige helle Fläche der App — weil es das
@@ -80,9 +81,9 @@ type DuplicateGroup = { key: string; jobs: Job[] };
  * ------------------------------------------------------------------ */
 
 const FIT: Record<Fit, { label: string; color: string }> = {
-  matched: { label: 'Match', color: '#35D0A5' },
-  offstack: { label: 'Offstack', color: '#E8B04B' },
-  brutal: { label: 'Brutal', color: '#5F6875' },
+  matched: { label: 'Match', color: 'var(--fit-matched)' },
+  offstack: { label: 'Offstack', color: 'var(--fit-offstack)' },
+  brutal: { label: 'Brutal', color: 'var(--fit-brutal)' },
 };
 
 // fit ist nullable (scrapers/interface.ts) und bekommt bewusst KEINEN Default hier im
@@ -105,6 +106,7 @@ const CSS = `
   --text:#E6EAF0; --muted:#8A94A6; --dim:#5E6878;
   --paper:#F3F2EE; --paper-ink:#191C22; --paper-line:#DAD8D1;
   --err:#E5484D; --ok:#35D0A5;
+  --fit-matched:#5B8CFF; --fit-offstack:#E8B04B; --fit-brutal:#E8622A;
   --sans:'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   --mono:'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
   --serif:'IBM Plex Serif', Georgia, serif;
@@ -156,6 +158,12 @@ const CSS = `
 }
 
 .loadgrid { display:flex; flex-direction:column; gap:16px; }
+.loadgrid__done-badge {
+  position:absolute; right:0; bottom:-2px;
+  font-size:10px; font-weight:600; letter-spacing:.02em;
+  padding:2px 7px; border-radius:5px;
+  background:var(--ok); color:var(--ink);
+}
 .loadgrid__head {
   font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em;
   color:var(--muted); margin-bottom:7px;
@@ -174,7 +182,15 @@ const CSS = `
   animation-fill-mode: forwards, forwards;
 }
 .loadgrid__sq--done { --final-color:#5B8CFF; }
-.loadgrid__sq--error { --final-color:#E8B04B; }
+.loadgrid__sq--error { --final-color:var(--err); }
+.loadgrid__sq--excluded { --final-color:var(--dim); }
+/* Filter-Ergebnis nutzt exakt die Fit-Urteilsfarben (siehe FIT oben) statt eigener
+   Töne — ein Quadrat und ein Job-Zeilen-Punkt für dasselbe Urteil sehen identisch aus. */
+.loadgrid__sq--matched { --final-color:var(--fit-matched); }
+.loadgrid__sq--offstack { --final-color:var(--fit-offstack); }
+.loadgrid__sq--brutal { --final-color:var(--fit-brutal); }
+.loadgrid__sq--clickable { cursor:pointer; }
+.loadgrid__sq--clickable:hover { filter:brightness(1.4); }
 @keyframes loadgrid-pop { to { opacity:1; transform:scale(1); } }
 @keyframes loadgrid-color { to { background:var(--final-color); } }
 
@@ -470,7 +486,12 @@ function decodeEntities(text: string): string {
 // eigener Implementierungen — Abschnitt (z.B. Quelle) -> Zeile (z.B. Batch) -> Quadrate
 // (ein Item, fertig oder Fehler). Hover-Tooltip ist der native `title`-Attribut-Tooltip
 // des Browsers statt eines eigenen Tooltip-Bauteils — reicht für "Kurzinfo beim Hover".
-type LoadGridSquare = { id: string; tooltip: string; state: 'done' | 'error' };
+type LoadGridSquare = {
+  id: string;
+  tooltip: string;
+  state: 'done' | 'error' | 'excluded' | 'matched' | 'offstack' | 'brutal';
+  url?: string;
+};
 type LoadGridRow = { key: string; squares: LoadGridSquare[] };
 type LoadGridSection = { key: string; label: string; rows: LoadGridRow[] };
 
@@ -498,8 +519,9 @@ function LoadGrid({ sections }: { sections: LoadGridSection[] }) {
                 {r.squares.map((sq, i) => (
                   <span
                     key={sq.id}
-                    className={'loadgrid__sq loadgrid__sq--' + sq.state}
+                    className={'loadgrid__sq loadgrid__sq--' + sq.state + (sq.url ? ' loadgrid__sq--clickable' : '')}
                     title={sq.tooltip}
+                    onClick={sq.url ? () => window.open(sq.url, '_blank', 'noopener,noreferrer') : undefined}
                     style={{ '--pop-delay': `${i * step}ms`, '--reveal-delay': `${revealDelay}ms` } as React.CSSProperties}
                   />
                 ))}
@@ -517,9 +539,9 @@ function LoadGrid({ sections }: { sections: LoadGridSection[] }) {
 // neuer Lauf sections auf [] zurücksetzt (siehe runScrapeNow/runFilterNow/runAnschreibenNow).
 function LoadGridPanel({ running, sections, onClose }: { running: boolean; sections: LoadGridSection[]; onClose: () => void }) {
   return (
-    <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
+    <div className="empty" style={{ textAlign: 'left', padding: '8px 0', position: 'relative' }}>
       <div className="empty__h" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ flex: 1 }}>{running ? 'Läuft…' : 'Fertig'}</span>
+        <span style={{ flex: 1 }}>{running ? 'Läuft…' : ''}</span>
         {!running && (
           <button className="btn" style={{ padding: '2px 10px', fontSize: 11.5 }} onClick={onClose}>
             Schließen
@@ -527,6 +549,7 @@ function LoadGridPanel({ running, sections, onClose }: { running: boolean; secti
         )}
       </div>
       {sections.length === 0 ? 'Startet…' : <LoadGrid sections={sections} />}
+      {!running && <span className="loadgrid__done-badge">Fertig</span>}
     </div>
   );
 }
@@ -649,7 +672,7 @@ export default function JobbotUI() {
           lastSeenFilterRunId.current = f.runId;
           refetchJobs();
           say(
-            f.status === 'error' ? `Filter fehlgeschlagen: ${f.error}` : `Filter: ${f.result?.sicher ?? 0} sicher, ${f.result?.unsicher ?? 0} unsicher, ${f.result?.raus ?? 0} raus`,
+            f.status === 'error' ? `Filter fehlgeschlagen: ${f.error}` : `Filter: ${f.result?.matched ?? 0} Match, ${f.result?.offstack ?? 0} Offstack, ${f.result?.brutal ?? 0} Brutal`,
             f.status === 'error' ? 'err' : 'ok'
           );
         }
@@ -708,7 +731,7 @@ export default function JobbotUI() {
   }, []);
 
   // Wie oben, fürs Filter-Lade-Grid — ein Event pro fertigem 10er-Batch je
-  // Ergebnis-Kategorie (Sicher/Unsicher/Raus, siehe scripts/ui-server.ts).
+  // Ergebnis-Kategorie (Match/Offstack/Brutal, siehe scripts/ui-server.ts).
   useEffect(() => {
     const es = new EventSource('/api/filter/stream');
     es.onmessage = (e) => {

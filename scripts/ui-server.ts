@@ -49,7 +49,7 @@ interface FilterRunState {
   status: 'idle' | 'running' | 'done' | 'error';
   runId: string | null;
   current?: { i: number; total: number; title: string };
-  result?: { sicher: number; unsicher: number; raus: number };
+  result?: { matched: number; offstack: number; brutal: number };
   error?: string;
 }
 interface AnschreibenRunState {
@@ -75,7 +75,7 @@ let anschreibenAbort: AbortController | null = null;
 // hängt die Zeile an (siehe ui/app.tsx LoadGrid). Kein Snapshot beim (Re-)Connect —
 // Einzelnutzer-Lokaltool, ein mittendrin verbundener Client sieht nur ab da (siehe
 // scrapeRun/filterRun/anschreibenRun: ein Server-Neustart verliert genauso).
-interface GridSquare { id: string; tooltip: string; state: 'done' | 'error' }
+interface GridSquare { id: string; tooltip: string; state: 'done' | 'error' | 'excluded' | 'matched' | 'offstack' | 'brutal'; url?: string }
 interface GridUnitEvent { section: string; sectionLabel: string; row: string; items: GridSquare[] }
 
 function createSseChannel<T>() {
@@ -93,7 +93,7 @@ const filterSse = createSseChannel<GridUnitEvent>();
 // Zeilen-Zähler pro Quelle, nur für eindeutige Grid-Row-Keys — bei jedem neuen
 // Scrape-Lauf zurückgesetzt (siehe POST /api/scrape).
 let scrapeRowCounters: Record<string, number> = {};
-let filterRowCounters = { sicher: 0, unsicher: 0, raus: 0 };
+let filterRowCounters = { matched: 0, offstack: 0, brutal: 0 };
 
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -457,11 +457,15 @@ const server = createServer(async (req, res) => {
             section: name,
             sectionLabel: name,
             row: `${name}-${n}`,
-            items: items.map(j => ({
-              id: j.url,
-              tooltip: `${j.title} — ${j.company}${j.location ? ' — ' + j.location : ''}`,
-              state: 'done',
-            })),
+            items: items.map(j => {
+              const inRange = keep(j);
+              return {
+                id: j.url,
+                tooltip: `${j.title} — ${j.company}${j.location ? ' — ' + j.location : ''}${inRange ? '' : ' — außerhalb Location-Gate'}`,
+                state: inRange ? 'done' : 'excluded',
+                url: j.url,
+              };
+            }),
           });
         },
       });
@@ -501,33 +505,39 @@ const server = createServer(async (req, res) => {
     }
 
     // Ein Batcher pro Ergebnis-Kategorie (nicht einer über den ganzen Lauf) — sonst
-    // würden Match/Unsicher/Raus wild gemischt in derselben Zeile landen, statt eigene
-    // Abschnitte im Grid zu bilden (siehe ui/app.tsx LoadGrid).
+    // würden Match/Offstack/Brutal wild gemischt in derselben Zeile landen, statt eigene
+    // Abschnitte im Grid zu bilden (siehe ui/app.tsx LoadGrid). Kategorien und Farben
+    // sind dieselben wie das Fit-Urteil überall sonst in der UI (siehe ui/app.tsx FIT).
     const filterBatchers = {
-      matched: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'sicher', sectionLabel: 'Sicher', row: `sicher-${++filterRowCounters.sicher}`, items })),
-      uncertain: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'unsicher', sectionLabel: 'Unsicher', row: `unsicher-${++filterRowCounters.unsicher}`, items })),
-      filtered_out: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'raus', sectionLabel: 'Raus', row: `raus-${++filterRowCounters.raus}`, items })),
+      matched: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'matched', sectionLabel: 'Match', row: `matched-${++filterRowCounters.matched}`, items })),
+      uncertain: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'offstack', sectionLabel: 'Offstack', row: `offstack-${++filterRowCounters.offstack}`, items })),
+      filtered_out: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'brutal', sectionLabel: 'Brutal', row: `brutal-${++filterRowCounters.brutal}`, items })),
     };
-    filterRowCounters = { sicher: 0, unsicher: 0, raus: 0 };
+    filterRowCounters = { matched: 0, offstack: 0, brutal: 0 };
 
     try {
       // scope "all" triaged jede vorhandene Job-Datei neu — siehe scripts/run-filter.ts --scope.
       const jobs = await storage.list(scope === 'all' ? undefined : { status: 'new' });
-      let sicher = 0, unsicher = 0, raus = 0;
+      let matched = 0, offstack = 0, brutal = 0;
       for (let i = 0; i < jobs.length; i++) {
         const job = jobs[i];
         filterRun.current = { i, total: jobs.length, title: job.title };
         const d = await filterJob(job, storage, undefined, mode);
-        const ergebnis = d.status === 'matched' ? 'Sicher' : d.status === 'uncertain' ? 'Unsicher' : 'Raus';
-        const square: GridSquare = { id: job.id, tooltip: `${job.title} — ${job.company} — ${ergebnis}`, state: 'done' };
-        if (d.status === 'matched') { sicher++; filterBatchers.matched.push(square); }
-        else if (d.status === 'uncertain') { unsicher++; filterBatchers.uncertain.push(square); }
-        else { raus++; filterBatchers.filtered_out.push(square); }
+        const ergebnis = d.status === 'matched' ? 'Match' : d.status === 'uncertain' ? 'Offstack' : 'Brutal';
+        const square: GridSquare = {
+          id: job.id,
+          tooltip: `${job.title} — ${job.company} — ${ergebnis}`,
+          state: d.status === 'matched' ? 'matched' : d.status === 'uncertain' ? 'offstack' : 'brutal',
+          url: job.url,
+        };
+        if (d.status === 'matched') { matched++; filterBatchers.matched.push(square); }
+        else if (d.status === 'uncertain') { offstack++; filterBatchers.uncertain.push(square); }
+        else { brutal++; filterBatchers.filtered_out.push(square); }
       }
       filterBatchers.matched.flush();
       filterBatchers.uncertain.flush();
       filterBatchers.filtered_out.flush();
-      filterRun = { status: 'done', runId, result: { sicher, unsicher, raus } };
+      filterRun = { status: 'done', runId, result: { matched, offstack, brutal } };
     } catch (err) {
       filterRun = { status: 'error', runId, error: err instanceof Error ? err.message : String(err) };
     }
