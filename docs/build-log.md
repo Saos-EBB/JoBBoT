@@ -1,3 +1,8 @@
+## 2026-07-31 — feat(api): read-only /api/calendar aus sent/reply-daten
+
+**Was:** Neue Route `GET /api/calendar` (`scripts/ui-server.ts`) reduziert alle Jobs auf eine flache Ereignisliste `{ date, type: 'sent'|'reply', jobId, title, company }` — ein Eintrag je gesetztem `sentAt`/`replyReceivedAt` (Datum via `.slice(0, 10)`, UTC-Tag aus dem ISO-Zeitstempel). Keine eigene Speicherung, reines Lesen. Gruppierung nach Monat/Woche macht Step 4 in der UI, nicht der Endpoint. Gegen den laufenden Server verifiziert (`curl /api/calendar` → `[]`, da lokal aktuell keine `gesendet`-Jobs existieren).
+**Nicht gebaut:** Keine Gruppierung/Aggregation server-seitig — flache Liste reicht, die UI gruppiert selbst.
+
 ## 2026-07-31 — feat(mail): sende-datum pro job persistieren
 
 **Was:** Recon für den Bewerbungs-Kalender ergab: kein Sende-Zeitstempel vorhanden, nur der Status-String `gesendet`. `updatedAt` als Ersatz war unsicher, weil `storage.update()` es bei jedem Aufruf neu setzt — auch wenn später `replyReceivedAt` eintrifft (`/api/mail/replies/fetch`), was den Sende-Zeitpunkt überschrieben hätte. Neues `sentAt?: string | null`-Feld auf `Job` (`scrapers/interface.ts`), gesetzt an beiden Stellen, die auf `gesendet` schalten (`scripts/ui-server.ts`: `/api/jobs/:id/send` und `/job/:id/send`) — `storage.update(id, { status: 'gesendet', sentAt: ... })` statt `storage.updateStatus()`.
