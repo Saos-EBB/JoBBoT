@@ -158,6 +158,16 @@ const CSS = `
   @keyframes fld-shimmer { to { background-position:-200% 0; } }
 }
 
+.loadgrid { display:flex; flex-direction:column; gap:16px; }
+.loadgrid__head {
+  font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--muted); margin-bottom:7px;
+}
+.loadgrid__row { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:3px; }
+.loadgrid__sq { width:11px; height:11px; border-radius:3px; background:var(--line); flex:none; }
+.loadgrid__sq--done { background:var(--ok); }
+.loadgrid__sq--error { background:var(--err); }
+
 /* .chip/.chip--on ist für die Fit-Filter gebaut, wo ein Farbpunkt die Auswahl
    trägt — ohne Punkt (Regex/LLM) ist der Kontrast dort zu schwach, um überhaupt
    wie ein Button auszusehen. Eigener, kontrastreicherer Toggle statt .chip.
@@ -444,6 +454,33 @@ function decodeEntities(text: string): string {
   const el = document.createElement('textarea');
   el.innerHTML = text;
   return el.value;
+}
+
+// Ein Grid-Muster für alle drei Lade-Anzeigen (Scrape/Filter/Anschreiben) statt drei
+// eigener Implementierungen — Abschnitt (z.B. Quelle) -> Zeile (z.B. Batch) -> Quadrate
+// (ein Item, fertig oder Fehler). Hover-Tooltip ist der native `title`-Attribut-Tooltip
+// des Browsers statt eines eigenen Tooltip-Bauteils — reicht für "Kurzinfo beim Hover".
+type LoadGridSquare = { id: string; tooltip: string; state: 'done' | 'error' };
+type LoadGridRow = { key: string; squares: LoadGridSquare[] };
+type LoadGridSection = { key: string; label: string; rows: LoadGridRow[] };
+
+function LoadGrid({ sections }: { sections: LoadGridSection[] }) {
+  return (
+    <div className="loadgrid">
+      {sections.map(s => (
+        <div className="loadgrid__section" key={s.key}>
+          <div className="loadgrid__head">{s.label}</div>
+          {s.rows.map(r => (
+            <div className="loadgrid__row" key={r.key}>
+              {r.squares.map(sq => (
+                <span key={sq.id} className={'loadgrid__sq loadgrid__sq--' + sq.state} title={sq.tooltip} />
+              ))}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default function JobbotUI() {
