@@ -161,25 +161,22 @@ const CSS = `
   color:var(--muted); margin-bottom:7px;
 }
 .loadgrid__row { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:3px; }
+/* Zwei getrennte Animationen: "pop" (Erscheinen, pro Quadrat gestaffelt via --pop-delay)
+   endet grau und BLEIBT grau — erst wenn die ganze Zeile fertig erschienen ist, färbt
+   "color" (auf --reveal-delay verzögert, für jedes Quadrat der Zeile gleich) sie um. */
 .loadgrid__sq {
   width:11px; height:11px; border-radius:3px; flex:none;
-  opacity:0; transform:scale(.4);
-  animation-duration:.35s; animation-timing-function:ease-out; animation-fill-mode:forwards;
+  opacity:0; transform:scale(.4); background:var(--dim);
+  animation-name: loadgrid-pop, loadgrid-color;
+  animation-duration: .35s, .3s;
+  animation-timing-function: ease-out, ease-out;
+  animation-delay: var(--pop-delay, 0ms), var(--reveal-delay, 0ms);
+  animation-fill-mode: forwards, forwards;
 }
-/* Erscheint erst grau (neutral, wie "wird noch geprüft"), färbt sich erst am Ende der
-   Pop-Animation ein — blau für "passt" (done), gelb für den Rest (error/nicht-Treffer). */
-.loadgrid__sq--done { animation-name:loadgrid-pop-done; }
-.loadgrid__sq--error { animation-name:loadgrid-pop-error; }
-@keyframes loadgrid-pop-done {
-  0% { opacity:0; transform:scale(.4); background:var(--dim); }
-  55% { opacity:1; transform:scale(1); background:var(--dim); }
-  100% { background:#5B8CFF; }
-}
-@keyframes loadgrid-pop-error {
-  0% { opacity:0; transform:scale(.4); background:var(--dim); }
-  55% { opacity:1; transform:scale(1); background:var(--dim); }
-  100% { background:#E8B04B; }
-}
+.loadgrid__sq--done { --final-color:#5B8CFF; }
+.loadgrid__sq--error { --final-color:#E8B04B; }
+@keyframes loadgrid-pop { to { opacity:1; transform:scale(1); } }
+@keyframes loadgrid-color { to { background:var(--final-color); } }
 
 /* .chip/.chip--on ist für die Fit-Filter gebaut, wo ein Farbpunkt die Auswahl
    trägt — ohne Punkt (Regex/LLM) ist der Kontrast dort zu schwach, um überhaupt
@@ -478,6 +475,9 @@ type LoadGridRow = { key: string; squares: LoadGridSquare[] };
 type LoadGridSection = { key: string; label: string; rows: LoadGridRow[] };
 
 const ROW_DURATION_MS = 4000;
+// Muss zur .35s-Pop-Dauer in der CSS oben passen — der Moment, an dem das LETZTE
+// Quadrat einer Zeile fertig erschienen ist (danach färbt sich die ganze Zeile ein).
+const POP_DURATION_MS = 350;
 
 function LoadGrid({ sections }: { sections: LoadGridSection[] }) {
   return (
@@ -490,6 +490,9 @@ function LoadGrid({ sections }: { sections: LoadGridSection[] }) {
             // Versatz pro Quadrat — sonst bräuchte eine 10er-Zeile 10x so lang wie eine
             // 1er-Zeile (Anschreiben). Bei 1 Quadrat entfällt der Versatz automatisch.
             const step = ROW_DURATION_MS / r.squares.length;
+            // Gleich für jedes Quadrat der Zeile — erst wenn ALLE erschienen sind
+            // (letztes Quadrat bei (n-1)*step + Pop-Dauer), färbt sich die Zeile ein.
+            const revealDelay = (r.squares.length - 1) * step + POP_DURATION_MS;
             return (
               <div className="loadgrid__row" key={r.key}>
                 {r.squares.map((sq, i) => (
@@ -497,7 +500,7 @@ function LoadGrid({ sections }: { sections: LoadGridSection[] }) {
                     key={sq.id}
                     className={'loadgrid__sq loadgrid__sq--' + sq.state}
                     title={sq.tooltip}
-                    style={{ animationDelay: `${i * step}ms` }}
+                    style={{ '--pop-delay': `${i * step}ms`, '--reveal-delay': `${revealDelay}ms` } as React.CSSProperties}
                   />
                 ))}
               </div>
