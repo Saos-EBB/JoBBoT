@@ -480,6 +480,25 @@ function LoadGrid({ sections }: { sections: LoadGridSection[] }) {
   );
 }
 
+// Hülle ums Grid, geteilt von Scrape/Filter/Anschreiben: bleibt nach Laufende stehen
+// (Kevin: "verschwindet zu schnell"), bis der Schließen-Button sie wegräumt oder ein
+// neuer Lauf sections auf [] zurücksetzt (siehe runScrapeNow/runFilterNow/runAnschreibenNow).
+function LoadGridPanel({ running, sections, onClose }: { running: boolean; sections: LoadGridSection[]; onClose: () => void }) {
+  return (
+    <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
+      <div className="empty__h" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ flex: 1 }}>{running ? 'Läuft…' : 'Fertig'}</span>
+        {!running && (
+          <button className="btn" style={{ padding: '2px 10px', fontSize: 11.5 }} onClick={onClose}>
+            Schließen
+          </button>
+        )}
+      </div>
+      {sections.length === 0 ? 'Startet…' : <LoadGrid sections={sections} />}
+    </div>
+  );
+}
+
 // Hängt ein SSE-GridUnitEvent (eine fertige Zeile) an den bestehenden Sections-Baum an —
 // von Scrape/Filter/Anschreiben gleichermaßen genutzt, damit die Anhänge-Logik nicht
 // dreimal geschrieben wird.
@@ -1253,15 +1272,12 @@ export default function JobbotUI() {
             <div className="dt__titel">Neue Jobs von den ausgewählten Quellen holen.</div>
           </header>
           <div className="dt__body">
-            {scrapeStatus?.status === 'running' ? (
-              <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
-                <div className="empty__h">Läuft…</div>
-                {scrapeSections.length === 0 ? (
-                  'Startet…'
-                ) : (
-                  <LoadGrid sections={scrapeSections} />
-                )}
-              </div>
+            {scrapeStatus?.status === 'running' || scrapeSections.length > 0 ? (
+              <LoadGridPanel
+                running={scrapeStatus?.status === 'running'}
+                sections={scrapeSections}
+                onClose={() => setScrapeSections([])}
+              />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 9, maxWidth: 420 }}>
                 {scrapeSources.map(name => (
@@ -1301,11 +1317,12 @@ export default function JobbotUI() {
             </div>
           </header>
           <div className="dt__body">
-            {filterStatus?.status === 'running' ? (
-              <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
-                <div className="empty__h">Läuft…</div>
-                {filterSections.length === 0 ? 'Startet…' : <LoadGrid sections={filterSections} />}
-              </div>
+            {filterStatus?.status === 'running' || filterSections.length > 0 ? (
+              <LoadGridPanel
+                running={filterStatus?.status === 'running'}
+                sections={filterSections}
+                onClose={() => setFilterSections([])}
+              />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div className="modetoggle">
@@ -1423,11 +1440,12 @@ export default function JobbotUI() {
             <div className="dt__titel">Anschreiben für getriagte Jobs generieren — wie scripts/run-anschreiben.ts.</div>
           </header>
           <div className="dt__body">
-            {anschreibenStatus?.status === 'running' ? (
-              <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
-                <div className="empty__h">Läuft…</div>
-                {anschreibenSections.length === 0 ? 'Startet…' : <LoadGrid sections={anschreibenSections} />}
-              </div>
+            {anschreibenStatus?.status === 'running' || anschreibenSections.length > 0 ? (
+              <LoadGridPanel
+                running={anschreibenStatus?.status === 'running'}
+                sections={anschreibenSections}
+                onClose={() => setAnschreibenSections([])}
+              />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 420 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
