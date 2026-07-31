@@ -169,9 +169,6 @@ const CSS = `
 .loadgrid__sq--done { background:var(--ok); }
 .loadgrid__sq--error { background:var(--err); }
 @keyframes loadgrid-pop { to { opacity:1; transform:scale(1); } }
-@media (prefers-reduced-motion:reduce) {
-  .loadgrid__sq { opacity:1; transform:none; animation:none; }
-}
 
 /* .chip/.chip--on ist für die Fit-Filter gebaut, wo ein Farbpunkt die Auswahl
    trägt — ohne Punkt (Regex/LLM) ist der Kontrast dort zu schwach, um überhaupt
