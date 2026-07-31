@@ -1,6 +1,7 @@
 ## 2026-07-31 — feat(ui): quadrate erscheinen grau, färben sich erst am ende der pop-animation ein
 
-**Was:** Kevin: "mach die quadrate beim erscheinen grau und wenn ... durch ist mach die die passen so blau und den rest gelb". `.loadgrid__sq--done`/`--error` nutzen jetzt eigene Keyframes (`loadgrid-pop-done`/`-error`) statt fixer `background`-Werte: 0–55% grau (`var(--line)`, wie der alte "noch leer"-Zustand aus Step 2), ab 100% blau (`#5B8CFF`, "passt" — Filter: Sicher; Scrape: alle gezeigten Quadrate, da nur Kandidaten nach dem Location-Gate überhaupt Quadrate werden) bzw. gelb (`#E8B04B`, "Rest" — Filter: Unsicher/Raus; Anschreiben: fehlgeschlagen, ersetzt das vorherige Rot).
+**Was:** Kevin: "mach die quadrate beim erscheinen grau und wenn ... durch ist mach die die passen so blau und den rest gelb". `.loadgrid__sq--done`/`--error` nutzen jetzt eigene Keyframes (`loadgrid-pop-done`/`-error`) statt fixer `background`-Werte: 0–55% grau, ab 100% blau (`#5B8CFF`, "passt" — Filter: Sicher; Scrape: alle gezeigten Quadrate, da nur Kandidaten nach dem Location-Gate überhaupt Quadrate werden) bzw. gelb (`#E8B04B`, "Rest" — Filter: Unsicher/Raus; Anschreiben: fehlgeschlagen, ersetzt das vorherige Rot).
+**Nachtrag:** Erstes Grau (`var(--line)`, `#2A323F`) war vor dem `--ink`-Hintergrund (`#0E1116`) praktisch unsichtbar — auf `var(--dim)` (`#5E6878`, deutlich heller als der Hintergrund) gewechselt.
 **Nicht gebaut:** Keine eigenen "abgelehnt vom Location-Gate"-Quadrate für Scrape — nur Kandidaten, die die Gate schon bestanden haben, werden überhaupt als Quadrat gezeigt (unverändert seit Step 4), die Rest-Farbe kommt dort aktuell also nie vor.
 
 ## 2026-07-31 — feat(ui): quadrate erscheinen einzeln gestaffelt statt zeilenweise auf einen Schlag
