@@ -15,6 +15,7 @@ import { loadSettings, type FilterMode } from '../lib/settings.ts';
 import { buildScrapeSetup } from '../lib/scrape-setup.ts';
 import { runScrape } from '../lib/scrape-runner.ts';
 import { filterJob } from '../lib/filter.ts';
+import { createBatcher } from '../lib/grid-batch.ts';
 import { findDuplicates, planMerge } from '../lib/duplicates.ts';
 import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
@@ -88,9 +89,11 @@ function createSseChannel<T>() {
 
 const anschreibenSse = createSseChannel<GridUnitEvent>();
 const scrapeSse = createSseChannel<GridUnitEvent>();
+const filterSse = createSseChannel<GridUnitEvent>();
 // Zeilen-Zähler pro Quelle, nur für eindeutige Grid-Row-Keys — bei jedem neuen
 // Scrape-Lauf zurückgesetzt (siehe POST /api/scrape).
 let scrapeRowCounters: Record<string, number> = {};
+let filterRowCounters = { sicher: 0, unsicher: 0, raus: 0 };
 
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -392,6 +395,17 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === 'GET' && url.pathname === '/api/filter/stream') {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    });
+    filterSse.clients.add(res);
+    req.on('close', () => filterSse.clients.delete(res));
+    return;
+  }
+
   if (req.method === 'POST' && url.pathname === '/api/scrape') {
     // Lock synchron VOR dem ersten await setzen (der Body-Read ist async) — sonst
     // könnten zwei fast gleichzeitige POSTs beide noch den alten Status sehen und
@@ -486,17 +500,33 @@ const server = createServer(async (req, res) => {
       // undefined -> filterJob fällt auf config/settings.json zurück
     }
 
+    // Ein Batcher pro Ergebnis-Kategorie (nicht einer über den ganzen Lauf) — sonst
+    // würden Match/Unsicher/Raus wild gemischt in derselben Zeile landen, statt eigene
+    // Abschnitte im Grid zu bilden (siehe ui/app.tsx LoadGrid).
+    const filterBatchers = {
+      matched: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'sicher', sectionLabel: 'Sicher', row: `sicher-${++filterRowCounters.sicher}`, items })),
+      uncertain: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'unsicher', sectionLabel: 'Unsicher', row: `unsicher-${++filterRowCounters.unsicher}`, items })),
+      filtered_out: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'raus', sectionLabel: 'Raus', row: `raus-${++filterRowCounters.raus}`, items })),
+    };
+    filterRowCounters = { sicher: 0, unsicher: 0, raus: 0 };
+
     try {
       // scope "all" triaged jede vorhandene Job-Datei neu — siehe scripts/run-filter.ts --scope.
       const jobs = await storage.list(scope === 'all' ? undefined : { status: 'new' });
       let sicher = 0, unsicher = 0, raus = 0;
       for (let i = 0; i < jobs.length; i++) {
-        filterRun.current = { i, total: jobs.length, title: jobs[i].title };
-        const d = await filterJob(jobs[i], storage, undefined, mode);
-        if (d.status === 'matched') sicher++;
-        else if (d.status === 'uncertain') unsicher++;
-        else raus++;
+        const job = jobs[i];
+        filterRun.current = { i, total: jobs.length, title: job.title };
+        const d = await filterJob(job, storage, undefined, mode);
+        const ergebnis = d.status === 'matched' ? 'Sicher' : d.status === 'uncertain' ? 'Unsicher' : 'Raus';
+        const square: GridSquare = { id: job.id, tooltip: `${job.title} — ${job.company} — ${ergebnis}`, state: 'done' };
+        if (d.status === 'matched') { sicher++; filterBatchers.matched.push(square); }
+        else if (d.status === 'uncertain') { unsicher++; filterBatchers.uncertain.push(square); }
+        else { raus++; filterBatchers.filtered_out.push(square); }
       }
+      filterBatchers.matched.flush();
+      filterBatchers.uncertain.flush();
+      filterBatchers.filtered_out.flush();
       filterRun = { status: 'done', runId, result: { sicher, unsicher, raus } };
     } catch (err) {
       filterRun = { status: 'error', runId, error: err instanceof Error ? err.message : String(err) };
