@@ -469,24 +469,32 @@ type LoadGridSquare = { id: string; tooltip: string; state: 'done' | 'error' };
 type LoadGridRow = { key: string; squares: LoadGridSquare[] };
 type LoadGridSection = { key: string; label: string; rows: LoadGridRow[] };
 
+const ROW_DURATION_MS = 4000;
+
 function LoadGrid({ sections }: { sections: LoadGridSection[] }) {
   return (
     <div className="loadgrid">
       {sections.map(s => (
         <div className="loadgrid__section" key={s.key}>
           <div className="loadgrid__head">{s.label}</div>
-          {s.rows.map(r => (
-            <div className="loadgrid__row" key={r.key}>
-              {r.squares.map((sq, i) => (
-                <span
-                  key={sq.id}
-                  className={'loadgrid__sq loadgrid__sq--' + sq.state}
-                  title={sq.tooltip}
-                  style={{ animationDelay: `${i * 150}ms` }}
-                />
-              ))}
-            </div>
-          ))}
+          {s.rows.map(r => {
+            // Feste Gesamtdauer pro Zeile (Kevin: "eine Zeile auf 4 Sek") statt fixem
+            // Versatz pro Quadrat — sonst bräuchte eine 10er-Zeile 10x so lang wie eine
+            // 1er-Zeile (Anschreiben). Bei 1 Quadrat entfällt der Versatz automatisch.
+            const step = ROW_DURATION_MS / r.squares.length;
+            return (
+              <div className="loadgrid__row" key={r.key}>
+                {r.squares.map((sq, i) => (
+                  <span
+                    key={sq.id}
+                    className={'loadgrid__sq loadgrid__sq--' + sq.state}
+                    title={sq.tooltip}
+                    style={{ animationDelay: `${i * step}ms` }}
+                  />
+                ))}
+              </div>
+            );
+          })}
         </div>
       ))}
     </div>
