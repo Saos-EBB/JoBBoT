@@ -164,7 +164,7 @@ const CSS = `
 .loadgrid__sq {
   width:11px; height:11px; border-radius:3px; flex:none;
   opacity:0; transform:scale(.4);
-  animation:loadgrid-pop .22s ease-out forwards;
+  animation:loadgrid-pop .35s ease-out forwards;
 }
 .loadgrid__sq--done { background:var(--ok); }
 .loadgrid__sq--error { background:var(--err); }
@@ -482,7 +482,7 @@ function LoadGrid({ sections }: { sections: LoadGridSection[] }) {
                   key={sq.id}
                   className={'loadgrid__sq loadgrid__sq--' + sq.state}
                   title={sq.tooltip}
-                  style={{ animationDelay: `${i * 45}ms` }}
+                  style={{ animationDelay: `${i * 150}ms` }}
                 />
               ))}
             </div>
