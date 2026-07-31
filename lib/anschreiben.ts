@@ -125,10 +125,8 @@ export async function saveAnschreiben(job: Job, text: string, dir = config.ansch
 }
 
 // Ollama streamt bei stream:true NDJSON (ein JSON-Objekt pro Zeile). Konkateniert
-// die message.content-Fragmente zum vollständigen Text. onChunk feuert pro Zeile,
-// damit Aufrufer den echten Streaming-Fortschritt (statt eines Fake-Timers)
-// weiterreichen können — siehe generateAnschreiben().
-export async function readNdjsonContent(res: Response, onChunk?: () => void): Promise<string> {
+// die message.content-Fragmente zum vollständigen Text.
+export async function readNdjsonContent(res: Response): Promise<string> {
   const reader = res.body!.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
@@ -139,7 +137,6 @@ export async function readNdjsonContent(res: Response, onChunk?: () => void): Pr
     if (!trimmed) return;
     const chunk = JSON.parse(trimmed) as { message?: { content?: string } };
     content += chunk?.message?.content ?? '';
-    onChunk?.();
   };
 
   while (true) {
@@ -169,10 +166,6 @@ const RETRY_CONFIG = [
   { numThread: 4, timeoutMs: 1_000_000 },
 ];
 
-// Phasen für die UI-Progressbar statt eines Fake-Timers: Gesamt-Tokenzahl ist
-// vorab unbekannt, daher diskrete Phasen statt einer geschätzten Prozentzahl.
-export type AnschreibenPhase = 'prompt' | 'generating' | 'done';
-
 export async function generateAnschreiben(
   job: Job,
   storage: Storage,
@@ -182,7 +175,6 @@ export async function generateAnschreiben(
   model = config.modelWriter,
   logPath = ANSCHREIBEN_LOG_PATH,
   signal?: AbortSignal,
-  onPhase?: (phase: AnschreibenPhase) => void,
 ): Promise<string | null> {
   if (job.status !== 'triaged' || job.fit === 'brutal') {
     console.warn(`[anschreiben] job ${job.id} hat status "${job.status}"/fit "${job.fit}", erwartet "triaged" mit fit "matched" oder "offstack"`);
@@ -194,7 +186,6 @@ export async function generateAnschreiben(
 
   for (let attempt = 0; attempt <= MAX_REGENERATIONS; attempt++) {
     if (signal?.aborted) { lastError = 'Abgebrochen'; break; }
-    onPhase?.('prompt');
     const { numThread, timeoutMs } = RETRY_CONFIG[attempt];
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -224,8 +215,7 @@ export async function generateAnschreiben(
         console.warn(`[anschreiben] ollama ${res.status} für job ${job.id}`);
         return null;
       }
-      onPhase?.('generating');
-      raw = await readNdjsonContent(res, () => onPhase?.('generating'));
+      raw = await readNdjsonContent(res);
     } catch (err) {
       lastError = err instanceof Error && err.name === 'AbortError'
         ? (signal?.aborted ? 'Abgebrochen' : `Timeout nach ${timeoutMs / 1000}s (${numThread} Threads)`)
@@ -263,6 +253,5 @@ export async function generateAnschreiben(
   // veralteten `job` zu überschreiben (gleiches Muster wie lib/filter.ts).
   await storage.update(job.id, { status: 'generated' });
   logSuccess(job, model, path, logPath);
-  onPhase?.('done');
   return path;
 }

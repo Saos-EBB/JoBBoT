@@ -57,6 +57,9 @@ type AnschreibenRunStatus = {
   result?: { generated: number; skipped: number; emailsFound: number; mailGenerated: number; nomailGenerated: number };
   error?: string;
 };
+// Spiegelt GridUnitEvent aus scripts/ui-server.ts — ein SSE-Event pro abgeschlossener
+// Grid-Zeile (Seite/Batch/Anschreiben-Item), siehe LoadGrid weiter unten.
+type GridUnitEvent = { section: string; sectionLabel: string; row: string; items: LoadGridSquare[] };
 type FilterMode = 'llm' | 'regex';
 // Spiegelt lib/duplicates.ts DuplicateGroup — kein gemeinsames Modul aus demselben
 // Grund wie oben (Job-Typ selbst kommt weiterhin aus scrapers/interface.ts).
@@ -483,6 +486,18 @@ function LoadGrid({ sections }: { sections: LoadGridSection[] }) {
   );
 }
 
+// Hängt ein SSE-GridUnitEvent (eine fertige Zeile) an den bestehenden Sections-Baum an —
+// von Scrape/Filter/Anschreiben gleichermaßen genutzt, damit die Anhänge-Logik nicht
+// dreimal geschrieben wird.
+function appendGridRow(sections: LoadGridSection[], e: GridUnitEvent): LoadGridSection[] {
+  const row: LoadGridRow = { key: e.row, squares: e.items };
+  const idx = sections.findIndex(s => s.key === e.section);
+  if (idx === -1) return [...sections, { key: e.section, label: e.sectionLabel, rows: [row] }];
+  const next = [...sections];
+  next[idx] = { ...next[idx], rows: [...next[idx].rows, row] };
+  return next;
+}
+
 export default function JobbotUI() {
   const [jobs, setJobs] = useState<JobWithBrief[]>([]);
   const [folder, setFolder] = useState<FolderId>('mail/entwurf');
@@ -518,7 +533,11 @@ export default function JobbotUI() {
   const [replyOnly, setReplyOnly] = useState(false);
   const [repliesFetching, setRepliesFetching] = useState(false);
   const [anschreibenStatus, setAnschreibenStatus] = useState<AnschreibenRunStatus | null>(null);
-  const [anschreibenPhase, setAnschreibenPhase] = useState<'prompt' | 'generating' | 'done' | null>(null);
+  // anschreibenPhase kommt nicht mehr über SSE (siehe anschreibenSections/EventSource
+  // unten) — bleibt bis Step 7 (alte Progressbar entfernen) stehen, damit der noch
+  // ungewechselte JSX-Block darunter kompiliert, ohne vorzeitig Toten Code zu jagen.
+  const anschreibenPhase: 'prompt' | 'generating' | 'done' | null = null;
+  const [anschreibenSections, setAnschreibenSections] = useState<LoadGridSection[]>([]);
   const [scrapeStarting, setScrapeStarting] = useState(false);
   const [filterStarting, setFilterStarting] = useState(false);
   const [anschreibenStarting, setAnschreibenStarting] = useState(false);
@@ -621,15 +640,15 @@ export default function JobbotUI() {
     return () => clearInterval(id);
   }, [refetchJobs, say]);
 
-  // SSE statt Polling für die Anschreiben-Phase (prompt/generating/done) — echte
-  // Streaming-Ticks aus Ollama statt eines an das 1.5s-Poll-Intervall gebundenen
-  // Fake-Fortschritts. Eine einzige, dauerhaft offene Verbindung (wie das Poll-Intervall
-  // oben), damit die Phase auch beim Ansichtswechsel weiterläuft.
+  // SSE statt Polling fürs Anschreiben-Lade-Grid — ein Event pro fertigem (oder
+  // fehlgeschlagenem) Anschreiben, angehängt an anschreibenSections (siehe
+  // appendGridRow). Eine einzige, dauerhaft offene Verbindung (wie das Poll-Intervall
+  // oben), damit das Grid auch beim Ansichtswechsel weiterwächst.
   useEffect(() => {
     const es = new EventSource('/api/anschreiben/stream');
     es.onmessage = (e) => {
-      const { phase } = JSON.parse(e.data) as { phase: 'prompt' | 'generating' | 'done' | null };
-      setAnschreibenPhase(phase);
+      const event = JSON.parse(e.data) as GridUnitEvent;
+      setAnschreibenSections(prev => appendGridRow(prev, event));
     };
     return () => es.close();
   }, []);
@@ -722,6 +741,7 @@ export default function JobbotUI() {
   async function runAnschreibenNow(jobIds: string[]) {
     if (jobIds.length === 0) return;
     setAnschreibenStarting(true);
+    setAnschreibenSections([]);
     try {
       const res = await fetch('/api/anschreiben', {
         method: 'POST',
