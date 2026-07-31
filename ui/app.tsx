@@ -527,6 +527,7 @@ export default function JobbotUI() {
   const [scrapeStatus, setScrapeStatus] = useState<ScrapeStatus | null>(null);
   const [scrapeSections, setScrapeSections] = useState<LoadGridSection[]>([]);
   const [filterStatus, setFilterStatus] = useState<FilterRunStatus | null>(null);
+  const [filterSections, setFilterSections] = useState<LoadGridSection[]>([]);
   const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[] | null>(null);
   const [duplicatesLoading, setDuplicatesLoading] = useState(false);
   const [selectedDupKeys, setSelectedDupKeys] = useState<Set<string>>(new Set());
@@ -665,6 +666,17 @@ export default function JobbotUI() {
     return () => es.close();
   }, []);
 
+  // Wie oben, fürs Filter-Lade-Grid — ein Event pro fertigem 10er-Batch je
+  // Ergebnis-Kategorie (Sicher/Unsicher/Raus, siehe scripts/ui-server.ts).
+  useEffect(() => {
+    const es = new EventSource('/api/filter/stream');
+    es.onmessage = (e) => {
+      const event = JSON.parse(e.data) as GridUnitEvent;
+      setFilterSections(prev => appendGridRow(prev, event));
+    };
+    return () => es.close();
+  }, []);
+
   async function runScrapeNow() {
     setScrapeStarting(true);
     setScrapeSections([]);
@@ -682,6 +694,7 @@ export default function JobbotUI() {
 
   async function runFilterNow() {
     setFilterStarting(true);
+    setFilterSections([]);
     try {
       const res = await fetch('/api/filter', {
         method: 'POST',
@@ -1309,6 +1322,11 @@ export default function JobbotUI() {
                 {filterStatus.current && (
                   <div style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
                     {filterStatus.current.i + 1}/{filterStatus.current.total}: {filterStatus.current.title}
+                  </div>
+                )}
+                {filterSections.length > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    <LoadGrid sections={filterSections} />
                   </div>
                 )}
               </div>
