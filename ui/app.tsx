@@ -164,11 +164,22 @@ const CSS = `
 .loadgrid__sq {
   width:11px; height:11px; border-radius:3px; flex:none;
   opacity:0; transform:scale(.4);
-  animation:loadgrid-pop .35s ease-out forwards;
+  animation-duration:.35s; animation-timing-function:ease-out; animation-fill-mode:forwards;
 }
-.loadgrid__sq--done { background:var(--ok); }
-.loadgrid__sq--error { background:var(--err); }
-@keyframes loadgrid-pop { to { opacity:1; transform:scale(1); } }
+/* Erscheint erst grau (neutral, wie "wird noch geprüft"), färbt sich erst am Ende der
+   Pop-Animation ein — blau für "passt" (done), gelb für den Rest (error/nicht-Treffer). */
+.loadgrid__sq--done { animation-name:loadgrid-pop-done; }
+.loadgrid__sq--error { animation-name:loadgrid-pop-error; }
+@keyframes loadgrid-pop-done {
+  0% { opacity:0; transform:scale(.4); background:var(--line); }
+  55% { opacity:1; transform:scale(1); background:var(--line); }
+  100% { background:#5B8CFF; }
+}
+@keyframes loadgrid-pop-error {
+  0% { opacity:0; transform:scale(.4); background:var(--line); }
+  55% { opacity:1; transform:scale(1); background:var(--line); }
+  100% { background:#E8B04B; }
+}
 
 /* .chip/.chip--on ist für die Fit-Filter gebaut, wo ein Farbpunkt die Auswahl
    trägt — ohne Punkt (Regex/LLM) ist der Kontrast dort zu schwach, um überhaupt
