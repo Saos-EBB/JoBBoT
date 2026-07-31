@@ -1,3 +1,8 @@
+## 2026-07-31 — feat(mail): sende-datum pro job persistieren
+
+**Was:** Recon für den Bewerbungs-Kalender ergab: kein Sende-Zeitstempel vorhanden, nur der Status-String `gesendet`. `updatedAt` als Ersatz war unsicher, weil `storage.update()` es bei jedem Aufruf neu setzt — auch wenn später `replyReceivedAt` eintrifft (`/api/mail/replies/fetch`), was den Sende-Zeitpunkt überschrieben hätte. Neues `sentAt?: string | null`-Feld auf `Job` (`scrapers/interface.ts`), gesetzt an beiden Stellen, die auf `gesendet` schalten (`scripts/ui-server.ts`: `/api/jobs/:id/send` und `/job/:id/send`) — `storage.update(id, { status: 'gesendet', sentAt: ... })` statt `storage.updateStatus()`.
+**Nicht gebaut:** Kein Nachdatieren von Altbestand — bestehende `gesendet`-Jobs ohne `sentAt` bleiben undatiert (lokal aktuell ohnehin keine vorhanden, siehe Recon-Meldung im Auftrag).
+
 ## 2026-07-31 — feat(ui): quadrate erscheinen grau, färben sich erst am ende der pop-animation ein
 
 **Was:** Kevin: "mach die quadrate beim erscheinen grau und wenn ... durch ist mach die die passen so blau und den rest gelb". `.loadgrid__sq--done`/`--error` nutzen jetzt eigene Keyframes (`loadgrid-pop-done`/`-error`) statt fixer `background`-Werte: 0–55% grau, ab 100% blau (`#5B8CFF`, "passt" — Filter: Sicher; Scrape: alle gezeigten Quadrate, da nur Kandidaten nach dem Location-Gate überhaupt Quadrate werden) bzw. gelb (`#E8B04B`, "Rest" — Filter: Unsicher/Raus; Anschreiben: fehlgeschlagen, ersetzt das vorherige Rot).

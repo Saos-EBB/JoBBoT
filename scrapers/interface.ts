@@ -38,6 +38,11 @@ export interface Job extends ScrapedJob {
   // den Bewerbungsstatus nicht, sie ist nur eine zusätzliche Information dazu. Gesetzt
   // über das generische storage.update(), wie job.email.
   replyReceivedAt?: string | null;
+  // Zeitpunkt des Übergangs zu status "gesendet", gesetzt an der Sendestelle selbst
+  // statt aus updatedAt abgeleitet — updatedAt wird bei jedem storage.update() neu
+  // gesetzt (z.B. wenn später replyReceivedAt eintrifft) und wäre danach kein
+  // verlässliches Sende-Datum mehr. Altbestand ohne sentAt bleibt bewusst undatiert.
+  sentAt?: string | null;
 }
 
 export type SourceQuery = Record<string, string>;
