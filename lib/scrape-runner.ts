@@ -18,6 +18,7 @@ export interface RunScrapeOptions {
   keep?: (job: ScrapedJob) => boolean;
   storage: Storage;
   onProgress?: (name: string, current: number, total: number) => void;
+  onUnitDone?: (name: string, items: ScrapedJob[]) => void;
   maxConcurrent?: number;
   maxBrowsers?: number;
 }
@@ -67,7 +68,7 @@ function createScheduler(maxConcurrent: number, maxBrowsers: number) {
 // Ergebnissen sequenziell (verhindert Write-Races, wenn dieselbe Stelle auf zwei
 // Quellen mit gleicher jobId auftaucht).
 export async function runScrape(options: RunScrapeOptions): Promise<SourceOutcome[]> {
-  const { names, registry, queriesFor, keep, storage, onProgress, maxConcurrent = 2, maxBrowsers = 1 } = options;
+  const { names, registry, queriesFor, keep, storage, onProgress, onUnitDone, maxConcurrent = 2, maxBrowsers = 1 } = options;
 
   const scheduler = createScheduler(maxConcurrent, maxBrowsers);
 
@@ -79,6 +80,7 @@ export async function runScrape(options: RunScrapeOptions): Promise<SourceOutcom
         queriesFor(name),
         keep,
         (current, total) => onProgress?.(name, current, total),
+        items => onUnitDone?.(name, items),
       );
     } finally {
       scheduler.release(isBrowser);

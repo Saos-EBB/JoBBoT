@@ -1,10 +1,12 @@
 import { sleep } from '../lib/fetch-page.ts';
 import { slugify } from '../lib/slugify.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
+import { createBatcher } from '../lib/grid-batch.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 
 const BASE = 'https://www.jobs.at';
 const UA = 'Mozilla/5.0 (compatible; JobBot/0.1; +local)';
+const GRID_BATCH_SIZE = 10;
 
 export function parseSearchPage(html: string): Partial<ScrapedJob>[] {
   if (!html) return [];
@@ -127,7 +129,12 @@ async function fetchDetailPage(url: string): Promise<string> {
 export const jobsAtAdapter: ScraperAdapter = {
   name: 'jobs.at',
   kind: 'fetch',
-  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (current: number, total: number) => void) {
+  async scrape(
+    queries: SourceQuery[],
+    keep?: (job: ScrapedJob) => boolean,
+    onProgress?: (current: number, total: number) => void,
+    onUnitDone?: (items: ScrapedJob[]) => void,
+  ) {
     const byUrl = new Map<string, ScrapedJob>();
 
     for (let qi = 0; qi < queries.length; qi++) {
@@ -145,25 +152,29 @@ export const jobsAtAdapter: ScraperAdapter = {
           : cards;
         console.log(`jobs.at '${keyword}': ${cards.length} Karten, ${candidates.length} nach Gate`);
 
+        const batcher = createBatcher(GRID_BATCH_SIZE, onUnitDone);
         for (let di = 0; di < candidates.length; di++) {
           const card = candidates[di];
           if (!card.url || byUrl.has(card.url)) continue;
           onProgress?.(di + 1, candidates.length);
+          let job: ScrapedJob;
           try {
-            const job = parseDetailPage(await fetchDetailPage(card.url), card);
-            byUrl.set(card.url, job);
+            job = parseDetailPage(await fetchDetailPage(card.url), card);
           } catch (err) {
             console.warn(`[jobs.at] detail fehlgeschlagen: ${card.url}`, err);
-            byUrl.set(card.url, {
+            job = {
               source: 'jobs.at',
               url: card.url,
               title: card.title ?? '',
               company: card.company ?? '',
               location: card.location,
               description: '',
-            });
+            };
           }
+          byUrl.set(card.url, job);
+          batcher.push(job);
         }
+        batcher.flush();
       } catch (err) {
         console.warn(`[jobs.at] search fehlgeschlagen: ${keyword}`, err);
       }
