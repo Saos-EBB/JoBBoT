@@ -814,6 +814,10 @@ export default function JobbotUI() {
   const lastSeenFilterRunId = useRef<string | null>(null);
   const lastSeenAnschreibenRunId = useRef<string | null>(null);
   const ta = useRef<HTMLTextAreaElement>(null);
+  // Für den Tschobbo-Hook im Scrape-SSE-Effect unten (der nur einmal läuft,
+  // `view` also sonst als Closure einfrieren würde).
+  const viewRef = useRef(view);
+  viewRef.current = view;
 
   const say = useCallback((m: string, kind: 'ok' | 'err' = 'ok') => {
     setToast({ msg: m, kind });
@@ -917,6 +921,11 @@ export default function JobbotUI() {
     es.onmessage = (e) => {
       const event = JSON.parse(e.data) as GridUnitEvent;
       setScrapeSections(prev => appendGridRow(prev, event));
+      // Tschobbo-Hook (ui/tschobbo.js): nur wenn das Scrape-Grid gerade sichtbar
+      // ist, sonst gäbe es keine echten Quadrat-Positionen zum Anfassen. Einzige
+      // Stelle, die das Event feuert — Filter/Anschreiben bekämen später denselben
+      // Einzeiler in ihren Effects, ohne Tschobbo selbst anzufassen.
+      if (viewRef.current === 'scrape') window.dispatchEvent(new CustomEvent('tschobbo:unit', { detail: event }));
     };
     return () => es.close();
   }, []);
