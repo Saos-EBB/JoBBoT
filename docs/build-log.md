@@ -1,3 +1,8 @@
+## 2026-08-04 — docs: tschobbo-einbau entscheidungen
+
+**Was:** Recon für den Tschobbo-Maskottchen-Sprite (Auftrag: LoadGrid-Quadrate synchron zu SSE-`GridUnitEvent` einsammeln). Alle vier Entscheidungsregeln geprüft und in `docs/architecture.md` (Abschnitt "Tschobbo") begründet: (1) Zielposition — volle Choreografie, LoadGrid legt Quadrate bereits vor der Sichtbarkeit ins Layout; (2) Statische Auslieferung — `ui-server.ts` hat keinen generischen Static-Handler, neuer Whitelist-Handler für genau drei Dateien; (3) Script-Muster — ES-Module, wie im Auftrag vorgegeben; (4) Scrape-Zustand — kein global erreichbarer Client-State, Ableitung aus `GridUnitEvent` über einen neuen `CustomEvent`-Hook im bestehenden Scrape-SSE-Effect. Zusätzlich notiert: Kevins GNOME meldete laut `build-log.md` (2026-07-31) bereits einmal `prefers-reduced-motion: reduce` systemweit und hat deshalb schon einmal eine Reduced-Motion-Regel aus `LoadGrid` entfernen lassen — der Tschobbo-Auftrag verlangt Reduced-Motion-Handling als Pflichtteil, wird also gebaut, aber das Risiko für den Live-Test ist dokumentiert statt stillschweigend umgangen.
+**Nicht gebaut:** —
+
 ## 2026-07-31 — feat(ui): kalender-tab mit monatsblöcken, tages-quadraten und popup-navigation
 
 **Was:** Steps 4 und 5 aus dem Auftrag in einem Commit zusammengefasst — Layout/Hover (Step 4) und Tages-Popup/Pfeiltasten (Step 5) leben in derselben `CalendarView`-Komponente, eine Trennung hätte einen Zwischenstand erzwungen, in dem Klicks auf Tage-Quadrate folgenlos geblieben wären.
