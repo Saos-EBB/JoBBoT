@@ -95,6 +95,16 @@ const filterSse = createSseChannel<GridUnitEvent>();
 let scrapeRowCounters: Record<string, number> = {};
 let filterRowCounters = { matched: 0, offstack: 0, brutal: 0 };
 
+// Whitelist statt generischem File-Server — ui-server.ts liefert sonst nur die
+// eine hartkodierte /app.js-Route (aus ui/dist/), kein Static-Handler existiert
+// bereits (siehe docs/architecture.md, Tschobbo-Entscheidung 2). Feste Pfade,
+// kein Verzeichnis-Traversal möglich.
+const TSCHOBBO_ASSETS = new Map<string, { path: string; type: string }>([
+  ['/tschobbo-sheet.png', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo-sheet.png'), type: 'image/png' }],
+  ['/tschobbo-arms.js', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo-arms.js'), type: 'text/javascript; charset=utf-8' }],
+  ['/tschobbo.js', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo.js'), type: 'text/javascript; charset=utf-8' }],
+]);
+
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 }
@@ -211,7 +221,20 @@ const server = createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname === '/') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end('<!doctype html><html><head><meta charset="utf-8"><title>JoBBoT</title></head>'
-      + '<body><div id="root"></div><script type="module" src="/app.js"></script></body></html>');
+      + '<body><div id="root"></div><script type="module" src="/app.js"></script>'
+      + '<script type="module" src="/tschobbo.js"></script></body></html>');
+    return;
+  }
+
+  if (req.method === 'GET' && TSCHOBBO_ASSETS.has(url.pathname)) {
+    const asset = TSCHOBBO_ASSETS.get(url.pathname)!;
+    try {
+      const data = await readFile(asset.path);
+      res.writeHead(200, { 'Content-Type': asset.type });
+      res.end(data);
+    } catch {
+      res.writeHead(404).end();
+    }
     return;
   }
 
