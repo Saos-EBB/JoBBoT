@@ -94,7 +94,6 @@ function buildDom() {
 }
 
 export function initTschobbo() {
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const { root, svg, body, toggle, style } = buildDom();
   const updateArms = createArms(svg);
 
@@ -273,7 +272,7 @@ export function initTschobbo() {
   }
 
   function onGridUnit() {
-    if (!enabledState || reduced) return;
+    if (!enabledState) return;
     if (mode === 'idle') {
       clearTimers();
       mode = 'scrape';
@@ -301,12 +300,6 @@ export function initTschobbo() {
     busy = false;
     const spot = spawnSpot();
     setFrame(body, 'front', 0);
-
-    if (reduced) {
-      // Seele-Beat 1 (Reinschlüpfen) entfällt: höchstens statisch am Rand.
-      place(spot.x, spot.y, 0);
-      return;
-    }
 
     place(spot.x + DISPLAY * 1.6, spot.y, 0);
     requestAnimationFrame(() => {
