@@ -1,0 +1,5 @@
+## 2026-08-06 — Klumpenwurf: nur der letzte Wurf einer Serie kommt an
+
+**Symptom:** Bei mehreren Jobs in einem GridUnitEvent (6 Würfe in der Testrunde) landete nur ein einziger Klumpen als `stick` — alle anderen verschwanden spurlos, ohne Fehler in der Konsole.
+**Ursache:** `throwOne()` löste den Blob-Release (`spawnFly`) aus dem Callback des `frameTimer`-`setInterval` heraus, bei Frame-Index 2 (~166ms nach Wurfstart). `drainThrowQueue()` startet aber alle `THROW_STAGGER_MS` (120ms) den nächsten Wurf, und jeder neue Wurf räumt zuerst das laufende `frameTimer`-Intervall weg (`clearInterval`), um sein eigenes Arm-Frame-Stepping zu starten. Bei 120ms Abstand < 166ms bis Frame 2 wurde das Intervall des vorigen Wurfs fast immer schon gekappt, bevor dessen Release-Frame je erreicht wurde — der Klumpen löste sich nie.
+**Fix:** Release an einen eigenen `setTimeout(() => spawnFly(...), 2 * THROW_FRAME_MS)` gehängt, unabhängig vom `frameTimer`-Intervall. Das Intervall bleibt rein kosmetisch fürs Arm-Frame-Flackern und darf beliebig unterbrochen werden, ohne den Wurf selbst zu beeinflussen.

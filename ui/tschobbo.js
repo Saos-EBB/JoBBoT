@@ -11,8 +11,15 @@ const SCALE = DISPLAY / FRAME;
 const SHEET_W = 576 * SCALE;
 const SHEET_H = 384 * SCALE;
 
-const ROWS = { front: 0, side: 1, push: 2, quarter: 3 };
-const FRAME_COUNTS = { front: 6, side: 6, push: 5, quarter: 6 };
+const ROWS = { front: 0, side: 1, quarter: 2, throw: 3 };
+const FRAME_COUNTS = { front: 6, side: 6, quarter: 6, throw: 4 };
+
+// Klumpen-Sheet (tschobbo-blobs.png): eigenes, kleineres Raster, nativ ohne
+// Skalierung (Anzeigegroesse = Asset-Groesse, siehe Auftrag).
+const BLOB_FRAME = 32;
+const BLOB_SHEET_W = 128, BLOB_SHEET_H = 96;
+const BLOB_ROWS = { fly: 0, stick: 1, glob: 2 };
+const BLOB_FRAME_COUNTS = { fly: 4, stick: 1, glob: 4 };
 
 const IDLE_FRAME_MS = 1000 / 8;
 const DRIFT_WAIT_MIN = 6000, DRIFT_WAIT_MAX = 14000;
@@ -25,6 +32,12 @@ const MARGIN = 32;
 const PARK_TRAVEL_MS = 600; // nicht im Auftrag beziffert — an Entrance/Drift angelehnt
 const HOP_MS = 160;
 const SCRAPE_SILENCE_MS = 5000;
+
+const THROW_FRAME_MS = 1000 / 12; // Auftrag: "Throw-Ticker: 12 fps"
+const THROW_STAGGER_MS = 120; // Auftrag: Wurf-Frequenz bei mehreren Jobs
+const FLY_MS = 450; // nicht im Auftrag beziffert — zuegiger Wurf, an Drift/Park angelehnt
+const FLY_SPINS = 2; // wie oft der Klumpen waehrend des Flugs durch seine 4 Frames rotiert, nicht beziffert
+const ARC = 80; // Auftrag: "Wurfhöhe (ARC): ~80 px"
 
 const STORAGE_KEY = 'tschobbo.enabled';
 
@@ -49,6 +62,16 @@ function spawnSpot() {
 
 function setFrame(body, view, frame) {
   body.style.backgroundPosition = `-${frame * DISPLAY}px -${ROWS[view] * DISPLAY}px`;
+}
+
+function setBlobFrame(el, row, frame) {
+  el.style.backgroundPosition = `-${frame * BLOB_FRAME}px -${BLOB_ROWS[row] * BLOB_FRAME}px`;
+}
+
+function makeBlobEl() {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed; width:${BLOB_FRAME}px; height:${BLOB_FRAME}px; background-image:url(/tschobbo-blobs.png); background-repeat:no-repeat; background-size:${BLOB_SHEET_W}px ${BLOB_SHEET_H}px; pointer-events:none; z-index:39;`;
+  return el;
 }
 
 function buildDom() {
@@ -91,6 +114,7 @@ export function initTschobbo() {
   let mode = 'idle';
   let busy = false;
   let silenceTimer = null;
+  let throwQueue = [];
 
   function clearTimers() {
     timers.forEach(clearTimeout);
@@ -170,6 +194,77 @@ export function initTschobbo() {
     }
   }
 
+  // Ein Klumpen fliegt auf einer Parabel (Formel, keine Physik-Engine) von der
+  // Wurfhand zum Ziel und rotiert dabei durch seine 4 fly-Frames. Bleibt am Ziel
+  // hängen (stick) — der Fallen-Fall kommt erst in Step 3.
+  function spawnFly(origin, target) {
+    const el = makeBlobEl();
+    document.body.appendChild(el);
+    const t0 = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - t0) / FLY_MS);
+      const x = origin.x + (target.x - origin.x) * t;
+      const y = origin.y + (target.y - origin.y) * t - ARC * Math.sin(Math.PI * t);
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      const frame = Math.floor(t * BLOB_FRAME_COUNTS.fly * FLY_SPINS) % BLOB_FRAME_COUNTS.fly;
+      setBlobFrame(el, 'fly', frame);
+      if (t < 1) requestAnimationFrame(step);
+      else {
+        setBlobFrame(el, 'stick', 0);
+        el.style.left = `${target.x}px`;
+        el.style.top = `${target.y}px`;
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  // Wurf-Animation: Frame 0 ausholen, 1 hochziehen, 2 = Release, 3 nachschwingen
+  // (siehe Auftrag). Keine Arme mehr — Wurfhand ist eine ungefähre Position
+  // relativ zum Körper, nicht im Auftrag exakt beziffert.
+  //
+  // Release hängt an einem eigenen Timeout statt am frameTimer-Intervall: bei
+  // ~120ms Wurf-Abstand (THROW_STAGGER_MS) überholt der nächste Wurf oft noch
+  // vor Frame 2 (~166ms) und würde das Intervall kappen — der Klumpen des
+  // vorigen Wurfs käme nie los. Das Intervall bleibt rein kosmetisch fürs Arm-Flackern.
+  function throwOne(targetEl) {
+    const rect = targetEl.getBoundingClientRect();
+    const target = { x: rect.left, y: rect.top };
+    const origin = { x: posX + DISPLAY * 0.5, y: posY + DISPLAY * 0.4 };
+
+    if (frameTimer) clearInterval(frameTimer);
+    let i = 0;
+    setFrame(body, 'throw', 0);
+    frameTimer = setInterval(() => {
+      i++;
+      if (i >= FRAME_COUNTS.throw) {
+        clearInterval(frameTimer); frameTimer = null;
+        startFrameLoop('side');
+        return;
+      }
+      setFrame(body, 'throw', i);
+    }, THROW_FRAME_MS);
+
+    timers.push(setTimeout(() => spawnFly(origin, target), 2 * THROW_FRAME_MS));
+  }
+
+  // Burst-Regel (anders als v1): kein Ignorieren mehr — jeder Job aus jedem
+  // Event wird gesehen, mit ~120ms Abstand nacheinander geworfen (Auftrag).
+  // Während der Anfahrt (busy) wartet die Queue, statt schon zu werfen.
+  function queueThrows(elements) {
+    const wasEmpty = throwQueue.length === 0;
+    throwQueue.push(...elements);
+    if (wasEmpty) drainThrowQueue();
+  }
+
+  function drainThrowQueue() {
+    if (throwQueue.length === 0) return;
+    if (busy) { timers.push(setTimeout(drainThrowQueue, THROW_STAGGER_MS)); return; }
+    const el = throwQueue.shift();
+    throwOne(el);
+    timers.push(setTimeout(drainThrowQueue, THROW_STAGGER_MS));
+  }
+
   // Seele-Beat 3: Freuden-Hüpfer bei Scrape-Ende, danach zurück zu 'front' über
   // dieselbe Zwischenstufe wie beim Scrape-Start (TURN_STEP_MIN/MAX), dann
   // zurück in den Idle-Zyklus.
@@ -198,19 +293,27 @@ export function initTschobbo() {
     silenceTimer = setTimeout(endScrape, SCRAPE_SILENCE_MS);
   }
 
-  // v2 wirft noch keine Klumpen (Step 2) — reagiert nur auf das erste Event
-  // (Anfahrt an den Rand) und hält den Stille-Timer am Laufen, damit Tschobbo
-  // nach Scrape-Ende wieder in den Idle-Zyklus zurückfindet.
+  // Pro Event: Stille-Timer zurücksetzen, beim allerersten zusätzlich anfahren.
+  // Die Quadrate der zuletzt angehängten Zeile (React braucht einen Frame zum
+  // Rendern, daher rAF — gleiches Muster wie das alte doPush) sind die Wurfziele,
+  // auch für das erste Event ("wir wollen alle Jobs sehen", Auftrag-Burst-Regel).
   function onGridUnit() {
     if (!enabledState) return;
     if (mode === 'idle') {
       clearTimers();
       mode = 'scrape';
+      throwQueue = [];
       resetSilenceTimer();
       parkForScrape();
-      return;
+    } else {
+      resetSilenceTimer();
     }
-    resetSilenceTimer();
+    requestAnimationFrame(() => {
+      const rows = document.querySelectorAll('.loadgrid__row');
+      const row = rows[rows.length - 1];
+      if (!row) return;
+      queueThrows(Array.from(row.querySelectorAll('.loadgrid__sq')));
+    });
   }
 
   window.addEventListener('tschobbo:unit', onGridUnit);

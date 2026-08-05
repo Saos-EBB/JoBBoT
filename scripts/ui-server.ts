@@ -101,6 +101,7 @@ let filterRowCounters = { matched: 0, offstack: 0, brutal: 0 };
 // kein Verzeichnis-Traversal möglich.
 const TSCHOBBO_ASSETS = new Map<string, { path: string; type: string }>([
   ['/tschobbo-sheet.png', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo-sheet.png'), type: 'image/png' }],
+  ['/tschobbo-blobs.png', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo-blobs.png'), type: 'image/png' }],
   ['/tschobbo.js', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo.js'), type: 'text/javascript; charset=utf-8' }],
 ]);
 
