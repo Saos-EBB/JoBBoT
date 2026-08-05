@@ -1,3 +1,8 @@
+## 2026-08-05 — fix(ui): tschobbo ignoriert prefers-reduced-motion
+
+**Was:** `reduced`-Guard komplett aus `ui/tschobbo.js` entfernt (Deklaration in `initTschobbo()`, Checks in `onGridUnit()` und `enable()`) — Idle-Drift, Reinschlüpfen und Schub laufen jetzt unabhängig von `matchMedia('(prefers-reduced-motion: reduce)')`. Explizite Entscheidung von Kevin, gegen den bisherigen Stand (Reduced-Motion war für Tschobbo als Pflichtteil gebaut und respektiert) — analog zum LoadGrid-Precedent (`docs/build-log.md`, Nachtrag 3: "Kevin will die Animation explizit, unabhängig von der Systemeinstellung"), diesmal auf eigenen Wunsch statt aus Auftragslage. Per Playwright gegen die echte App (Port 4030) mit `reducedMotion:'reduce'` emuliert verifiziert: Drift lief trotzdem (`896,596` → `896,314` nach 16s).
+**Nicht gebaut:** Kein Toggle/Config, um zwischen Reduced-Motion-Respekt und Ignorieren zu wählen — ersatzlos entfernt, wie verlangt.
+
 ## 2026-08-05 — fix(ui): tschobbo-idle nur front-ansicht, drift nur rechter rand mittig
 
 **Was:** `startIdle()` ruft `scheduleTurn()` nicht mehr auf — Idle bleibt durchgehend auf `front`, keine Dreh-Kette front→quarter→side mehr während des Wartens. `scheduleDrift()` zielt statt auf einen zufälligen von acht Rand-/Eckpunkten (`edgeSpots()`) immer auf denselben festen Punkt (`rightMidSpot()`: rechter Rand, vertikal mittig). `scheduleTurn()` und die dadurch verwaisten `TURN_WAIT_MIN/MAX` gelöscht, nicht stillgelegt — Scrape-Flow (`parkForScrape`/`endScrape`) nutzt weiter dieselbe Zwischenstufe/Timing (`TURN_STEP_MIN/MAX`) und bleibt unverändert. Per Playwright gegen `ui/tschobbo-test.html` verifiziert: Frame-Zeile über 30s durchgehend `0px` (front), Endposition exakt `innerWidth - DISPLAY - MARGIN, innerHeight/2 - DISPLAY/2`.
