@@ -1,3 +1,9 @@
+## 2026-08-06 — Geklebte Klumpen unsichtbar, nachdem sie DOM-Kinder ihres Quadrats wurden
+
+**Symptom:** Nach dem Scroll-Tracking-Fix (Klumpen wird `appendChild`-Kind des Zielquadrats statt eigenständig `position:fixed`) waren alle geklebten Klumpen komplett unsichtbar — nicht nur beim Scrollen, sofort.
+**Ursache:** `.loadgrid__sq--ghost` versteckte die Quadrate über `opacity:0 !important`. `opacity` ist keine reine Style-Vererbung, sondern eine Compositing-Eigenschaft: das Element und sein kompletter Subtree werden als eine Ebene mit dieser Deckkraft gerendert. Ein Kind mit eigenem `opacity:1` kann sich davon nicht befreien — es erbt zwangsläufig die 0-Deckkraft der Elternebene. Solange der geklebte Klumpen eigenständig `position:fixed` außerhalb des Quadrats positioniert war, fiel das nicht auf; sobald er ein echtes Kind des (unsichtbaren) Quadrats wurde, verschwand er mit.
+**Fix:** Ghost-Regel von `opacity:0 !important` auf `visibility:hidden` umgestellt. Anders als `opacity` lässt sich `visibility` pro Nachfahre zurücksetzen (`visibility:visible` an einem Kind hebt ein `visibility:hidden` am Vorfahren gezielt für dieses Kind wieder auf) — `stick()` nutzt genau das. Merke für künftige "unsichtbarer Elternknoten, sichtbares Kind"-Fälle: `visibility`, nicht `opacity`, ist das Werkzeug dafür.
+
 ## 2026-08-06 — Klumpenwurf: nur der letzte Wurf einer Serie kommt an
 
 **Symptom:** Bei mehreren Jobs in einem GridUnitEvent (6 Würfe in der Testrunde) landete nur ein einziger Klumpen als `stick` — alle anderen verschwanden spurlos, ohne Fehler in der Konsole.

@@ -47,10 +47,13 @@ const STORAGE_KEY = 'tschobbo.enabled';
 // Macht die Scrape-Quadrate unsichtbar (Klumpen übernehmen die Anzeige), ohne
 // LoadGrids Layout/Pop-Timing anzufassen — Quadrate bleiben im Fluss (Tschobbo
 // braucht ihre Positionen als Wurfziele), nur Sichtbarkeit + Interaktion aus.
-// !important noetig: loadgrid-pop animiert opacity selbst auf 1, eine normale
-// Klassenregel wuerde die laufende Animation nicht schlagen.
+// visibility statt opacity: geklebte Klumpen sind echte DOM-Kinder des Quadrats
+// (siehe stick() weiter unten) — opacity:0 würde die ganze Kind-Subbaum-Ebene
+// mitdimmen und ließe sich von einem Kind nicht zurücksetzen, visibility:hidden
+// schon (per visibility:visible am Klumpen). loadgrid-pop animiert nur opacity,
+// nicht visibility — kein !important nötig, nichts konkurriert hier.
 const TSCHOBBO_CSS = `
-.loadgrid__sq--ghost { opacity:0 !important; pointer-events:none; }`;
+.loadgrid__sq--ghost { visibility:hidden; pointer-events:none; }`;
 
 function rand(min, max) { return min + Math.random() * (max - min); }
 
@@ -242,6 +245,7 @@ export function initTschobbo() {
     el.style.position = 'absolute';
     el.style.left = '0';
     el.style.top = '0';
+    el.style.visibility = 'visible'; // Quadrat ist visibility:hidden (Ghost), Klumpen holt sich das explizit zurück
     targetEl.appendChild(el);
     stuckBlobs.push(el);
   }
