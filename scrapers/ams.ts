@@ -67,7 +67,12 @@ async function fetchSearchPage(page: Page, keyword: string, pageNum: number, loc
 export const amsAdapter: ScraperAdapter = {
   name: 'ams',
   kind: 'browser',
-  async scrape(queries: SourceQuery[], keep?: (job: ScrapedJob) => boolean, onProgress?: (current: number, total: number) => void) {
+  async scrape(
+    queries: SourceQuery[],
+    keep?: (job: ScrapedJob) => boolean,
+    onProgress?: (current: number, total: number) => void,
+    onUnitDone?: (items: ScrapedJob[]) => void,
+  ) {
     const byUrl = new Map<string, ScrapedJob>();
     const browser = await chromium.launch({ headless: true });
     try {
@@ -89,18 +94,16 @@ export const amsAdapter: ScraperAdapter = {
         try {
           onProgress?.(1, 1);
           const first = await fetchSearchPage(page, keyword, 1, locationParam);
-          for (const r of first.results ?? []) {
-            const job = parseAmsResult(r);
-            if (!byUrl.has(job.url)) byUrl.set(job.url, job);
-          }
+          const page1Jobs = (first.results ?? []).map(parseAmsResult);
+          for (const job of page1Jobs) if (!byUrl.has(job.url)) byUrl.set(job.url, job);
+          onUnitDone?.(page1Jobs);
           const totalPages = Math.min(first.totalPages ?? 1, MAX_PAGES);
           for (let p = 2; p <= totalPages; p++) {
             onProgress?.(p, totalPages);
             const res = await fetchSearchPage(page, keyword, p, locationParam);
-            for (const r of res.results ?? []) {
-              const job = parseAmsResult(r);
-              if (!byUrl.has(job.url)) byUrl.set(job.url, job);
-            }
+            const pageJobs = (res.results ?? []).map(parseAmsResult);
+            for (const job of pageJobs) if (!byUrl.has(job.url)) byUrl.set(job.url, job);
+            onUnitDone?.(pageJobs);
           }
         } catch (err) {
           console.warn(`[ams] search fehlgeschlagen: ${keyword}`, err);

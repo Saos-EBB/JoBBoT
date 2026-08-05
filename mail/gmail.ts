@@ -93,6 +93,32 @@ export async function createDraft(email: ComposedEmail): Promise<void> {
   }
 }
 
+export interface InboxReply {
+  from: string;
+  subject: string;
+  date: Date;
+}
+
+// Derselbe ImapFlow-Zugang wie createDraft() (gleicher Host/Auth) — nur eine
+// Verbindungslogik, hier für Lesen statt Schreiben verwendet.
+export async function fetchInboxReplies(since: Date): Promise<InboxReply[]> {
+  const { user, pass } = requireGmailCredentials();
+  const client = new ImapFlow({ host: 'imap.gmail.com', port: 993, secure: true, auth: { user, pass }, logger: false });
+  await client.connect();
+  try {
+    await client.mailboxOpen('INBOX', { readOnly: true });
+    const replies: InboxReply[] = [];
+    for await (const msg of client.fetch({ since }, { envelope: true })) {
+      const from = msg.envelope?.from?.[0]?.address;
+      if (!from) continue;
+      replies.push({ from, subject: msg.envelope?.subject ?? '', date: msg.envelope?.date ?? new Date() });
+    }
+    return replies;
+  } finally {
+    await client.logout();
+  }
+}
+
 export async function sendMail(email: ComposedEmail): Promise<void> {
   const att = await attachmentIfPresent();
   const cc = await loadCc();

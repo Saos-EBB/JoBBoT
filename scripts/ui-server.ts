@@ -1,4 +1,4 @@
-import { createServer } from 'node:http';
+import { createServer, type ServerResponse } from 'node:http';
 import { readFile, writeFile, mkdir, stat, unlink } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
@@ -6,7 +6,8 @@ import { createStorage } from '../storage/index.ts';
 import { config } from '../config.ts';
 import { jobBasename } from '../lib/slugify.ts';
 import { loadProfile } from '../lib/profile.ts';
-import { composeEmail, createDraft, sendMail, logMailAction, type ComposedEmail } from '../mail/gmail.ts';
+import { composeEmail, createDraft, sendMail, logMailAction, fetchInboxReplies, type ComposedEmail } from '../mail/gmail.ts';
+import { matchReplies } from '../lib/mail-match.ts';
 import { ATTACHMENT_PATH, ATTACHMENT_FILENAME } from '../lib/attachment.ts';
 import { loadCc, saveCc, clearCc } from '../lib/cc.ts';
 import { loadSources } from '../lib/sources.ts';
@@ -14,7 +15,8 @@ import { loadSettings, type FilterMode } from '../lib/settings.ts';
 import { buildScrapeSetup } from '../lib/scrape-setup.ts';
 import { runScrape } from '../lib/scrape-runner.ts';
 import { filterJob } from '../lib/filter.ts';
-import { findDuplicates } from '../lib/duplicates.ts';
+import { createBatcher } from '../lib/grid-batch.ts';
+import { findDuplicates, planMerge } from '../lib/duplicates.ts';
 import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 
@@ -47,7 +49,7 @@ interface FilterRunState {
   status: 'idle' | 'running' | 'done' | 'error';
   runId: string | null;
   current?: { i: number; total: number; title: string };
-  result?: { sicher: number; unsicher: number; raus: number };
+  result?: { matched: number; offstack: number; brutal: number };
   error?: string;
 }
 interface AnschreibenRunState {
@@ -63,6 +65,45 @@ let anschreibenRun: AnschreibenRunState = { status: 'idle', runId: null };
 // Nur für Anschreiben abbrechbar (Scrape/Filter sind schnell genug, dass ein Stop-Button
 // bisher niemand vermisst hat) — ein einzelner Lauf gleichzeitig, wie anschreibenRun selbst.
 let anschreibenAbort: AbortController | null = null;
+
+// SSE statt Polling fürs Lade-Grid: der Server ist plain node:http ohne Build-Step,
+// SSE braucht dafür nur einen offen gehaltenen Response-Stream (kein zusätzliches
+// Protokoll/Library) — einfacher als Chunked-Transfer selbst zu parsen. Die
+// vorhandene /status-Route bleibt für den restlichen (i/total-)Zustand nutzbar.
+// Payload ist jetzt "Einheit fertig + ihre Items" statt Prozent-/Phasen-Fortschritt —
+// ein Event pro abgeschlossener Zeile (Seite/Batch/Anschreiben-Item), das Frontend
+// hängt die Zeile an (siehe ui/app.tsx LoadGrid). Kein Snapshot beim (Re-)Connect —
+// Einzelnutzer-Lokaltool, ein mittendrin verbundener Client sieht nur ab da (siehe
+// scrapeRun/filterRun/anschreibenRun: ein Server-Neustart verliert genauso).
+interface GridSquare { id: string; tooltip: string; state: 'done' | 'error' | 'excluded' | 'matched' | 'offstack' | 'brutal'; url?: string }
+interface GridUnitEvent { section: string; sectionLabel: string; row: string; items: GridSquare[] }
+
+function createSseChannel<T>() {
+  const clients = new Set<ServerResponse>();
+  function broadcast(payload: T): void {
+    const data = `data: ${JSON.stringify(payload)}\n\n`;
+    for (const client of clients) client.write(data);
+  }
+  return { clients, broadcast };
+}
+
+const anschreibenSse = createSseChannel<GridUnitEvent>();
+const scrapeSse = createSseChannel<GridUnitEvent>();
+const filterSse = createSseChannel<GridUnitEvent>();
+// Zeilen-Zähler pro Quelle, nur für eindeutige Grid-Row-Keys — bei jedem neuen
+// Scrape-Lauf zurückgesetzt (siehe POST /api/scrape).
+let scrapeRowCounters: Record<string, number> = {};
+let filterRowCounters = { matched: 0, offstack: 0, brutal: 0 };
+
+// Whitelist statt generischem File-Server — ui-server.ts liefert sonst nur die
+// eine hartkodierte /app.js-Route (aus ui/dist/), kein Static-Handler existiert
+// bereits (siehe docs/architecture.md, Tschobbo-Entscheidung 2). Feste Pfade,
+// kein Verzeichnis-Traversal möglich.
+const TSCHOBBO_ASSETS = new Map<string, { path: string; type: string }>([
+  ['/tschobbo-sheet.png', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo-sheet.png'), type: 'image/png' }],
+  ['/tschobbo-blobs.png', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo-blobs.png'), type: 'image/png' }],
+  ['/tschobbo.js', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo.js'), type: 'text/javascript; charset=utf-8' }],
+]);
 
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -180,7 +221,20 @@ const server = createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname === '/') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end('<!doctype html><html><head><meta charset="utf-8"><title>JoBBoT</title></head>'
-      + '<body><div id="root"></div><script type="module" src="/app.js"></script></body></html>');
+      + '<body><div id="root"></div><script type="module" src="/app.js"></script>'
+      + '<script type="module" src="/tschobbo.js"></script></body></html>');
+    return;
+  }
+
+  if (req.method === 'GET' && TSCHOBBO_ASSETS.has(url.pathname)) {
+    const asset = TSCHOBBO_ASSETS.get(url.pathname)!;
+    try {
+      const data = await readFile(asset.path);
+      res.writeHead(200, { 'Content-Type': asset.type });
+      res.end(data);
+    } catch {
+      res.writeHead(404).end();
+    }
     return;
   }
 
@@ -194,6 +248,22 @@ const server = createServer(async (req, res) => {
     const withBriefs = await Promise.all(jobs.map(async job => ({ ...job, brief: await readCoverLetter(job) })));
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(withBriefs));
+    return;
+  }
+
+  // Read-only, keine eigene Speicherung — reduziert Jobs auf Kalender-Ereignisse aus
+  // den bereits vorhandenen Feldern sentAt/replyReceivedAt (siehe scrapers/interface.ts).
+  // Gruppierung nach Monat/Woche macht die UI (ui/app.tsx Kalender-Tab), hier nur die
+  // flache Ereignisliste.
+  if (req.method === 'GET' && url.pathname === '/api/calendar') {
+    const jobs = await storage.list();
+    const events: { date: string; type: 'sent' | 'reply'; jobId: string; title: string; company: string }[] = [];
+    for (const job of jobs) {
+      if (job.sentAt) events.push({ date: job.sentAt.slice(0, 10), type: 'sent', jobId: job.id, title: job.title, company: job.company });
+      if (job.replyReceivedAt) events.push({ date: job.replyReceivedAt.slice(0, 10), type: 'reply', jobId: job.id, title: job.title, company: job.company });
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(events));
     return;
   }
 
@@ -305,9 +375,73 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === 'POST' && url.pathname === '/api/duplicates/merge') {
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    let keys: string[] | 'all' = [];
+    try {
+      const parsed = JSON.parse(body) as { keys?: string[]; all?: boolean };
+      keys = parsed.all ? 'all' : (parsed.keys ?? []);
+    } catch {
+      // leer bleiben — behandelt wie "keine Auswahl"
+    }
+
+    const jobs = await storage.list();
+    const groups = findDuplicates(jobs);
+    const targets = keys === 'all' ? groups : groups.filter(g => keys.includes(g.key));
+
+    for (const group of targets) {
+      const plan = planMerge(group);
+      for (const job of plan.remove) await storage.deleteJob(job);
+      // Alte Datei exakt löschen statt update() (das den Dateinamen aus dem
+      // gepatchten scrapedAt neu ableitet — bei gleichem Zielordner bliebe die
+      // alte Datei mit dem alten Namen sonst als Leiche liegen) und dann frisch
+      // unter dem übernommenen scrapedAt speichern.
+      await storage.deleteJob(plan.keep);
+      await storage.save({ ...plan.keep, scrapedAt: plan.scrapedAt, updatedAt: new Date().toISOString() });
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ merged: targets.length }));
+    return;
+  }
+
   if (req.method === 'GET' && url.pathname === '/api/anschreiben/status') {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(anschreibenRun));
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/anschreiben/stream') {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    });
+    anschreibenSse.clients.add(res);
+    req.on('close', () => anschreibenSse.clients.delete(res));
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/scrape/stream') {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    });
+    scrapeSse.clients.add(res);
+    req.on('close', () => scrapeSse.clients.delete(res));
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/filter/stream') {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    });
+    filterSse.clients.add(res);
+    req.on('close', () => filterSse.clients.delete(res));
     return;
   }
 
@@ -323,6 +457,7 @@ const server = createServer(async (req, res) => {
     }
     const runId = randomUUID();
     scrapeRun = { status: 'running', runId, sources: {} };
+    scrapeRowCounters = {};
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ started: true, runId }));
 
@@ -354,6 +489,23 @@ const server = createServer(async (req, res) => {
         storage,
         onProgress: (name, current, total) => {
           scrapeRun.sources[name] = { current, total };
+        },
+        onUnitDone: (name, items) => {
+          const n = (scrapeRowCounters[name] = (scrapeRowCounters[name] ?? 0) + 1);
+          scrapeSse.broadcast({
+            section: name,
+            sectionLabel: name,
+            row: `${name}-${n}`,
+            items: items.map(j => {
+              const inRange = keep(j);
+              return {
+                id: j.url,
+                tooltip: `${j.title} — ${j.company}${j.location ? ' — ' + j.location : ''}${inRange ? '' : ' — außerhalb Location-Gate'}`,
+                state: inRange ? 'done' : 'excluded',
+                url: j.url,
+              };
+            }),
+          });
         },
       });
       let newTotal = 0, skipTotal = 0;
@@ -391,18 +543,40 @@ const server = createServer(async (req, res) => {
       // undefined -> filterJob fällt auf config/settings.json zurück
     }
 
+    // Ein Batcher pro Ergebnis-Kategorie (nicht einer über den ganzen Lauf) — sonst
+    // würden Match/Offstack/Brutal wild gemischt in derselben Zeile landen, statt eigene
+    // Abschnitte im Grid zu bilden (siehe ui/app.tsx LoadGrid). Kategorien und Farben
+    // sind dieselben wie das Fit-Urteil überall sonst in der UI (siehe ui/app.tsx FIT).
+    const filterBatchers = {
+      matched: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'matched', sectionLabel: 'Match', row: `matched-${++filterRowCounters.matched}`, items })),
+      uncertain: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'offstack', sectionLabel: 'Offstack', row: `offstack-${++filterRowCounters.offstack}`, items })),
+      filtered_out: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'brutal', sectionLabel: 'Brutal', row: `brutal-${++filterRowCounters.brutal}`, items })),
+    };
+    filterRowCounters = { matched: 0, offstack: 0, brutal: 0 };
+
     try {
       // scope "all" triaged jede vorhandene Job-Datei neu — siehe scripts/run-filter.ts --scope.
       const jobs = await storage.list(scope === 'all' ? undefined : { status: 'new' });
-      let sicher = 0, unsicher = 0, raus = 0;
+      let matched = 0, offstack = 0, brutal = 0;
       for (let i = 0; i < jobs.length; i++) {
-        filterRun.current = { i, total: jobs.length, title: jobs[i].title };
-        const d = await filterJob(jobs[i], storage, undefined, mode);
-        if (d.status === 'matched') sicher++;
-        else if (d.status === 'uncertain') unsicher++;
-        else raus++;
+        const job = jobs[i];
+        filterRun.current = { i, total: jobs.length, title: job.title };
+        const d = await filterJob(job, storage, undefined, mode);
+        const ergebnis = d.status === 'matched' ? 'Match' : d.status === 'uncertain' ? 'Offstack' : 'Brutal';
+        const square: GridSquare = {
+          id: job.id,
+          tooltip: `${job.title} — ${job.company} — ${ergebnis}`,
+          state: d.status === 'matched' ? 'matched' : d.status === 'uncertain' ? 'offstack' : 'brutal',
+          url: job.url,
+        };
+        if (d.status === 'matched') { matched++; filterBatchers.matched.push(square); }
+        else if (d.status === 'uncertain') { offstack++; filterBatchers.uncertain.push(square); }
+        else { brutal++; filterBatchers.filtered_out.push(square); }
       }
-      filterRun = { status: 'done', runId, result: { sicher, unsicher, raus } };
+      filterBatchers.matched.flush();
+      filterBatchers.uncertain.flush();
+      filterBatchers.filtered_out.flush();
+      filterRun = { status: 'done', runId, result: { matched, offstack, brutal } };
     } catch (err) {
       filterRun = { status: 'error', runId, error: err instanceof Error ? err.message : String(err) };
     }
@@ -451,6 +625,7 @@ const server = createServer(async (req, res) => {
         onProgress: (i, total, title) => {
           anschreibenRun.current = { i, total, title };
         },
+        onItemDone: item => anschreibenSse.broadcast({ section: runId, sectionLabel: 'Anschreiben', row: item.id, items: [item] }),
       });
       anschreibenRun = {
         status: anschreibenAbort.signal.aborted ? 'stopped' : 'done',
@@ -474,6 +649,32 @@ const server = createServer(async (req, res) => {
     anschreibenAbort.abort();
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ stopped: true }));
+    return;
+  }
+
+  // Manuell auslösbarer Fetch statt Auto-Polling-Daemon (siehe Auftrag: Prototyp reicht
+  // ein Button/eine Route, systemd-Scheduling wäre ein separater Auftrag).
+  if (req.method === 'POST' && url.pathname === '/api/mail/replies/fetch') {
+    try {
+      const jobs = await storage.list();
+      const gesendetDates = jobs.filter(j => j.status === 'gesendet' && j.email).map(j => new Date(j.updatedAt).getTime());
+      if (gesendetDates.length === 0) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ checked: 0, matched: 0 }));
+        return;
+      }
+      const since = new Date(Math.min(...gesendetDates));
+      const replies = await fetchInboxReplies(since);
+      const matches = matchReplies(replies, jobs);
+      for (const { job, reply } of matches) {
+        await storage.update(job.id, { replyReceivedAt: reply.date.toISOString() });
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ checked: replies.length, matched: matches.length }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
+    }
     return;
   }
 
@@ -519,7 +720,7 @@ const server = createServer(async (req, res) => {
     try {
       const email = await composeEmail(job, profile);
       await sendMail(email);
-      const updated = await storage.updateStatus(job.id, 'gesendet');
+      const updated = await storage.update(job.id, { status: 'gesendet', sentAt: new Date().toISOString() });
       await logMailAction(job, 'sent');
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify(updated));
@@ -630,7 +831,7 @@ const server = createServer(async (req, res) => {
     try {
       const email = await composeEmail(job, profile);
       await sendMail(email);
-      await storage.updateStatus(job.id, 'gesendet');
+      await storage.update(job.id, { status: 'gesendet', sentAt: new Date().toISOString() });
       await logMailAction(job, 'sent');
       res.writeHead(302, { Location: `/job/${job.id}` });
     } catch (err) {
