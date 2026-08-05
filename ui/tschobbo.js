@@ -1,13 +1,9 @@
 /* Tschobbo — Maskottchen-Sprite-Layer. Reines DOM/CSS/JS, kein React, kein
  * Build-Schritt. Idle-Verhalten (Driften, Drehen, Seele-Beats) lebt hier;
- * der Schub-Teil reagiert auf 'tschobbo:unit' (siehe ui/app.tsx, Hook im
+ * der Scrape-Teil reagiert auf 'tschobbo:unit' (siehe ui/app.tsx, Hook im
  * /api/scrape/stream-Effect — nur dort wird das Event gefeuert, das ist die
  * ganze "v1 reagiert nur auf Scrape"-Beschränkung, siehe docs/architecture.md).
- *
- * z-Reihenfolge im Overlay: Arm-SVG < Koerper-Sprite (siehe tschobbo-arms.js).
  */
-
-import { createArms, playPush } from './tschobbo-arms.js';
 
 const FRAME = 96;
 const DISPLAY = 72;
@@ -26,28 +22,19 @@ const ENTRANCE_MS = 400;
 const SETTLE_MS = 180;
 const MARGIN = 32;
 
-const PUSH_EXTEND_MS = 180, PUSH_HOLD_MS = 60, PUSH_RETRACT_MS = 200;
-const PUSH_BODY_FRAME_MS = 90;
-const ROW_FOLLOW_MS = 150;
 const PARK_TRAVEL_MS = 600; // nicht im Auftrag beziffert — an Entrance/Drift angelehnt
-const SLIDE_MS = 260, SLIDE_STAGGER_MS = 30, SLIDE_OFFSET_PX = 340;
 const HOP_MS = 160;
 const SCRAPE_SILENCE_MS = 5000;
 
 const STORAGE_KEY = 'tschobbo.enabled';
 
-// Retimed Reveal fuer Quadrate, die Tschobbo gerade ins Grid stopft — eigene
-// Klasse statt LoadGrid-Umbau, hoehere Spezifitaet als .loadgrid__sq ueberschreibt
-// nur Erscheinen+Timing, --final-color/loadgrid-color (Zustandsfarbe) bleibt unberuehrt.
+// Macht die Scrape-Quadrate unsichtbar (Klumpen übernehmen die Anzeige), ohne
+// LoadGrids Layout/Pop-Timing anzufassen — Quadrate bleiben im Fluss (Tschobbo
+// braucht ihre Positionen als Wurfziele), nur Sichtbarkeit + Interaktion aus.
+// !important noetig: loadgrid-pop animiert opacity selbst auf 1, eine normale
+// Klassenregel wuerde die laufende Animation nicht schlagen.
 const TSCHOBBO_CSS = `
-@keyframes tschobbo-slide-in { from { opacity:0; transform:translateX(${SLIDE_OFFSET_PX}px); } to { opacity:1; transform:translateX(0); } }
-.loadgrid__sq.tschobbo-arrive {
-  animation-name: tschobbo-slide-in, loadgrid-color;
-  animation-duration: ${SLIDE_MS}ms, .3s;
-  animation-timing-function: cubic-bezier(.2,1.4,.4,1), ease-out;
-  animation-delay: var(--tschobbo-delay, 0ms), var(--tschobbo-delay, 0ms);
-  animation-fill-mode: forwards, forwards;
-}`;
+.loadgrid__sq--ghost { opacity:0 !important; pointer-events:none; }`;
 
 function rand(min, max) { return min + Math.random() * (max - min); }
 
@@ -69,15 +56,9 @@ function buildDom() {
   root.className = 'tschobbo';
   root.style.cssText = `position:fixed; left:0; top:0; width:${DISPLAY}px; height:${DISPLAY}px; pointer-events:none; z-index:40;`;
 
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('width', String(DISPLAY));
-  svg.setAttribute('height', String(DISPLAY));
-  svg.style.cssText = 'position:absolute; inset:0; overflow:visible;';
-
   const body = document.createElement('div');
   body.style.cssText = `position:absolute; inset:0; width:${DISPLAY}px; height:${DISPLAY}px; background-image:url(/tschobbo-sheet.png); background-repeat:no-repeat; background-size:${SHEET_W}px ${SHEET_H}px;`;
 
-  root.appendChild(svg);
   root.appendChild(body);
 
   const toggle = document.createElement('button');
@@ -90,12 +71,11 @@ function buildDom() {
   document.head.appendChild(style);
   document.body.appendChild(root);
   document.body.appendChild(toggle);
-  return { root, svg, body, toggle, style };
+  return { root, body, toggle, style };
 }
 
 export function initTschobbo() {
-  const { root, svg, body, toggle, style } = buildDom();
-  const updateArms = createArms(svg);
+  const { root, body, toggle, style } = buildDom();
 
   let timers = [];
   let frameTimer = null;
@@ -190,59 +170,6 @@ export function initTschobbo() {
     }
   }
 
-  // Körper-Frames 0→4 einmal durchschalten (~90ms/Frame), parallel zur
-  // Armstreckung. Läuft im selben frameTimer-Slot wie die Idle-Loops — die
-  // 'side'-Loop danach wieder aufzunehmen ist Aufgabe des Aufrufers.
-  function playBodyPushFrames() {
-    if (frameTimer) clearInterval(frameTimer);
-    let i = 0;
-    setFrame(body, 'push', 0);
-    frameTimer = setInterval(() => {
-      i++;
-      if (i >= FRAME_COUNTS.push) { clearInterval(frameTimer); frameTimer = null; return; }
-      setFrame(body, 'push', i);
-    }, PUSH_BODY_FRAME_MS);
-  }
-
-  // Ein Schub für eine fertige Grid-Zeile: Quadrate erst unsichtbar einfrieren
-  // (LoadGrids eigene Pop-Animation würde sonst parallel mitlaufen), Arme
-  // strecken sich zur Zeilenposition, am Umkehrpunkt (onContact) übernimmt der
-  // Slide mit Stagger die Quadrate von LoadGrid.
-  function doPush() {
-    busy = true;
-    requestAnimationFrame(() => {
-      const rows = document.querySelectorAll('.loadgrid__row');
-      const row = rows[rows.length - 1];
-      const squares = row ? Array.from(row.querySelectorAll('.loadgrid__sq')) : [];
-      if (!row || squares.length === 0) { busy = false; return; }
-
-      squares.forEach(sq => { sq.style.animation = 'none'; sq.style.opacity = '0'; });
-
-      const rowRect = row.getBoundingClientRect();
-      const target = { x: rowRect.left + 6, y: rowRect.top + rowRect.height / 2 };
-      place(posX, target.y, ROW_FOLLOW_MS);
-      playBodyPushFrames();
-
-      playPush(updateArms, { origin: () => ({ x: posX, y: posY }), scale: SCALE, target: () => target }, {
-        extend: PUSH_EXTEND_MS,
-        hold: PUSH_HOLD_MS,
-        retract: PUSH_RETRACT_MS,
-        onContact: () => {
-          squares.forEach((sq, i) => {
-            sq.style.removeProperty('animation');
-            sq.style.setProperty('--tschobbo-delay', `${i * SLIDE_STAGGER_MS}ms`);
-            sq.classList.add('tschobbo-arrive');
-          });
-        },
-      });
-
-      timers.push(setTimeout(() => {
-        startFrameLoop('side');
-        busy = false;
-      }, PUSH_EXTEND_MS + PUSH_HOLD_MS + PUSH_RETRACT_MS));
-    });
-  }
-
   // Seele-Beat 3: Freuden-Hüpfer bei Scrape-Ende, danach zurück zu 'front' über
   // dieselbe Zwischenstufe wie beim Scrape-Start (TURN_STEP_MIN/MAX), dann
   // zurück in den Idle-Zyklus.
@@ -271,6 +198,9 @@ export function initTschobbo() {
     silenceTimer = setTimeout(endScrape, SCRAPE_SILENCE_MS);
   }
 
+  // v2 wirft noch keine Klumpen (Step 2) — reagiert nur auf das erste Event
+  // (Anfahrt an den Rand) und hält den Stille-Timer am Laufen, damit Tschobbo
+  // nach Scrape-Ende wieder in den Idle-Zyklus zurückfindet.
   function onGridUnit() {
     if (!enabledState) return;
     if (mode === 'idle') {
@@ -281,8 +211,6 @@ export function initTschobbo() {
       return;
     }
     resetSilenceTimer();
-    if (busy) return; // Burst-Regel: laufender Schub/Anfahrt schluckt das Event
-    doPush();
   }
 
   window.addEventListener('tschobbo:unit', onGridUnit);

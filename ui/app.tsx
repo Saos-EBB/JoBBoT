@@ -543,7 +543,10 @@ const ROW_DURATION_MS = 4000;
 // Quadrat einer Zeile fertig erschienen ist (danach färbt sich die ganze Zeile ein).
 const POP_DURATION_MS = 350;
 
-function LoadGrid({ sections }: { sections: LoadGridSection[] }) {
+// ghost: Quadrate bleiben im Layout (Tschobbo braucht ihre Positionen als
+// Wurfziele), werden aber unsichtbar + nicht klickbar — nur die Scrape-Section
+// nutzt das, seit Tschobbo dort Klumpen statt Quadraten zeigt (siehe ui/tschobbo.js).
+function LoadGrid({ sections, ghost }: { sections: LoadGridSection[]; ghost?: boolean }) {
   return (
     <div className="loadgrid">
       {sections.map(s => (
@@ -562,7 +565,7 @@ function LoadGrid({ sections }: { sections: LoadGridSection[] }) {
                 {r.squares.map((sq, i) => (
                   <span
                     key={sq.id}
-                    className={'loadgrid__sq loadgrid__sq--' + sq.state + (sq.url ? ' loadgrid__sq--clickable' : '')}
+                    className={'loadgrid__sq loadgrid__sq--' + sq.state + (sq.url ? ' loadgrid__sq--clickable' : '') + (ghost ? ' loadgrid__sq--ghost' : '')}
                     title={sq.tooltip}
                     onClick={sq.url ? () => window.open(sq.url, '_blank', 'noopener,noreferrer') : undefined}
                     style={{ '--pop-delay': `${i * step}ms`, '--reveal-delay': `${revealDelay}ms` } as React.CSSProperties}
@@ -580,7 +583,7 @@ function LoadGrid({ sections }: { sections: LoadGridSection[] }) {
 // Hülle ums Grid, geteilt von Scrape/Filter/Anschreiben: bleibt nach Laufende stehen
 // (Kevin: "verschwindet zu schnell"), bis der Schließen-Button sie wegräumt oder ein
 // neuer Lauf sections auf [] zurücksetzt (siehe runScrapeNow/runFilterNow/runAnschreibenNow).
-function LoadGridPanel({ running, sections, onClose }: { running: boolean; sections: LoadGridSection[]; onClose: () => void }) {
+function LoadGridPanel({ running, sections, onClose, ghost }: { running: boolean; sections: LoadGridSection[]; onClose: () => void; ghost?: boolean }) {
   return (
     <div className="empty" style={{ textAlign: 'left', padding: '8px 0', position: 'relative' }}>
       <div className="empty__h" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -591,7 +594,7 @@ function LoadGridPanel({ running, sections, onClose }: { running: boolean; secti
           </button>
         )}
       </div>
-      {sections.length === 0 ? 'Startet…' : <LoadGrid sections={sections} />}
+      {sections.length === 0 ? 'Startet…' : <LoadGrid sections={sections} ghost={ghost} />}
       {!running && <span className="loadgrid__done-badge">Fertig</span>}
     </div>
   );
@@ -1561,6 +1564,7 @@ export default function JobbotUI() {
                 running={scrapeStatus?.status === 'running'}
                 sections={scrapeSections}
                 onClose={() => setScrapeSections([])}
+                ghost
               />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 9, maxWidth: 420 }}>
