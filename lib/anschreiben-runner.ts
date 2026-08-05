@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { readFile } from 'node:fs/promises';
 import type { Job } from '../scrapers/interface.ts';
 import type { Storage } from '../storage/index.ts';
 import type { ProfileData } from './profile.ts';
@@ -6,6 +7,15 @@ import { generateAnschreiben } from './anschreiben.ts';
 import { findEmail, FIRMENABC_USER_AGENT } from './find-email.ts';
 import { sleep } from './fetch-page.ts';
 import { config } from '../config.ts';
+
+// Ein fertig generiertes (oder fehlgeschlagenes) Anschreiben, fürs Lade-Grid im UI —
+// siehe ui/app.tsx LoadGrid. Eine Zeile pro Item (nicht gebündelt in Batches wie beim
+// Filter): jede Generierung dauert Minuten, ein Batch von 10 hieße lange Stille.
+export interface AnschreibenGridItem {
+  id: string;
+  tooltip: string;
+  state: 'done' | 'error';
+}
 
 export interface AnschreibenOutcome {
   generated: number;
@@ -24,6 +34,7 @@ export interface RunAnschreibenOptions {
   profile: ProfileData;
   model?: string;
   onProgress?: (i: number, total: number, title: string) => void;
+  onItemDone?: (item: AnschreibenGridItem) => void;
   signal?: AbortSignal;
 }
 
@@ -31,7 +42,7 @@ export interface RunAnschreibenOptions {
 // (ein Browser fürs Ganze statt pro Job, sequenziell mit 1s Pause zwischen Jobs)
 // wiederverwenden kann statt ihn zu duplizieren.
 export async function runAnschreiben(options: RunAnschreibenOptions): Promise<AnschreibenOutcome> {
-  const { jobs, storage, profile, model = config.modelWriter, onProgress, signal } = options;
+  const { jobs, storage, profile, model = config.modelWriter, onProgress, onItemDone, signal } = options;
   let generated = 0;
   let emailsFound = 0;
   let mailGenerated = 0;
@@ -64,6 +75,17 @@ export async function runAnschreiben(options: RunAnschreibenOptions): Promise<An
         }
 
         if (hasMail) mailGenerated++;
+
+        // Grobe Länge statt exakter Tokenzahl (die kennt nur Ollama) — Wortzahl aus der
+        // gerade gespeicherten Datei reicht für die Tooltip-Kurzinfo.
+        const wordCount = (await readFile(path, 'utf8').catch(() => '')).trim().split(/\s+/).filter(Boolean).length;
+        onItemDone?.({
+          id: job.id,
+          tooltip: `${job.title} — ${job.company} — ${model} — ~${wordCount} Wörter — gespeichert`,
+          state: 'done',
+        });
+      } else {
+        onItemDone?.({ id: job.id, tooltip: `${job.title} — ${job.company} — fehlgeschlagen`, state: 'error' });
       }
 
       if (i < jobs.length - 1 && !signal?.aborted) await sleep(1000);

@@ -33,6 +33,16 @@ export interface Job extends ScrapedJob {
   // Runner-Umbau in run-anschreiben.ts/den Mail-Handlern ist ein separater Auftrag
   // (siehe findings/HANDOFF-gmail-versand.md). Bis dahin ist es ehrlich immer leer.
   error?: string | null;
+  // Kein eigener JobStatus-Wert: storage.updateStatus() beschränkt auf ein festes Enum
+  // und treibt darüber die Ordner-Verschiebung (lib/folders.ts) — eine Antwort ändert
+  // den Bewerbungsstatus nicht, sie ist nur eine zusätzliche Information dazu. Gesetzt
+  // über das generische storage.update(), wie job.email.
+  replyReceivedAt?: string | null;
+  // Zeitpunkt des Übergangs zu status "gesendet", gesetzt an der Sendestelle selbst
+  // statt aus updatedAt abgeleitet — updatedAt wird bei jedem storage.update() neu
+  // gesetzt (z.B. wenn später replyReceivedAt eintrifft) und wäre danach kein
+  // verlässliches Sende-Datum mehr. Altbestand ohne sentAt bleibt bewusst undatiert.
+  sentAt?: string | null;
 }
 
 export type SourceQuery = Record<string, string>;
@@ -44,5 +54,12 @@ export interface ScraperAdapter {
     queries: SourceQuery[],
     keep?: (job: ScrapedJob) => boolean,
     onProgress?: (current: number, total: number) => void,
+    // Fürs Lade-Grid im UI (siehe ui/app.tsx LoadGrid): eine abgeschlossene Zeile
+    // fertig gefundener Stellen. Bei Quellen mit echter Suchergebnis-Pagination
+    // (devjobs.at, ams, linkedin) ist das eine Seite; bei den übrigen (karriere.at,
+    // jobs.at, ohne echte Pagination) ein fester Batch aus dem Detail-Abruf
+    // (siehe lib/grid-batch.ts). Titel/Firma/Ort sind zu diesem Zeitpunkt schon
+    // bekannt (aus dem Such-Parse), unabhängig vom späteren Detail-Fetch.
+    onUnitDone?: (items: ScrapedJob[]) => void,
   ): Promise<ScrapedJob[]>;
 }

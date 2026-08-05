@@ -94,6 +94,11 @@ npm run scrape -- --source=karriere  # equivalent, directly via flag
 npm run filter                    # filter all 'new' jobs (mode from settings.json)
 npm run filter:regex              # force the regex strategy (offline, no Ollama needed)
 npm run filter -- --source=llm    # force the mode directly via flag (llm | regex)
+npm run filter:all                # re-triage ALL jobs, not just 'new' (--scope=all)
+npm run filter -- --scope=all     # equivalent, directly via flag (new | all, default new)
+
+npm run duplicates   # report: jobs whose normalized title+company (lowercased,
+                      # gender markers, legal-form suffixes stripped) collide. Deletes nothing.
 
 npm run anschreiben                       # generate cover letters for all triaged jobs (fit != brutal)
 npm run anschreiben -- --data=save        # only data/jobs/matched/  (fit "matched")
@@ -101,15 +106,22 @@ npm run anschreiben -- --data=unsave      # only data/jobs/offstack/ (fit "offst
 npm run anschreiben -- --limit=5          # only the first N jobs of the selection
 npm run anschreiben -- --source=<model>   # override the Ollama model for this run
 
-npm run ui   # job browser + Gmail integration, http://localhost:3000
+npm run ui                  # job browser + Gmail integration, http://localhost:3000
+npm run ui -- --port=3001   # force a different port (otherwise UI_PORT env or 3000)
 ```
 
 Flags go after `--` (npm convention, otherwise npm parses them itself) and
 can be combined, e.g. `npm run anschreiben -- --data=save --limit=3`.
 
-`npm run scrape` writes new jobs to `data/jobs/`. `npm run filter` sets each
-job's status (see lifecycle below) and writes a report to
-`data/filter-log.md`. `npm run anschreiben` places finished letters under
+`npm run scrape` writes new jobs to `data/jobs/`. `npm run filter` sets
+status `triaged` + `fit` (see lifecycle below) and writes a report to
+`data/filter-log.md`; with `--scope=all` it re-triages every existing job
+instead of only those with status `new` — useful after tweaking the filter
+rules, so the database doesn't sit on stale judgments. `npm run duplicates`
+finds jobs whose title+company collide once normalized (lowercased, gender
+markers like `(m/w/d)`, legal-form suffixes like `GmbH` stripped) — a plain
+report, nothing gets deleted automatically. `npm run anschreiben` places
+finished letters under
 `data/anschreiben/title_company_date_id8.md`, also tries to find an
 application email address (regex on the listing, then a firmenabc.at
 fallback), and logs every run (model, `--data` filter, count, emails found)
@@ -151,18 +163,22 @@ framework) that does two things at once:
 - **JSON API** the SPA talks to via `fetch`: `/api/jobs`, `/api/jobs/:id`
   (change status/fit), `/api/jobs/:id/brief` (edit the cover letter),
   `/api/jobs/:id/draft` / `/api/jobs/:id/send` (Gmail), `/api/attachment`
-  (résumé upload), and `/api/scrape/*` / `/api/filter/*` (see below).
+  (résumé upload), `/api/duplicates` (duplicate report, GET, synchronous),
+  `/api/duplicates/merge` (merge a duplicate group), `/api/calendar`
+  (calendar events, GET, synchronous), `/api/mail/replies/fetch` (scan the
+  Gmail inbox for replies), and `/api/scrape/*` / `/api/filter/*` (see below).
 
 ### Scrape/Filter from the UI
 
-The sidebar has its own "Pipeline" group with two entries — **Scrape** and
-**Filter** — that trigger `npm run scrape`/`npm run filter` from the browser
-instead of the terminal. Both follow the same pattern:
+The sidebar has its own "Pipeline" group with entries **Scrape**, **Filter**,
+**Duplicates**, and **Cover letters** that trigger the matching `npm run
+<x>` script from the browser instead of the terminal. Scrape/Filter/Cover
+letters follow the same pattern:
 
 1. `POST /api/scrape` (source selection) or `POST /api/filter` (`regex`/
-   `llm` mode) starts the run **in the background** inside the server
-   process and responds immediately with a `runId` — no waiting on a long
-   HTTP response.
+   `llm` mode + `new`/`all` scope, see above) starts the run **in the
+   background** inside the server process and responds immediately with a
+   `runId` — no waiting on a long HTTP response.
 2. The SPA polls `GET /api/scrape/status` / `/api/filter/status` every
    ~1.5s, regardless of which view is open — that's what keeps the progress
    bar under the sidebar entry visible even while browsing the job list.
@@ -173,6 +189,25 @@ instead of the terminal. Both follow the same pattern:
 
 The server keeps run state only in process memory (no restart recovery) —
 fine for a local single-user tool.
+
+**Duplicates** follows a simpler, different pattern: `GET /api/duplicates`
+is a synchronous read with no background run/polling — it returns the
+duplicate groups directly in the response. The UI calls it when the view
+opens; a "Check again" button triggers a refetch. Per group (or all at once)
+a "Merge" button consolidates them: the newest listing survives but takes on
+the oldest duplicate's `scrapedAt`; the remaining files get deleted.
+
+### Calendar
+
+The sidebar tab "Calendar" shows when applications went out (`sentAt`) and
+when replies came back (`replyReceivedAt`) — day = square, week = row, month
+= block, newest month first. Clicking a day opens a popup with that day's
+entries and jumps from there to the job detail view. Replies aren't detected
+automatically: a "Fetch replies" button in the "Sent" folder (history) scans
+the Gmail inbox via `POST /api/mail/replies/fetch` (email+subject matching,
+no message ID) and sets `replyReceivedAt` on hits — jobs with a reply then
+show a "Reply received" badge, with a "Only with reply" filter in the
+history.
 
 ## Tests
 
@@ -201,14 +236,22 @@ The whole system only talks to storage through the `Storage` interface
 ## Job lifecycle
 
 ```
-new → filtered_out | matched → generated → reviewed → drafted → sent
+new → triaged → generated → freigegeben → postausgang → gesendet
+                                    (+ geloescht/fehler as side paths)
 ```
 
-`scrape` creates `new`, `filter` sets `filtered_out`/`matched`/`uncertain`,
-`anschreiben` sets `generated`. `reviewed` is set manually in the UI (status
-dropdown) — only then does the UI unlock draft/send. `drafted`/`sent` are
-set by the UI itself, only on an actually successful Gmail call (no status
-change on failure). There is still no auto-send without that explicit click.
+Status names are German in the data model (`freigegeben` = reviewed,
+`postausgang` = drafted/outbox, `gesendet` = sent, `geloescht` = deleted,
+`fehler` = error). `scrape` creates `new`. `filter` sets status `triaged` —
+the actual verdict lives in a separate `fit` field (`matched`/`offstack`/
+`brutal`, still manually overridable in the UI), not in the status anymore.
+`anschreiben` sets `generated`. `freigegeben` is set manually in the UI —
+only then does the UI unlock draft/send. `postausgang` (Gmail draft created,
+send not yet confirmed) and `gesendet` are set by the UI itself, only on an
+actually successful Gmail call (no status change on failure — those land on
+`fehler` instead). `geloescht` is reachable from most states (a trash bin,
+not a file delete). There is still no auto-send without the explicit
+"confirm sent" click.
 
 ## Environment variables
 
@@ -219,4 +262,4 @@ change on failure). There is still no auto-send without that explicit click.
 | `JOBBOT_MODEL_WRITER` | `mistral-small3.2:latest` |
 | `GMAIL_USER` | — (see [Gmail integration](#gmail-integration)) |
 | `GMAIL_APP_PASSWORD` | — (see [Gmail integration](#gmail-integration)) |
-| `UI_PORT` | `3000` |
+| `UI_PORT` | `3000` (overridden by `npm run ui -- --port=<n>`, which wins over `UI_PORT`) |

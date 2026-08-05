@@ -22,6 +22,7 @@ import {
   Square,
   Copy,
   Layers,
+  Calendar,
 } from 'lucide-react';
 import type { Job, Fit } from '../scrapers/interface.ts';
 import { FOLDER_IDS, inFolder, type FolderId } from '../lib/folders.ts';
@@ -47,7 +48,7 @@ type FilterRunStatus = {
   status: 'idle' | 'running' | 'done' | 'error';
   runId: string | null;
   current?: { i: number; total: number; title: string };
-  result?: { sicher: number; unsicher: number; raus: number };
+  result?: { matched: number; offstack: number; brutal: number };
   error?: string;
 };
 type AnschreibenRunStatus = {
@@ -57,19 +58,26 @@ type AnschreibenRunStatus = {
   result?: { generated: number; skipped: number; emailsFound: number; mailGenerated: number; nomailGenerated: number };
   error?: string;
 };
+// Spiegelt GridUnitEvent aus scripts/ui-server.ts — ein SSE-Event pro abgeschlossener
+// Grid-Zeile (Seite/Batch/Anschreiben-Item), siehe LoadGrid weiter unten.
+type GridUnitEvent = { section: string; sectionLabel: string; row: string; items: LoadGridSquare[] };
 type FilterMode = 'llm' | 'regex';
 // Spiegelt lib/duplicates.ts DuplicateGroup — kein gemeinsames Modul aus demselben
 // Grund wie oben (Job-Typ selbst kommt weiterhin aus scrapers/interface.ts).
 type DuplicateGroup = { key: string; jobs: Job[] };
+// Spiegelt die Ereignisliste von GET /api/calendar (scripts/ui-server.ts) — ein Eintrag
+// je gesetztem sentAt/replyReceivedAt, date als 'YYYY-MM-DD'.
+type CalendarEvent = { date: string; type: 'sent' | 'reply'; jobId: string; title: string; company: string };
 
 /* ------------------------------------------------------------------ *
  * Design tokens
  *
  * Ganze App ist bewusst entsättigt. Die EINZIGE Farbe im Interface ist
  * das Fit-Urteil (Match/Offstack/Brutal) — damit liest sich die Liste
- * als Streifen von Urteilen, bevor du ein Wort gelesen hast.
- * Rot ist exklusiv für Fehler reserviert, deshalb ist "brutal" Stahl
- * und nicht Rot: die Zeile soll zurücktreten, nicht schreien.
+ * als Streifen von Urteilen, bevor du ein Wort gelesen hast: Match blau,
+ * Offstack gelb, Brutal orange. Rot ist exklusiv für Fehler reserviert,
+ * deshalb bleibt "brutal" Orange und wird nie Rot, obwohl es das
+ * Aussortier-Urteil ist.
  *
  * Tiefe = 4 Stufen Elevation: ink < slate < panel < paper.
  * Das Anschreiben ist die einzige helle Fläche der App — weil es das
@@ -77,9 +85,9 @@ type DuplicateGroup = { key: string; jobs: Job[] };
  * ------------------------------------------------------------------ */
 
 const FIT: Record<Fit, { label: string; color: string }> = {
-  matched: { label: 'Match', color: '#35D0A5' },
-  offstack: { label: 'Offstack', color: '#E8B04B' },
-  brutal: { label: 'Brutal', color: '#5F6875' },
+  matched: { label: 'Match', color: 'var(--fit-matched)' },
+  offstack: { label: 'Offstack', color: 'var(--fit-offstack)' },
+  brutal: { label: 'Brutal', color: 'var(--fit-brutal)' },
 };
 
 // fit ist nullable (scrapers/interface.ts) und bekommt bewusst KEINEN Default hier im
@@ -102,6 +110,7 @@ const CSS = `
   --text:#E6EAF0; --muted:#8A94A6; --dim:#5E6878;
   --paper:#F3F2EE; --paper-ink:#191C22; --paper-line:#DAD8D1;
   --err:#E5484D; --ok:#35D0A5;
+  --fit-matched:#5B8CFF; --fit-offstack:#E8B04B; --fit-brutal:#E8622A;
   --sans:'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   --mono:'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
   --serif:'IBM Plex Serif', Georgia, serif;
@@ -145,8 +154,50 @@ const CSS = `
 .fld--err.fld--has svg, .fld--err.fld--has .fld__n { color:var(--err); opacity:1; }
 .fld__dot { width:6px; height:6px; border-radius:50%; background:var(--ok); flex:none; }
 
-.fld__bar { height:2px; margin:0 8px 6px; background:var(--line); border-radius:99px; overflow:hidden; }
-.fld__bar span { display:block; height:100%; background:var(--text); transition:width .3s ease; }
+.fld__bar { height:3px; margin:0 8px 6px; background:var(--line); border-radius:99px; overflow:hidden; }
+.fld__bar span {
+  display:block; height:100%; border-radius:inherit; transition:width .3s ease;
+  background:linear-gradient(90deg, #5B8CFF, #35D0A5, #5B8CFF);
+  background-size:200% 100%;
+}
+
+.loadgrid { display:flex; flex-direction:column; gap:16px; }
+.loadgrid__done-badge {
+  position:absolute; right:0; bottom:-2px;
+  font-size:10px; font-weight:600; letter-spacing:.02em;
+  padding:2px 7px; border-radius:5px;
+  background:var(--ok); color:var(--ink);
+}
+.loadgrid__head {
+  font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--muted); margin-bottom:7px;
+}
+.loadgrid__row { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:3px; }
+/* Zwei getrennte Animationen: "pop" (Erscheinen, pro Quadrat gestaffelt via --pop-delay)
+   endet grau und BLEIBT grau — erst wenn die ganze Zeile fertig erschienen ist, färbt
+   "color" (auf --reveal-delay verzögert, für jedes Quadrat der Zeile gleich) sie um. */
+.loadgrid__sq {
+  position:relative; /* Anker für Tschobbos geklebte Klumpen, siehe ui/tschobbo.js */
+  width:11px; height:11px; border-radius:3px; flex:none;
+  opacity:0; transform:scale(.4); background:var(--dim);
+  animation-name: loadgrid-pop, loadgrid-color;
+  animation-duration: .35s, .3s;
+  animation-timing-function: ease-out, ease-out;
+  animation-delay: var(--pop-delay, 0ms), var(--reveal-delay, 0ms);
+  animation-fill-mode: forwards, forwards;
+}
+.loadgrid__sq--done { --final-color:#5B8CFF; }
+.loadgrid__sq--error { --final-color:var(--err); }
+.loadgrid__sq--excluded { --final-color:var(--dim); }
+/* Filter-Ergebnis nutzt exakt die Fit-Urteilsfarben (siehe FIT oben) statt eigener
+   Töne — ein Quadrat und ein Job-Zeilen-Punkt für dasselbe Urteil sehen identisch aus. */
+.loadgrid__sq--matched { --final-color:var(--fit-matched); }
+.loadgrid__sq--offstack { --final-color:var(--fit-offstack); }
+.loadgrid__sq--brutal { --final-color:var(--fit-brutal); }
+.loadgrid__sq--clickable { cursor:pointer; }
+.loadgrid__sq--clickable:hover { filter:brightness(1.4); }
+@keyframes loadgrid-pop { to { opacity:1; transform:scale(1); } }
+@keyframes loadgrid-color { to { background:var(--final-color); } }
 
 /* .chip/.chip--on ist für die Fit-Filter gebaut, wo ein Farbpunkt die Auswahl
    trägt — ohne Punkt (Regex/LLM) ist der Kontrast dort zu schwach, um überhaupt
@@ -225,6 +276,7 @@ const CSS = `
 }
 .tag--nomail { border-style:dashed; }
 .tag--err { border-color:rgba(229,72,77,.4); color:var(--err); }
+.tag--reply { border-color:rgba(53,208,165,.4); color:var(--ok); }
 
 .empty { padding:56px 24px; text-align:center; color:var(--dim); }
 .empty__h { color:var(--muted); font-weight:500; margin-bottom:5px; font-size:13px; }
@@ -242,6 +294,12 @@ const CSS = `
 .lnk { display:inline-flex; align-items:center; gap:3px; color:var(--dim); }
 .lnk:hover { color:var(--text); }
 .lnk svg { width:10px; height:10px; }
+
+/* Babyblau statt Standard-Browserblau, Rosa statt Lila für besuchte Links — weniger
+   aggressiv auf dem dunklen Hintergrund. */
+.dup-lnk:link { color:#8ecae6; }
+.dup-lnk:visited { color:#e8a0c4; }
+.dup-lnk:hover { color:var(--text); }
 
 .fitpick { display:flex; align-items:center; gap:7px; margin-top:12px; }
 .fitpick__lbl { font-size:11px; color:var(--dim); }
@@ -311,10 +369,16 @@ const CSS = `
 .bar__spacer { flex:1; }
 .bar__hint { font-family:var(--mono); font-size:10.5px; color:var(--dim); }
 
+/* Rechts oben statt mittig unten — verdeckt so nicht den Content-Fokus in der Mitte.
+   Alternative (mittig auf Augenhöhe), falls gewünscht, wäre hier eine Ein-Zeilen-Änderung:
+   top:50%; left:50%; transform:translate(-50%,-50%); (position bleibt sonst gleich). */
+.toaststack {
+  position:fixed; top:20px; right:20px; z-index:50;
+  display:flex; flex-direction:column; gap:8px;
+}
 .toast {
-  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
   background:var(--raised); border:1px solid var(--line); border-radius:6px;
-  padding:8px 15px; font-size:12.5px; box-shadow:0 8px 24px rgba(0,0,0,.5); z-index:50;
+  padding:8px 15px; font-size:12.5px; box-shadow:0 8px 24px rgba(0,0,0,.5);
   display:flex; align-items:center; gap:7px;
 }
 .toast svg { width:14px; height:14px; flex:none; }
@@ -325,8 +389,47 @@ const CSS = `
 
 @media (prefers-reduced-motion:no-preference) {
   .toast { animation:rise .16s ease-out; }
-  @keyframes rise { from { opacity:0; transform:translate(-50%,6px); } }
+  @keyframes rise { from { opacity:0; transform:translateY(-6px); } }
 }
+
+/* ---------- Kalender ---------- */
+/* Eigene Ansicht (7-Spalten-Wochenraster), aber dieselben Farbtokens wie das Lade-Grid:
+   --fit-matched für "gesendet", --ok für "Antwort" (deckt sich mit .tag--reply, das
+   dieselbe Farbe für "hat geantwortet" in der Job-Liste nutzt). */
+.cal { display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--ink); grid-column:span 2; }
+.cal__body { flex:1; min-height:0; overflow-y:auto; padding:22px 24px; display:flex; flex-direction:column; gap:28px; }
+.cal__month-h { font-size:13px; font-weight:600; color:var(--text); margin-bottom:8px; text-transform:capitalize; }
+.cal__weekday-row, .cal__grid { display:grid; grid-template-columns:repeat(7, 34px); gap:4px; }
+.cal__weekday-row { font-family:var(--mono); font-size:9.5px; color:var(--dim); text-align:center; margin-bottom:4px; }
+.cal__sq {
+  width:34px; height:34px; border-radius:5px; border:1px solid var(--line);
+  display:flex; align-items:flex-end; justify-content:flex-end; padding:3px 4px;
+  font-family:var(--mono); font-size:10px; color:var(--dim);
+}
+.cal__sq--pad { visibility:hidden; }
+.cal__sq--sent { background:var(--fit-matched); border-color:transparent; color:var(--ink); }
+.cal__sq--reply { background:var(--ok); border-color:transparent; color:var(--ink); }
+.cal__sq--both { border-color:transparent; color:var(--ink); background:linear-gradient(135deg, var(--fit-matched) 50%, var(--ok) 50%); }
+.cal__sq--active { cursor:pointer; }
+.cal__sq--active:hover { filter:brightness(1.15); }
+
+.cal__hover {
+  position:fixed; z-index:60; pointer-events:none;
+  background:var(--raised); border:1px solid var(--line); border-radius:6px;
+  padding:6px 10px; font-size:11.5px; color:var(--text); box-shadow:0 8px 24px rgba(0,0,0,.5);
+  white-space:nowrap;
+}
+
+.cal__overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:70; display:flex; align-items:center; justify-content:center; }
+.cal__popup { width:380px; max-height:70vh; display:flex; flex-direction:column; background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+.cal__popup-head { padding:14px 18px; border-bottom:1px solid var(--line-soft); font-weight:600; font-size:13.5px; text-transform:capitalize; }
+.cal__popup-list { flex:1; min-height:0; overflow-y:auto; padding:6px 8px; }
+.cal__entry { display:flex; align-items:center; gap:9px; width:100%; padding:8px 10px; border-radius:5px; text-align:left; }
+.cal__entry:hover { background:var(--raised); }
+.cal__entry__dot { width:7px; height:7px; border-radius:99px; flex:none; }
+.cal__entry__firma { font-weight:500; font-size:12.5px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cal__entry__titel { font-size:11px; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px; }
+.cal__popup-foot { padding:8px 18px; border-top:1px solid var(--line-soft); font-family:var(--mono); font-size:10px; color:var(--dim); }
 
 /* ---------- Responsive ---------- */
 @media (max-width:1180px) { .jb { grid-template-columns:208px 320px 1fr; } }
@@ -423,6 +526,240 @@ function decodeEntities(text: string): string {
   return el.value;
 }
 
+// Ein Grid-Muster für alle drei Lade-Anzeigen (Scrape/Filter/Anschreiben) statt drei
+// eigener Implementierungen — Abschnitt (z.B. Quelle) -> Zeile (z.B. Batch) -> Quadrate
+// (ein Item, fertig oder Fehler). Hover-Tooltip ist der native `title`-Attribut-Tooltip
+// des Browsers statt eines eigenen Tooltip-Bauteils — reicht für "Kurzinfo beim Hover".
+type LoadGridSquare = {
+  id: string;
+  tooltip: string;
+  state: 'done' | 'error' | 'excluded' | 'matched' | 'offstack' | 'brutal';
+  url?: string;
+};
+type LoadGridRow = { key: string; squares: LoadGridSquare[] };
+type LoadGridSection = { key: string; label: string; rows: LoadGridRow[] };
+
+const ROW_DURATION_MS = 4000;
+// Muss zur .35s-Pop-Dauer in der CSS oben passen — der Moment, an dem das LETZTE
+// Quadrat einer Zeile fertig erschienen ist (danach färbt sich die ganze Zeile ein).
+const POP_DURATION_MS = 350;
+
+// ghost: Quadrate bleiben im Layout (Tschobbo braucht ihre Positionen als
+// Wurfziele), werden aber unsichtbar + nicht klickbar — nur die Scrape-Section
+// nutzt das, seit Tschobbo dort Klumpen statt Quadraten zeigt (siehe ui/tschobbo.js).
+function LoadGrid({ sections, ghost }: { sections: LoadGridSection[]; ghost?: boolean }) {
+  return (
+    <div className="loadgrid">
+      {sections.map(s => (
+        <div className="loadgrid__section" key={s.key}>
+          <div className="loadgrid__head">{s.label}</div>
+          {s.rows.map(r => {
+            // Feste Gesamtdauer pro Zeile (Kevin: "eine Zeile auf 4 Sek") statt fixem
+            // Versatz pro Quadrat — sonst bräuchte eine 10er-Zeile 10x so lang wie eine
+            // 1er-Zeile (Anschreiben). Bei 1 Quadrat entfällt der Versatz automatisch.
+            const step = ROW_DURATION_MS / r.squares.length;
+            // Gleich für jedes Quadrat der Zeile — erst wenn ALLE erschienen sind
+            // (letztes Quadrat bei (n-1)*step + Pop-Dauer), färbt sich die Zeile ein.
+            const revealDelay = (r.squares.length - 1) * step + POP_DURATION_MS;
+            return (
+              <div className="loadgrid__row" key={r.key}>
+                {r.squares.map((sq, i) => (
+                  <span
+                    key={sq.id}
+                    className={'loadgrid__sq loadgrid__sq--' + sq.state + (sq.url ? ' loadgrid__sq--clickable' : '') + (ghost ? ' loadgrid__sq--ghost' : '')}
+                    title={sq.tooltip}
+                    onClick={sq.url ? () => window.open(sq.url, '_blank', 'noopener,noreferrer') : undefined}
+                    style={{ '--pop-delay': `${i * step}ms`, '--reveal-delay': `${revealDelay}ms` } as React.CSSProperties}
+                  />
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Hülle ums Grid, geteilt von Scrape/Filter/Anschreiben: bleibt nach Laufende stehen
+// (Kevin: "verschwindet zu schnell"), bis der Schließen-Button sie wegräumt oder ein
+// neuer Lauf sections auf [] zurücksetzt (siehe runScrapeNow/runFilterNow/runAnschreibenNow).
+function LoadGridPanel({ running, sections, onClose, ghost }: { running: boolean; sections: LoadGridSection[]; onClose: () => void; ghost?: boolean }) {
+  return (
+    <div className="empty" style={{ textAlign: 'left', padding: '8px 0', position: 'relative' }}>
+      <div className="empty__h" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ flex: 1 }}>{running ? 'Läuft…' : ''}</span>
+        {!running && (
+          <button className="btn" style={{ padding: '2px 10px', fontSize: 11.5 }} onClick={onClose}>
+            Schließen
+          </button>
+        )}
+      </div>
+      {sections.length === 0 ? 'Startet…' : <LoadGrid sections={sections} ghost={ghost} />}
+      {!running && <span className="loadgrid__done-badge">Fertig</span>}
+    </div>
+  );
+}
+
+function formatDayLong(date: string): string {
+  return new Date(date + 'T00:00:00').toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+function formatDayShort(date: string): string {
+  return new Date(date + 'T00:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
+}
+function summarizeDay(date: string, sentN: number, replyN: number): string {
+  const parts: string[] = [];
+  if (sentN) parts.push(`${sentN} gesendet`);
+  if (replyN) parts.push(`${replyN} Antwort${replyN > 1 ? 'en' : ''}`);
+  return `${formatDayShort(date)} · ${parts.join(' · ')}`;
+}
+
+type DayBucket = { sent: CalendarEvent[]; reply: CalendarEvent[] };
+
+// Ein Monatsblock: Monatsüberschrift + 7-Spalten-Wochenraster (Mo–So), führende
+// Leerzellen für den Wochentags-Versatz des Monatsersten. Kein Auffüllen am Ende
+// der letzten Woche — optisch unauffällig, spart eine zweite Padding-Rechnung.
+function CalendarMonth({ month, byDate, onHover, onOpenDay }: {
+  month: string;
+  byDate: Map<string, DayBucket>;
+  onHover: (h: { x: number; y: number; text: string } | null) => void;
+  onOpenDay: (date: string) => void;
+}) {
+  const [year, mo] = month.split('-').map(Number);
+  const firstWeekday = (new Date(year, mo - 1, 1).getDay() + 6) % 7; // Mo=0..So=6
+  const daysInMonth = new Date(year, mo, 0).getDate();
+  const label = new Date(year, mo - 1, 1).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  const cells: (number | null)[] = [
+    ...Array(firstWeekday).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+
+  return (
+    <div>
+      <div className="cal__month-h">{label}</div>
+      <div className="cal__weekday-row">
+        {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(d => <span key={d}>{d}</span>)}
+      </div>
+      <div className="cal__grid">
+        {cells.map((day, i) => {
+          if (day == null) return <span key={'pad' + i} className="cal__sq cal__sq--pad" />;
+          const date = `${month}-${String(day).padStart(2, '0')}`;
+          const bucket = byDate.get(date);
+          const sentN = bucket?.sent.length ?? 0;
+          const replyN = bucket?.reply.length ?? 0;
+          const active = sentN > 0 || replyN > 0;
+          const cls = 'cal__sq'
+            + (sentN && replyN ? ' cal__sq--both' : sentN ? ' cal__sq--sent' : replyN ? ' cal__sq--reply' : '')
+            + (active ? ' cal__sq--active' : '');
+          return (
+            <span
+              key={date}
+              className={cls}
+              onClick={active ? () => onOpenDay(date) : undefined}
+              onMouseMove={active ? (e) => onHover({ x: e.clientX, y: e.clientY, text: summarizeDay(date, sentN, replyN) }) : undefined}
+              onMouseLeave={active ? () => onHover(null) : undefined}
+            >
+              {day}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Eigenes Hover-Element statt native title (Verzögerung/Optik, dieselbe Entscheidung
+// stand beim Lade-Grid noch offen) + Tages-Popup mit Pfeiltasten-Navigation über
+// activeDates (nur Tage mit Aktivität — leere Tage werden beim Wechseln übersprungen).
+function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; onOpenJob: (id: string) => void }) {
+  const byDate = useMemo(() => {
+    const m = new Map<string, DayBucket>();
+    for (const ev of events) {
+      const bucket = m.get(ev.date) ?? { sent: [], reply: [] };
+      bucket[ev.type].push(ev);
+      m.set(ev.date, bucket);
+    }
+    return m;
+  }, [events]);
+
+  const months = useMemo(() => {
+    const set = new Set<string>();
+    for (const date of byDate.keys()) set.add(date.slice(0, 7));
+    return [...set].sort().reverse();
+  }, [byDate]);
+
+  const activeDates = useMemo(() => [...byDate.keys()].sort(), [byDate]);
+
+  const [activeDay, setActiveDay] = useState<string | null>(null);
+  const [hover, setHover] = useState<{ x: number; y: number; text: string } | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!activeDay) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setActiveDay(null); return; }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        const i = activeDates.indexOf(activeDay);
+        const next = e.key === 'ArrowLeft' ? activeDates[i - 1] : activeDates[i + 1];
+        if (next) setActiveDay(next);
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        listRef.current?.scrollBy({ top: e.key === 'ArrowDown' ? 40 : -40 });
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [activeDay, activeDates]);
+
+  if (months.length === 0) {
+    return (
+      <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
+        <div className="empty__h">Noch keine Aktivität</div>
+        Sobald eine Bewerbung versendet wird oder eine Antwort eintrifft, erscheint sie hier.
+      </div>
+    );
+  }
+
+  const dayEntries = activeDay ? [...(byDate.get(activeDay)?.sent ?? []), ...(byDate.get(activeDay)?.reply ?? [])] : [];
+
+  return (
+    <>
+      {months.map(month => (
+        <CalendarMonth key={month} month={month} byDate={byDate} onHover={setHover} onOpenDay={setActiveDay} />
+      ))}
+      {hover && <div className="cal__hover" style={{ left: hover.x + 14, top: hover.y + 14 }}>{hover.text}</div>}
+      {activeDay && (
+        <div className="cal__overlay" onClick={() => setActiveDay(null)}>
+          <div className="cal__popup" onClick={e => e.stopPropagation()}>
+            <div className="cal__popup-head">{formatDayLong(activeDay)}</div>
+            <div className="cal__popup-list" ref={listRef}>
+              {dayEntries.map((ev, i) => (
+                <button key={ev.jobId + ev.type + i} className="cal__entry" onClick={() => onOpenJob(ev.jobId)}>
+                  <span className="cal__entry__dot" style={{ background: ev.type === 'sent' ? 'var(--fit-matched)' : 'var(--ok)' }} />
+                  <span className="cal__entry__firma">{ev.company}</span>
+                  <span className="cal__entry__titel">{ev.title}</span>
+                </button>
+              ))}
+            </div>
+            <div className="cal__popup-foot">← → Tag · ↑ ↓ scrollen · Esc</div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// Hängt ein SSE-GridUnitEvent (eine fertige Zeile) an den bestehenden Sections-Baum an —
+// von Scrape/Filter/Anschreiben gleichermaßen genutzt, damit die Anhänge-Logik nicht
+// dreimal geschrieben wird.
+function appendGridRow(sections: LoadGridSection[], e: GridUnitEvent): LoadGridSection[] {
+  const row: LoadGridRow = { key: e.row, squares: e.items };
+  const idx = sections.findIndex(s => s.key === e.section);
+  if (idx === -1) return [...sections, { key: e.section, label: e.sectionLabel, rows: [row] }];
+  const next = [...sections];
+  next[idx] = { ...next[idx], rows: [...next[idx].rows, row] };
+  return next;
+}
+
 export default function JobbotUI() {
   const [jobs, setJobs] = useState<JobWithBrief[]>([]);
   const [folder, setFolder] = useState<FolderId>('mail/entwurf');
@@ -434,7 +771,8 @@ export default function JobbotUI() {
   const [detailOpen, setDetailOpen] = useState(false);
   // 'attachment'/'scrape'/'filter' sind keine Ordner (kein FolderId, kein Job-Filter)
   // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
-  const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben'>('jobs');
+  const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben' | 'calendar'>('jobs');
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [attachment, setAttachment] = useState<AttachmentMeta | null | undefined>(undefined);
   const [cc, setCc] = useState<string | null | undefined>(undefined);
   const [ccInput, setCcInput] = useState('');
@@ -450,10 +788,17 @@ export default function JobbotUI() {
   const [anschreibenFits, setAnschreibenFits] = useState<Set<Fit>>(new Set(['matched', 'offstack']));
   const [anschreibenLimit, setAnschreibenLimit] = useState('');
   const [scrapeStatus, setScrapeStatus] = useState<ScrapeStatus | null>(null);
+  const [scrapeSections, setScrapeSections] = useState<LoadGridSection[]>([]);
   const [filterStatus, setFilterStatus] = useState<FilterRunStatus | null>(null);
+  const [filterSections, setFilterSections] = useState<LoadGridSection[]>([]);
   const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[] | null>(null);
   const [duplicatesLoading, setDuplicatesLoading] = useState(false);
+  const [selectedDupKeys, setSelectedDupKeys] = useState<Set<string>>(new Set());
+  const [merging, setMerging] = useState(false);
+  const [replyOnly, setReplyOnly] = useState(false);
+  const [repliesFetching, setRepliesFetching] = useState(false);
   const [anschreibenStatus, setAnschreibenStatus] = useState<AnschreibenRunStatus | null>(null);
+  const [anschreibenSections, setAnschreibenSections] = useState<LoadGridSection[]>([]);
   const [scrapeStarting, setScrapeStarting] = useState(false);
   const [filterStarting, setFilterStarting] = useState(false);
   const [anschreibenStarting, setAnschreibenStarting] = useState(false);
@@ -473,6 +818,10 @@ export default function JobbotUI() {
   const lastSeenFilterRunId = useRef<string | null>(null);
   const lastSeenAnschreibenRunId = useRef<string | null>(null);
   const ta = useRef<HTMLTextAreaElement>(null);
+  // Für den Tschobbo-Hook im Scrape-SSE-Effect unten (der nur einmal läuft,
+  // `view` also sonst als Closure einfrieren würde).
+  const viewRef = useRef(view);
+  viewRef.current = view;
 
   const say = useCallback((m: string, kind: 'ok' | 'err' = 'ok') => {
     setToast({ msg: m, kind });
@@ -522,7 +871,7 @@ export default function JobbotUI() {
           lastSeenFilterRunId.current = f.runId;
           refetchJobs();
           say(
-            f.status === 'error' ? `Filter fehlgeschlagen: ${f.error}` : `Filter: ${f.result?.sicher ?? 0} sicher, ${f.result?.unsicher ?? 0} unsicher, ${f.result?.raus ?? 0} raus`,
+            f.status === 'error' ? `Filter fehlgeschlagen: ${f.error}` : `Filter: ${f.result?.matched ?? 0} Match, ${f.result?.offstack ?? 0} Offstack, ${f.result?.brutal ?? 0} Brutal`,
             f.status === 'error' ? 'err' : 'ok'
           );
         }
@@ -556,8 +905,49 @@ export default function JobbotUI() {
     return () => clearInterval(id);
   }, [refetchJobs, say]);
 
+  // SSE statt Polling fürs Anschreiben-Lade-Grid — ein Event pro fertigem (oder
+  // fehlgeschlagenem) Anschreiben, angehängt an anschreibenSections (siehe
+  // appendGridRow). Eine einzige, dauerhaft offene Verbindung (wie das Poll-Intervall
+  // oben), damit das Grid auch beim Ansichtswechsel weiterwächst.
+  useEffect(() => {
+    const es = new EventSource('/api/anschreiben/stream');
+    es.onmessage = (e) => {
+      const event = JSON.parse(e.data) as GridUnitEvent;
+      setAnschreibenSections(prev => appendGridRow(prev, event));
+    };
+    return () => es.close();
+  }, []);
+
+  // Wie oben, fürs Scrape-Lade-Grid — ein Event pro fertiger Seite/Batch je Quelle
+  // (siehe scripts/ui-server.ts onUnitDone).
+  useEffect(() => {
+    const es = new EventSource('/api/scrape/stream');
+    es.onmessage = (e) => {
+      const event = JSON.parse(e.data) as GridUnitEvent;
+      setScrapeSections(prev => appendGridRow(prev, event));
+      // Tschobbo-Hook (ui/tschobbo.js): nur wenn das Scrape-Grid gerade sichtbar
+      // ist, sonst gäbe es keine echten Quadrat-Positionen zum Anfassen. Einzige
+      // Stelle, die das Event feuert — Filter/Anschreiben bekämen später denselben
+      // Einzeiler in ihren Effects, ohne Tschobbo selbst anzufassen.
+      if (viewRef.current === 'scrape') window.dispatchEvent(new CustomEvent('tschobbo:unit', { detail: event }));
+    };
+    return () => es.close();
+  }, []);
+
+  // Wie oben, fürs Filter-Lade-Grid — ein Event pro fertigem 10er-Batch je
+  // Ergebnis-Kategorie (Match/Offstack/Brutal, siehe scripts/ui-server.ts).
+  useEffect(() => {
+    const es = new EventSource('/api/filter/stream');
+    es.onmessage = (e) => {
+      const event = JSON.parse(e.data) as GridUnitEvent;
+      setFilterSections(prev => appendGridRow(prev, event));
+    };
+    return () => es.close();
+  }, []);
+
   async function runScrapeNow() {
     setScrapeStarting(true);
+    setScrapeSections([]);
     try {
       const res = await fetch('/api/scrape', {
         method: 'POST',
@@ -572,6 +962,7 @@ export default function JobbotUI() {
 
   async function runFilterNow() {
     setFilterStarting(true);
+    setFilterSections([]);
     try {
       const res = await fetch('/api/filter', {
         method: 'POST',
@@ -592,12 +983,56 @@ export default function JobbotUI() {
       .finally(() => setDuplicatesLoading(false));
   }, []);
 
+  async function fetchReplies() {
+    setRepliesFetching(true);
+    try {
+      const res = await fetch('/api/mail/replies/fetch', { method: 'POST' });
+      const data = await res.json() as { checked?: number; matched?: number; error?: string };
+      if (!res.ok) { say(`Antworten-Abruf fehlgeschlagen: ${data.error}`, 'err'); return; }
+      say(`Antworten-Abruf: ${data.matched ?? 0} von ${data.checked ?? 0} Mails zugeordnet`, 'ok');
+      if ((data.matched ?? 0) > 0) refetchJobs();
+    } catch (err) {
+      say(`Antworten-Abruf fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`, 'err');
+    } finally {
+      setRepliesFetching(false);
+    }
+  }
+
   // Nur beim Betreten der Ansicht laden (kein Polling wie bei Scrape/Filter/Anschreiben)
   // — Duplikatsuche ist eine synchrone, sofort fertige Leseoperation ohne Fortschritt,
   // der sich zu beobachten lohnt.
   useEffect(() => {
     if (view === 'duplicates') loadDuplicates();
   }, [view, loadDuplicates]);
+
+  // Wie Duplikate: nur beim Betreten laden, kein Polling — der Kalender liest einen
+  // Snapshot, keinen laufenden Prozess.
+  useEffect(() => {
+    if (view === 'calendar') fetch('/api/calendar').then(r => r.json()).then(setCalendarEvents);
+  }, [view]);
+
+  // Behält je Gruppe das neueste Inserat (frischerer Titel/Beschreibung/Status),
+  // übernimmt aber das erste Pull-Datum der älteren Duplikate ins JSON des Behaltenen
+  // (siehe lib/duplicates.ts planMerge) — die älteren Dateien werden dabei gelöscht.
+  async function mergeDuplicates(keys: string[] | 'all') {
+    setMerging(true);
+    try {
+      const res = await fetch('/api/duplicates/merge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(keys === 'all' ? { all: true } : { keys }),
+      });
+      const data = await res.json() as { merged?: number };
+      say(`${data.merged ?? 0} Duplikat-Gruppe(n) zusammengeführt`, 'ok');
+      setSelectedDupKeys(new Set());
+      loadDuplicates();
+      refetchJobs();
+    } catch (err) {
+      say(`Zusammenführen fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`, 'err');
+    } finally {
+      setMerging(false);
+    }
+  }
 
   // Ein Aufruf für beides: die Mehrfachauswahl in der Liste UND den einzelnen
   // "Neu generieren"-Button im Detail (der bisher ein reiner Toast-Stub war,
@@ -606,6 +1041,7 @@ export default function JobbotUI() {
   async function runAnschreibenNow(jobIds: string[]) {
     if (jobIds.length === 0) return;
     setAnschreibenStarting(true);
+    setAnschreibenSections([]);
     try {
       const res = await fetch('/api/anschreiben', {
         method: 'POST',
@@ -710,8 +1146,9 @@ export default function JobbotUI() {
     return inCurrentFolder
       .filter(j => (fit === 'alle' ? true : fit === 'unbewertet' ? j.fit === null : j.fit === fit))
       .filter(j => !s || (j.company + ' ' + j.title + ' ' + (j.location ?? '')).toLowerCase().includes(s))
+      .filter(j => !(folder === 'log/gesendet' && replyOnly) || j.replyReceivedAt != null)
       .sort((a, b) => daysAgo(a.scrapedAt) - daysAgo(b.scrapedAt));
-  }, [inCurrentFolder, fit, q]);
+  }, [inCurrentFolder, fit, q, folder, replyOnly]);
 
   const job = jobs.find(j => j.id === sel) ?? null;
   const shown = list.some(j => j.id === sel) ? job : null;
@@ -933,6 +1370,10 @@ export default function JobbotUI() {
             <Copy />
             <span className="fld__label">CC</span>
           </button>
+          <button className={'fld' + (view === 'calendar' ? ' fld--on' : '')} onClick={() => setView('calendar')}>
+            <Calendar />
+            <span className="fld__label">Kalender</span>
+          </button>
         </div>
 
         <div className="sb__rule" />
@@ -1039,6 +1480,25 @@ export default function JobbotUI() {
             </footer>
           )}
         </section>
+      ) : view === 'calendar' ? (
+        /* ---------- Kalender ---------- */
+        <section className="cal">
+          <header className="dt__head">
+            <div className="dt__firma">Kalender</div>
+            <div className="dt__titel">Wann Bewerbungen rausgingen und wann Antworten zurückkamen.</div>
+          </header>
+          <div className="cal__body">
+            <CalendarView
+              events={calendarEvents}
+              onOpenJob={id => {
+                setView('jobs');
+                setFolder('log/gesendet');
+                setFit('alle');
+                open(id);
+              }}
+            />
+          </div>
+        </section>
       ) : view === 'attachment' ? (
         /* ---------- Anhang ---------- */
         <section className="att">
@@ -1100,19 +1560,13 @@ export default function JobbotUI() {
             <div className="dt__titel">Neue Jobs von den ausgewählten Quellen holen.</div>
           </header>
           <div className="dt__body">
-            {scrapeStatus?.status === 'running' ? (
-              <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
-                <div className="empty__h">Läuft…</div>
-                {scrapeSourceEntries.length === 0 ? (
-                  'Startet…'
-                ) : (
-                  scrapeSourceEntries.map(([name, p]) => (
-                    <div key={name} style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)', marginTop: 4 }}>
-                      {name}: {p.current}/{p.total}
-                    </div>
-                  ))
-                )}
-              </div>
+            {scrapeStatus?.status === 'running' || scrapeSections.length > 0 ? (
+              <LoadGridPanel
+                running={scrapeStatus?.status === 'running'}
+                sections={scrapeSections}
+                onClose={() => setScrapeSections([])}
+                ghost
+              />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 9, maxWidth: 420 }}>
                 {scrapeSources.map(name => (
@@ -1152,15 +1606,12 @@ export default function JobbotUI() {
             </div>
           </header>
           <div className="dt__body">
-            {filterStatus?.status === 'running' ? (
-              <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
-                <div className="empty__h">Läuft…</div>
-                {filterStatus.current && (
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
-                    {filterStatus.current.i + 1}/{filterStatus.current.total}: {filterStatus.current.title}
-                  </div>
-                )}
-              </div>
+            {filterStatus?.status === 'running' || filterSections.length > 0 ? (
+              <LoadGridPanel
+                running={filterStatus?.status === 'running'}
+                sections={filterSections}
+                onClose={() => setFilterSections([])}
+              />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div className="modetoggle">
@@ -1197,7 +1648,8 @@ export default function JobbotUI() {
             <div className="dt__firma">Duplikate</div>
             <div className="dt__titel">
               Jobs, die nach Normalisierung (Klein­schreibung, Gender­marker, Rechtsform) auf dieselbe ID
-              zusammenfallen — reiner Report, es wird nichts gelöscht.
+              zusammenfallen. Zusammenführen behält das neueste Inserat je Gruppe, übernimmt aber
+              das erste Pull-Datum der älteren — die älteren Dateien werden dabei gelöscht.
             </div>
           </header>
           <div className="dt__body">
@@ -1211,28 +1663,61 @@ export default function JobbotUI() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                {duplicateGroups.map(g => (
-                  <div key={g.key}>
-                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-                      {g.jobs[0].title} — {g.jobs[0].company}
-                      <span style={{ color: 'var(--muted)', fontWeight: 400 }}> ({g.jobs.length}×)</span>
+                {duplicateGroups.map(g => {
+                  const newestIndex = g.jobs.length - 1;
+                  return (
+                    <div key={g.key}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedDupKeys.has(g.key)}
+                          onChange={e => setSelectedDupKeys(prev => {
+                            const next = new Set(prev);
+                            if (e.target.checked) next.add(g.key); else next.delete(g.key);
+                            return next;
+                          })}
+                        />
+                        {g.jobs[0].title} — {g.jobs[0].company}
+                        <span style={{ color: 'var(--muted)', fontWeight: 400 }}> ({g.jobs.length}×)</span>
+                      </label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingLeft: 22 }}>
+                        {g.jobs.map((job, i) => (
+                          // Index statt job.id als key/Vergleich: ein echter Re-Scrape derselben
+                          // Stelle trägt in beiden Dateien dieselbe id (siehe lib/duplicates.ts
+                          // planMerge) — job.id === newestId hätte hier fälschlich beide markiert.
+                          <div key={i} style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
+                            {job.scrapedAt.slice(0, 10)} · {job.status} ·{' '}
+                            <a className="dup-lnk" href={job.url} target="_blank" rel="noreferrer">{job.url}</a>
+                            {i === newestIndex
+                              ? <span style={{ color: 'var(--ok)' }}> — bleibt (bekommt {g.jobs[0].scrapedAt.slice(0, 10)} als Pull-Datum)</span>
+                              : <span style={{ color: 'var(--err)' }}> — wird gelöscht</span>}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      {g.jobs.map(job => (
-                        <div key={job.id} style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
-                          {job.scrapedAt.slice(0, 10)} · {job.status} ·{' '}
-                          <a href={job.url} target="_blank" rel="noreferrer">{job.url}</a>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
           <footer className="bar">
             <button className="btn btn--primary" disabled={duplicatesLoading} onClick={loadDuplicates}>
               <RotateCw /> Neu prüfen
+            </button>
+            <span className="bar__spacer" />
+            <button
+              className="btn"
+              disabled={merging || selectedDupKeys.size === 0}
+              onClick={() => mergeDuplicates([...selectedDupKeys])}
+            >
+              Ausgewählte zusammenführen ({selectedDupKeys.size})
+            </button>
+            <button
+              className="btn btn--primary"
+              disabled={merging || !duplicateGroups || duplicateGroups.length === 0}
+              onClick={() => mergeDuplicates('all')}
+            >
+              Alle zusammenführen
             </button>
           </footer>
         </section>
@@ -1244,15 +1729,12 @@ export default function JobbotUI() {
             <div className="dt__titel">Anschreiben für getriagte Jobs generieren — wie scripts/run-anschreiben.ts.</div>
           </header>
           <div className="dt__body">
-            {anschreibenStatus?.status === 'running' ? (
-              <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
-                <div className="empty__h">Läuft…</div>
-                {anschreibenStatus.current && (
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--muted)' }}>
-                    {anschreibenStatus.current.i + 1}/{anschreibenStatus.current.total}: {anschreibenStatus.current.title}
-                  </div>
-                )}
-              </div>
+            {anschreibenStatus?.status === 'running' || anschreibenSections.length > 0 ? (
+              <LoadGridPanel
+                running={anschreibenStatus?.status === 'running'}
+                sections={anschreibenSections}
+                onClose={() => setAnschreibenSections([])}
+              />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 420 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -1344,6 +1826,17 @@ export default function JobbotUI() {
               </button>
             ))}
           </div>
+          {folder === 'log/gesendet' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 4px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--muted)' }}>
+                <input type="checkbox" checked={replyOnly} onChange={e => setReplyOnly(e.target.checked)} />
+                Nur mit Antwort
+              </label>
+              <button className="btn btn--ghost" disabled={repliesFetching} onClick={fetchReplies}>
+                <Mail /> {repliesFetching ? 'Prüft…' : 'Antworten abrufen'}
+              </button>
+            </div>
+          )}
           {folder === 'jobs' && list.length > 0 && (
             <label style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 0 4px', fontSize: 12, color: 'var(--muted)' }}>
               <input
@@ -1411,6 +1904,7 @@ export default function JobbotUI() {
                     <span className={'tag' + (j.email ? '' : ' tag--nomail')}>{j.email ? 'MAIL' : 'PORTAL'}</span>
                     <span className="tag">{j.source}</span>
                     {j.status === 'fehler' && <span className="tag tag--err">FEHLER</span>}
+                    {j.replyReceivedAt && <span className="tag tag--reply">ANTWORT ERHALTEN</span>}
                   </span>
                 </button>
               </div>
@@ -1589,9 +2083,11 @@ export default function JobbotUI() {
       )}
 
       {toast && (
-        <div className={`toast toast--${toast.kind}`}>
-          {toast.kind === 'ok' ? <CheckCircle2 /> : <XCircle />}
-          {toast.msg}
+        <div className="toaststack">
+          <div className={`toast toast--${toast.kind}`}>
+            {toast.kind === 'ok' ? <CheckCircle2 /> : <XCircle />}
+            {toast.msg}
+          </div>
         </div>
       )}
     </div>
