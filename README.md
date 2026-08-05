@@ -166,7 +166,10 @@ klaren Fehlermeldung fehl statt die Seite zu blockieren.
   `/api/jobs/:id` (Status/Fit ändern), `/api/jobs/:id/brief` (Anschreiben
   bearbeiten), `/api/jobs/:id/draft` bzw. `/api/jobs/:id/send` (Gmail),
   `/api/attachment` (Lebenslauf-Upload), `/api/duplicates` (Duplikat-Report,
-  GET, synchron) sowie `/api/scrape/*` und `/api/filter/*` (siehe unten).
+  GET, synchron), `/api/duplicates/merge` (Duplikat-Gruppe zusammenführen),
+  `/api/calendar` (Kalender-Ereignisse, GET, synchron), `/api/mail/replies/fetch`
+  (Gmail-Inbox nach Antworten durchsuchen) sowie `/api/scrape/*` und
+  `/api/filter/*` (siehe unten).
 
 ### Scrape/Filter aus der UI
 
@@ -195,7 +198,22 @@ Neustart-Recovery) — für ein lokales Einzelnutzer-Tool ausreichend.
 /api/duplicates` ist eine synchrone Leseoperation ohne Hintergrundlauf/Polling
 — sie liefert die Duplikat-Gruppen direkt in der Response. Die UI ruft sie
 beim Öffnen der Ansicht auf; ein „Neu prüfen"-Button stößt einen erneuten
-Abruf an.
+Abruf an. Pro Gruppe (oder für alle auf einmal) lässt sich per
+„Zusammenführen"-Button konsolidieren: Das neueste Inserat bleibt, übernimmt
+aber das `scrapedAt` des ältesten Duplikats; die restlichen Dateien werden
+gelöscht.
+
+### Kalender
+
+Der Sidebar-Tab „Kalender" zeigt, wann Bewerbungen rausgingen (`sentAt`) und
+wann Antworten zurückkamen (`replyReceivedAt`) — Tag = Quadrat, Woche = Zeile,
+Monat = Block, neuester Monat zuerst. Klick auf einen Tag öffnet ein Popup mit
+den Einträgen des Tages und springt von dort zur Job-Detailansicht.
+Antworten werden nicht automatisch erkannt: ein „Antworten abrufen"-Button im
+„Gesendet"-Ordner (Verlauf) durchsucht die Gmail-Inbox per
+`POST /api/mail/replies/fetch` (E-Mail+Betreff-Abgleich, keine Message-ID) und
+setzt `replyReceivedAt` auf Treffer — Jobs mit Antwort tragen danach ein
+Badge „Antwort erhalten", mit Filter „Nur mit Antwort" im Verlauf.
 
 ## Tests
 

@@ -164,7 +164,9 @@ framework) that does two things at once:
   (change status/fit), `/api/jobs/:id/brief` (edit the cover letter),
   `/api/jobs/:id/draft` / `/api/jobs/:id/send` (Gmail), `/api/attachment`
   (résumé upload), `/api/duplicates` (duplicate report, GET, synchronous),
-  and `/api/scrape/*` / `/api/filter/*` (see below).
+  `/api/duplicates/merge` (merge a duplicate group), `/api/calendar`
+  (calendar events, GET, synchronous), `/api/mail/replies/fetch` (scan the
+  Gmail inbox for replies), and `/api/scrape/*` / `/api/filter/*` (see below).
 
 ### Scrape/Filter from the UI
 
@@ -191,7 +193,21 @@ fine for a local single-user tool.
 **Duplicates** follows a simpler, different pattern: `GET /api/duplicates`
 is a synchronous read with no background run/polling — it returns the
 duplicate groups directly in the response. The UI calls it when the view
-opens; a "Check again" button triggers a refetch.
+opens; a "Check again" button triggers a refetch. Per group (or all at once)
+a "Merge" button consolidates them: the newest listing survives but takes on
+the oldest duplicate's `scrapedAt`; the remaining files get deleted.
+
+### Calendar
+
+The sidebar tab "Calendar" shows when applications went out (`sentAt`) and
+when replies came back (`replyReceivedAt`) — day = square, week = row, month
+= block, newest month first. Clicking a day opens a popup with that day's
+entries and jumps from there to the job detail view. Replies aren't detected
+automatically: a "Fetch replies" button in the "Sent" folder (history) scans
+the Gmail inbox via `POST /api/mail/replies/fetch` (email+subject matching,
+no message ID) and sets `replyReceivedAt` on hits — jobs with a reply then
+show a "Reply received" badge, with a "Only with reply" filter in the
+history.
 
 ## Tests
 
