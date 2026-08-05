@@ -38,6 +38,9 @@ const THROW_STAGGER_MS = 120; // Auftrag: Wurf-Frequenz bei mehreren Jobs
 const FLY_MS = 450; // nicht im Auftrag beziffert — zuegiger Wurf, an Drift/Park angelehnt
 const FLY_SPINS = 2; // wie oft der Klumpen waehrend des Flugs durch seine 4 Frames rotiert, nicht beziffert
 const ARC = 80; // Auftrag: "Wurfhöhe (ARC): ~80 px"
+const FALL_G = 0.6; // Auftrag: "kleines g", nicht beziffert
+const GLOB_CAP = 40; // Auftrag: "ab ~40 sichtbaren globs im Haufen keine neuen DOM-Knoten mehr"
+const PILE_BASE_H = 40, PILE_MAX_H = 120; // nicht im Auftrag beziffert — Anfangs-/Deckelhöhe des Haufens
 
 const STORAGE_KEY = 'tschobbo.enabled';
 
@@ -91,14 +94,22 @@ function buildDom() {
   const style = document.createElement('style');
   style.textContent = TSCHOBBO_CSS;
 
+  // Schleimhaufen-Footer: unsichtbarer Sammelbereich am unteren Rand des
+  // Scrape-Containers (.dt__body), overflow:hidden hält die globs drin.
+  // Position/Größe wird erst bei Scrape-Start gesetzt (positionPile), solange
+  // unsichtbar (Auftrag will keine feste Größe vorab).
+  const pile = document.createElement('div');
+  pile.style.cssText = 'position:fixed; overflow:hidden; pointer-events:none; z-index:38; display:none;';
+
   document.head.appendChild(style);
   document.body.appendChild(root);
   document.body.appendChild(toggle);
-  return { root, body, toggle, style };
+  document.body.appendChild(pile);
+  return { root, body, toggle, style, pile };
 }
 
 export function initTschobbo() {
-  const { root, body, toggle, style } = buildDom();
+  const { root, body, toggle, style, pile } = buildDom();
 
   let timers = [];
   let frameTimer = null;
@@ -106,6 +117,8 @@ export function initTschobbo() {
   let destroyed = false;
   let enabledState = true;
   let posX = 0, posY = 0;
+  let stuckBlobs = [];
+  let pileCount = 0;
 
   // 'idle' | 'scrape' — 'scrape' deckt sowohl die Anfahrt an den Grid-Rand als
   // auch die eigentlichen Schübe ab. `busy` ist die Burst-Sperre: laeuft eine
@@ -195,9 +208,10 @@ export function initTschobbo() {
   }
 
   // Ein Klumpen fliegt auf einer Parabel (Formel, keine Physik-Engine) von der
-  // Wurfhand zum Ziel und rotiert dabei durch seine 4 fly-Frames. Bleibt am Ziel
-  // hängen (stick) — der Fallen-Fall kommt erst in Step 3.
-  function spawnFly(origin, target) {
+  // Wurfhand zum Ziel und rotiert dabei durch seine 4 fly-Frames. Am Ziel
+  // entscheidet das Location-Gate-Ergebnis (an der Zielquadrat-Klasse abgelesen):
+  // klebt (matched) oder fällt (Auftrag-Regel 1, real erkennbar).
+  function spawnFly(origin, target, matched) {
     const el = makeBlobEl();
     document.body.appendChild(el);
     const t0 = performance.now();
@@ -210,13 +224,83 @@ export function initTschobbo() {
       const frame = Math.floor(t * BLOB_FRAME_COUNTS.fly * FLY_SPINS) % BLOB_FRAME_COUNTS.fly;
       setBlobFrame(el, 'fly', frame);
       if (t < 1) requestAnimationFrame(step);
-      else {
+      else if (matched) {
         setBlobFrame(el, 'stick', 0);
         el.style.left = `${target.x}px`;
         el.style.top = `${target.y}px`;
+        stuckBlobs.push(el);
+      } else {
+        fall(el, target.x, target.y);
       }
     }
     requestAnimationFrame(step);
+  }
+
+  // Formel-basiertes Fallen (Auftrag: "y += vy; vy += g", kein Stapeln, keine
+  // Kollision) bis zum Haufen-Rand, dann verschwindet der Einzel-Klumpen und
+  // wird zu einem glob im Footer.
+  function fall(el, x, startY) {
+    let y = startY, vy = 0;
+    function step() {
+      vy += FALL_G;
+      y += vy;
+      const pileTop = pile.getBoundingClientRect().top;
+      if (y < pileTop) {
+        el.style.top = `${y}px`;
+        requestAnimationFrame(step);
+      } else {
+        el.remove();
+        addGlob(x);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  // Deckel (Auftrag: "ab ~40 sichtbaren globs keine neuen DOM-Knoten mehr") —
+  // Füllstand wächst danach nur noch über die Haufenhöhe, nicht über neue Knoten.
+  function addGlob(x) {
+    pileCount++;
+    if (pileCount <= GLOB_CAP) {
+      const glob = makeBlobEl();
+      glob.style.position = 'absolute';
+      const variant = Math.floor(rand(0, BLOB_FRAME_COUNTS.glob));
+      setBlobFrame(glob, 'glob', variant);
+      const pileRect = pile.getBoundingClientRect();
+      const relX = Math.min(pileRect.width - BLOB_FRAME, Math.max(0, x - pileRect.left + rand(-10, 10)));
+      glob.style.left = `${relX}px`;
+      glob.style.bottom = `${rand(0, 6)}px`;
+      pile.appendChild(glob);
+    } else {
+      const extra = pileCount - GLOB_CAP;
+      pile.style.height = `${Math.min(PILE_MAX_H, PILE_BASE_H + extra * 1.5)}px`;
+    }
+  }
+
+  // Haufen an .dt__body verankern (genau eine Instanz sichtbar, siehe Auftrag-
+  // Regel 3) — Aufruf bei jedem Scrape-Start, damit Größe/Position stimmen,
+  // falls sich das Layout seit dem letzten Lauf geändert hat.
+  function positionPile() {
+    const bodyRect = document.querySelector('.dt__body')?.getBoundingClientRect();
+    if (!bodyRect) return;
+    pile.style.left = `${bodyRect.left}px`;
+    pile.style.width = `${bodyRect.width}px`;
+    pile.style.top = `${bodyRect.bottom - PILE_BASE_H}px`;
+    pile.style.height = `${PILE_BASE_H}px`;
+    pile.style.display = 'block';
+  }
+
+  // "Der Haufen bleibt sichtbar bis zum nächsten Scrape-Start (dann leeren)" —
+  // Auftrag. Geklebte Klumpen einer alten, längst ersetzten scrapeSections-
+  // Zeile ebenso, sonst hängen sie über dem neuen (leeren) Grid in der Luft.
+  function clearPile() {
+    pile.replaceChildren();
+    pileCount = 0;
+    pile.style.height = `${PILE_BASE_H}px`;
+  }
+
+  function clearStuck() {
+    stuckBlobs.forEach(el => el.remove());
+    stuckBlobs = [];
   }
 
   // Wurf-Animation: Frame 0 ausholen, 1 hochziehen, 2 = Release, 3 nachschwingen
@@ -231,6 +315,7 @@ export function initTschobbo() {
     const rect = targetEl.getBoundingClientRect();
     const target = { x: rect.left, y: rect.top };
     const origin = { x: posX + DISPLAY * 0.5, y: posY + DISPLAY * 0.4 };
+    const matched = !targetEl.classList.contains('loadgrid__sq--excluded');
 
     if (frameTimer) clearInterval(frameTimer);
     let i = 0;
@@ -245,7 +330,7 @@ export function initTschobbo() {
       setFrame(body, 'throw', i);
     }, THROW_FRAME_MS);
 
-    timers.push(setTimeout(() => spawnFly(origin, target), 2 * THROW_FRAME_MS));
+    timers.push(setTimeout(() => spawnFly(origin, target, matched), 2 * THROW_FRAME_MS));
   }
 
   // Burst-Regel (anders als v1): kein Ignorieren mehr — jeder Job aus jedem
@@ -299,7 +384,8 @@ export function initTschobbo() {
   // auch für das erste Event ("wir wollen alle Jobs sehen", Auftrag-Burst-Regel).
   function onGridUnit() {
     if (!enabledState) return;
-    if (mode === 'idle') {
+    const firstEvent = mode === 'idle';
+    if (firstEvent) {
       clearTimers();
       mode = 'scrape';
       throwQueue = [];
@@ -309,6 +395,7 @@ export function initTschobbo() {
       resetSilenceTimer();
     }
     requestAnimationFrame(() => {
+      if (firstEvent) { positionPile(); clearPile(); clearStuck(); }
       const rows = document.querySelectorAll('.loadgrid__row');
       const row = rows[rows.length - 1];
       if (!row) return;
@@ -365,6 +452,7 @@ export function initTschobbo() {
       root.remove();
       toggle.remove();
       style.remove();
+      pile.remove();
     },
   };
 }
