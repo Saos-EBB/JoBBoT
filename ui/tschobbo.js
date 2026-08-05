@@ -21,7 +21,6 @@ const FRAME_COUNTS = { front: 6, side: 6, push: 5, quarter: 6 };
 const IDLE_FRAME_MS = 1000 / 8;
 const DRIFT_WAIT_MIN = 6000, DRIFT_WAIT_MAX = 14000;
 const DRIFT_TRAVEL_MIN = 3000, DRIFT_TRAVEL_MAX = 6000;
-const TURN_WAIT_MIN = 8000, TURN_WAIT_MAX = 15000;
 const TURN_STEP_MIN = 150, TURN_STEP_MAX = 200;
 const ENTRANCE_MS = 400;
 const SETTLE_MS = 180;
@@ -52,18 +51,9 @@ const TSCHOBBO_CSS = `
 
 function rand(min, max) { return min + Math.random() * (max - min); }
 
-function edgeSpots() {
-  const w = innerWidth, h = innerHeight;
-  return [
-    { x: MARGIN, y: MARGIN },
-    { x: w - DISPLAY - MARGIN, y: MARGIN },
-    { x: MARGIN, y: h - DISPLAY - MARGIN },
-    { x: w - DISPLAY - MARGIN, y: h - DISPLAY - MARGIN },
-    { x: w / 2 - DISPLAY / 2, y: MARGIN },
-    { x: w / 2 - DISPLAY / 2, y: h - DISPLAY - MARGIN },
-    { x: MARGIN, y: h / 2 - DISPLAY / 2 },
-    { x: w - DISPLAY - MARGIN, y: h / 2 - DISPLAY / 2 },
-  ];
+// Idle-Driftziel: fest rechter Rand, vertikal mittig — kein Rand-Sampling mehr.
+function rightMidSpot() {
+  return { x: innerWidth - DISPLAY - MARGIN, y: innerHeight / 2 - DISPLAY / 2 };
 }
 
 function spawnSpot() {
@@ -159,27 +149,10 @@ export function initTschobbo() {
   function scheduleDrift() {
     const wait = rand(DRIFT_WAIT_MIN, DRIFT_WAIT_MAX);
     timers.push(setTimeout(() => {
-      const spots = edgeSpots();
-      const target = spots[Math.floor(Math.random() * spots.length)];
+      const target = rightMidSpot();
       const travel = rand(DRIFT_TRAVEL_MIN, DRIFT_TRAVEL_MAX);
       place(target.x, target.y, travel);
       timers.push(setTimeout(() => { settleSquash(); scheduleDrift(); }, travel));
-    }, wait));
-  }
-
-  // Kette front -> quarter -> side und zurück, nie direkt front -> side —
-  // quarter ist die kurze Zwischenstufe (150–200ms), front/side sind die
-  // Ruhezustände zwischen zwei Dreh-Ticks (8–15s).
-  function scheduleTurn() {
-    const wait = rand(TURN_WAIT_MIN, TURN_WAIT_MAX);
-    timers.push(setTimeout(() => {
-      const holdMs = rand(TURN_STEP_MIN, TURN_STEP_MAX);
-      startFrameLoop('quarter');
-      timers.push(setTimeout(() => {
-        atFront = !atFront;
-        startFrameLoop(atFront ? 'front' : 'side');
-        scheduleTurn();
-      }, holdMs));
     }, wait));
   }
 
@@ -187,13 +160,13 @@ export function initTschobbo() {
     atFront = true;
     startFrameLoop('front');
     scheduleDrift();
-    scheduleTurn();
   }
 
-  // Scrape-Beginn: dreht über die normale Dreh-Kette auf 'side' (kein Sonderfall,
-  // gleiche Zwischenstufe/Timing wie scheduleTurn), fährt an den rechten Rand des
-  // Viewports und parkt halb draußen. Zaehlt als busy, bis geparkt ist — das erste
-  // Event triggert nur die Anfahrt, der erste Schub kommt erst mit dem naechsten.
+  // Scrape-Beginn: dreht über die Dreh-Kette front -> quarter -> side (quarter
+  // als kurze Zwischenstufe, 150–200ms, TURN_STEP_MIN/MAX), fährt an den rechten
+  // Rand des Viewports und parkt halb draußen. Zaehlt als busy, bis geparkt ist —
+  // das erste Event triggert nur die Anfahrt, der erste Schub kommt erst mit dem
+  // naechsten.
   function parkForScrape() {
     busy = true;
     const finishPark = () => {
@@ -272,7 +245,8 @@ export function initTschobbo() {
   }
 
   // Seele-Beat 3: Freuden-Hüpfer bei Scrape-Ende, danach zurück zu 'front' über
-  // dieselbe Zwischenstufe wie scheduleTurn, dann zurück in den Idle-Zyklus.
+  // dieselbe Zwischenstufe wie beim Scrape-Start (TURN_STEP_MIN/MAX), dann
+  // zurück in den Idle-Zyklus.
   function endScrape() {
     if (mode !== 'scrape') return;
     mode = 'idle';
