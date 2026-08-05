@@ -177,6 +177,7 @@ const CSS = `
    endet grau und BLEIBT grau — erst wenn die ganze Zeile fertig erschienen ist, färbt
    "color" (auf --reveal-delay verzögert, für jedes Quadrat der Zeile gleich) sie um. */
 .loadgrid__sq {
+  position:relative; /* Anker für Tschobbos geklebte Klumpen, siehe ui/tschobbo.js */
   width:11px; height:11px; border-radius:3px; flex:none;
   opacity:0; transform:scale(.4); background:var(--dim);
   animation-name: loadgrid-pop, loadgrid-color;

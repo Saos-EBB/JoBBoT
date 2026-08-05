@@ -211,7 +211,7 @@ export function initTschobbo() {
   // Wurfhand zum Ziel und rotiert dabei durch seine 4 fly-Frames. Am Ziel
   // entscheidet das Location-Gate-Ergebnis (an der Zielquadrat-Klasse abgelesen):
   // klebt (matched) oder fällt (Auftrag-Regel 1, real erkennbar).
-  function spawnFly(origin, target, matched) {
+  function spawnFly(origin, target, matched, targetEl) {
     const el = makeBlobEl();
     document.body.appendChild(el);
     const t0 = performance.now();
@@ -225,15 +225,25 @@ export function initTschobbo() {
       setBlobFrame(el, 'fly', frame);
       if (t < 1) requestAnimationFrame(step);
       else if (matched) {
-        setBlobFrame(el, 'stick', 0);
-        el.style.left = `${target.x}px`;
-        el.style.top = `${target.y}px`;
-        stuckBlobs.push(el);
+        stick(el, targetEl);
       } else {
         fall(el, target.x, target.y);
       }
     }
     requestAnimationFrame(step);
+  }
+
+  // Klebt als echtes DOM-Kind des Quadrats (nicht mehr fixed an der Landeposition)
+  // — .dt__body scrollt (overflow-y:auto), ein eigenständig positionierter Klumpen
+  // würde beim Scrollen vom Quadrat abdriften/verdeckt wirken. Als Kind wandert er
+  // zwangsläufig mit, .loadgrid__sq braucht dafür position:relative als Anker.
+  function stick(el, targetEl) {
+    setBlobFrame(el, 'stick', 0);
+    el.style.position = 'absolute';
+    el.style.left = '0';
+    el.style.top = '0';
+    targetEl.appendChild(el);
+    stuckBlobs.push(el);
   }
 
   // Formel-basiertes Fallen (Auftrag: "y += vy; vy += g", kein Stapeln, keine
@@ -330,7 +340,7 @@ export function initTschobbo() {
       setFrame(body, 'throw', i);
     }, THROW_FRAME_MS);
 
-    timers.push(setTimeout(() => spawnFly(origin, target, matched), 2 * THROW_FRAME_MS));
+    timers.push(setTimeout(() => spawnFly(origin, target, matched, targetEl), 2 * THROW_FRAME_MS));
   }
 
   // Burst-Regel (anders als v1): kein Ignorieren mehr — jeder Job aus jedem
