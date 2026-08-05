@@ -14,3 +14,4 @@ config/profile.json
 .env
 *.log
 dist
+/brainstorm
