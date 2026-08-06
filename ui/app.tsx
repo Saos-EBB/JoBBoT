@@ -820,6 +820,10 @@ export default function JobbotUI() {
   const lastSeenScrapeRunId = useRef<string | null>(null);
   const lastSeenFilterRunId = useRef<string | null>(null);
   const lastSeenAnschreibenRunId = useRef<string | null>(null);
+  // Weckt die Status-Poll-Schleife (siehe unten) sofort auf, statt auf den nächsten
+  // 1.5s-Tick zu warten — gesetzt vom Poll-Effect, aufgerufen von runScrapeNow/
+  // runFilterNow/runAnschreibenNow direkt nach dem Start-POST.
+  const pollRunsNow = useRef<() => void>(() => {});
   const ta = useRef<HTMLTextAreaElement>(null);
   // Für den Tschobbo-Hook im Scrape-SSE-Effect unten (der nur einmal läuft,
   // `view` also sonst als Closure einfrieren würde).
@@ -847,11 +851,19 @@ export default function JobbotUI() {
     fetch('/api/settings').then(r => r.json()).then((s: { filterMode: FilterMode }) => setFilterMode(s.filterMode));
   }, []);
 
-  // Ein einziges, immer laufendes Poll-Intervall für die gesamte Lebensdauer der
-  // App (nicht an eine bestimmte Ansicht gebunden) — nur so bleibt die Fortschritts-
-  // anzeige in der Sidebar sichtbar, auch wenn man zu einer anderen Ansicht wechselt.
+  // Poll-Schleife für die gesamte Lebensdauer der App (nicht an eine bestimmte
+  // Ansicht gebunden) — nur so bleibt die Fortschrittsanzeige in der Sidebar
+  // sichtbar, auch wenn man zu einer anderen Ansicht wechselt. Läuft aber nur,
+  // solange tatsächlich etwas läuft: selbst-planender setTimeout statt Dauer-
+  // Intervall, hört auf sobald alle drei Status nicht mehr "running" sind.
+  // runScrapeNow/runFilterNow/runAnschreibenNow wecken sie über pollRunsNow
+  // sofort nach dem Start-POST wieder auf, statt auf den nächsten Tick zu warten.
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
+
     const tick = async () => {
+      if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
       try {
         const [s, f, a] = await Promise.all([
           fetch('/api/scrape/status').then(r => r.json()) as Promise<ScrapeStatus>,
@@ -899,13 +911,20 @@ export default function JobbotUI() {
             });
           }
         }
+
+        const stillRunning = s.status === 'running' || f.status === 'running' || a.status === 'running';
+        if (!cancelled && stillRunning) timeoutId = setTimeout(tick, 1500);
       } catch {
-        // Server kurz nicht erreichbar — nächster Tick versucht's wieder
+        // Server kurz nicht erreichbar — weiter versuchen statt die Schleife stillschweigend zu beenden
+        if (!cancelled) timeoutId = setTimeout(tick, 1500);
       }
     };
+    pollRunsNow.current = tick;
     tick();
-    const id = setInterval(tick, 1500);
-    return () => clearInterval(id);
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [refetchJobs, say]);
 
   // SSE statt Polling fürs Anschreiben-Lade-Grid — ein Event pro fertigem (oder
@@ -958,6 +977,7 @@ export default function JobbotUI() {
         body: JSON.stringify({ sources: [...selectedSources] }),
       });
       if (res.status === 409) say('Scrape läuft bereits', 'err');
+      pollRunsNow.current();
     } finally {
       setScrapeStarting(false);
     }
@@ -973,6 +993,7 @@ export default function JobbotUI() {
         body: JSON.stringify({ mode: filterMode, scope: filterScope }),
       });
       if (res.status === 409) say('Filter läuft bereits', 'err');
+      pollRunsNow.current();
     } finally {
       setFilterStarting(false);
     }
@@ -1053,6 +1074,7 @@ export default function JobbotUI() {
       });
       if (res.status === 409) say('Anschreiben-Lauf läuft bereits', 'err');
       else setSelectedJobIds(new Set());
+      pollRunsNow.current();
     } finally {
       setAnschreibenStarting(false);
     }

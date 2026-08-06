@@ -1,3 +1,8 @@
+## 2026-08-06 — refactor(ui): status-poll nur solange läuft statt dauerhaft alle 1.5s
+
+**Was:** Kevin fragte, warum `/api/scrape/status`, `/api/filter/status`, `/api/anschreiben/status` dauerhaft alle 1.5s gefeuert werden, auch im Leerlauf. Poll-`setInterval` durch selbst-planenden `setTimeout` ersetzt — läuft weiter nur solange einer der drei Status `running` ist, hört danach auf. `runScrapeNow`/`runFilterNow`/`runAnschreibenNow` wecken die Schleife über einen neuen Ref (`pollRunsNow`) sofort nach dem Start-POST, statt auf den nächsten Tick zu warten (sonst würde der Übergang zu `running` erst bis zu 1.5s später bemerkt — oder nie, wenn die Schleife wegen vorherigem Leerlauf schon gestoppt hatte).
+**Nicht gebaut:** kein Backoff bei wiederholten Fetch-Fehlern (Server-nicht-erreichbar-Fall bleibt bei fixem 1.5s-Retry wie vorher).
+
 ## 2026-08-06 — fix(ui): klumpen finden ihre zeile über das event statt zu raten
 
 **Was:** `onGridUnit()` griff sich bislang die letzte `.loadgrid__row` im DOM als Wurfziel — richtig nur bei einer aktiven Scrape-Section. Bei ≥2 gleichzeitig laufenden Quellen (`maxConcurrent:2` in `lib/scrape-runner.ts`) verschachteln sich die Events, DOM-Reihenfolge ist section-weise statt chronologisch, "letzte Zeile" traf oft die falsche Section. Fix: `.loadgrid__row` bekommt `data-row={r.key}` (`ui/app.tsx`), `onGridUnit(e)` liest `e.detail.row` und sucht gezielt statt zu raten. Siehe docs/errors.md für die volle Analyse.
