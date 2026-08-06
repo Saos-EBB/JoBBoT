@@ -562,7 +562,10 @@ function LoadGrid({ sections, ghost }: { sections: LoadGridSection[]; ghost?: bo
             // (letztes Quadrat bei (n-1)*step + Pop-Dauer), färbt sich die Zeile ein.
             const revealDelay = (r.squares.length - 1) * step + POP_DURATION_MS;
             return (
-              <div className="loadgrid__row" key={r.key}>
+              // data-row: Tschobbo (ui/tschobbo.js) muss bei parallelen Quellen die
+              // Zeile aus dem Event finden können, nicht raten — DOM-Reihenfolge ist
+              // nach Section gruppiert, nicht nach Event-Chronologie.
+              <div className="loadgrid__row" key={r.key} data-row={r.key}>
                 {r.squares.map((sq, i) => (
                   <span
                     key={sq.id}

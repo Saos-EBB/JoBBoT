@@ -393,11 +393,15 @@ export function initTschobbo() {
   }
 
   // Pro Event: Stille-Timer zurücksetzen, beim allerersten zusätzlich anfahren.
-  // Die Quadrate der zuletzt angehängten Zeile (React braucht einen Frame zum
-  // Rendern, daher rAF — gleiches Muster wie das alte doPush) sind die Wurfziele,
-  // auch für das erste Event ("wir wollen alle Jobs sehen", Auftrag-Burst-Regel).
-  function onGridUnit() {
+  // Die Zeile kommt über event.detail.row (data-row-Attribut, siehe ui/app.tsx) —
+  // "letzte .loadgrid__row im DOM" war nur richtig, solange eine einzige Section
+  // scrapt. Bei paralleler Multi-Source-Scrape (maxConcurrent in scrape-runner.ts)
+  // verschachteln sich die Events mehrerer Sections, DOM-Reihenfolge ist nach
+  // Section gruppiert statt nach Event-Chronologie — "letzte Zeile" traf dann oft
+  // die falsche (schon beworfene) Section (siehe docs/errors.md).
+  function onGridUnit(e) {
     if (!enabledState) return;
+    const rowKey = e.detail.row;
     const firstEvent = mode === 'idle';
     if (firstEvent) {
       clearTimers();
@@ -410,8 +414,7 @@ export function initTschobbo() {
     }
     requestAnimationFrame(() => {
       if (firstEvent) { positionPile(); clearPile(); clearStuck(); }
-      const rows = document.querySelectorAll('.loadgrid__row');
-      const row = rows[rows.length - 1];
+      const row = document.querySelector(`.loadgrid__row[data-row="${rowKey}"]`);
       if (!row) return;
       queueThrows(Array.from(row.querySelectorAll('.loadgrid__sq')));
     });
