@@ -6,8 +6,8 @@ import { createStorage } from '../storage/index.ts';
 import { config } from '../config.ts';
 import { jobBasename } from '../lib/slugify.ts';
 import { loadProfile } from '../lib/profile.ts';
-import { composeEmail, createDraft, sendMail, logMailAction, fetchInboxReplies, type ComposedEmail } from '../mail/gmail.ts';
-import { matchReplies } from '../lib/mail-match.ts';
+import { composeEmail, createDraft, sendMail, logMailAction, fetchInboxReplies, fetchSentMails, type ComposedEmail } from '../mail/gmail.ts';
+import { matchReplies, matchSent } from '../lib/mail-match.ts';
 import { ATTACHMENT_PATH, ATTACHMENT_FILENAME } from '../lib/attachment.ts';
 import { loadCc, saveCc, clearCc } from '../lib/cc.ts';
 import { loadSources } from '../lib/sources.ts';
@@ -650,6 +650,56 @@ const server = createServer(async (req, res) => {
     anschreibenAbort.abort();
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ stopped: true }));
+    return;
+  }
+
+  // Rückwirkender Sync: liest Gesendet-Ordner und INBOX und trägt nach, was in den
+  // Job-JSONs fehlt. Manuell ausgelöst wie die anderen Mail-Features (kein Daemon).
+  //
+  // Drei Zusagen, die hier bewusst im Code stehen und nicht nur im Auftrag:
+  //  1. read-only gegenüber Gmail — beide Ordner werden mit readOnly:true geöffnet,
+  //     nichts wird gesendet, gelöscht, verschoben oder als gelesen markiert;
+  //  2. füllt nur Lücken — ein vorhandenes sentAt/replyReceivedAt bleibt unangetastet,
+  //     damit ein heuristischer Treffer nie einen echten Wert überschreibt;
+  //  3. ändert keinen Status — geschrieben werden ausschließlich die zwei Datumsfelder.
+  if (req.method === 'POST' && url.pathname === '/api/gmail-sync') {
+    try {
+      const jobs = await storage.list();
+      const kandidaten = jobs.filter(j => j.email && !j.sentAt);
+
+      // Eine Bewerbung kann nicht älter sein als der Job, auf den sie sich bezieht —
+      // das älteste scrapedAt begrenzt den IMAP-Fetch, statt das ganze Postfach zu ziehen.
+      let sentGefuellt = 0;
+      if (kandidaten.length > 0) {
+        const since = new Date(Math.min(...kandidaten.map(j => new Date(j.scrapedAt).getTime())));
+        const treffer = matchSent(await fetchSentMails(since), jobs);
+        for (const { job, date } of treffer) {
+          await storage.update(job.id, { sentAt: date.toISOString() });
+          sentGefuellt++;
+        }
+      }
+
+      // Frisch aus dem Sent-Scan gesetzte sentAt sollen sofort für die Antwort-Zuordnung
+      // zählen, deshalb die Liste neu laden statt die veraltete weiterzureichen.
+      const nachSent = await storage.list();
+      const gesendet = nachSent.filter(j => j.sentAt || j.status === 'gesendet');
+      let replyGefuellt = 0;
+      if (gesendet.length > 0) {
+        const since = new Date(Math.min(...gesendet.map(j => new Date(j.sentAt ?? j.updatedAt).getTime())));
+        const treffer = matchReplies(await fetchInboxReplies(since), nachSent);
+        for (const { job, reply } of treffer) {
+          if (job.replyReceivedAt) continue; // Lücken füllen, nicht überschreiben
+          await storage.update(job.id, { replyReceivedAt: reply.date.toISOString() });
+          replyGefuellt++;
+        }
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ sentGefuellt, replyGefuellt, ohneTreffer: kandidaten.length - sentGefuellt }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
+    }
     return;
   }
 

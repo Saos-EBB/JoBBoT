@@ -168,7 +168,8 @@ klaren Fehlermeldung fehl statt die Seite zu blockieren.
   `/api/attachment` (Lebenslauf-Upload), `/api/duplicates` (Duplikat-Report,
   GET, synchron), `/api/duplicates/merge` (Duplikat-Gruppe zusammenführen),
   `/api/calendar` (Kalender-Ereignisse, GET, synchron), `/api/mail/replies/fetch`
-  (Gmail-Inbox nach Antworten durchsuchen) sowie `/api/scrape/*` und
+  (Gmail-Inbox nach Antworten durchsuchen), `/api/gmail-sync` (rückwirkend
+  `sentAt`/`replyReceivedAt` nachtragen, read-only gegenüber Gmail) sowie `/api/scrape/*` und
   `/api/filter/*` (siehe unten).
 
 ### Scrape/Filter aus der UI
@@ -214,6 +215,31 @@ Antworten werden nicht automatisch erkannt: ein „Antworten abrufen"-Button im
 `POST /api/mail/replies/fetch` (E-Mail+Betreff-Abgleich, keine Message-ID) und
 setzt `replyReceivedAt` auf Treffer — Jobs mit Antwort tragen danach ein
 Badge „Antwort erhalten", mit Filter „Nur mit Antwort" im Verlauf.
+
+### Gmail-Sync (rückwirkend)
+
+`POST /api/gmail-sync` trägt Daten nach, die im Job-JSON fehlen: der
+Gesendet-Ordner liefert `sentAt`, die Inbox `replyReceivedAt`. Gedacht für
+Bewerbungen, die vor der Einführung dieser Felder rausgingen oder händisch
+am Bot vorbei — laufende Versände schreiben ihr `sentAt` ohnehin selbst.
+
+Drei Eigenschaften, auf die man sich verlassen kann:
+
+- **read-only gegenüber Gmail.** Beide Ordner werden mit `readOnly: true`
+  geöffnet; der Sync sendet, löscht und verschiebt nichts und markiert auch
+  nichts als gelesen. Der Gesendet-Ordner wird über das IMAP-Flag
+  `\Sent` gefunden, nicht über den (lokalisierten) Ordnernamen.
+- **Füllt nur Lücken.** Ein vorhandenes `sentAt`/`replyReceivedAt` wird nie
+  überschrieben, damit ein heuristischer Treffer keinen echten Wert zerstört.
+  Mehrfache Läufe sind dadurch gefahrlos.
+- **Ändert keinen Status.** Geschrieben werden ausschließlich die zwei
+  Datumsfelder.
+
+Die Zuordnung ist Heuristik, keine exakte Zuordnung: die Message-ID wurde beim
+ursprünglichen Senden nie gespeichert. Gematcht wird über die exakte
+Empfängeradresse, der rekonstruierte Betreff (`Bewerbung als … bei …`) dient
+nur als Tiebreaker, wenn mehrere Jobs dieselbe Firmenadresse teilen. Bleibt es
+mehrdeutig, wird nichts gesetzt — ungematchte Jobs bleiben schlicht undatiert.
 
 ## Tests
 
