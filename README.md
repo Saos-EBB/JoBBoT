@@ -218,7 +218,8 @@ Badge „Antwort erhalten", mit Filter „Nur mit Antwort" im Verlauf.
 
 ### Gmail-Sync (rückwirkend)
 
-`POST /api/gmail-sync` trägt Daten nach, die im Job-JSON fehlen: der
+Der Button „Gmail-Sync" oben rechts im Kalender-Tab trägt Daten nach, die im
+Job-JSON fehlen (`POST /api/gmail-sync`): der
 Gesendet-Ordner liefert `sentAt`, die Inbox `replyReceivedAt`. Gedacht für
 Bewerbungen, die vor der Einführung dieser Felder rausgingen oder händisch
 am Bot vorbei — laufende Versände schreiben ihr `sentAt` ohnehin selbst.
