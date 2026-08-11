@@ -25,7 +25,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import type { Job, Fit } from '../scrapers/interface.ts';
-import { FOLDER_IDS, inFolder, type FolderId } from '../lib/folders.ts';
+import { FOLDER_IDS, inFolder, canGenerateAnschreiben, type FolderId } from '../lib/folders.ts';
 
 // /api/jobs joint das Anschreiben serverseitig dazu (siehe scripts/ui-server.ts) —
 // es lebt in data/anschreiben/{slug}.md, nicht im Job-JSON. Deshalb ist `brief` hier
@@ -244,6 +244,10 @@ const CSS = `
 
 .row-wrap { display:flex; align-items:stretch; border-bottom:1px solid var(--line-soft); }
 .row__check { flex:none; align-self:center; margin-left:14px; accent-color:var(--text); cursor:pointer; }
+/* Ungefilterte Jobs (status "new") sitzen mit im "jobs"-Ordner, taugen aber nicht
+   fürs Anschreiben — Checkbox bleibt sichtbar (die Spalte soll nicht springen),
+   nur eben erkennbar tot. */
+.row__check:disabled { cursor:not-allowed; opacity:.3; }
 
 .row {
   position:relative; width:100%; display:block; text-align:left;
@@ -263,6 +267,7 @@ const CSS = `
 }
 .selbar__n { font-weight:500; color:var(--text); }
 .selbar__spacer { flex:1; }
+.sel__hint { color:var(--dim); }
 
 .row__l1 { display:flex; align-items:baseline; gap:8px; margin-bottom:2px; }
 .row__firma { font-weight:600; font-size:13px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -276,6 +281,7 @@ const CSS = `
 }
 .tag--nomail { border-style:dashed; }
 .tag--err { border-color:rgba(229,72,77,.4); color:var(--err); }
+.tag--roh { border-style:dotted; border-color:rgba(232,176,75,.45); color:var(--fit-offstack); }
 .tag--reply { border-color:rgba(53,208,165,.4); color:var(--ok); }
 
 .empty { padding:56px 24px; text-align:center; color:var(--dim); }
@@ -1175,6 +1181,13 @@ export default function JobbotUI() {
       .sort((a, b) => daysAgo(a.scrapedAt) - daysAgo(b.scrapedAt));
   }, [inCurrentFolder, fit, q, folder, replyOnly]);
 
+  // Der "jobs"-Ordner mischt ungefilterte (status "new") mit getriagten Jobs, aber nur
+  // letztere kann der Anschreiben-Lauf verarbeiten (siehe canGenerateAnschreiben).
+  // Getrennt gehalten, damit Checkboxen und "Alle auswählen" gar nicht erst anbieten,
+  // was der Server hinterher still wegwerfen müsste.
+  const selectable = useMemo(() => list.filter(canGenerateAnschreiben), [list]);
+  const ungefiltert = list.length - selectable.length;
+
   const job = jobs.find(j => j.id === sel) ?? null;
   const shown = list.some(j => j.id === sel) ? job : null;
 
@@ -1862,22 +1875,24 @@ export default function JobbotUI() {
               </button>
             </div>
           )}
-          {folder === 'jobs' && list.length > 0 && (
+          {folder === 'jobs' && selectable.length > 0 && (
             <label style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 0 4px', fontSize: 12, color: 'var(--muted)' }}>
               <input
                 type="checkbox"
                 className="row__check"
                 style={{ marginLeft: 0 }}
-                checked={list.every(j => selectedJobIds.has(j.id))}
-                onChange={e => setSelectedJobIds(e.target.checked ? new Set(list.map(j => j.id)) : new Set())}
+                checked={selectable.every(j => selectedJobIds.has(j.id))}
+                onChange={e => setSelectedJobIds(e.target.checked ? new Set(selectable.map(j => j.id)) : new Set())}
               />
-              Alle sichtbaren auswählen ({list.length})
+              Alle gefilterten auswählen ({selectable.length})
+              {ungefiltert > 0 && <span className="sel__hint">· {ungefiltert} ungefiltert</span>}
             </label>
           )}
         </div>
 
-        {/* Auswahl nur im "jobs"-Ordner: matched/uncertain (die einzigen für
-            Anschreiben geeigneten Status) landen laut STATUS_MAP nirgendwo sonst. */}
+        {/* Auswahl nur im "jobs"-Ordner — der enthält laut STATUS_MAP aber AUCH
+            ungefilterte Jobs (status "new"), für die es kein Anschreiben gibt.
+            Die sind hier nicht auswählbar, statt vom Server still verworfen zu werden. */}
         {folder === 'jobs' && selectedJobIds.size > 0 && (
           <div className="selbar">
             <span className="selbar__n">{selectedJobIds.size} ausgewählt</span>
@@ -1908,10 +1923,16 @@ export default function JobbotUI() {
                   <input
                     type="checkbox"
                     className="row__check"
+                    disabled={!canGenerateAnschreiben(j)}
                     checked={selectedJobIds.has(j.id)}
                     onChange={() => toggleSelect(j.id)}
                     onClick={e => e.stopPropagation()}
-                    aria-label={`${j.title} auswählen`}
+                    title={canGenerateAnschreiben(j) ? undefined : 'Noch nicht gefiltert — erst den Filter laufen lassen'}
+                    aria-label={
+                      canGenerateAnschreiben(j)
+                        ? `${j.title} auswählen`
+                        : `${j.title} — noch nicht gefiltert, kein Anschreiben möglich`
+                    }
                   />
                 )}
                 <button
@@ -1929,6 +1950,7 @@ export default function JobbotUI() {
                     <span className={'tag' + (j.email ? '' : ' tag--nomail')}>{j.email ? 'MAIL' : 'PORTAL'}</span>
                     <span className="tag">{j.source}</span>
                     {j.status === 'fehler' && <span className="tag tag--err">FEHLER</span>}
+                    {j.status === 'new' && <span className="tag tag--roh">UNGEFILTERT</span>}
                     {j.replyReceivedAt && <span className="tag tag--reply">ANTWORT ERHALTEN</span>}
                   </span>
                 </button>
@@ -2031,8 +2053,11 @@ export default function JobbotUI() {
                 ) : (
                   <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
                     <div className="empty__h">Kein Anschreiben</div>
-                    Der Lauf ist vor der Generierung abgebrochen. Fehler oben beheben, dann neu
-                    generieren.
+                    {/* Ungefilterte Jobs hatten nie einen Lauf — "abgebrochen" wäre gelogen
+                        und schickt beim Suchen nach dem Fehler in die falsche Richtung. */}
+                    {shown.status === 'new'
+                      ? 'Noch nicht gefiltert — erst den Filter über diesen Job laufen lassen, danach ist ein Anschreiben möglich.'
+                      : 'Der Lauf ist vor der Generierung abgebrochen. Fehler oben beheben, dann neu generieren.'}
                   </div>
                 )
               ) : (

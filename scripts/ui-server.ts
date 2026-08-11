@@ -17,6 +17,7 @@ import { runScrape } from '../lib/scrape-runner.ts';
 import { filterJob } from '../lib/filter.ts';
 import { createBatcher } from '../lib/grid-batch.ts';
 import { findDuplicates, planMerge } from '../lib/duplicates.ts';
+import { canGenerateAnschreiben } from '../lib/folders.ts';
 import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 
@@ -609,7 +610,7 @@ const server = createServer(async (req, res) => {
       // nochmal) — hier vorab gefiltert, damit "skipped" korrekt zählt, statt
       // still Lücken aus fehlenden/ungeeigneten IDs zu übernehmen.
       const fetched = await Promise.all(jobIds.map(id => storage.get(id)));
-      const jobs = fetched.filter((j): j is Job => j !== null && j.status === 'triaged' && j.fit !== 'brutal');
+      const jobs = fetched.filter((j): j is Job => j !== null && canGenerateAnschreiben(j));
       const preSkipped = jobIds.length - jobs.length;
 
       if (jobs.length === 0) {
