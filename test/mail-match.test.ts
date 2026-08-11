@@ -74,7 +74,7 @@ function offenerJob(overrides: Partial<{ title: string; company: string; email: 
 }
 
 function sent(overrides: Partial<SentMail> = {}): SentMail {
-  return { to: ['office@acme.at'], subject: 'Bewerbung als Junior Developer bei Acme', date: new Date('2026-07-05'), ...overrides };
+  return { to: ['office@acme.at'], subject: 'Bewerbung als Junior Developer bei Acme', date: new Date('2026-07-05'), labels: ['Bewerbung'], ...overrides };
 }
 
 test('matchSent: exakte Empfängeradresse trifft', () => {
@@ -90,9 +90,25 @@ test('matchSent: Jobs mit vorhandenem sentAt bleiben unangetastet', () => {
   assert.equal(matchSent([sent()], [job]).length, 0);
 });
 
-test('matchSent: fremde Adresse trifft nicht', () => {
+test('matchSent: fremde Adresse UND fremder Betreff trifft nicht', () => {
   const job = offenerJob({ email: 'office@acme.at' });
-  assert.equal(matchSent([sent({ to: ['office@other.at'] })], [job]).length, 0);
+  const fremd = sent({ to: ['office@other.at'], subject: 'Bewerbung als Irgendwas bei Andere GmbH' });
+  assert.equal(matchSent([fremd], [job]).length, 0);
+});
+
+test('matchSent: Betreff trifft auch ohne job.email', () => {
+  // Der Fall aus dem Juli-Bestand: ein Re-Scrape hat das Job-JSON neu geschrieben und
+  // dabei die Adresse verloren — der Betreff ist dann der einzige verbliebene Anker.
+  const job = { ...offenerJob(), email: null };
+  const matches = matchSent([sent({ to: ['irgendwer@acme.at'] })], [job]);
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].job.id, job.id);
+});
+
+test('matchSent: liefert die zugeordnete Mail mit', () => {
+  const job = offenerJob();
+  const mail = sent();
+  assert.equal(matchSent([mail], [job])[0].mail, mail);
 });
 
 test('matchSent: älteste Mail gewinnt, Nachfassen zählt nicht', () => {

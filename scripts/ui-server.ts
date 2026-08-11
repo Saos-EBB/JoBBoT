@@ -6,9 +6,10 @@ import { createStorage } from '../storage/index.ts';
 import { config } from '../config.ts';
 import { jobBasename } from '../lib/slugify.ts';
 import { loadProfile } from '../lib/profile.ts';
-import { composeEmail, createDraft, sendMail, logMailAction, fetchInboxReplies, fetchSentMails, type ComposedEmail } from '../mail/gmail.ts';
+import { composeEmail, createDraft, sendMail, logMailAction, fetchInboxReplies, fetchSentMails, istBewerbung, type ComposedEmail, type SentMail } from '../mail/gmail.ts';
 import { matchReplies, matchSent } from '../lib/mail-match.ts';
 import { HISTORY_START } from '../lib/calendar.ts';
+import { loadMailEvents, saveMailEvents, toMailEvents } from '../lib/mail-events.ts';
 import { ATTACHMENT_PATH, ATTACHMENT_FILENAME } from '../lib/attachment.ts';
 import { loadCc, saveCc, clearCc } from '../lib/cc.ts';
 import { loadSources } from '../lib/sources.ts';
@@ -259,10 +260,15 @@ const server = createServer(async (req, res) => {
   // flache Ereignisliste.
   if (req.method === 'GET' && url.pathname === '/api/calendar') {
     const jobs = await storage.list();
-    const events: { date: string; type: 'sent' | 'reply'; jobId: string; title: string; company: string }[] = [];
+    const events: { date: string; type: 'sent' | 'reply'; jobId: string | null; title: string; company: string }[] = [];
     for (const job of jobs) {
       if (job.sentAt) events.push({ date: job.sentAt.slice(0, 10), type: 'sent', jobId: job.id, title: job.title, company: job.company });
       if (job.replyReceivedAt) events.push({ date: job.replyReceivedAt.slice(0, 10), type: 'reply', jobId: job.id, title: job.title, company: job.company });
+    }
+    // Gelabelte Bewerbungs-Mails ohne Job im Bestand (siehe lib/mail-events.ts) — jobId
+    // bleibt null, die UI zeigt sie als "nur Mail" ohne Sprung in die Detailansicht.
+    for (const ev of await loadMailEvents()) {
+      events.push({ date: ev.date.slice(0, 10), type: 'sent', jobId: null, title: ev.title, company: ev.company });
     }
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(events));
@@ -674,12 +680,22 @@ const server = createServer(async (req, res) => {
       // Der Scan läuft auch ohne Kandidaten. Er schreibt dann nichts, aber die Zahl der
       // gelesenen Mails macht sichtbar, ob das Postfach überhaupt etwas hergibt — ein
       // stilles "0 ergänzt" verrät nicht, ob nichts da war oder nichts zugeordnet wurde.
-      const sentMails = await fetchSentMails(since);
+      const alleSent = await fetchSentMails(since);
+      // Nur was du in Gmail als Bewerbung markiert hast — sonst landete jede private
+      // Mail im Kalender.
+      const sentMails = alleSent.filter(istBewerbung);
       let sentGefuellt = 0;
-      for (const { job, date } of matchSent(sentMails, jobs)) {
+      const zugeordnet = new Set<SentMail>();
+      for (const { job, date, mail } of matchSent(sentMails, jobs)) {
         await storage.update(job.id, { sentAt: date.toISOString() });
+        zugeordnet.add(mail);
         sentGefuellt++;
       }
+
+      // Gelabelte Mails ohne Job: als eigene Kalender-Ereignisse ablegen, damit der
+      // Zeitraum vollständig sichtbar ist statt an Lücken im Job-Bestand zu scheitern.
+      const ohneJob = sentMails.filter(m => !zugeordnet.has(m));
+      await saveMailEvents(toMailEvents(ohneJob));
 
       // Frisch aus dem Sent-Scan gesetzte sentAt sollen sofort für die Antwort-Zuordnung
       // zählen, deshalb die Liste neu laden statt die veraltete weiterzureichen.
@@ -694,11 +710,12 @@ const server = createServer(async (req, res) => {
 
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({
-        sentGescannt: sentMails.length,
+        sentGescannt: alleSent.length,
+        markiert: sentMails.length,
         sentGefuellt,
+        ohneJob: ohneJob.length,
         replyGescannt: replies.length,
         replyGefuellt,
-        ohneTreffer: kandidaten.length - sentGefuellt,
         seit: HISTORY_START,
       }));
     } catch (err) {

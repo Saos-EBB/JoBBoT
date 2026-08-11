@@ -233,14 +233,31 @@ Bewerbungen, die vor der Einführung dieser Felder rausgingen oder händisch
 am Bot vorbei — laufende Versände schreiben ihr `sentAt` ohnehin selbst.
 
 Gescannt wird ab `HISTORY_START` (`lib/calendar.ts`, aktuell `2026-07-01`) —
-derselbe Startpunkt, ab dem der Kalender anzeigt. Die Meldung nennt neben den
-ergänzten auch die **gelesenen** Mails (`sentGescannt`/`replyGescannt`): ein
-bloßes „0 ergänzt" verrät sonst nicht, ob das Postfach leer war oder nur nichts
-zugeordnet werden konnte.
+derselbe Startpunkt, ab dem der Kalender anzeigt.
 
-Damit ein Job überhaupt zuordenbar ist, braucht er eine `job.email` — die füllt
-erst der Anschreiben-Lauf (`findEmail()`). Jobs, die nie durch diesen Lauf
-gingen, kann der Sync grundsätzlich nicht treffen.
+**Welche Mails zählen:** nur die, die in Gmail mit dem Label `Bewerbung` oder
+`Beworben` markiert sind (`BEWERBUNGS_LABELS` in `mail/gmail.ts`). Das Label ist
+die verlässlichste Quelle: `job.email` geht bei einem Re-Scrape verloren und der
+Betreff ändert sich, wenn ein Inserat neu eingelesen wird — deine Markierung
+bleibt. Ohne Label passiert nichts, und private Mails landen nie im Kalender.
+
+**Zuordnung zum Job** läuft über zwei gleichwertige Schlüssel: den
+rekonstruierten Betreff (`Bewerbung als … bei …`, aus Titel+Firma jederzeit
+neu berechenbar) und die Empfängeradresse. Trifft einer, bekommt der Job sein
+`sentAt`.
+
+**Mails ohne Job** — weil das Inserat gelöscht, neu eingelesen oder händisch
+geschrieben wurde — verschwinden nicht, sondern landen in
+`data/mail-events.json` und erscheinen im Kalender als eigener Eintrag mit dem
+Vermerk „nur Mail" (nicht anklickbar, es gibt keine Detailansicht dazu). Titel
+und Firma kommen aus dem Betreff; passt der nicht aufs Muster, dient die
+Empfänger-Domain als Beschriftung. Die Datei ist ein Abbild des Postfachs, kein
+Verlauf: jeder Lauf schreibt sie komplett neu, und sie ist gitignored, weil sie
+Empfängeradressen enthält.
+
+Die Meldung nach dem Lauf nennt jede Stufe einzeln — gelesen, markiert,
+verknüpft, nur Mail —, weil ein blankes „0 ergänzt" offenließe, ob das Postfach
+leer war, das Label fehlt oder die Zuordnung nichts fand.
 
 Drei Eigenschaften, auf die man sich verlassen kann:
 

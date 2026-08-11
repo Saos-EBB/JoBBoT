@@ -7,6 +7,7 @@ data/skills/
 skills-lock.json
 .understand-anything/
 data/jobs/**/*.json
+data/mail-events.json
 data/anschreiben/**/*.md
 data/attachments/*.pdf
 data/backup-*/
