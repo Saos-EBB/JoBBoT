@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { matchReplies } from '../lib/mail-match.ts';
+import { matchReplies, matchSent } from '../lib/mail-match.ts';
 import { toJob } from '../lib/normalize.ts';
 import type { Job } from '../scrapers/interface.ts';
-import type { InboxReply } from '../mail/gmail.ts';
+import type { InboxReply, SentMail } from '../mail/gmail.ts';
 
 function gesendetJob(overrides: Partial<{ title: string; company: string; email: string; updatedAt: string }> = {}): Job {
   const job = toJob({
@@ -58,4 +58,68 @@ test('no match when sender domain differs from job.email', () => {
   const job = gesendetJob({ email: 'office@acme.at' });
   const matches = matchReplies([reply({ from: 'office@other.at' })], [job]);
   assert.equal(matches.length, 0);
+});
+
+// --- Sent-Ordner-Scan (rückwirkendes sentAt) ---
+
+function offenerJob(overrides: Partial<{ title: string; company: string; email: string; sentAt: string }> = {}): Job {
+  const job = toJob({
+    source: 'karriere.at',
+    url: 'https://www.karriere.at/jobs/123',
+    title: overrides.title ?? 'Junior Developer',
+    company: overrides.company ?? 'Acme',
+    description: 'Anforderungen: TypeScript-Kenntnisse.',
+  });
+  return { ...job, email: overrides.email ?? 'office@acme.at', sentAt: overrides.sentAt ?? null };
+}
+
+function sent(overrides: Partial<SentMail> = {}): SentMail {
+  return { to: ['office@acme.at'], subject: 'Bewerbung als Junior Developer bei Acme', date: new Date('2026-07-05'), ...overrides };
+}
+
+test('matchSent: exakte Empfängeradresse trifft', () => {
+  const job = offenerJob();
+  const matches = matchSent([sent()], [job]);
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].job.id, job.id);
+  assert.equal(matches[0].date.toISOString(), new Date('2026-07-05').toISOString());
+});
+
+test('matchSent: Jobs mit vorhandenem sentAt bleiben unangetastet', () => {
+  const job = offenerJob({ sentAt: '2026-06-01T00:00:00.000Z' });
+  assert.equal(matchSent([sent()], [job]).length, 0);
+});
+
+test('matchSent: fremde Adresse trifft nicht', () => {
+  const job = offenerJob({ email: 'office@acme.at' });
+  assert.equal(matchSent([sent({ to: ['office@other.at'] })], [job]).length, 0);
+});
+
+test('matchSent: älteste Mail gewinnt, Nachfassen zählt nicht', () => {
+  const job = offenerJob();
+  const matches = matchSent([
+    sent({ date: new Date('2026-07-20') }),
+    sent({ date: new Date('2026-07-05') }),
+  ], [job]);
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].date.toISOString(), new Date('2026-07-05').toISOString());
+});
+
+test('matchSent: geteilte Firmenadresse wird über den Betreff getrennt', () => {
+  const a = offenerJob({ title: 'Junior Developer', company: 'Acme' });
+  const b = offenerJob({ title: 'Senior Developer', company: 'Acme' });
+  const matches = matchSent([sent({ subject: 'Bewerbung als Senior Developer bei Acme' })], [a, b]);
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].job.id, b.id);
+});
+
+test('matchSent: geteilte Adresse ohne Betreff-Treffer wird übersprungen statt geraten', () => {
+  const a = offenerJob({ title: 'Junior Developer', company: 'Acme' });
+  const b = offenerJob({ title: 'Senior Developer', company: 'Acme' });
+  assert.equal(matchSent([sent({ subject: 'Ihre Unterlagen' })], [a, b]).length, 0);
+});
+
+test('matchReplies: sentAt allein genügt, auch ohne Status "gesendet"', () => {
+  const job = { ...offenerJob({ sentAt: '2026-07-01T00:00:00.000Z' }), status: 'triaged' as const };
+  assert.equal(matchReplies([reply()], [job]).length, 1);
 });

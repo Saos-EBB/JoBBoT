@@ -99,6 +99,42 @@ export interface InboxReply {
   date: Date;
 }
 
+export interface SentMail {
+  to: string[];
+  subject: string;
+  date: Date;
+}
+
+// Gmail lokalisiert den Gesendet-Ordner ("[Gmail]/Sent Mail" vs. "[Gmail]/Gesendet"),
+// der Name ist also nicht hartkodierbar. Das IMAP-SPECIAL-USE-Flag "\Sent" ist
+// sprachunabhängig; der hartkodierte Name bleibt nur als Notnagel für Server, die
+// kein SPECIAL-USE melden.
+async function sentMailboxPath(client: ImapFlow): Promise<string> {
+  const boxes = await client.list();
+  return boxes.find(b => b.specialUse === '\\Sent')?.path ?? '[Gmail]/Sent Mail';
+}
+
+// Derselbe ImapFlow-Zugang wie createDraft()/fetchInboxReplies(), hier lesend auf den
+// Gesendet-Ordner. readOnly:true ist Absicht und keine Optimierung: der Sync darf nichts
+// senden, löschen, verschieben oder auch nur als gelesen markieren.
+export async function fetchSentMails(since: Date): Promise<SentMail[]> {
+  const { user, pass } = requireGmailCredentials();
+  const client = new ImapFlow({ host: 'imap.gmail.com', port: 993, secure: true, auth: { user, pass }, logger: false });
+  await client.connect();
+  try {
+    await client.mailboxOpen(await sentMailboxPath(client), { readOnly: true });
+    const mails: SentMail[] = [];
+    for await (const msg of client.fetch({ since }, { envelope: true })) {
+      const to = (msg.envelope?.to ?? []).map(a => a.address).filter((a): a is string => !!a);
+      if (to.length === 0) continue;
+      mails.push({ to, subject: msg.envelope?.subject ?? '', date: msg.envelope?.date ?? new Date() });
+    }
+    return mails;
+  } finally {
+    await client.logout();
+  }
+}
+
 // Derselbe ImapFlow-Zugang wie createDraft() (gleicher Host/Auth) — nur eine
 // Verbindungslogik, hier für Lesen statt Schreiben verwendet.
 export async function fetchInboxReplies(since: Date): Promise<InboxReply[]> {
