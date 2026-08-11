@@ -24,6 +24,15 @@ export function deriveStatus(job: Job): Status {
   return STATUS_MAP[job.status];
 }
 
+// Dieselbe Bedingung, die generateAnschreiben() (lib/anschreiben.ts) selbst prüft —
+// hier zentral, weil sie an drei Stellen gebraucht wird: Server-Vorfilter, Checkbox-
+// Zustand und "Alle sichtbaren auswählen". Driften die auseinander, verschluckt der
+// Lauf die Auswahl still: Status "new" sitzt laut STATUS_MAP mit im "jobs"-Ordner,
+// ist aber ungefiltert und damit ungeeignet.
+export function canGenerateAnschreiben(job: Job): boolean {
+  return job.status === 'triaged' && job.fit !== 'brutal';
+}
+
 function hasMail(job: Job): boolean {
   return job.email != null;
 }

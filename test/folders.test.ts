@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { toJob } from '../lib/normalize.ts';
-import { deriveStatus, inFolder, folderCounts } from '../lib/folders.ts';
+import { deriveStatus, inFolder, folderCounts, canGenerateAnschreiben } from '../lib/folders.ts';
 import type { Fit, Job, JobStatus } from '../scrapers/interface.ts';
 
 function job(status: JobStatus, fit: Fit | null = null, email: string | null = null): Job {
@@ -39,6 +39,22 @@ test('inFolder: jobs ist ein eigener Ordner ohne mail/nomail-Split', () => {
   assert.equal(inFolder(job('triaged', 'offstack'), 'jobs'), true);
   assert.equal(inFolder(job('triaged', 'matched'), 'jobs'), true);
   assert.equal(inFolder(job('new'), 'jobs'), true);
+});
+
+test('canGenerateAnschreiben: nur getriagt und nicht brutal', () => {
+  assert.equal(canGenerateAnschreiben(job('triaged', 'matched')), true);
+  assert.equal(canGenerateAnschreiben(job('triaged', 'offstack')), true);
+  assert.equal(canGenerateAnschreiben(job('triaged', 'brutal')), false);
+  // Der Fall, der die Auswahl im UI still verschluckt hat: "new" sitzt im
+  // "jobs"-Ordner, ist aber ungefiltert.
+  assert.equal(canGenerateAnschreiben(job('new')), false);
+});
+
+test('canGenerateAnschreiben: nicht jeder Job im "jobs"-Ordner ist geeignet', () => {
+  const imOrdner = [job('new'), job('triaged', 'matched'), job('triaged', 'offstack')]
+    .filter(j => inFolder(j, 'jobs'));
+  assert.equal(imOrdner.length, 3);
+  assert.equal(imOrdner.filter(canGenerateAnschreiben).length, 2);
 });
 
 test('inFolder: VERLAUF-Ordner ignorieren Mail-Status', () => {
