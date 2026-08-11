@@ -8,6 +8,7 @@ import { jobBasename } from '../lib/slugify.ts';
 import { loadProfile } from '../lib/profile.ts';
 import { composeEmail, createDraft, sendMail, logMailAction, fetchInboxReplies, fetchSentMails, type ComposedEmail } from '../mail/gmail.ts';
 import { matchReplies, matchSent } from '../lib/mail-match.ts';
+import { HISTORY_START } from '../lib/calendar.ts';
 import { ATTACHMENT_PATH, ATTACHMENT_FILENAME } from '../lib/attachment.ts';
 import { loadCc, saveCc, clearCc } from '../lib/cc.ts';
 import { loadSources } from '../lib/sources.ts';
@@ -666,36 +667,40 @@ const server = createServer(async (req, res) => {
     try {
       const jobs = await storage.list();
       const kandidaten = jobs.filter(j => j.email && !j.sentAt);
+      // Fester Startpunkt statt aus scrapedAt abgeleitet: gescannt wird der Zeitraum,
+      // den auch der Kalender anzeigt (siehe lib/calendar.ts HISTORY_START).
+      const since = new Date(HISTORY_START);
 
-      // Eine Bewerbung kann nicht älter sein als der Job, auf den sie sich bezieht —
-      // das älteste scrapedAt begrenzt den IMAP-Fetch, statt das ganze Postfach zu ziehen.
+      // Der Scan läuft auch ohne Kandidaten. Er schreibt dann nichts, aber die Zahl der
+      // gelesenen Mails macht sichtbar, ob das Postfach überhaupt etwas hergibt — ein
+      // stilles "0 ergänzt" verrät nicht, ob nichts da war oder nichts zugeordnet wurde.
+      const sentMails = await fetchSentMails(since);
       let sentGefuellt = 0;
-      if (kandidaten.length > 0) {
-        const since = new Date(Math.min(...kandidaten.map(j => new Date(j.scrapedAt).getTime())));
-        const treffer = matchSent(await fetchSentMails(since), jobs);
-        for (const { job, date } of treffer) {
-          await storage.update(job.id, { sentAt: date.toISOString() });
-          sentGefuellt++;
-        }
+      for (const { job, date } of matchSent(sentMails, jobs)) {
+        await storage.update(job.id, { sentAt: date.toISOString() });
+        sentGefuellt++;
       }
 
       // Frisch aus dem Sent-Scan gesetzte sentAt sollen sofort für die Antwort-Zuordnung
       // zählen, deshalb die Liste neu laden statt die veraltete weiterzureichen.
       const nachSent = await storage.list();
-      const gesendet = nachSent.filter(j => j.sentAt || j.status === 'gesendet');
+      const replies = await fetchInboxReplies(since);
       let replyGefuellt = 0;
-      if (gesendet.length > 0) {
-        const since = new Date(Math.min(...gesendet.map(j => new Date(j.sentAt ?? j.updatedAt).getTime())));
-        const treffer = matchReplies(await fetchInboxReplies(since), nachSent);
-        for (const { job, reply } of treffer) {
-          if (job.replyReceivedAt) continue; // Lücken füllen, nicht überschreiben
-          await storage.update(job.id, { replyReceivedAt: reply.date.toISOString() });
-          replyGefuellt++;
-        }
+      for (const { job, reply } of matchReplies(replies, nachSent)) {
+        if (job.replyReceivedAt) continue; // Lücken füllen, nicht überschreiben
+        await storage.update(job.id, { replyReceivedAt: reply.date.toISOString() });
+        replyGefuellt++;
       }
 
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ sentGefuellt, replyGefuellt, ohneTreffer: kandidaten.length - sentGefuellt }));
+      res.end(JSON.stringify({
+        sentGescannt: sentMails.length,
+        sentGefuellt,
+        replyGescannt: replies.length,
+        replyGefuellt,
+        ohneTreffer: kandidaten.length - sentGefuellt,
+        seit: HISTORY_START,
+      }));
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
