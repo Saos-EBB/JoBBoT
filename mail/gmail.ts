@@ -103,6 +103,17 @@ export interface SentMail {
   to: string[];
   subject: string;
   date: Date;
+  labels: string[];
+}
+
+// Gmail-Labels, mit denen du eine gesendete Mail als Bewerbung markierst. Der Sync
+// zieht ausschließlich so markierte Mails — das ist die verlässlichste Quelle dafür,
+// was überhaupt eine Bewerbung war: job.email geht bei Re-Scrapes verloren und der
+// Betreff ändert sich, wenn ein Inserat neu eingelesen wird, aber dein Label bleibt.
+export const BEWERBUNGS_LABELS = ['Bewerbung', 'Beworben'];
+
+export function istBewerbung(mail: SentMail): boolean {
+  return mail.labels.some(l => BEWERBUNGS_LABELS.some(b => l.toLowerCase() === b.toLowerCase()));
 }
 
 // Gmail lokalisiert den Gesendet-Ordner ("[Gmail]/Sent Mail" vs. "[Gmail]/Gesendet"),
@@ -124,10 +135,18 @@ export async function fetchSentMails(since: Date): Promise<SentMail[]> {
   try {
     await client.mailboxOpen(await sentMailboxPath(client), { readOnly: true });
     const mails: SentMail[] = [];
-    for await (const msg of client.fetch({ since }, { envelope: true })) {
+    // labels:true liefert die Gmail-Labels mit (X-GM-EXT-1). Server ohne die Erweiterung
+    // lassen msg.labels weg — dann bleibt die Liste leer und istBewerbung() filtert alles
+    // weg, statt stillschweigend das ganze Postfach als Bewerbungen zu behandeln.
+    for await (const msg of client.fetch({ since }, { envelope: true, labels: true })) {
       const to = (msg.envelope?.to ?? []).map(a => a.address).filter((a): a is string => !!a);
       if (to.length === 0) continue;
-      mails.push({ to, subject: msg.envelope?.subject ?? '', date: msg.envelope?.date ?? new Date() });
+      mails.push({
+        to,
+        subject: msg.envelope?.subject ?? '',
+        date: msg.envelope?.date ?? new Date(),
+        labels: [...(msg.labels ?? [])],
+      });
     }
     return mails;
   } finally {

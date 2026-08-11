@@ -9,6 +9,9 @@ export interface ReplyMatch {
 export interface SentMatch {
   job: Job;
   date: Date;
+  // Die zugeordnete Mail, damit der Aufrufer die übrigen (job-losen) auseinanderhalten
+  // kann, ohne die Match-Regeln ein zweites Mal nachzubauen.
+  mail: SentMail;
 }
 
 function domain(email: string): string {
@@ -34,28 +37,45 @@ function normalizeReplySubject(subject: string): string {
 //
 // Nur Jobs OHNE sentAt kommen infrage: der Sync füllt Lücken und überschreibt nie einen
 // echten Wert aus dem Live-Versand.
+// Zwei gleichwertige Schlüssel statt nur der Adresse: job.email geht bei einem
+// Re-Scrape oder Filter-Lauf verloren (die schreiben das Job-JSON neu), der Betreff
+// dagegen ist aus title+company jederzeit rekonstruierbar. Wer nur die Adresse nimmt,
+// verliert genau die Altbestände, für die der Sync gebaut wurde.
 export function matchSent(mails: SentMail[], jobs: Job[]): SentMatch[] {
-  const offen = jobs.filter((j): j is Job & { email: string } => !!j.email && !j.sentAt);
+  const offen = jobs.filter(j => !j.sentAt);
   const matches: SentMatch[] = [];
 
   for (const job of offen) {
-    const adresse = job.email.toLowerCase();
-    const treffer = mails.filter(m => m.to.some(a => a.toLowerCase() === adresse));
+    const adresse = job.email?.toLowerCase();
+    const betreff = reconstructedSubject(job);
+    const treffer = mails.filter(m =>
+      m.subject.trim().toLowerCase() === betreff
+      || (!!adresse && m.to.some(a => a.toLowerCase() === adresse))
+    );
     if (treffer.length === 0) continue;
 
-    // Mehrere Jobs auf derselben (geteilten) Firmenadresse — nur der Betreff trennt sie.
-    const geteilt = offen.filter(j => j.email.toLowerCase() === adresse).length > 1;
+    // Mehrere offene Jobs auf derselben Firmenadresse — dann trennt nur der Betreff.
+    // Bleibt es mehrdeutig, wird übersprungen statt geraten.
+    const geteilt = !!adresse && offen.filter(j => j.email?.toLowerCase() === adresse).length > 1;
     const passend = geteilt
-      ? treffer.filter(m => m.subject.trim().toLowerCase() === reconstructedSubject(job))
+      ? treffer.filter(m => m.subject.trim().toLowerCase() === betreff)
       : treffer;
     if (passend.length === 0) continue;
 
     // Älteste Mail an diese Adresse = die eigentliche Bewerbung; spätere sind Nachfassen.
-    const datum = passend.reduce((a, b) => (a.date <= b.date ? a : b)).date;
-    matches.push({ job, date: datum });
+    const aelteste = passend.reduce((a, b) => (a.date <= b.date ? a : b));
+    matches.push({ job, date: aelteste.date, mail: aelteste });
   }
 
   return matches;
+}
+
+// Gegenstück zu composeEmail(): holt Titel und Firma aus "Bewerbung als X bei Y"
+// zurück. Nötig für gelabelte Mails, zu denen es keinen Job (mehr) gibt — ohne das
+// stünde im Kalender nur eine nackte E-Mail-Adresse.
+export function parseBewerbungsBetreff(subject: string): { title: string; company: string } | null {
+  const m = subject.trim().match(/^Bewerbung als (.+) bei (.+)$/i);
+  return m ? { title: m[1].trim(), company: m[2].trim() } : null;
 }
 
 // Primär: Absenderdomain gegen job.email. Sekundär: Betreff-Abgleich, nötig weil eine

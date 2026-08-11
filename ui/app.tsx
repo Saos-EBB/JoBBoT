@@ -67,8 +67,10 @@ type FilterMode = 'llm' | 'regex';
 // Grund wie oben (Job-Typ selbst kommt weiterhin aus scrapers/interface.ts).
 type DuplicateGroup = { key: string; jobs: Job[] };
 // Spiegelt die Ereignisliste von GET /api/calendar (scripts/ui-server.ts) — ein Eintrag
-// je gesetztem sentAt/replyReceivedAt, date als 'YYYY-MM-DD'.
-type CalendarEvent = { date: string; type: 'sent' | 'reply'; jobId: string; title: string; company: string };
+// je gesetztem sentAt/replyReceivedAt, date als 'YYYY-MM-DD'. jobId ist null bei
+// gelabelten Bewerbungs-Mails, zu denen es keinen Job (mehr) gibt: die kommen aus
+// data/mail-events.json und haben nichts, wohin man springen könnte.
+type CalendarEvent = { date: string; type: 'sent' | 'reply'; jobId: string | null; title: string; company: string };
 
 /* ------------------------------------------------------------------ *
  * Design tokens
@@ -443,6 +445,14 @@ const CSS = `
 .cal__popup-list { flex:1; min-height:0; overflow-y:auto; padding:6px 8px; }
 .cal__entry { display:flex; align-items:center; gap:9px; width:100%; padding:8px 10px; border-radius:5px; text-align:left; }
 .cal__entry:hover { background:var(--raised); }
+/* Aus Gmail, kein Job dazu — nicht anklickbar, aber vollwertig sichtbar: der Eintrag
+   ist der einzige Beleg für diese Bewerbung. */
+.cal__entry--nurmail { cursor:default; }
+.cal__entry--nurmail:hover { background:transparent; }
+.cal__entry__quelle {
+  font-family:var(--mono); font-size:9px; letter-spacing:.04em; flex:none;
+  padding:1px 5px; border-radius:3px; border:1px dotted var(--line); color:var(--dim);
+}
 .cal__entry__dot { width:7px; height:7px; border-radius:99px; flex:none; }
 .cal__entry__firma { font-weight:500; font-size:12.5px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .cal__entry__titel { font-size:11px; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px; }
@@ -802,10 +812,17 @@ function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; onOpenJo
             <div className="cal__popup-head">{formatDayLong(activeDay)}</div>
             <div className="cal__popup-list" ref={listRef}>
               {dayEntries.map((ev, i) => (
-                <button key={ev.jobId + ev.type + i} className="cal__entry" onClick={() => onOpenJob(ev.jobId)}>
+                <button
+                  key={(ev.jobId ?? 'mail') + ev.type + i}
+                  className={'cal__entry' + (ev.jobId ? '' : ' cal__entry--nurmail')}
+                  disabled={!ev.jobId}
+                  onClick={ev.jobId ? () => onOpenJob(ev.jobId!) : undefined}
+                  title={ev.jobId ? undefined : 'Aus Gmail — kein Job dazu im Bestand'}
+                >
                   <span className="cal__entry__dot" style={{ background: ev.type === 'sent' ? 'var(--fit-matched)' : 'var(--ok)' }} />
                   <span className="cal__entry__firma">{ev.company}</span>
                   <span className="cal__entry__titel">{ev.title}</span>
+                  {!ev.jobId && <span className="cal__entry__quelle">nur Mail</span>}
                 </button>
               ))}
             </div>
@@ -1097,16 +1114,17 @@ export default function JobbotUI() {
     try {
       const res = await fetch('/api/gmail-sync', { method: 'POST' });
       const data = await res.json() as {
-        sentGescannt?: number; sentGefuellt?: number;
-        replyGescannt?: number; replyGefuellt?: number;
-        ohneTreffer?: number; seit?: string; error?: string;
+        sentGescannt?: number; markiert?: number; sentGefuellt?: number; ohneJob?: number;
+        replyGescannt?: number; replyGefuellt?: number; seit?: string; error?: string;
       };
       if (!res.ok) { say(`Gmail-Sync fehlgeschlagen: ${data.error}`, 'err'); return; }
-      // Gelesene Mails mitmelden: ohne sie lässt ein "0 ergänzt" offen, ob das Postfach
-      // nichts hergab oder die Zuordnung nichts fand.
+      // Jede Stufe einzeln melden (gelesen → markiert → zugeordnet): ein blankes
+      // "0 ergänzt" ließe offen, ob das Postfach leer war, das Label fehlt oder die
+      // Zuordnung nichts fand — drei völlig verschiedene Ursachen.
       say(
-        `Gmail-Sync ab ${data.seit ?? HISTORY_START}: ${data.sentGescannt ?? 0} gesendete gelesen → ${data.sentGefuellt ?? 0}× sentAt, `
-        + `${data.replyGescannt ?? 0} Inbox-Mails → ${data.replyGefuellt ?? 0}× Antwort (${data.ohneTreffer ?? 0} ohne Treffer)`,
+        `Gmail-Sync ab ${data.seit ?? HISTORY_START}: ${data.sentGescannt ?? 0} gesendet gelesen, `
+        + `${data.markiert ?? 0} als Bewerbung markiert → ${data.sentGefuellt ?? 0} Jobs verknüpft, `
+        + `${data.ohneJob ?? 0} nur Mail · ${data.replyGefuellt ?? 0} Antworten`,
         'ok'
       );
       if ((data.sentGefuellt ?? 0) > 0 || (data.replyGefuellt ?? 0) > 0) {
