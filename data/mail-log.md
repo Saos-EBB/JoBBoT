@@ -28,3 +28,39 @@
 - 2026-07-22 14:05: drafted — 2nd Level IT-Techniker (m/w/d) — Education Group GmbH — office@aspire-education.com
 
 - 2026-07-23 12:00: drafted — Junior Javascript & Typescript Engineer — Dynatrace GmbH — office.linz@dynatrace.com
+
+- 2026-08-11 08:26: sent — 2nd-Level-Support V460 — Sprecher Automation — career@sprecher-automation.com
+
+- 2026-08-11 08:26: sent — 2nd-Level-Support V460 — Sprecher Automation — career@sprecher-automation.com
+
+- 2026-08-11 08:26: sent — Full Stack Developer (m/w/d) — Trenkwalder Personaldienste GmbH — info@trenkwalder.com
+
+- 2026-08-11 08:26: sent — Full Stack Developer (m/w/d) — Trenkwalder Personaldienste GmbH — info@trenkwalder.com
+
+- 2026-08-11 08:26: sent — Fullstack-Entwickler:in mit Java Backend und Vue/Nuxt Frontend — STRABAG — strabag.zirl@strabag.com
+
+- 2026-08-11 08:26: sent — Fullstack-Entwickler:in mit Java Backend und Vue/Nuxt Frontend — STRABAG — strabag.zirl@strabag.com
+
+- 2026-08-11 08:26: sent — Fullstack-Entwickler:in mit Java Backend und Vue/Nuxt Frontend — STRABAG — strabag.zirl@strabag.com
+
+- 2026-08-11 08:26: sent — (Junior) Software Developer (w/m/x) — epunkt GmbH — office@epunkt.com
+
+- 2026-08-11 08:26: sent — (Junior) Software Developer (w/m/x) — epunkt GmbH — office@epunkt.com
+
+- 2026-08-11 08:26: sent — (Junior) Software Developer (w/m/x) — epunkt GmbH — office@epunkt.com
+
+- 2026-08-11 08:26: sent — (Junior) Software Developer (w/m/x) — epunkt GmbH — office@epunkt.com
+
+- 2026-08-11 08:26: sent — (Junior) Software Developer (w/m/x) — epunkt GmbH — office@epunkt.com
+
+- 2026-08-11 08:26: sent — (Junior) Software Developer (w/m/x) — epunkt GmbH — office@epunkt.com
+
+- 2026-08-11 08:26: sent — (Junior) Software Developer (w/m/x) — epunkt GmbH — office@epunkt.com
+
+- 2026-08-11 08:26: sent — (Junior) Software Developer (w/m/x) — epunkt GmbH — office@epunkt.com
+
+- 2026-08-11 08:26: sent — (Junior) Software Developer (w/m/x) — epunkt GmbH — office@epunkt.com
+
+- 2026-08-11 08:26: sent — Lehre Applikationsentwickler - Coding — Starlim Spritzguss Gmbh — office@starlim-sterner.com
+
+- 2026-08-11 08:26: sent — Praktikant — Ahoi Kapptn! — ahoi@ahoikapptn.com
