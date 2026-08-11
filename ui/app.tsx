@@ -403,6 +403,7 @@ const CSS = `
    --fit-matched für "gesendet", --ok für "Antwort" (deckt sich mit .tag--reply, das
    dieselbe Farbe für "hat geantwortet" in der Job-Liste nutzt). */
 .cal { display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--ink); grid-column:span 2; }
+.cal__head-row { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
 .cal__body { flex:1; min-height:0; overflow-y:auto; padding:22px 24px; display:flex; flex-direction:column; gap:28px; }
 .cal__month-h { font-size:13px; font-weight:600; color:var(--text); margin-bottom:8px; text-transform:capitalize; }
 .cal__weekday-row, .cal__grid { display:grid; grid-template-columns:repeat(7, 34px); gap:4px; }
@@ -806,6 +807,7 @@ export default function JobbotUI() {
   const [merging, setMerging] = useState(false);
   const [replyOnly, setReplyOnly] = useState(false);
   const [repliesFetching, setRepliesFetching] = useState(false);
+  const [gmailSyncing, setGmailSyncing] = useState(false);
   const [anschreibenStatus, setAnschreibenStatus] = useState<AnschreibenRunStatus | null>(null);
   const [anschreibenSections, setAnschreibenSections] = useState<LoadGridSection[]>([]);
   const [scrapeStarting, setScrapeStarting] = useState(false);
@@ -1025,6 +1027,30 @@ export default function JobbotUI() {
       say(`Antworten-Abruf fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`, 'err');
     } finally {
       setRepliesFetching(false);
+    }
+  }
+
+  // Trägt sentAt/replyReceivedAt nach, die im Job-JSON fehlen — read-only gegenüber
+  // Gmail, füllt nur Lücken (siehe POST /api/gmail-sync). Läuft synchron durch zwei
+  // IMAP-Ordner, kann bei großem Postfach also dauern; deshalb der Fetching-Zustand.
+  async function syncGmail() {
+    setGmailSyncing(true);
+    try {
+      const res = await fetch('/api/gmail-sync', { method: 'POST' });
+      const data = await res.json() as { sentGefuellt?: number; replyGefuellt?: number; ohneTreffer?: number; error?: string };
+      if (!res.ok) { say(`Gmail-Sync fehlgeschlagen: ${data.error}`, 'err'); return; }
+      say(
+        `Gmail-Sync: ${data.sentGefuellt ?? 0}× sentAt ergänzt, ${data.replyGefuellt ?? 0}× Antwort, ${data.ohneTreffer ?? 0} ohne Treffer`,
+        'ok'
+      );
+      if ((data.sentGefuellt ?? 0) > 0 || (data.replyGefuellt ?? 0) > 0) {
+        refetchJobs();
+        fetch('/api/calendar').then(r => r.json()).then(setCalendarEvents);
+      }
+    } catch (err) {
+      say(`Gmail-Sync fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`, 'err');
+    } finally {
+      setGmailSyncing(false);
     }
   }
 
@@ -1522,8 +1548,23 @@ export default function JobbotUI() {
         /* ---------- Kalender ---------- */
         <section className="cal">
           <header className="dt__head">
-            <div className="dt__firma">Kalender</div>
-            <div className="dt__titel">Wann Bewerbungen rausgingen und wann Antworten zurückkamen.</div>
+            <div className="cal__head-row">
+              <div>
+                <div className="dt__firma">Kalender</div>
+                <div className="dt__titel">Wann Bewerbungen rausgingen und wann Antworten zurückkamen.</div>
+              </div>
+              {/* Sitzt hier statt in der Sidebar, weil der Sync genau das füllt, was
+                  diese Ansicht anzeigt — ein leerer Kalender ist der Moment, in dem
+                  man ihn sucht. */}
+              <button
+                className="btn btn--ghost"
+                disabled={gmailSyncing}
+                onClick={syncGmail}
+                title="Liest Gesendet-Ordner und Inbox und trägt fehlende Daten nach. Ändert in Gmail nichts."
+              >
+                <Mail /> {gmailSyncing ? 'Synct…' : 'Gmail-Sync'}
+              </button>
+            </div>
           </header>
           <div className="cal__body">
             <CalendarView
