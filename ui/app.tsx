@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import type { Job, Fit } from '../scrapers/interface.ts';
 import { FOLDER_IDS, inFolder, canGenerateAnschreiben, type FolderId } from '../lib/folders.ts';
+import { HISTORY_START, monthsDescending } from '../lib/calendar.ts';
 
 // /api/jobs joint das Anschreiben serverseitig dazu (siehe scripts/ui-server.ts) —
 // es lebt in data/anschreiben/{slug}.md, nicht im Job-JSON. Deshalb ist `brief` hier
@@ -405,7 +406,16 @@ const CSS = `
 .cal { display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--ink); grid-column:span 2; }
 .cal__head-row { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
 .cal__body { flex:1; min-height:0; overflow-y:auto; padding:22px 24px; display:flex; flex-direction:column; gap:28px; }
-.cal__month-h { font-size:13px; font-weight:600; color:var(--text); margin-bottom:8px; text-transform:capitalize; }
+.cal__month-h {
+  display:flex; align-items:center; gap:8px; width:100%; padding:4px 0;
+  font-size:13px; font-weight:600; color:var(--text); margin-bottom:8px;
+  text-transform:capitalize; text-align:left; cursor:pointer;
+}
+.cal__month-h:hover { color:var(--text); }
+.cal__month-h:hover .cal__month-sum { color:var(--muted); }
+.cal__caret { display:inline-block; color:var(--dim); font-size:10px; transition:transform .12s ease; }
+.cal__caret--offen { transform:rotate(90deg); }
+.cal__month-sum { font-family:var(--mono); font-size:10px; font-weight:400; color:var(--dim); text-transform:none; }
 .cal__weekday-row, .cal__grid { display:grid; grid-template-columns:repeat(7, 34px); gap:4px; }
 .cal__weekday-row { font-family:var(--mono); font-size:9.5px; color:var(--dim); text-align:center; margin-bottom:4px; }
 .cal__sq {
@@ -629,9 +639,11 @@ type DayBucket = { sent: CalendarEvent[]; reply: CalendarEvent[] };
 // Ein Monatsblock: Monatsüberschrift + 7-Spalten-Wochenraster (Mo–So), führende
 // Leerzellen für den Wochentags-Versatz des Monatsersten. Kein Auffüllen am Ende
 // der letzten Woche — optisch unauffällig, spart eine zweite Padding-Rechnung.
-function CalendarMonth({ month, byDate, onHover, onOpenDay }: {
+function CalendarMonth({ month, byDate, offen, onToggle, onHover, onOpenDay }: {
   month: string;
   byDate: Map<string, DayBucket>;
+  offen: boolean;
+  onToggle: () => void;
   onHover: (h: { x: number; y: number; text: string } | null) => void;
   onOpenDay: (date: string) => void;
 }) {
@@ -644,9 +656,26 @@ function CalendarMonth({ month, byDate, onHover, onOpenDay }: {
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
 
+  // Monatssumme in der Überschrift: ein eingeklappter Monat soll trotzdem sagen, ob
+  // sich das Aufklappen lohnt.
+  let sentSumme = 0;
+  let replySumme = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const bucket = byDate.get(`${month}-${String(d).padStart(2, '0')}`);
+    sentSumme += bucket?.sent.length ?? 0;
+    replySumme += bucket?.reply.length ?? 0;
+  }
+  const summe = [sentSumme && `${sentSumme} gesendet`, replySumme && `${replySumme} Antwort${replySumme > 1 ? 'en' : ''}`]
+    .filter(Boolean).join(' · ');
+
   return (
     <div>
-      <div className="cal__month-h">{label}</div>
+      <button className="cal__month-h" onClick={onToggle} aria-expanded={offen}>
+        <span className={'cal__caret' + (offen ? ' cal__caret--offen' : '')}>▸</span>
+        {label}
+        <span className="cal__month-sum">{summe || 'keine Aktivität'}</span>
+      </button>
+      {!offen ? null : <>
       <div className="cal__weekday-row">
         {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(d => <span key={d}>{d}</span>)}
       </div>
@@ -674,6 +703,7 @@ function CalendarMonth({ month, byDate, onHover, onOpenDay }: {
           );
         })}
       </div>
+      </>}
     </div>
   );
 }
@@ -692,13 +722,32 @@ function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; onOpenJo
     return m;
   }, [events]);
 
+  // Durchgehende Reihe ab HISTORY_START bis mindestens heute — auch Monate ohne
+  // Aktivität bekommen einen Block, damit der Zeitraum, den der Gmail-Sync scannt,
+  // im Kalender vollständig sichtbar ist statt auf die Treffermonate zusammenzuschrumpfen.
   const months = useMemo(() => {
-    const set = new Set<string>();
-    for (const date of byDate.keys()) set.add(date.slice(0, 7));
-    return [...set].sort().reverse();
+    const letzter = [...byDate.keys()].sort().at(-1) ?? '';
+    const heute = new Date().toISOString().slice(0, 10);
+    return monthsDescending(HISTORY_START, letzter > heute ? letzter : heute);
   }, [byDate]);
 
   const activeDates = useMemo(() => [...byDate.keys()].sort(), [byDate]);
+
+  // Monate ohne Aktivität starten eingeklappt: sie sind nur da, um den Zeitraum
+  // lückenlos zu zeigen, und sollen die Monate mit Inhalt nicht wegdrücken. Gespeichert
+  // wird nur die Abweichung vom Standard, nicht der Zustand selbst — sonst müsste die
+  // Menge jedes Mal nachgezogen werden, wenn neue Ereignisse einen Monat füllen.
+  const [umgeschaltet, setUmgeschaltet] = useState<Set<string>>(new Set());
+  const mitAktivitaet = useMemo(
+    () => new Set([...byDate.keys()].map(d => d.slice(0, 7))),
+    [byDate]
+  );
+  const istOffen = (m: string) => (umgeschaltet.has(m) ? !mitAktivitaet.has(m) : mitAktivitaet.has(m));
+  const umschalten = (m: string) => setUmgeschaltet(prev => {
+    const next = new Set(prev);
+    if (next.has(m)) next.delete(m); else next.add(m);
+    return next;
+  });
 
   const [activeDay, setActiveDay] = useState<string | null>(null);
   const [hover, setHover] = useState<{ x: number; y: number; text: string } | null>(null);
@@ -720,7 +769,9 @@ function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; onOpenJo
     return () => window.removeEventListener('keydown', onKey);
   }, [activeDay, activeDates]);
 
-  if (months.length === 0) {
+  // Ganz ohne Ereignisse wäre der Kalender nur eine Reihe leerer Monatsköpfe — die
+  // Erklärung ist dann nützlicher als das Raster.
+  if (events.length === 0) {
     return (
       <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
         <div className="empty__h">Noch keine Aktivität</div>
@@ -734,7 +785,15 @@ function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; onOpenJo
   return (
     <>
       {months.map(month => (
-        <CalendarMonth key={month} month={month} byDate={byDate} onHover={setHover} onOpenDay={setActiveDay} />
+        <CalendarMonth
+          key={month}
+          month={month}
+          byDate={byDate}
+          offen={istOffen(month)}
+          onToggle={() => umschalten(month)}
+          onHover={setHover}
+          onOpenDay={setActiveDay}
+        />
       ))}
       {hover && <div className="cal__hover" style={{ left: hover.x + 14, top: hover.y + 14 }}>{hover.text}</div>}
       {activeDay && (
@@ -1037,10 +1096,17 @@ export default function JobbotUI() {
     setGmailSyncing(true);
     try {
       const res = await fetch('/api/gmail-sync', { method: 'POST' });
-      const data = await res.json() as { sentGefuellt?: number; replyGefuellt?: number; ohneTreffer?: number; error?: string };
+      const data = await res.json() as {
+        sentGescannt?: number; sentGefuellt?: number;
+        replyGescannt?: number; replyGefuellt?: number;
+        ohneTreffer?: number; seit?: string; error?: string;
+      };
       if (!res.ok) { say(`Gmail-Sync fehlgeschlagen: ${data.error}`, 'err'); return; }
+      // Gelesene Mails mitmelden: ohne sie lässt ein "0 ergänzt" offen, ob das Postfach
+      // nichts hergab oder die Zuordnung nichts fand.
       say(
-        `Gmail-Sync: ${data.sentGefuellt ?? 0}× sentAt ergänzt, ${data.replyGefuellt ?? 0}× Antwort, ${data.ohneTreffer ?? 0} ohne Treffer`,
+        `Gmail-Sync ab ${data.seit ?? HISTORY_START}: ${data.sentGescannt ?? 0} gesendete gelesen → ${data.sentGefuellt ?? 0}× sentAt, `
+        + `${data.replyGescannt ?? 0} Inbox-Mails → ${data.replyGefuellt ?? 0}× Antwort (${data.ohneTreffer ?? 0} ohne Treffer)`,
         'ok'
       );
       if ((data.sentGefuellt ?? 0) > 0 || (data.replyGefuellt ?? 0) > 0) {

@@ -210,6 +210,14 @@ Der Sidebar-Tab „Kalender" zeigt, wann Bewerbungen rausgingen (`sentAt`) und
 wann Antworten zurückkamen (`replyReceivedAt`) — Tag = Quadrat, Woche = Zeile,
 Monat = Block, neuester Monat zuerst. Klick auf einen Tag öffnet ein Popup mit
 den Einträgen des Tages und springt von dort zur Job-Detailansicht.
+
+Die Monatsreihe läuft lückenlos von `HISTORY_START` (`lib/calendar.ts`, aktuell
+`2026-07-01`) bis heute — also über denselben Zeitraum, den der Gmail-Sync
+scannt. Monate ohne Aktivität bekommen trotzdem einen Block, damit weit
+auseinanderliegende Monate keine Nachbarschaft vortäuschen; sie starten
+eingeklappt. Jeder Monatskopf ist ein Umschalter, die Summe daneben
+(„2 gesendet · 1 Antwort") verrät auch im eingeklappten Zustand, ob sich das
+Aufklappen lohnt.
 Antworten werden nicht automatisch erkannt: ein „Antworten abrufen"-Button im
 „Gesendet"-Ordner (Verlauf) durchsucht die Gmail-Inbox per
 `POST /api/mail/replies/fetch` (E-Mail+Betreff-Abgleich, keine Message-ID) und
@@ -223,6 +231,16 @@ Job-JSON fehlen (`POST /api/gmail-sync`): der
 Gesendet-Ordner liefert `sentAt`, die Inbox `replyReceivedAt`. Gedacht für
 Bewerbungen, die vor der Einführung dieser Felder rausgingen oder händisch
 am Bot vorbei — laufende Versände schreiben ihr `sentAt` ohnehin selbst.
+
+Gescannt wird ab `HISTORY_START` (`lib/calendar.ts`, aktuell `2026-07-01`) —
+derselbe Startpunkt, ab dem der Kalender anzeigt. Die Meldung nennt neben den
+ergänzten auch die **gelesenen** Mails (`sentGescannt`/`replyGescannt`): ein
+bloßes „0 ergänzt" verrät sonst nicht, ob das Postfach leer war oder nur nichts
+zugeordnet werden konnte.
+
+Damit ein Job überhaupt zuordenbar ist, braucht er eine `job.email` — die füllt
+erst der Anschreiben-Lauf (`findEmail()`). Jobs, die nie durch diesen Lauf
+gingen, kann der Sync grundsätzlich nicht treffen.
 
 Drei Eigenschaften, auf die man sich verlassen kann:
 
