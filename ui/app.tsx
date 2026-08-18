@@ -87,6 +87,27 @@ type CalendarEvent = { date: string; type: 'sent' | 'reply'; jobId: string | nul
  * einzige ist, das die App verlässt.
  * ------------------------------------------------------------------ */
 
+// Ziele der Mehrfachaktion "Verschieben" — bewusst nur die drei Ordner, die reine
+// Einsortierung sind. Entwurf/Freigegeben/Postausgang/Gesendet sind Pipeline-Stufen
+// mit Vorbedingungen (Brief da? Gmail-Entwurf angelegt?), die ein Sammel-Zug still
+// überspringen würde; die bleiben bei ihren Einzelaktionen im Detail.
+//
+// "Jobs" und "Aussortiert" sind BEIDE status 'triaged' und unterscheiden sich nur im
+// fit (lib/folders.ts deriveStatus: brutal → aussortiert, sonst → jobs). Ein Zug nach
+// Jobs muss ein brutales Urteil deshalb mitnehmen, sonst fällt der Job sofort wieder
+// zurück nach Aussortiert — sichtbar als "nichts passiert".
+type MoveTarget = 'jobs' | 'aussortiert' | 'geloescht';
+const MOVE_TARGETS: { value: MoveTarget; label: string }[] = [
+  { value: 'jobs', label: 'Jobs' },
+  { value: 'aussortiert', label: 'Aussortiert' },
+  { value: 'geloescht', label: 'Gelöscht' },
+];
+const MOVE_PATCH: Record<MoveTarget, (job: Job) => Partial<Pick<Job, 'status' | 'fit'>>> = {
+  jobs: job => (job.fit === 'brutal' ? { status: 'triaged', fit: 'offstack' } : { status: 'triaged' }),
+  aussortiert: () => ({ status: 'triaged', fit: 'brutal' }),
+  geloescht: () => ({ status: 'geloescht' }),
+};
+
 const FIT: Record<Fit, { label: string; color: string }> = {
   matched: { label: 'Match', color: 'var(--fit-matched)' },
   offstack: { label: 'Offstack', color: 'var(--fit-offstack)' },
@@ -263,14 +284,21 @@ const CSS = `
 .row--dim:hover, .row--dim.row--on { opacity:1; }
 .rail { position:absolute; left:0; top:0; bottom:0; width:3px; }
 
+/* wrap, weil die Listenspalte schmal ist: mit fünf Aktionen passt die Leiste dort
+   nicht mehr in eine Zeile und die letzten Knöpfe verschwänden unter der Detailspalte.
+   Kein flex:1-Spacer mehr — der würde beim Umbruch eine ganze Zeile fressen. */
 .selbar {
-  display:flex; align-items:center; gap:10px; padding:8px 12px;
+  display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding:8px 12px;
   border-bottom:1px solid var(--line-soft); background:var(--raised);
   font-size:12px; color:var(--muted);
 }
-.selbar__n { font-weight:500; color:var(--text); }
-.selbar__spacer { flex:1; }
+.selbar__n { flex:none; font-weight:500; color:var(--text); margin-right:2px; }
+.selbar .btn { padding:5px 10px; white-space:nowrap; }
 .sel__hint { color:var(--dim); }
+/* Natives <select> auf .btn getrimmt: eigene Optik, aber das Menü bleibt das des
+   Betriebssystems (Tastatur, Touch, kein offener Zustand im React-State). */
+.selbar__menu { appearance:none; background:transparent; cursor:pointer; padding-right:11px; }
+.selbar__menu option { background:var(--panel); color:var(--text); }
 
 .row__l1 { display:flex; align-items:baseline; gap:8px; margin-bottom:2px; }
 .row__firma { font-weight:600; font-size:13px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -1308,12 +1336,18 @@ export default function JobbotUI() {
       .sort((a, b) => daysAgo(a.scrapedAt) - daysAgo(b.scrapedAt));
   }, [inCurrentFolder, fit, q, folder, replyOnly]);
 
-  // Der "jobs"-Ordner mischt ungefilterte (status "new") mit getriagten Jobs, aber nur
-  // letztere kann der Anschreiben-Lauf verarbeiten (siehe canGenerateAnschreiben).
-  // Getrennt gehalten, damit Checkboxen und "Alle auswählen" gar nicht erst anbieten,
-  // was der Server hinterher still wegwerfen müsste.
-  const selectable = useMemo(() => list.filter(canGenerateAnschreiben), [list]);
-  const ungefiltert = list.length - selectable.length;
+  // Auswählbar ist alles ausser Gesendetem — das ist überall sonst in der UI
+  // schreibgeschützt (siehe Detail-Leiste), und eine Mehrfachaktion darf dieselbe
+  // Regel nicht hintenrum aushebeln.
+  const selectable = useMemo(() => list.filter(j => j.status !== 'gesendet'), [list]);
+  // Anschreiben ist die eine Mehrfachaktion mit einer engeren Bedingung als
+  // "ausgewählt": der Lauf verarbeitet nur getriagte, nicht-brutale Jobs
+  // (canGenerateAnschreiben). Statt sie unauswählbar zu machen — sie sind ja für
+  // Löschen/Verschieben sehr wohl gemeint — steht die Zahl am Knopf.
+  const briefbar = useMemo(
+    () => [...selectedJobIds].filter(id => { const j = jobs.find(x => x.id === id); return j != null && canGenerateAnschreiben(j); }),
+    [selectedJobIds, jobs],
+  );
 
   const job = jobs.find(j => j.id === sel) ?? null;
   const shown = list.some(j => j.id === sel) ? job : null;
@@ -1374,6 +1408,40 @@ export default function JobbotUI() {
     });
     if (res.ok) patch(id, { fit });
     else say('Speichern fehlgeschlagen', 'err');
+  }
+
+  // Mehrfachaktion = dieselbe Route wie die Einzelaktion (POST /api/jobs/:id), n-mal.
+  // Kein Sammel-Endpunkt: jeder Job ist eine eigene JSON-Datei (storage/json-store.ts),
+  // serverseitig wäre das exakt dieselbe Schleife — nur an einer Stelle mehr, die den
+  // Teilerfolg-Fall (k von n gespeichert) nochmal eigens beschreiben müsste.
+  //
+  // Pessimistisch wie move(): der lokale State wird erst nach der Antwort angefasst,
+  // und nur für die Jobs, die wirklich durchkamen.
+  async function runBulk(patchFor: (job: JobWithBrief) => Partial<Pick<Job, 'status' | 'fit'>>, verb: string) {
+    const targets = [...selectedJobIds]
+      .map(id => jobs.find(j => j.id === id))
+      .filter((j): j is JobWithBrief => j != null);
+    if (targets.length === 0) return;
+
+    const done = (
+      await Promise.all(
+        targets.map(async j => {
+          const p = patchFor(j);
+          const res = await fetch(`/api/jobs/${j.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(p),
+          });
+          return res.ok ? { id: j.id, p } : null;
+        }),
+      )
+    ).filter((r): r is { id: string; p: Partial<Pick<Job, 'status' | 'fit'>> } => r != null);
+
+    setJobs(js => js.map(j => { const hit = done.find(d => d.id === j.id); return hit ? { ...j, ...hit.p } : j; }));
+    setSelectedJobIds(new Set());
+    const failed = targets.length - done.length;
+    if (failed) say(`${done.length} ${verb}, ${failed} fehlgeschlagen`, 'err');
+    else say(`${done.length} ${verb}`);
   }
 
   // "Entwurf erzeugen" heißt: echten Gmail-Entwurf per IMAP anlegen
@@ -2022,7 +2090,7 @@ export default function JobbotUI() {
               </button>
             </div>
           )}
-          {folder === 'jobs' && selectable.length > 0 && (
+          {selectable.length > 0 && (
             <label style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 0 4px', fontSize: 12, color: 'var(--muted)' }}>
               <input
                 type="checkbox"
@@ -2031,28 +2099,72 @@ export default function JobbotUI() {
                 checked={selectable.every(j => selectedJobIds.has(j.id))}
                 onChange={e => setSelectedJobIds(e.target.checked ? new Set(selectable.map(j => j.id)) : new Set())}
               />
-              Alle gefilterten auswählen ({selectable.length})
-              {ungefiltert > 0 && <span className="sel__hint">· {ungefiltert} ungefiltert</span>}
+              Alle sichtbaren auswählen ({selectable.length})
             </label>
           )}
         </div>
 
-        {/* Auswahl nur im "jobs"-Ordner — der enthält laut STATUS_MAP aber AUCH
-            ungefilterte Jobs (status "new"), für die es kein Anschreiben gibt.
-            Die sind hier nicht auswählbar, statt vom Server still verworfen zu werden. */}
-        {folder === 'jobs' && selectedJobIds.size > 0 && (
+        {/* Auswahl-Leiste, in jedem Ordner. Die Aktionen unterscheiden sich nicht nach
+            Ordner, sondern nach dem, was der einzelne Job hergibt: Anschreiben nur für
+            getriagte, nicht-brutale Jobs (briefbar), alles andere für jede Auswahl.
+            Die beiden Menüs sind native <select> — ein Klick, Tastatur inklusive, und
+            kein eigener Dropdown-Zustand, der offen bleiben könnte. */}
+        {selectedJobIds.size > 0 && (
           <div className="selbar">
             <span className="selbar__n">{selectedJobIds.size} ausgewählt</span>
-            <span className="selbar__spacer" />
-            <button className="btn btn--ghost" onClick={() => setSelectedJobIds(new Set())}>
-              Auswahl aufheben
+
+            <select
+              className="btn selbar__menu"
+              value=""
+              aria-label="Auswahl verschieben nach"
+              onChange={e => {
+                const t = e.target.value as MoveTarget | '';
+                if (t) runBulk(MOVE_PATCH[t], `nach ${MOVE_TARGETS.find(m => m.value === t)!.label} verschoben`);
+              }}
+            >
+              <option value="">Verschieben …</option>
+              {MOVE_TARGETS.map(m => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
+
+            <select
+              className="btn selbar__menu"
+              value=""
+              aria-label="Urteil für Auswahl setzen"
+              onChange={e => {
+                const f = e.target.value as Fit | '';
+                if (f) runBulk(() => ({ fit: f }), `auf ${FIT[f].label} gesetzt`);
+              }}
+            >
+              <option value="">Urteil …</option>
+              {(Object.keys(FIT) as Fit[]).map(f => (
+                <option key={f} value={f}>{FIT[f].label}</option>
+              ))}
+            </select>
+
+            <button
+              className="btn btn--ghost btn--danger"
+              onClick={() => runBulk(MOVE_PATCH.geloescht, 'gelöscht')}
+            >
+              <Trash2 /> Löschen
             </button>
+
             <button
               className="btn btn--primary"
-              disabled={anschreibenStarting || anschreibenStatus?.status === 'running'}
-              onClick={() => runAnschreibenNow([...selectedJobIds])}
+              disabled={briefbar.length === 0 || anschreibenStarting || anschreibenStatus?.status === 'running'}
+              title={
+                briefbar.length === selectedJobIds.size
+                  ? undefined
+                  : `Nur ${briefbar.length} der ${selectedJobIds.size} sind getriagt und nicht brutal — erst den Filter laufen lassen`
+              }
+              onClick={() => runAnschreibenNow(briefbar)}
             >
-              <FileText /> Anschreiben erstellen
+              <FileText /> Anschreiben ({briefbar.length})
+            </button>
+
+            <button className="btn btn--ghost" onClick={() => setSelectedJobIds(new Set())}>
+              <XCircle /> Aufheben
             </button>
           </div>
         )}
@@ -2066,22 +2178,20 @@ export default function JobbotUI() {
           ) : (
             list.map(j => (
               <div key={j.id} className="row-wrap">
-                {folder === 'jobs' && (
-                  <input
-                    type="checkbox"
-                    className="row__check"
-                    disabled={!canGenerateAnschreiben(j)}
-                    checked={selectedJobIds.has(j.id)}
-                    onChange={() => toggleSelect(j.id)}
-                    onClick={e => e.stopPropagation()}
-                    title={canGenerateAnschreiben(j) ? undefined : 'Noch nicht gefiltert — erst den Filter laufen lassen'}
-                    aria-label={
-                      canGenerateAnschreiben(j)
-                        ? `${j.title} auswählen`
-                        : `${j.title} — noch nicht gefiltert, kein Anschreiben möglich`
-                    }
-                  />
-                )}
+                <input
+                  type="checkbox"
+                  className="row__check"
+                  disabled={j.status === 'gesendet'}
+                  checked={selectedJobIds.has(j.id)}
+                  onChange={() => toggleSelect(j.id)}
+                  onClick={e => e.stopPropagation()}
+                  title={j.status === 'gesendet' ? 'Gesendet — schreibgeschützt' : undefined}
+                  aria-label={
+                    j.status === 'gesendet'
+                      ? `${j.title} — gesendet, schreibgeschützt`
+                      : `${j.title} auswählen`
+                  }
+                />
                 <button
                   className={'row' + (sel === j.id ? ' row--on' : '') + (j.fit === 'brutal' ? ' row--dim' : '')}
                   onClick={() => open(j.id)}
