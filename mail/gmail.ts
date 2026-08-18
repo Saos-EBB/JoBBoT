@@ -12,7 +12,7 @@ import { loadCc } from '../lib/cc.ts';
 
 export const MAIL_LOG_PATH = 'data/mail-log.md';
 
-export async function logMailAction(job: Job, action: 'drafted' | 'sent', logPath = MAIL_LOG_PATH): Promise<void> {
+export async function logMailAction(job: Job, action: 'drafted' | 'sent' | 'followup-drafted' | 'followup-sent', logPath = MAIL_LOG_PATH): Promise<void> {
   const ts = new Date().toISOString().slice(0, 16).replace('T', ' ');
   await appendFile(logPath, `\n- ${ts}: ${action} — ${job.title} — ${job.company} — ${job.email}\n`);
 }
@@ -45,6 +45,38 @@ export async function composeEmail(job: Job, profile: ProfileData): Promise<Comp
     to: job.email,
     subject: `Bewerbung als ${job.title} bei ${job.company}`,
     text: `Sehr geehrte Damen und Herren,\n\n${body}\n\nMit freundlichen Grüßen\n${profile.name}${cvLink}\n\nFalls Interesse an meinen Projekten besteht: saos-repo.vercel.app`,
+  };
+}
+
+// Nachfass zur schon abgeschickten Bewerbung. Der Betreff ist ABSICHTLICH identisch mit
+// dem der Bewerbung: zum einen landet die Mail so im selben Gmail-Thread, zum anderen
+// rekonstruiert lib/mail-match.ts genau diesen Betreff, um eingehende Antworten einem Job
+// zuzuordnen ("Re: Bewerbung als X bei Y"). Ein eigener Nachfass-Betreff würde eine Antwort
+// darauf am Betreff-Tiebreaker vorbeilaufen lassen.
+//
+// Kein Anschreiben-Text: der ist beim Empfänger schon, ein zweites Mal derselbe Brief
+// liest sich wie ein kaputtes Skript (Kevin wollte deshalb ausdrücklich eine kurze Nachfrage).
+export async function composeFollowUp(job: Job, profile: ProfileData): Promise<ComposedEmail> {
+  if (!job.email) throw new Error(`Job ${job.id} hat keine E-Mail-Adresse`);
+
+  // Ohne sentAt (Altbestand) bleibt der Satz datumslos, statt ein Datum zu erfinden.
+  const datum = job.sentAt
+    ? ` am ${new Date(job.sentAt).toLocaleDateString('de-AT', { day: 'numeric', month: 'long', year: 'numeric' })}`
+    : '';
+
+  return {
+    to: job.email,
+    subject: `Bewerbung als ${job.title} bei ${job.company}`,
+    text: [
+      'Sehr geehrte Damen und Herren,',
+      '',
+      `ich habe mich${datum} bei Ihnen als ${job.title} beworben und wollte höflich nachfragen, ob meine Unterlagen angekommen sind und wie der aktuelle Stand ist.`,
+      '',
+      'Über eine kurze Rückmeldung würde ich mich freuen.',
+      '',
+      'Mit freundlichen Grüßen',
+      profile.name,
+    ].join('\n'),
   };
 }
 
