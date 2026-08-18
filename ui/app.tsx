@@ -1040,6 +1040,23 @@ export default function JobbotUI() {
     return () => es.close();
   }, []);
 
+  // Tschobbo-Hook Teil 2 (ui/tschobbo.js): Die geworfenen Klumpen hängen an
+  // <body>, nicht im React-Baum — ohne dieses Event blieben sie beim Wechsel auf
+  // Jobs/Kalender/… sichtbar. Beim Zurückkommen auf ein fertiges Grid wirft
+  // Tschobbo den letzten Stand neu auf (Animation wiederholt sich), weil die
+  // Klumpen beim Verlassen weggeräumt wurden. Läuft gerade ein Scrape, übernimmt
+  // der Stream oben — dann kein Nachbau.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('tschobbo:view', { detail: { active: view === 'scrape' } }));
+    if (view !== 'scrape' || scrapeStatus?.status === 'running' || scrapeSections.length === 0) return;
+    // Ein Frame Abstand: das Grid muss erst gemountet sein, sonst findet Tschobbo
+    // keine Quadrate als Wurfziele.
+    const raf = requestAnimationFrame(() => window.dispatchEvent(new CustomEvent('tschobbo:replay')));
+    return () => cancelAnimationFrame(raf);
+    // Absicht: nur beim Ansichtswechsel, nicht bei jeder Section-Änderung.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
+
   // Wie oben, fürs Filter-Lade-Grid — ein Event pro fertigem 10er-Batch je
   // Ergebnis-Kategorie (Match/Offstack/Brutal, siehe scripts/ui-server.ts).
   useEffect(() => {
@@ -1727,7 +1744,12 @@ export default function JobbotUI() {
               <LoadGridPanel
                 running={scrapeStatus?.status === 'running'}
                 sections={scrapeSections}
-                onClose={() => setScrapeSections([])}
+                onClose={() => {
+                  setScrapeSections([]);
+                  // Mit dem Grid gehen auch Tschobbos Klumpen (ui/tschobbo.js) —
+                  // sonst bliebe der Haufen ohne Grid im Bild stehen.
+                  window.dispatchEvent(new CustomEvent('tschobbo:view', { detail: { active: false } }));
+                }}
                 ghost
               />
             ) : (
