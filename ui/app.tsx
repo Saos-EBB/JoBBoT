@@ -71,7 +71,7 @@ type DuplicateGroup = { key: string; jobs: Job[] };
 // je gesetztem sentAt/replyReceivedAt, date als 'YYYY-MM-DD'. jobId ist null bei
 // gelabelten Bewerbungs-Mails, zu denen es keinen Job (mehr) gibt: die kommen aus
 // data/mail-events.json und haben nichts, wohin man springen könnte.
-type CalendarEvent = { date: string; type: 'sent' | 'reply'; jobId: string | null; title: string; company: string };
+type CalendarEvent = { date: string; type: 'sent' | 'reply' | 'followup'; jobId: string | null; title: string; company: string };
 
 /* ------------------------------------------------------------------ *
  * Design tokens
@@ -447,6 +447,8 @@ const CSS = `
    dieselbe Farbe für "hat geantwortet" in der Job-Liste nutzt). */
 .cal { display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--ink); grid-column:span 2; }
 .cal__head-row { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.cal__legende { display:flex; gap:14px; margin-top:8px; font-size:11px; color:var(--dim); }
+.cal__legende > span { display:flex; align-items:center; gap:5px; }
 .cal__body { flex:1; min-height:0; overflow-y:auto; padding:22px 24px; display:flex; flex-direction:column; gap:28px; }
 .cal__month-h {
   display:flex; align-items:center; gap:8px; width:100%; padding:4px 0;
@@ -466,9 +468,10 @@ const CSS = `
   font-family:var(--mono); font-size:10px; color:var(--dim);
 }
 .cal__sq--pad { visibility:hidden; }
-.cal__sq--sent { background:var(--fit-matched); border-color:transparent; color:var(--ink); }
-.cal__sq--reply { background:var(--ok); border-color:transparent; color:var(--ink); }
-.cal__sq--both { border-color:transparent; color:var(--ink); background:linear-gradient(135deg, var(--fit-matched) 50%, var(--ok) 50%); }
+/* Farbe kommt inline aus CAL_COLOR (ein Tag kann gesendet + nachgefasst + Antwort
+   tragen, das wären sonst sieben Kombinationsklassen) — hier bleibt nur, was für
+   jeden gefüllten Tag gleich ist. */
+.cal__sq--filled { border-color:transparent; color:var(--ink); }
 .cal__sq--active { cursor:pointer; }
 .cal__sq--active:hover { filter:brightness(1.15); }
 
@@ -677,14 +680,40 @@ function formatDayLong(date: string): string {
 function formatDayShort(date: string): string {
   return new Date(date + 'T00:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
 }
-function summarizeDay(date: string, sentN: number, replyN: number): string {
-  const parts: string[] = [];
-  if (sentN) parts.push(`${sentN} gesendet`);
-  if (replyN) parts.push(`${replyN} Antwort${replyN > 1 ? 'en' : ''}`);
+function summarizeDay(date: string, bucket: DayBucket | undefined): string {
+  const parts = CAL_TYPES.filter(t => bucket?.[t].length).map(t => CAL_LABEL[t](bucket![t].length));
   return `${formatDayShort(date)} · ${parts.join(' · ')}`;
 }
 
-type DayBucket = { sent: CalendarEvent[]; reply: CalendarEvent[] };
+type DayBucket = { sent: CalendarEvent[]; followup: CalendarEvent[]; reply: CalendarEvent[] };
+
+// Reihenfolge = Chronologie einer Bewerbung: raus, nachgehakt, Antwort. Sie bestimmt
+// auch, wie die Streifen im Tagesquadrat liegen und wie das Popup sortiert.
+const CAL_TYPES = ['sent', 'followup', 'reply'] as const;
+const CAL_COLOR: Record<CalendarEvent['type'], string> = {
+  sent: 'var(--fit-matched)',
+  followup: 'var(--fit-offstack)',
+  reply: 'var(--ok)',
+};
+const CAL_LABEL: Record<CalendarEvent['type'], (n: number) => string> = {
+  sent: n => `${n} gesendet`,
+  followup: n => `${n}× nachgefasst`,
+  reply: n => `${n} Antwort${n > 1 ? 'en' : ''}`,
+};
+
+// Ein Tag kann jetzt drei Sorten tragen — statt für jede Kombination eine eigene
+// CSS-Klasse (--sent/--reply/--both/…) wächst der Verlauf aus den tatsächlich
+// vorhandenen Farben. Eine Farbe bleibt einfarbig.
+function calBackground(farben: string[]): string {
+  if (farben.length === 1) return farben[0];
+  const stufe = 100 / farben.length;
+  const stops = farben.map((f, i) => `${f} ${i * stufe}% ${(i + 1) * stufe}%`);
+  return `linear-gradient(135deg, ${stops.join(', ')})`;
+}
+
+function calTypesOf(bucket: DayBucket | undefined): CalendarEvent['type'][] {
+  return CAL_TYPES.filter(t => (bucket?.[t].length ?? 0) > 0);
+}
 
 // Ein Monatsblock: Monatsüberschrift + 7-Spalten-Wochenraster (Mo–So), führende
 // Leerzellen für den Wochentags-Versatz des Monatsersten. Kein Auffüllen am Ende
@@ -708,15 +737,12 @@ function CalendarMonth({ month, byDate, offen, onToggle, onHover, onOpenDay }: {
 
   // Monatssumme in der Überschrift: ein eingeklappter Monat soll trotzdem sagen, ob
   // sich das Aufklappen lohnt.
-  let sentSumme = 0;
-  let replySumme = 0;
+  const summen: Record<CalendarEvent['type'], number> = { sent: 0, followup: 0, reply: 0 };
   for (let d = 1; d <= daysInMonth; d++) {
     const bucket = byDate.get(`${month}-${String(d).padStart(2, '0')}`);
-    sentSumme += bucket?.sent.length ?? 0;
-    replySumme += bucket?.reply.length ?? 0;
+    for (const t of CAL_TYPES) summen[t] += bucket?.[t].length ?? 0;
   }
-  const summe = [sentSumme && `${sentSumme} gesendet`, replySumme && `${replySumme} Antwort${replySumme > 1 ? 'en' : ''}`]
-    .filter(Boolean).join(' · ');
+  const summe = CAL_TYPES.filter(t => summen[t]).map(t => CAL_LABEL[t](summen[t])).join(' · ');
 
   return (
     <div>
@@ -734,18 +760,16 @@ function CalendarMonth({ month, byDate, offen, onToggle, onHover, onOpenDay }: {
           if (day == null) return <span key={'pad' + i} className="cal__sq cal__sq--pad" />;
           const date = `${month}-${String(day).padStart(2, '0')}`;
           const bucket = byDate.get(date);
-          const sentN = bucket?.sent.length ?? 0;
-          const replyN = bucket?.reply.length ?? 0;
-          const active = sentN > 0 || replyN > 0;
-          const cls = 'cal__sq'
-            + (sentN && replyN ? ' cal__sq--both' : sentN ? ' cal__sq--sent' : replyN ? ' cal__sq--reply' : '')
-            + (active ? ' cal__sq--active' : '');
+          const typen = calTypesOf(bucket);
+          const active = typen.length > 0;
+          const cls = 'cal__sq' + (active ? ' cal__sq--filled cal__sq--active' : '');
           return (
             <span
               key={date}
               className={cls}
+              style={active ? { background: calBackground(typen.map(t => CAL_COLOR[t])) } : undefined}
               onClick={active ? () => onOpenDay(date) : undefined}
-              onMouseMove={active ? (e) => onHover({ x: e.clientX, y: e.clientY, text: summarizeDay(date, sentN, replyN) }) : undefined}
+              onMouseMove={active ? (e) => onHover({ x: e.clientX, y: e.clientY, text: summarizeDay(date, bucket) }) : undefined}
               onMouseLeave={active ? () => onHover(null) : undefined}
             >
               {day}
@@ -765,7 +789,7 @@ function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; onOpenJo
   const byDate = useMemo(() => {
     const m = new Map<string, DayBucket>();
     for (const ev of events) {
-      const bucket = m.get(ev.date) ?? { sent: [], reply: [] };
+      const bucket = m.get(ev.date) ?? { sent: [], followup: [], reply: [] };
       bucket[ev.type].push(ev);
       m.set(ev.date, bucket);
     }
@@ -825,12 +849,13 @@ function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; onOpenJo
     return (
       <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
         <div className="empty__h">Noch keine Aktivität</div>
-        Sobald eine Bewerbung versendet wird oder eine Antwort eintrifft, erscheint sie hier.
+        Sobald eine Bewerbung versendet wird, du nachfasst oder eine Antwort eintrifft, erscheint sie hier.
       </div>
     );
   }
 
-  const dayEntries = activeDay ? [...(byDate.get(activeDay)?.sent ?? []), ...(byDate.get(activeDay)?.reply ?? [])] : [];
+  // Chronologisch nach CAL_TYPES: erst die Bewerbung, dann die Nachfassen, dann die Antwort.
+  const dayEntries = activeDay ? CAL_TYPES.flatMap(t => byDate.get(activeDay)?.[t] ?? []) : [];
 
   return (
     <>
@@ -859,7 +884,8 @@ function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; onOpenJo
                   onClick={ev.jobId ? () => onOpenJob(ev.jobId!) : undefined}
                   title={ev.jobId ? undefined : 'Aus Gmail — kein Job dazu im Bestand'}
                 >
-                  <span className="cal__entry__dot" style={{ background: ev.type === 'sent' ? 'var(--fit-matched)' : 'var(--ok)' }} />
+                  <span className="cal__entry__dot" style={{ background: CAL_COLOR[ev.type] }} />
+                  {ev.type === 'followup' && <span className="cal__entry__quelle">Nachfass</span>}
                   <span className="cal__entry__firma">{ev.company}</span>
                   <span className="cal__entry__titel">{ev.title}</span>
                   {!ev.jobId && <span className="cal__entry__quelle">nur Mail</span>}
@@ -1776,7 +1802,18 @@ export default function JobbotUI() {
             <div className="cal__head-row">
               <div>
                 <div className="dt__firma">Kalender</div>
-                <div className="dt__titel">Wann Bewerbungen rausgingen und wann Antworten zurückkamen.</div>
+                <div className="dt__titel">
+                  Wann Bewerbungen rausgingen, wann nachgefasst wurde und wann Antworten zurückkamen.
+                </div>
+                {/* Ohne Legende ist der dreifarbige Verlauf im Tagesquadrat nicht lesbar. */}
+                <div className="cal__legende">
+                  {CAL_TYPES.map(t => (
+                    <span key={t}>
+                      <span className="cal__entry__dot" style={{ background: CAL_COLOR[t] }} />
+                      {{ sent: 'gesendet', followup: 'nachgefasst', reply: 'Antwort' }[t]}
+                    </span>
+                  ))}
+                </div>
               </div>
               {/* Sitzt hier statt in der Sidebar, weil der Sync genau das füllt, was
                   diese Ansicht anzeigt — ein leerer Kalender ist der Moment, in dem

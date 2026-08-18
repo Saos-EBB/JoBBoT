@@ -261,9 +261,14 @@ const server = createServer(async (req, res) => {
   // flache Ereignisliste.
   if (req.method === 'GET' && url.pathname === '/api/calendar') {
     const jobs = await storage.list();
-    const events: { date: string; type: 'sent' | 'reply'; jobId: string | null; title: string; company: string }[] = [];
+    const events: { date: string; type: 'sent' | 'reply' | 'followup'; jobId: string | null; title: string; company: string }[] = [];
     for (const job of jobs) {
       if (job.sentAt) events.push({ date: job.sentAt.slice(0, 10), type: 'sent', jobId: job.id, title: job.title, company: job.company });
+      // Jeder Nachfass ein eigener Eintrag, nicht nur der letzte: der Kalender soll
+      // zeigen, WIE OFT und WANN nachgehakt wurde, nicht bloß dass es passiert ist.
+      for (const fu of job.followUps ?? []) {
+        events.push({ date: fu.at.slice(0, 10), type: 'followup', jobId: job.id, title: job.title, company: job.company });
+      }
       if (job.replyReceivedAt) events.push({ date: job.replyReceivedAt.slice(0, 10), type: 'reply', jobId: job.id, title: job.title, company: job.company });
     }
     // Gelabelte Bewerbungs-Mails ohne Job im Bestand (siehe lib/mail-events.ts) — jobId
