@@ -13,6 +13,11 @@ export interface DuplicateGroup {
 export function findDuplicates(jobs: Job[]): DuplicateGroup[] {
   const byKey = new Map<string, Job[]>();
   for (const job of jobs) {
+    // Ohne Firma (oder ohne Titel) trägt der Schlüssel zu wenig, um einen Merge zu
+    // rechtfertigen: jobs.at liefert für einen Teil der Inserate keine Firma, und
+    // zwei verschiedene "Software-Entwickler (m/w/d)" ohne Firma würden sonst zu
+    // einem verschmolzen — ein Merge löscht Dateien, ein verpasstes Duplikat nicht.
+    if (!job.company.trim() || !job.title.trim()) continue;
     const key = jobId(job);
     const group = byKey.get(key);
     if (group) group.push(job);

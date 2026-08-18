@@ -70,3 +70,34 @@ test('planMerge: same stored id for both duplicates (real re-scrape) still resol
   assert.equal(plan.scrapedAt, a.scrapedAt);
   assert.deepEqual(plan.remove, [a]);
 });
+
+// Der Fall aus den echten Daten: dieselbe Stelle auf karriere.at und jobs.at, die
+// Titel unterscheiden sich NUR im Gedankenstrich (karriere.at " – ", jobs.at "  ").
+// normalizeTitle hat vorher nur Whitespace kollabiert, Satzzeichen blieben stehen —
+// zwei ids, kein Duplikat.
+test('finds duplicates that differ only in punctuation across portals', () => {
+  const a = job({ title: 'Technical Support Engineer (m/w/d) – 1st Level (AMR/Robotics)', company: 'AGILOX Services GmbH' });
+  const b = job({ title: 'Technical Support Engineer (m/w/d)  1st Level (AMR/Robotics)', company: 'AGILOX Services GmbH' });
+  assert.equal(findDuplicates([a, b]).length, 1);
+});
+
+test('gender suffix on the noun does not split a group', () => {
+  const a = job({ title: 'Softwareentwickler:in Backend', company: 'Test GmbH' });
+  const b = job({ title: 'Softwareentwickler Backend', company: 'Test GmbH' });
+  assert.equal(findDuplicates([a, b]).length, 1);
+});
+
+// Gegenprobe zum Suffix-Strip: "in" am Wortende ohne Trenner bleibt Teil des Wortes.
+test('a word merely ending in "in" is not treated as a gender suffix', () => {
+  const a = job({ title: 'Marketing Manager Berlin', company: 'Test GmbH' });
+  const b = job({ title: 'Marketing Manager Berl', company: 'Test GmbH' });
+  assert.deepEqual(findDuplicates([a, b]), []);
+});
+
+// Firmenlose Jobs (jobs.at liefert die Firma nicht immer) dürfen nicht über den
+// Titel allein verschmolzen werden — ein Merge löscht Dateien.
+test('jobs without a company are never grouped, even with identical titles', () => {
+  const a = job({ title: 'Software-Entwickler (m/w/d)', company: '' });
+  const b = job({ title: 'Software-Entwickler (m/w/d)', company: '   ' });
+  assert.deepEqual(findDuplicates([a, b]), []);
+});
