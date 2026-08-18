@@ -38,6 +38,12 @@ export interface Job extends ScrapedJob {
   // den Bewerbungsstatus nicht, sie ist nur eine zusätzliche Information dazu. Gesetzt
   // über das generische storage.update(), wie job.email.
   replyReceivedAt?: string | null;
+  // Jeder Nachfass zu dieser Bewerbung, ältester zuerst. Trägt sowohl die Uhr für den
+  // nächsten fälligen Nachfass (lib/followup.ts rechnet ab dem letzten Eintrag, sonst ab
+  // sentAt) als auch die Historie fürs UI. 'draft' zählt bewusst mit: ein angelegter
+  // Gmail-Entwurf ist "erledigt für jetzt", sonst schlüge derselbe Job beim nächsten
+  // Blick wieder auf und bekäme einen zweiten Entwurf.
+  followUps?: { at: string; via: 'draft' | 'sent' }[];
   // Zeitpunkt des Übergangs zu status "gesendet", gesetzt an der Sendestelle selbst
   // statt aus updatedAt abgeleitet — updatedAt wird bei jedem storage.update() neu
   // gesetzt (z.B. wenn später replyReceivedAt eintrifft) und wäre danach kein

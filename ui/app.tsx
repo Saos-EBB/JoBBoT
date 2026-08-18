@@ -27,6 +27,7 @@ import {
 import type { Job, Fit } from '../scrapers/interface.ts';
 import { FOLDER_IDS, inFolder, canGenerateAnschreiben, type FolderId } from '../lib/folders.ts';
 import { HISTORY_START, monthsDescending } from '../lib/calendar.ts';
+import { FOLLOW_UP_DAYS, dueFollowUps, daysSinceLastContact } from '../lib/followup.ts';
 
 // /api/jobs joint das Anschreiben serverseitig dazu (siehe scripts/ui-server.ts) —
 // es lebt in data/anschreiben/{slug}.md, nicht im Job-JSON. Deshalb ist `brief` hier
@@ -293,6 +294,17 @@ const CSS = `
   font-size:12px; color:var(--muted);
 }
 .selbar__n { flex:none; font-weight:500; color:var(--text); margin-right:2px; }
+
+/* Nachfass-Zeile: flacher als .row (kein Snippet, kein Fit-Rail) — die Liste ist eine
+   Auswahlliste, kein Job-Browser. */
+.nf__row {
+  display:grid; grid-template-columns:auto 1fr 2fr auto; align-items:center; gap:10px;
+  padding:7px 4px; border-bottom:1px solid var(--line-soft); cursor:pointer; font-size:12.5px;
+}
+.nf__row:hover { background:var(--raised); }
+.nf__firma { color:var(--text); font-weight:500; }
+.nf__titel { color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nf__meta { display:flex; align-items:center; gap:6px; justify-self:end; }
 .selbar .btn { padding:5px 10px; white-space:nowrap; }
 .sel__hint { color:var(--dim); }
 /* Natives <select> auf .btn getrimmt: eigene Optik, aber das Menü bleibt das des
@@ -885,7 +897,7 @@ export default function JobbotUI() {
   const [detailOpen, setDetailOpen] = useState(false);
   // 'attachment'/'scrape'/'filter' sind keine Ordner (kein FolderId, kein Job-Filter)
   // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
-  const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben' | 'calendar'>('jobs');
+  const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben' | 'calendar' | 'nachfass'>('jobs');
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [attachment, setAttachment] = useState<AttachmentMeta | null | undefined>(undefined);
   const [cc, setCc] = useState<string | null | undefined>(undefined);
@@ -921,6 +933,10 @@ export default function JobbotUI() {
   // (matched/uncertain landen laut STATUS_MAP nirgendwo sonst), deshalb bei
   // Ordnerwechsel zurückgesetzt statt über Ordner hinweg mitzuschleppen.
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
+  // Eigene Auswahl statt selectedJobIds: die hängt am Ordner und wird bei jedem
+  // Ordnerwechsel geleert — der Nachfass-Tab ist kein Ordner.
+  const [followUpSelection, setFollowUpSelection] = useState<Set<string>>(new Set());
+  const [followUpBusy, setFollowUpBusy] = useState(false);
   // Sidebar-Ordner mit frisch generierten Anschreiben, die noch nicht angesehen wurden —
   // nur im Speicher (kein localStorage, bewusst so einfach wie möglich): ein Reload
   // löscht die Markierung, das ist unkritisch, weil die betroffenen Jobs im Ordner
@@ -1444,6 +1460,41 @@ export default function JobbotUI() {
     else say(`${done.length} ${verb}`);
   }
 
+  // Fällige Nachfassen. Die Regel lebt in lib/followup.ts, damit sie testbar ist und
+  // nicht zwischen Server und UI auseinanderdriftet.
+  const faellig = useMemo(() => dueFollowUps(jobs), [jobs]);
+
+  // Sammelaktion, ausdrücklich so gewollt: "all masse nicht alles einzeln klicken".
+  // Sequentiell statt Promise.all — anders als beim Statuspatch geht hier je Job eine
+  // echte IMAP/SMTP-Verbindung raus, die parallel zu Rate-Limits bei Gmail führt.
+  async function runFollowUps(via: 'draft' | 'sent') {
+    const ids = [...followUpSelection];
+    if (ids.length === 0) return;
+    setFollowUpBusy(true);
+    let ok = 0;
+    let letzterFehler = '';
+    for (const id of ids) {
+      try {
+        const res = await fetch(`/api/jobs/${id}/followup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ via }),
+        });
+        if (!res.ok) { letzterFehler = ((await res.json()) as { error?: string }).error ?? 'Fehler'; continue; }
+        const updated = (await res.json()) as JobWithBrief;
+        patch(id, { followUps: updated.followUps });
+        ok++;
+      } catch (err) {
+        letzterFehler = err instanceof Error ? err.message : String(err);
+      }
+    }
+    setFollowUpBusy(false);
+    setFollowUpSelection(new Set());
+    const verb = via === 'sent' ? 'gesendet' : 'als Entwurf angelegt';
+    if (ok === ids.length) say(`${ok} Nachfass ${verb}`);
+    else say(`${ok} von ${ids.length} ${verb} — ${letzterFehler}`, 'err');
+  }
+
   // "Entwurf erzeugen" heißt: echten Gmail-Entwurf per IMAP anlegen
   // (POST /api/jobs/:id/draft, siehe ui-server.ts), nicht bloß den Status umbiegen —
   // sonst würde die UI "postausgang" behaupten, ohne dass in Gmail je ein Entwurf
@@ -1638,6 +1689,11 @@ export default function JobbotUI() {
           <button className={'fld' + (view === 'anschreiben' ? ' fld--on' : '')} onClick={() => setView('anschreiben')}>
             <FileText />
             <span className="fld__label">Anschreiben</span>
+          </button>
+          <button className={'fld' + (view === 'nachfass' ? ' fld--on' : '')} onClick={() => setView('nachfass')}>
+            <RotateCw />
+            <span className="fld__label">Nachfassen</span>
+            {faellig.length > 0 && <span className="fld__n">{faellig.length}</span>}
           </button>
           {anschreibenStatus?.status === 'running' && (
             <div className="fld__bar">
@@ -1972,6 +2028,88 @@ export default function JobbotUI() {
             >
               Alle zusammenführen
             </button>
+          </footer>
+        </section>
+      ) : view === 'nachfass' ? (
+        /* ---------- Nachfassen ---------- */
+        <section className="att">
+          <header className="dt__head">
+            <div className="dt__firma">Nachfassen</div>
+            <div className="dt__titel">
+              Bewerbungen ohne Rückmeldung seit mindestens {FOLLOW_UP_DAYS} Tagen. Die Uhr läuft ab dem letzten
+              Kontakt, ein Nachfass setzt sie zurück — es bleibt fällig, bis eine Antwort da ist.
+            </div>
+          </header>
+          <div className="dt__body">
+            {faellig.length === 0 ? (
+              <div className="empty">
+                <div className="empty__h">Nichts offen</div>
+                Keine Bewerbung wartet länger als {FOLLOW_UP_DAYS} Tage auf eine Antwort.
+              </div>
+            ) : (
+              <>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '0 0 10px', fontSize: 12, color: 'var(--muted)' }}>
+                  <input
+                    type="checkbox"
+                    className="row__check"
+                    style={{ marginLeft: 0 }}
+                    checked={faellig.every(j => followUpSelection.has(j.id))}
+                    onChange={e => setFollowUpSelection(e.target.checked ? new Set(faellig.map(j => j.id)) : new Set())}
+                  />
+                  Alle auswählen ({faellig.length})
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {faellig.map(j => {
+                    const tage = daysSinceLastContact(j) ?? 0;
+                    const versuche = j.followUps?.length ?? 0;
+                    return (
+                      <label key={j.id} className="nf__row">
+                        <input
+                          type="checkbox"
+                          className="row__check"
+                          style={{ marginLeft: 0 }}
+                          checked={followUpSelection.has(j.id)}
+                          onChange={() => setFollowUpSelection(prev => {
+                            const next = new Set(prev);
+                            if (next.has(j.id)) next.delete(j.id); else next.add(j.id);
+                            return next;
+                          })}
+                        />
+                        <span className="nf__firma">{j.company}</span>
+                        <span className="nf__titel">{j.title}</span>
+                        <span className="nf__meta">
+                          <span className="tag">{j.email}</span>
+                          {versuche > 0 && <span className="tag">{versuche}× nachgefasst</span>}
+                          <span className="row__age">{tage}d</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+          {/* Knöpfe links wie in den anderen Views: der Tschobbo-Schalter klebt fix unten
+              rechts (z-index 41) und läge sonst genau auf "Senden". */}
+          <footer className="bar">
+            <button
+              className="btn"
+              disabled={followUpBusy || followUpSelection.size === 0}
+              onClick={() => runFollowUps('draft')}
+            >
+              <FileText /> Als Entwurf ({followUpSelection.size})
+            </button>
+            <button
+              className="btn btn--primary"
+              disabled={followUpBusy || followUpSelection.size === 0}
+              onClick={() => runFollowUps('sent')}
+            >
+              <Send /> Senden ({followUpSelection.size})
+            </button>
+            <span className="bar__spacer" />
+            <span className="bar__hint">
+              {followUpBusy ? 'läuft…' : `${followUpSelection.size} von ${faellig.length} ausgewählt`}
+            </span>
           </footer>
         </section>
       ) : view === 'anschreiben' ? (

@@ -6,7 +6,7 @@ import { createStorage } from '../storage/index.ts';
 import { config } from '../config.ts';
 import { jobBasename } from '../lib/slugify.ts';
 import { loadProfile } from '../lib/profile.ts';
-import { composeEmail, createDraft, sendMail, logMailAction, fetchInboxReplies, fetchSentMails, istBewerbung, type ComposedEmail, type SentMail } from '../mail/gmail.ts';
+import { composeEmail, composeFollowUp, createDraft, sendMail, logMailAction, fetchInboxReplies, fetchSentMails, istBewerbung, type ComposedEmail, type SentMail } from '../mail/gmail.ts';
 import { matchReplies, matchSent } from '../lib/mail-match.ts';
 import { HISTORY_START } from '../lib/calendar.ts';
 import { loadMailEvents, saveMailEvents, toMailEvents } from '../lib/mail-events.ts';
@@ -19,6 +19,7 @@ import { runScrape } from '../lib/scrape-runner.ts';
 import { filterJob } from '../lib/filter.ts';
 import { createBatcher } from '../lib/grid-batch.ts';
 import { findDuplicates, planMerge } from '../lib/duplicates.ts';
+import { recordFollowUp } from '../lib/followup.ts';
 import { canGenerateAnschreiben } from '../lib/folders.ts';
 import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
@@ -764,6 +765,37 @@ const server = createServer(async (req, res) => {
     const updated = await storage.update(job.id, patch);
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(updated));
+    return;
+  }
+
+  // Nachfass: eine Route für beide Wege, weil sich nur der letzte Schritt unterscheidet
+  // (Entwurf anlegen vs. senden) — Betreff, Text und die Historie sind identisch.
+  // Anders als /send ändert das den Status NICHT: die Bewerbung war schon gesendet und
+  // bleibt es, ein Nachfass ist kein neuer Zustand, sondern ein weiterer Kontakt.
+  const followUpMatch = url.pathname.match(/^\/api\/jobs\/([a-f0-9]+)\/followup$/);
+  if (req.method === 'POST' && followUpMatch) {
+    const job = await storage.get(followUpMatch[1]);
+    if (!job) { res.writeHead(404).end('Job nicht gefunden'); return; }
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    let via: 'draft' | 'sent' = 'draft';
+    try {
+      via = (JSON.parse(body) as { via?: 'draft' | 'sent' }).via === 'sent' ? 'sent' : 'draft';
+    } catch {
+      // kein Body — bleibt beim sichereren Entwurf
+    }
+    try {
+      const email = await composeFollowUp(job, profile);
+      if (via === 'sent') await sendMail(email); else await createDraft(email);
+      const updated = await storage.update(job.id, { followUps: recordFollowUp(job, via) });
+      await logMailAction(job, via === 'sent' ? 'followup-sent' : 'followup-drafted');
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(updated));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: `Nachfass fehlgeschlagen: ${message}` }));
+    }
     return;
   }
 
