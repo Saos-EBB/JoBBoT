@@ -71,7 +71,10 @@ export const amsAdapter: ScraperAdapter = {
   querySchema: [
     { key: 'keyword', label: 'Suchbegriff', required: true, format: 'text', placeholder: 'junior software developer' },
     { key: 'location', label: 'Suchgebiet', required: false, format: 'text', placeholder: 'Linz' },
-    { key: 'vicinity', label: 'Umkreis (km)', required: false, format: 'number', placeholder: '40' },
+    // "Radius", nicht "Umkreis": Umkreis heisst in der UI der Nachfilter aus
+    // config/location.json. Dieses Feld geht ans Portal und meint etwas anderes —
+    // dieselben zwei Bedeutungen, die Ticket "Ort bedeutet zweierlei" getrennt hat.
+    { key: 'vicinity', label: 'Radius (km)', required: false, format: 'number', placeholder: '40' },
   ],
   async scrape(
     queries: SourceQuery[],
