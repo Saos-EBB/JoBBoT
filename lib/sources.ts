@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs';
 
-export type SourceQuery = Record<string, string>;
+// Re-Export statt zweiter Definition: derselbe Typ stand bis hierher auch in
+// scrapers/interface.ts, und zwei Wahrheiten über dieselbe Form driften auseinander.
+export type { SourceQuery } from '../scrapers/interface.ts';
+import type { SourceQuery } from '../scrapers/interface.ts';
 interface SourceConfig { enabled: boolean; queries: SourceQuery[] }
 export type SourcesConfig = Record<string, SourceConfig>;
 

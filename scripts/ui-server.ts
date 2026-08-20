@@ -14,7 +14,7 @@ import { ATTACHMENT_PATH, ATTACHMENT_FILENAME } from '../lib/attachment.ts';
 import { loadCc, saveCc, clearCc } from '../lib/cc.ts';
 import { loadSources } from '../lib/sources.ts';
 import { loadSettings, type FilterMode } from '../lib/settings.ts';
-import { buildScrapeSetup } from '../lib/scrape-setup.ts';
+import { adapterRegistry, buildScrapeSetup } from '../lib/scrape-setup.ts';
 import { runScrape } from '../lib/scrape-runner.ts';
 import { filterJob } from '../lib/filter.ts';
 import { createBatcher } from '../lib/grid-batch.ts';
@@ -356,8 +356,12 @@ const server = createServer(async (req, res) => {
   }
 
   if (req.method === 'GET' && url.pathname === '/api/scrape/sources') {
+    // Ausgangspunkt ist die Registry, nicht die Datei. Vorher lief das andersherum als
+    // in run-scrape.ts — ein Portalname in sources.json ohne Adapter erschien hier als
+    // auswählbare Quelle und lief dann in lib/scrape-runner.ts auf registry[name].kind
+    // eines undefined. Jetzt sind beide Wege gleich: Code sagt, was es gibt.
     const sources = loadSources();
-    const names = Object.entries(sources).filter(([, c]) => c.enabled).map(([name]) => name);
+    const names = Object.keys(adapterRegistry).filter(name => sources[name]?.enabled);
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(names));
     return;

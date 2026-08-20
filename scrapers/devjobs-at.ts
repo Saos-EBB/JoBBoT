@@ -1,6 +1,7 @@
 import { chromium, type Page } from 'playwright';
 import { normalizeDescription } from '../lib/normalize-description.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
+import { usableQueries } from '../lib/query-schema.ts';
 
 const BASE = 'https://www.devjobs.at';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
@@ -133,6 +134,11 @@ export async function fetchRemixContext(url: string): Promise<unknown> {
 export const devJobsAtAdapter: ScraperAdapter = {
   name: 'devjobs.at',
   kind: 'browser',
+  // Einziges Portal ohne Suchbegriff: devjobs.at filtert über einen fertigen
+  // Query-String, der unverändert an die URL gehängt wird.
+  querySchema: [
+    { key: 'params', label: 'Filter (Query-String)', required: true, format: 'raw', placeholder: 'jobLevel=junior-job-level' },
+  ],
   async scrape(
     queries: SourceQuery[],
     keep?: (job: ScrapedJob) => boolean,
@@ -140,8 +146,8 @@ export const devJobsAtAdapter: ScraperAdapter = {
     onUnitDone?: (items: ScrapedJob[]) => void,
   ) {
     const baseJobs: ScrapedJob[] = [];
-    for (const query of queries) {
-      const qstring = query.params ?? 'jobLevel=junior-job-level';
+    for (const query of usableQueries(devJobsAtAdapter, queries)) {
+      const qstring = query.params;
       const baseUrl = `${BASE}/jobs/search?${qstring}`;
       onProgress?.(1, 1);
       const firstCtx = await fetchRemixContext(baseUrl);

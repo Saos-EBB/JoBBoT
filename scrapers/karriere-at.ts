@@ -2,6 +2,8 @@ import { fetchPage, sleep } from '../lib/fetch-page.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
 import { createBatcher } from '../lib/grid-batch.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
+import { searchSlug } from '../lib/slugify.ts';
+import { usableQueries } from '../lib/query-schema.ts';
 
 const GRID_BATCH_SIZE = 10;
 
@@ -60,8 +62,7 @@ export function parseDetailPage(html: string, baseJob: ScrapedJob): ScrapedJob {
 }
 
 async function fetchSearchPage(keyword: string): Promise<string> {
-  const slug = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
-  const r = await fetchPage(`${BASE}/jobs/${slug(keyword)}`);
+  const r = await fetchPage(`${BASE}/jobs/${searchSlug(keyword)}`);
   if (!r.ok) throw new Error(`karriere.at search ${r.status}: ${keyword}`);
   return r.html;
 }
@@ -76,6 +77,9 @@ async function fetchDetailPage(url: string): Promise<string> {
 export const karriereAtAdapter: ScraperAdapter = {
   name: 'karriere.at',
   kind: 'fetch',
+  querySchema: [
+    { key: 'keyword', label: 'Suchbegriff', required: true, format: 'slug', placeholder: 'junior-entwickler' },
+  ],
   async scrape(
     queries: SourceQuery[],
     keep?: (job: ScrapedJob) => boolean,
@@ -83,12 +87,11 @@ export const karriereAtAdapter: ScraperAdapter = {
     onUnitDone?: (items: ScrapedJob[]) => void,
   ) {
     const byUrl = new Map<string, ScrapedJob>();
-    for (let qi = 0; qi < queries.length; qi++) {
-      const query = queries[qi];
-      const keyword = query.keyword ?? '';
-      if (!keyword) continue;
+    const usable = usableQueries(karriereAtAdapter, queries);
+    for (let qi = 0; qi < usable.length; qi++) {
+      const keyword = usable[qi].keyword;
       try {
-        onProgress?.(qi + 1, queries.length);
+        onProgress?.(qi + 1, usable.length);
         const searchHtml = await fetchSearchPage(keyword);
         for (const job of parseSearchPage(searchHtml)) {
           if (!byUrl.has(job.url)) byUrl.set(job.url, job);

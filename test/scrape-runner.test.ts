@@ -10,11 +10,11 @@ const job = (title: string, company: string): ScrapedJob => ({
 });
 
 function okAdapter(name: string, jobs: ScrapedJob[], kind: 'fetch' | 'browser' = 'fetch'): ScraperAdapter {
-  return { name, kind, async scrape() { return jobs; } };
+  return { name, kind, querySchema: [], async scrape() { return jobs; } };
 }
 
 function failingAdapter(name: string, message: string, kind: 'fetch' | 'browser' = 'fetch'): ScraperAdapter {
-  return { name, kind, async scrape() { throw new Error(message); } };
+  return { name, kind, querySchema: [], async scrape() { throw new Error(message); } };
 }
 
 const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
@@ -88,6 +88,7 @@ test('keep-Filter wird an jeden Adapter durchgereicht', async (t) => {
     a: {
       name: 'a',
       kind: 'fetch',
+      querySchema: [],
       async scrape(_queries, keepFn) {
         receivedKeep = keepFn;
         return [];
@@ -110,6 +111,7 @@ test('onProgress wird pro Quelle mit ihrem Namen aufgerufen', async (t) => {
     a: {
       name: 'a',
       kind: 'fetch',
+      querySchema: [],
       async scrape(_queries, _keep, onProgress) {
         onProgress?.(1, 2);
         onProgress?.(2, 2);
@@ -135,6 +137,7 @@ function trackingAdapter(name: string, kind: 'fetch' | 'browser', ms: number, tr
   return {
     name,
     kind,
+    querySchema: [],
     async scrape() {
       tracker.active++;
       if (kind === 'browser') tracker.activeBrowsers++;
@@ -204,7 +207,7 @@ test('Scheduler: werfender Adapter blockiert die anderen nicht, auch unter Dross
 
   const tracker = { active: 0, max: 0, activeBrowsers: 0, maxBrowsers: 0 };
   const registry: Record<string, ScraperAdapter> = {
-    fails: { name: 'fails', kind: 'browser', async scrape() { throw new Error('boom'); } },
+    fails: { name: 'fails', kind: 'browser', querySchema: [], async scrape() { throw new Error('boom'); } },
     a: trackingAdapter('a', 'fetch', 10, tracker),
     b: trackingAdapter('b', 'fetch', 10, tracker),
   };
@@ -220,6 +223,7 @@ function timedAdapter(name: string, kind: 'fetch' | 'browser', ms: number, start
   return {
     name,
     kind,
+    querySchema: [],
     async scrape() {
       starts[name] = performance.now() - t0;
       await delay(ms);
@@ -274,4 +278,24 @@ test('Scheduler: maxConcurrent/maxBrowsers per Option überschreibbar', async (t
 
   await runScrape({ names: ['b1', 'b2'], registry, queriesFor: () => [], storage, maxConcurrent: 2, maxBrowsers: 2 });
   assert.equal(tracker.maxBrowsers, 2);
+});
+
+// Ein Portalname ohne Adapter (z.B. ein Altbestand in config/sources.json) lief vorher
+// auf `registry[name].kind` eines undefined und kam als nichtssagender Quellen-Fehlschlag
+// zurück. Jetzt sagt die Meldung, woran es lag — und die anderen Quellen laufen weiter.
+test('unbekannte Quelle: sprechender Fehler statt undefined-Zugriff', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const outcomes = await runScrape({
+    names: ['gibtsnicht', 'a'],
+    registry: { a: okAdapter('a', [job('T', 'F')]) },
+    queriesFor: () => [{}],
+    storage,
+  });
+  const fehlt = outcomes.find(o => o.name === 'gibtsnicht')!;
+  assert.equal(fehlt.ok, false);
+  assert.match(String(fehlt.error), /Kein Adapter für Quelle "gibtsnicht"/);
+  assert.match(String(fehlt.error), /bekannt sind: a/);
+  assert.equal(outcomes.find(o => o.name === 'a')!.ok, true);
 });
