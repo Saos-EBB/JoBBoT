@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { config } from '../config.ts';
 
 export interface ExperienceRules {
   minYears: number;
@@ -16,7 +18,7 @@ export interface ExpResult {
 }
 
 export function loadExperienceRules(): ExperienceRules {
-  const path = new URL('../config/experience-rules.json', import.meta.url);
+  const path = join(config.configDir, 'experience-rules.json');
   return JSON.parse(readFileSync(path, 'utf8')) as ExperienceRules;
 }
 
