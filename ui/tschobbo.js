@@ -109,6 +109,38 @@ function makeBlobEl() {
   return el;
 }
 
+// Der Schalter haengt in der Seitenleiste, nicht mehr fix unten rechts am Fenster.
+// Dort lag er ueber JEDER Fussleiste (z-index 41) — beim Nachfassen-Tab musste ich die
+// Knoepfe deswegen schon nach links ruecken, und auf schmalen Schirmen verdeckte er einen
+// guten Teil der Zeile. In der Leiste ist er ausserdem automatisch mit in der Schublade,
+// sobald die Leiste unter 1024px zu einer wird.
+//
+// React raeumt fremde Kinder eines von ihm gerenderten Elements beim Abgleich nicht weg
+// (dieselbe Annahme wie bei den geklebten Klumpen an .loadgrid__sq). Ist die Leiste noch
+// nicht da — tschobbo.js laedt als eigenes Modul neben app.js —, wird kurz gewartet und
+// sonst auf die alte Ecke zurueckgefallen, damit der Schalter nie ganz verschwindet.
+function mountToggle(toggle, versuch = 0) {
+  const sb = document.querySelector('.sb');
+  if (sb) {
+    // sticky im scrollenden .sb: die Leiste ist laenger als der Schirm, ohne das lag der
+    // Schalter unterhalb der Falte und waere in der Schublade erst nach Scrollen zu finden.
+    toggle.style.position = 'sticky';
+    toggle.style.bottom = '10px';
+    toggle.style.margin = 'auto 12px 12px';
+    toggle.style.alignSelf = 'flex-start';
+    // Er schwebt ueber den Tastatur-Hinweisen, solange die Leiste nicht ganz unten steht —
+    // der Schatten macht daraus ein Overlay statt einer Kollision.
+    toggle.style.boxShadow = '0 2px 10px rgba(0,0,0,.45)';
+    sb.appendChild(toggle);
+    return;
+  }
+  if (versuch < 40) { setTimeout(() => mountToggle(toggle, versuch + 1), 50); return; }
+  toggle.style.position = 'fixed';
+  toggle.style.right = '12px';
+  toggle.style.bottom = '12px';
+  document.body.appendChild(toggle);
+}
+
 function buildDom() {
   const root = document.createElement('div');
   root.className = 'tschobbo';
@@ -121,7 +153,7 @@ function buildDom() {
 
   const toggle = document.createElement('button');
   toggle.type = 'button';
-  toggle.style.cssText = 'position:fixed; right:12px; bottom:12px; z-index:41; pointer-events:auto; font-family:var(--sans, sans-serif); font-size:11px; font-weight:600; letter-spacing:.02em; padding:4px 9px; border-radius:20px; border:1px solid var(--line, #2A323F); background:var(--panel, #1B212B); color:var(--muted, #8A94A6); cursor:pointer;';
+  toggle.style.cssText = 'z-index:41; pointer-events:auto; font-family:var(--sans, sans-serif); font-size:11px; font-weight:600; letter-spacing:.02em; padding:4px 9px; border-radius:20px; border:1px solid var(--line, #2A323F); background:var(--panel, #1B212B); color:var(--muted, #8A94A6); cursor:pointer;';
 
   const style = document.createElement('style');
   style.textContent = TSCHOBBO_CSS;
@@ -143,7 +175,7 @@ function buildDom() {
 
   document.head.appendChild(style);
   document.body.appendChild(root);
-  document.body.appendChild(toggle);
+  mountToggle(toggle);
   layer.appendChild(pile);
   document.body.appendChild(layer);
   return { root, body, toggle, style, pile, layer };

@@ -23,6 +23,7 @@ import {
   Copy,
   Layers,
   Calendar,
+  Menu,
 } from 'lucide-react';
 import type { Job, Fit } from '../scrapers/interface.ts';
 import { FOLDER_IDS, inFolder, canGenerateAnschreiben, type FolderId } from '../lib/folders.ts';
@@ -141,7 +142,13 @@ const CSS = `
   --serif:'IBM Plex Serif', Georgia, serif;
 
   position:fixed; inset:0;
-  display:grid; grid-template-columns:236px 372px 1fr;
+  /* Band B: stetig statt in Stufen. Die alte 1180er-Stufe (236/372 -> 208/320) sprang
+     sichtbar, und bei 1024px blieben der Detailspalte nur 496px — schmaler als das
+     Anschreiben selbst (.paper, max-width:660px). minmax(0,1fr) statt 1fr, damit die
+     Detailspalte beim Schrumpfen nicht ihre Mindest-Inhaltsbreite erzwingt und das
+     Raster über den Rand schiebt. */
+  display:grid;
+  grid-template-columns:clamp(200px, 16vw, 236px) clamp(320px, 26vw, 430px) minmax(0, 1fr);
   background:var(--ink); color:var(--text);
   font-family:var(--sans); font-size:13px; line-height:1.45;
   -webkit-font-smoothing:antialiased;
@@ -253,8 +260,13 @@ const CSS = `
 .srch input { flex:1; background:none; border:none; outline:none; color:var(--text); font:inherit; min-width:0; }
 .srch input::placeholder { color:var(--dim); }
 
-.chips { display:flex; gap:5px; padding:10px 0; overflow-x:auto; scrollbar-width:none; }
-.chips::-webkit-scrollbar { display:none; }
+/* Die Reihe war bei JEDER Fensterbreite breiter als ihre Spalte — bei 1024 um 168px, ab
+   1280 um 116px, selbst auf 2560 noch, weil die Listenspalte nie mitwächst. Sie lag in
+   einem overflow-x:auto mit scrollbar-width:none, sah also abgeschnitten aus statt
+   scrollbar. Umbruch statt Scrollen: eine Filterreihe, die man nicht ganz sieht, ist als
+   Filter wertlos, und zwei Zeilen kosten hier 28px. Erst mit einer Listenspalte jenseits
+   von 600px passte sie in eine Zeile — so breit soll die Liste aber gar nicht werden. */
+.chips { display:flex; flex-wrap:wrap; gap:5px; padding:10px 0; }
 .chip {
   display:flex; align-items:center; gap:6px; flex:none;
   padding:3px 9px; border-radius:99px; border:1px solid var(--line);
@@ -315,8 +327,12 @@ const CSS = `
 .row__l1 { display:flex; align-items:baseline; gap:8px; margin-bottom:2px; }
 .row__firma { font-weight:600; font-size:13px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .row__age { font-family:var(--mono); font-size:10.5px; color:var(--dim); flex:none; font-variant-numeric:tabular-nums; }
-.row__titel { font-size:12.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:4px; }
-.row__snip { font-size:11.5px; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* display:block ist hier Pflicht, nicht Kosmetik: als <span> sind beide inline, und an
+   inline-Elementen sind overflow/text-overflow/margin-bottom wirkungslos. Deshalb liefen
+   Titel und Ausschnitt bisher in einer Zeile ineinander ("…ADMINISTRATOR:INAls Quereinsteiger")
+   statt untereinander mit Auslassungspunkten. */
+.row__titel { display:block; font-size:12.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:4px; }
+.row__snip { display:block; font-size:11.5px; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .row__meta { display:flex; align-items:center; gap:7px; margin-top:6px; }
 .tag {
   font-family:var(--mono); font-size:9.5px; letter-spacing:.04em;
@@ -407,7 +423,7 @@ const CSS = `
 .errbox__h svg { width:14px; height:14px; }
 .errbox__msg { font-family:var(--mono); font-size:11.5px; line-height:1.6; color:var(--muted); }
 
-.bar { display:flex; align-items:center; gap:8px; padding:12px 24px; border-top:1px solid var(--line-soft); background:var(--slate); }
+.bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:12px 24px; border-top:1px solid var(--line-soft); background:var(--slate); }
 .btn { display:flex; align-items:center; gap:6px; padding:6px 13px; border-radius:5px; border:1px solid var(--line); color:var(--muted); font-size:12.5px; }
 .btn:hover { border-color:var(--dim); color:var(--text); }
 .btn svg { width:13px; height:13px; }
@@ -502,10 +518,16 @@ const CSS = `
 .cal__popup-foot { padding:8px 18px; border-top:1px solid var(--line-soft); font-family:var(--mono); font-size:10px; color:var(--dim); }
 
 /* ---------- Responsive ---------- */
-@media (max-width:1180px) { .jb { grid-template-columns:208px 320px 1fr; } }
-@media (max-width:960px) {
-  .jb { grid-template-columns:1fr; }
-  .sb { display:none; }
+/* ---------- Mobile Kopfzeile + Schublade ---------- */
+/* Beide existieren nur unterhalb von 1024. Darüber ist .sb eine normale Rasterspalte,
+   und diese Regeln fassen sie nicht an. */
+.topbar { display:none; }
+.sb__overlay { display:none; }
+
+/* Umschaltpunkt von 960 auf 1024 gehoben: dazwischen standen drei Spalten auf zu wenig
+   Platz (bei 1024 waren es 208+320+496). Ab hier ist die Seitenleiste eine Schublade. */
+@media (max-width:1023px) {
+  .jb { grid-template-columns:minmax(0, 1fr); }
   .ls { border-right:none; }
   .dt { display:none; }
   .jb--detail .ls { display:none; }
@@ -514,7 +536,78 @@ const CSS = `
   .dt__back svg { width:14px; height:14px; }
   .dt__head, .dt__body, .tabs, .bar { padding-left:16px; padding-right:16px; }
   .paper { padding:24px 22px; }
+
+  /* Die Pipeline-Ansichten sind für zwei Spalten gebaut. Im Ein-Spalten-Raster erzeugt
+     span 2 eine implizite zweite Spalte — heute 0px breit und damit harmlos, aber sie
+     sitzen dort aus Versehen richtig statt aus Absicht. */
+  .att, .cal { grid-column:1 / -1; }
+
+  /* Trefferflächen: 13px-Zeilen und ein 13px-Kästchen sind für den Daumen zu klein. */
+  .fld { min-height:44px; }
+  .chip { padding:8px 12px; }
+  .row__check { width:20px; height:20px; margin-left:12px; }
+  .row { padding-top:14px; padding-bottom:14px; }
+
+  /* Kalender wächst mit, statt bei 7×34px stehenzubleiben. */
+  .cal__weekday-row, .cal__grid { grid-template-columns:repeat(7, minmax(0, 1fr)); }
+  .cal__sq { width:auto; }
+
+  /* Nachfass-Zeile zweizeilig: Firma+Titel oben, Adresse+Alter darunter. */
+  .nf__row { grid-template-columns:auto 1fr; row-gap:4px; }
+  .nf__titel { grid-column:2; }
+  .nf__meta { grid-column:2; justify-self:start; }
+
+  /* top statt padding-top: .jb ist position:fixed;inset:0 und selbst NICHT von der
+     border-box-Regel erfasst (die gilt für .jb *), ein padding würde es zu hoch machen. */
+  .jb { top:48px; }
+  .topbar {
+    position:fixed; top:0; left:0; right:0; height:48px; z-index:58;
+    display:flex; align-items:center; gap:10px; padding:0 8px;
+    background:var(--slate); border-bottom:1px solid var(--line-soft);
+  }
+  .topbar__burger {
+    display:flex; align-items:center; justify-content:center;
+    width:40px; height:40px; border-radius:6px; color:var(--muted); flex:none;
+  }
+  .topbar__burger:hover { color:var(--text); background:var(--raised); }
+  .topbar__burger svg { width:18px; height:18px; }
+  .topbar__wo { font-weight:600; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .topbar__n { font-family:var(--mono); font-size:11px; color:var(--dim); flex:none; margin-left:auto; }
+
+  /* Schublade: fährt über den Inhalt statt ihn zu verschieben — der Inhalt ist hier
+     ohnehin nur eine Spalte breit, ein Wegschieben würde ihn unlesbar quetschen. */
+  .sb {
+    position:fixed; top:0; bottom:0; left:0; z-index:60;
+    width:min(300px, 84vw); transform:translateX(-100%);
+  }
+  .sb--offen { transform:none; box-shadow:0 0 40px rgba(0,0,0,.5); }
+  .sb__overlay { display:block; position:fixed; inset:0; z-index:59; background:rgba(0,0,0,.5); }
 }
+@media (max-width:1023px) and (prefers-reduced-motion:no-preference) {
+  .sb { transition:transform .18s ease-out; }
+}
+
+/* Band C: ab 2000px hat die Detailspalte Platz für zwei Bahnen (bei 2560 sind es 1894px).
+   Statt Anschreiben UND Inserat übereinander umzuschalten, stehen sie nebeneinander — beim
+   Prüfen liest man den Brief gegen das Inserat, und genau dafür war der Platz bisher leer.
+   Die Tabs verschwinden, weil es nichts mehr umzuschalten gibt. */
+.dt__panels--brief .dt__panel--inserat,
+.dt__panels--inserat .dt__panel--brief { display:none; }
+
+@media (min-width:2000px) {
+  .tabs { display:none; }
+  .dt__panels {
+    display:grid; grid-template-columns:minmax(0, 660px) minmax(0, 720px);
+    gap:36px; align-items:start; justify-content:start;
+  }
+  /* schlägt die Tab-Regel oben, weil gleich spezifisch und später im Stylesheet */
+  .dt__panels--brief .dt__panel--inserat,
+  .dt__panels--inserat .dt__panel--brief { display:block; }
+  /* Eine Zeile "Ort · Quelle · Alter · Hinweis" über 1500px ist keine Zeile mehr,
+     sondern eine Fährte. */
+  .dt__head > * { max-width:1100px; }
+}
+
 `;
 
 /* ------------------------------------------------------------------ *
@@ -564,6 +657,17 @@ const GROUPS: { head: string | null; icon: typeof Mail | null; folders: { id: Fo
 // Sagt, was der leere Zustand bedeutet, nicht dass er leer ist — "Keine Einträge" ist für
 // jeden Ordner wahr und hilft nirgends. "jobs" ist der Posteingang: eine leere Triage-Queue
 // heißt "nichts Neues reingekommen", kein Fehlerzustand.
+// Beschriftung fuer die mobile Kopfzeile — sie ist dort die einzige Ortsangabe, weil
+// die Seitenleiste mit ihrer Markierung hinter der Schublade liegt. Ordner-Namen kommen
+// aus GROUPS statt aus einer zweiten Liste, sonst driften sie auseinander.
+const FOLDER_LABEL: Record<string, string> = Object.fromEntries(
+  GROUPS.flatMap(g => g.folders.map(f => [f.id, f.label])),
+);
+const VIEW_LABEL: Partial<Record<string, string>> = {
+  attachment: 'Anhang', cc: 'CC', calendar: 'Kalender', scrape: 'Scrape',
+  filter: 'Filter', duplicates: 'Duplikate', anschreiben: 'Anschreiben', nachfass: 'Nachfassen',
+};
+
 const EMPTY_COPY: Record<FolderId, string> = {
   'jobs': 'Nichts Neues.',
   'mail/entwurf': 'Keine Entwürfe zu prüfen.',
@@ -921,6 +1025,9 @@ export default function JobbotUI() {
   const [tab, setTab] = useState<'brief' | 'inserat'>('brief');
   const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'err' } | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const burgerRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
   // 'attachment'/'scrape'/'filter' sind keine Ordner (kein FolderId, kein Job-Filter)
   // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
   const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben' | 'calendar' | 'nachfass'>('jobs');
@@ -1588,6 +1695,34 @@ export default function JobbotUI() {
     setDetailOpen(true);
   };
 
+  // Schublade: Esc schliesst, Fokus wandert beim Oeffnen hinein und beim Schliessen
+  // zurueck auf den Burger. Ohne das laesst eine Tastaturbedienung den Fokus hinter
+  // dem Overlay stehen und man tabbt durch eine Liste, die man nicht sieht.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    drawerRef.current?.querySelector<HTMLElement>('button')?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setDrawerOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      burgerRef.current?.focus();
+    };
+  }, [drawerOpen]);
+
+  // Startordner auf schmalen Schirmen: der erste nicht-leere. Ist gar nichts da, ist
+  // der Scraper der einzige sinnvolle Ort (Kevin). Fest auf mail/entwurf zu starten
+  // hiess auf dem Handy: leerer Bildschirm, und ohne Seitenleiste kein Weg heraus.
+  // Laeuft genau einmal, sobald die Jobs geladen sind — danach entscheidet der Nutzer.
+  const startGesetzt = useRef(false);
+  useEffect(() => {
+    if (startGesetzt.current || jobs.length === 0) return;
+    startGesetzt.current = true;
+    if (!window.matchMedia('(max-width:1023px)').matches) return;
+    const ersterVoller = FOLDER_IDS.find(id => jobs.some(j => inFolder(j, id)));
+    if (ersterVoller) setFolder(ersterVoller);
+    else setView('scrape');
+  }, [jobs]);
+
   // Grobe Summen-Fraktion über alle Quellen statt Fortschritt pro Quelle exakt zu
   // verrechnen (die "total"-Einheiten unterscheiden sich je Quelle) — reicht für
   // eine dekorative "es tut sich was"-Anzeige, siehe Grilling-Runde 1.
@@ -1618,8 +1753,33 @@ export default function JobbotUI() {
     <div className={'jb' + (detailOpen ? ' jb--detail' : '')}>
       <style>{CSS}</style>
 
+      {/* Nur unter 1024 sichtbar (siehe .topbar im CSS). Traegt den einzigen Zugang zur
+          Seitenleiste, sobald die zur Schublade wird — ohne ihn war die halbe App auf
+          schmalen Schirmen unerreichbar. */}
+      <div className="topbar">
+        <button
+          ref={burgerRef}
+          className="topbar__burger"
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Navigation öffnen"
+          aria-expanded={drawerOpen}
+        >
+          <Menu />
+        </button>
+        <span className="topbar__wo">{view === 'jobs' ? (FOLDER_LABEL[folder] ?? 'Jobs') : (VIEW_LABEL[view] ?? 'Jobs')}</span>
+        {view === 'jobs' && <span className="topbar__n">{list.length}</span>}
+      </div>
+
+      {drawerOpen && <div className="sb__overlay" onClick={() => setDrawerOpen(false)} />}
+
       {/* ---------- Sidebar ---------- */}
-      <nav className="sb">
+      {/* Ein Klick-Handler auf dem <nav> statt an jedem einzelnen Eintrag: die Leiste hat
+          inzwischen 17 Knoepfe, und ein vergessener liesse die Schublade offen stehen. */}
+      <nav
+        ref={drawerRef}
+        className={'sb' + (drawerOpen ? ' sb--offen' : '')}
+        onClick={e => { if ((e.target as HTMLElement).closest('.fld')) setDrawerOpen(false); }}
+      >
         <div className="sb__brand">
           <span className="sb__logo">
             <b>jobbot</b>
@@ -2461,7 +2621,13 @@ export default function JobbotUI() {
                 </div>
               )}
 
-              {tab === 'brief' ? (
+              {/* Beide Bereiche sind immer im DOM; welcher zu sehen ist, entscheidet CSS.
+                  Unter 2000px blendet die Tab-Klasse den inaktiven aus, darüber stehen sie
+                  nebeneinander (Band C) — so bleibt der Umschalt-Zustand eine reine
+                  Darstellungsfrage und braucht keinen zweiten React-Zweig. */}
+              <div className={'dt__panels dt__panels--' + tab}>
+              <div className="dt__panel dt__panel--brief">
+              {(
                 shown.brief ? (
                   <div className="paper">
                     <div className="paper__to">
@@ -2492,12 +2658,15 @@ export default function JobbotUI() {
                       : 'Der Lauf ist vor der Generierung abgebrochen. Fehler oben beheben, dann neu generieren.'}
                   </div>
                 )
-              ) : (
+              )}
+              </div>
+              <div className="dt__panel dt__panel--inserat">
                 <div className="inserat">
                   <h4>Inserat · {shown.source}</h4>
                   {decodeEntities(shown.description)}
                 </div>
-              )}
+              </div>
+              </div>
             </div>
 
             <footer className="bar">
