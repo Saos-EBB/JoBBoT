@@ -20,3 +20,12 @@ dist
 # Sicherung der letzten Config-Fassung (siehe lib/config-store.ts) — Arbeitsstand,
 # keine Fassung; git hat die Historie.
 config/*.json.bak
+
+# IDE-Projektdateien (WebStorm) — Maschinen- und Nutzerzustand, kein Projektinhalt.
+# (JetBrains legt darin eine eigene .gitignore für workspace.xml an; wir nehmen den
+# ganzen Ordner, damit auch iml/modules.xml draußen bleiben.)
+.idea/
+
+# Standalone-Testseite für ui/tschobbo.js: lädt das Maskottchen-Modul ohne den
+# React-Bau und überbrückt dafür prefers-reduced-motion. Werkzeug, kein Projektinhalt.
+ui/tschobbo-test.html
