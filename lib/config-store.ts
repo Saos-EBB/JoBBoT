@@ -1,5 +1,7 @@
 import { readFile, writeFile, rename, unlink, copyFile, stat } from 'node:fs/promises';
 import { randomBytes } from 'node:crypto';
+import { join } from 'node:path';
+import { config } from '../config.ts';
 import { adapterRegistry } from './scrape-setup.ts';
 import { checkQuery, describeProblem } from './query-schema.ts';
 
@@ -7,8 +9,8 @@ import { checkQuery, describeProblem } from './query-schema.ts';
 // Pfads aus der Anfrage: der Server nimmt hier Schreibbefehle entgegen, und ein
 // Dateiname aus dem Netz waere ein Pfad-Ausbruch mit Ansage.
 export const CONFIG_FILES = {
-  sources: 'config/sources.json',
-  location: 'config/location.json',
+  sources: 'sources.json',
+  location: 'location.json',
 } as const;
 
 export type ConfigName = keyof typeof CONFIG_FILES;
@@ -17,8 +19,11 @@ export function isConfigName(s: string): s is ConfigName {
   return s in CONFIG_FILES;
 }
 
-const pfad = (name: ConfigName) => new URL(`../${CONFIG_FILES[name]}`, import.meta.url);
-const bakPfad = (name: ConfigName) => new URL(`../${CONFIG_FILES[name]}.bak`, import.meta.url);
+// cwd-relativ wie alles andere in config.ts. Vorher zeigten diese Pfade ueber
+// import.meta.url immer ins Repo, unabhaengig vom Arbeitsverzeichnis — ein PUT auf einen
+// Server, der woanders gestartet wurde, schrieb trotzdem hierher.
+const pfad = (name: ConfigName) => join(config.configDir, CONFIG_FILES[name]);
+const bakPfad = (name: ConfigName) => `${pfad(name)}.bak`;
 
 export async function readConfig(name: ConfigName): Promise<unknown> {
   return JSON.parse(await readFile(pfad(name), 'utf8'));
@@ -38,7 +43,7 @@ export async function hasBackup(name: ConfigName): Promise<boolean> {
 export async function writeConfig(name: ConfigName, data: unknown): Promise<void> {
   const ziel = pfad(name);
   try { await copyFile(ziel, bakPfad(name)); } catch { /* erste Fassung, nichts zu sichern */ }
-  const tmp = new URL(`../${CONFIG_FILES[name]}.tmp-${randomBytes(6).toString('hex')}`, import.meta.url);
+  const tmp = `${ziel}.tmp-${randomBytes(6).toString('hex')}`;
   await writeFile(tmp, JSON.stringify(data, null, 2) + '\n', 'utf8');
   await rename(tmp, ziel);
 }
