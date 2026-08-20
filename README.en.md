@@ -30,12 +30,20 @@ projects and links that flow into every generated cover letter.
 | File | Purpose |
 |---|---|
 | `profile.json` | Applicant profile used for cover-letter generation (copy from `profile.example.json`) |
-| `sources.json` | Which portals are active (karriere.at, devjobs.at, LinkedIn, AMS, jobs.at) + search queries per portal |
-| `location.json` | Whitelist of cities/regions (Upper Austria) + remote keywords |
+| `sources.json` | Which portals are active (karriere.at, devjobs.at, LinkedIn, AMS, jobs.at) + search queries per portal — **also editable from the UI**, see [Settings page "Search"](#settings-page-search) |
+| `location.json` | Whitelist of cities/regions (Upper Austria) + remote keywords — **also editable from the UI** |
 | `experience-rules.json` | Keyword/phrase lists for the regex filter (years of experience, junior signals, exclusion/negation words) |
 | `settings.json` | `filterMode` (`regex` or `llm`) and fallback `filterModel` |
 
 ### Tuning the config files
+
+`sources.json` and `location.json` can be edited in the browser as of v0.5 via
+the **Search** settings page — no editor, no JSON knowledge, works on a phone.
+The other three files are still edited by hand.
+
+Every config file is re-read on each use (`loadSources()`,
+`loadLocationConfig()` in `lib/scrape-setup.ts`) — no server restart needed
+after a change.
 
 - **`sources.json`**: toggle portals and adjust search queries per portal
   if you're getting too few/too many hits.
@@ -166,12 +174,26 @@ framework) that does two things at once:
   (résumé upload), `/api/duplicates` (duplicate report, GET, synchronous),
   `/api/duplicates/merge` (merge a duplicate group), `/api/calendar`
   (calendar events, GET, synchronous), `/api/mail/replies/fetch` (scan the
-  Gmail inbox for replies), and `/api/scrape/*` / `/api/filter/*` (see below).
+  Gmail inbox for replies), `/api/gmail-sync` (backfill `sentAt`/
+  `replyReceivedAt`, read-only towards Gmail), `/api/jobs/:id/followup`
+  (follow-up as draft or send), `/api/config/schema` (search fields per
+  portal), `/api/config/sources` and `/api/config/location` (GET/PUT) plus
+  `/api/config/:name/restore`, and `/api/scrape/*` / `/api/filter/*`
+  (see below).
+
+The interface has three width bands:
+
+- **below 1024px** the sidebar becomes a drawer (burger in a top bar, overlay,
+  Esc). The starting folder there is the first non-empty one, or the scraper —
+  otherwise you land on an empty folder with no way out.
+- **1024–2000px**: three columns, continuous via `clamp()` rather than in steps.
+- **from 2000px** the cover letter and the posting sit side by side instead of
+  behind tabs.
 
 ### Scrape/Filter from the UI
 
 The sidebar has its own "Pipeline" group with entries **Scrape**, **Filter**,
-**Duplicates**, and **Cover letters** that trigger the matching `npm run
+**Duplicates**, **Cover letters**, and **Follow-ups** that trigger the matching `npm run
 <x>` script from the browser instead of the terminal. Scrape/Filter/Cover
 letters follow the same pattern:
 
@@ -197,17 +219,111 @@ opens; a "Check again" button triggers a refetch. Per group (or all at once)
 a "Merge" button consolidates them: the newest listing survives but takes on
 the oldest duplicate's `scrapedAt`; the remaining files get deleted.
 
+### Bulk selection in the job list
+
+Every row has a checkbox, in every folder. Once something is selected, a bar
+appears with **Move** (Jobs / Rejected / Deleted), **Verdict** (Match /
+Offstack / Brutal), **Delete**, and **Cover letters (n)**.
+
+Two things that aren't obvious:
+
+- The number on the cover-letter button is smaller than the selection when it
+  contains unfiltered or brutal-rated jobs — the run can't process those. They
+  stay selectable because they *are* meant for deleting and moving.
+- "Move → Jobs" carries a brutal verdict along to `offstack`. *Jobs* and
+  *Rejected* are both `status: triaged` and differ **only** in `fit` (see
+  `lib/folders.ts`); without changing the verdict the job would fall straight
+  back, which looks like "nothing happened".
+
+Sent applications aren't selectable — they're read-only everywhere else in the
+UI, and a bulk action shouldn't undercut that through the back door.
+
+### Settings page "Search"
+
+The **Search** entry (next to Attachment and CC) makes `sources.json` and
+`location.json` editable in the browser. Two sections, because they are two
+different things that could both be called "location":
+
+- **Search area** — goes to the portal. Only LinkedIn and AMS have one; the
+  other three search Austria-wide and are filtered afterwards.
+- **Radius** — `location.json`, applied **after** scraping via `isInRange()`,
+  for all five sources.
+
+The shape of a portal block follows the field count, not the portal name: one
+field becomes a chip cloud, several become labelled rows. How the page knows:
+every `ScraperAdapter` carries a **`querySchema`** as of v0.5 — a required
+field, so a portal without a schema doesn't compile. `GET /api/config/schema`
+serves it to the browser.
+
+The same schema is checked in three places: in the form while typing, on the
+server before writing, and in the adapters while reading. All three call
+`checkQuery()` from `lib/query-schema.ts` — the rules exist exactly once. A
+query with a typo in the *key* (`keywords` instead of `keyword`) used to be
+skipped silently; now the adapter reports it, and the page offers "Repair" when
+the intent is unambiguous.
+
+The collapsible raw JSON is a **view**, not a second editor — read-only with a
+copy button, so there is no second source of truth.
+
+On save the previous version moves to `<file>.bak`, and "Restore last version"
+brings it back. One step deep; anything older comes from git, since both files
+are versioned.
+
+**One warning is built in**: "Österreich" as a region. `COUNTRY_ONLY`
+(`lib/location-terms.ts`) is compared **exactly** in `isInRange()`, a region by
+substring — entering it there would keep every job ending in "…, Österreich"
+and effectively switch the radius filter off. The most obvious input there is,
+and the only one that silently inverts the whole behaviour. Warned, not
+forbidden.
+
+### Follow-ups
+
+The **Follow-ups** entry lists applications with no reply for at least
+`FOLLOW_UP_DAYS` (3, see `lib/followup.ts`) — longest waiting first, with a due
+count on the sidebar. Select individually or all, then **As draft** (Gmail
+draft) or **Send** as a bulk action.
+
+The clock runs from the **last contact**, not from `sentAt`: after a follow-up
+the same job is due again three days later, repeating until a reply arrives. A
+created draft counts as handled — otherwise the same job would get a second one
+on the next visit. The history lives on the job as `followUps: [{ at, via }]`,
+which is where "2× followed up" in the row comes from.
+
+The subject deliberately stays the one from the application (`Bewerbung als X
+bei Y`): that keeps the follow-up in the same Gmail thread, and
+`lib/mail-match.ts` reconstructs exactly this subject to attribute incoming
+replies to a job. A separate follow-up subject would make a reply to it miss
+the subject match. The body is new and short, not the cover letter a second time.
+
 ### Calendar
 
-The sidebar tab "Calendar" shows when applications went out (`sentAt`) and
-when replies came back (`replyReceivedAt`) — day = square, week = row, month
-= block, newest month first. Clicking a day opens a popup with that day's
+The sidebar tab "Calendar" shows when applications went out (`sentAt`), when
+follow-ups were sent (`followUps`), and when replies came back
+(`replyReceivedAt`) — day = square, week = row, month = block, newest month
+first. Three colours, legend in the header; a day carrying several kinds is
+split accordingly. Every follow-up is its own entry, not just the last one —
+the calendar should show how often you chased. Clicking a day opens a popup with that day's
 entries and jumps from there to the job detail view. Replies aren't detected
 automatically: a "Fetch replies" button in the "Sent" folder (history) scans
 the Gmail inbox via `POST /api/mail/replies/fetch` (email+subject matching,
 no message ID) and sets `replyReceivedAt` on hits — jobs with a reply then
 show a "Reply received" badge, with a "Only with reply" filter in the
 history.
+
+### Gmail sync (backfill)
+
+The "Gmail sync" button at the top right of the Calendar tab backfills data
+missing from the job JSON (`POST /api/gmail-sync`): the Sent folder supplies
+`sentAt`, the inbox `replyReceivedAt`. Meant for applications that went out
+before these fields existed, or by hand past the bot — live sends write their
+own `sentAt` anyway.
+
+Scanning starts at `HISTORY_START` (`lib/calendar.ts`, currently `2026-07-01`)
+— the same span the calendar displays. Only mails you labelled as an
+application in Gmail are pulled; labelled mails without a matching job are
+stored as standalone calendar entries so the period stays complete. The sync
+is read-only towards Gmail and never overwrites an existing value, it only
+fills gaps.
 
 ## Tests
 
@@ -252,6 +368,12 @@ actually successful Gmail call (no status change on failure — those land on
 `fehler` instead). `geloescht` is reachable from most states (a trash bin,
 not a file delete). There is still no auto-send without the explicit
 "confirm sent" click.
+
+`gesendet` isn't the end: `followUps` collects every follow-up as
+`{ at, via }` (see [Follow-ups](#follow-ups)). The status does **not** change —
+the application was sent and stays sent; a follow-up isn't a new state but
+another contact. Same for `replyReceivedAt`: a reply is additional information,
+not a status change.
 
 ## Environment variables
 

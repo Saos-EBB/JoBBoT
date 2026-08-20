@@ -6,17 +6,22 @@ import { createStorage } from '../storage/index.ts';
 import { config } from '../config.ts';
 import { jobBasename } from '../lib/slugify.ts';
 import { loadProfile } from '../lib/profile.ts';
-import { composeEmail, createDraft, sendMail, logMailAction, fetchInboxReplies, type ComposedEmail } from '../mail/gmail.ts';
-import { matchReplies } from '../lib/mail-match.ts';
+import { composeEmail, composeFollowUp, createDraft, sendMail, logMailAction, fetchInboxReplies, fetchSentMails, istBewerbung, type ComposedEmail, type SentMail } from '../mail/gmail.ts';
+import { matchReplies, matchSent } from '../lib/mail-match.ts';
+import { HISTORY_START } from '../lib/calendar.ts';
+import { loadMailEvents, saveMailEvents, toMailEvents } from '../lib/mail-events.ts';
 import { ATTACHMENT_PATH, ATTACHMENT_FILENAME } from '../lib/attachment.ts';
 import { loadCc, saveCc, clearCc } from '../lib/cc.ts';
 import { loadSources } from '../lib/sources.ts';
 import { loadSettings, type FilterMode } from '../lib/settings.ts';
-import { buildScrapeSetup } from '../lib/scrape-setup.ts';
+import { adapterRegistry, buildScrapeSetup } from '../lib/scrape-setup.ts';
+import { isConfigName, readConfig, writeConfig, restoreConfig, hasBackup, validateConfig } from '../lib/config-store.ts';
 import { runScrape } from '../lib/scrape-runner.ts';
 import { filterJob } from '../lib/filter.ts';
 import { createBatcher } from '../lib/grid-batch.ts';
 import { findDuplicates, planMerge } from '../lib/duplicates.ts';
+import { recordFollowUp } from '../lib/followup.ts';
+import { canGenerateAnschreiben } from '../lib/folders.ts';
 import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 
@@ -257,10 +262,20 @@ const server = createServer(async (req, res) => {
   // flache Ereignisliste.
   if (req.method === 'GET' && url.pathname === '/api/calendar') {
     const jobs = await storage.list();
-    const events: { date: string; type: 'sent' | 'reply'; jobId: string; title: string; company: string }[] = [];
+    const events: { date: string; type: 'sent' | 'reply' | 'followup'; jobId: string | null; title: string; company: string }[] = [];
     for (const job of jobs) {
       if (job.sentAt) events.push({ date: job.sentAt.slice(0, 10), type: 'sent', jobId: job.id, title: job.title, company: job.company });
+      // Jeder Nachfass ein eigener Eintrag, nicht nur der letzte: der Kalender soll
+      // zeigen, WIE OFT und WANN nachgehakt wurde, nicht bloß dass es passiert ist.
+      for (const fu of job.followUps ?? []) {
+        events.push({ date: fu.at.slice(0, 10), type: 'followup', jobId: job.id, title: job.title, company: job.company });
+      }
       if (job.replyReceivedAt) events.push({ date: job.replyReceivedAt.slice(0, 10), type: 'reply', jobId: job.id, title: job.title, company: job.company });
+    }
+    // Gelabelte Bewerbungs-Mails ohne Job im Bestand (siehe lib/mail-events.ts) — jobId
+    // bleibt null, die UI zeigt sie als "nur Mail" ohne Sprung in die Detailansicht.
+    for (const ev of await loadMailEvents()) {
+      events.push({ date: ev.date.slice(0, 10), type: 'sent', jobId: null, title: ev.title, company: ev.company });
     }
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(events));
@@ -341,9 +356,73 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  // Das querySchema jedes Portals, damit die Einstellungsseite ihr Formular daraus bauen
+  // kann. Kommt aus der Registry, nicht aus config/sources.json — der Code sagt, welche
+  // Portale es gibt und welche Felder sie kennen (siehe Ticket "Schema pro Portal").
+  if (req.method === 'GET' && url.pathname === '/api/config/schema') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(
+      Object.fromEntries(Object.entries(adapterRegistry).map(([name, a]) => [name, a.querySchema])),
+    ));
+    return;
+  }
+
+  // Config-Endpunkte fuer die Einstellungsseite. Ein GET/PUT je Datei statt eines
+  // Sammel-Endpunkts: die beiden Dateien haben getrennte Bedeutung, und ein PUT, das
+  // beide schreibt, schriebe auch, was niemand angefasst hat.
+  const configMatch = url.pathname.match(/^\/api\/config\/([a-z]+)$/);
+  if (configMatch && (req.method === 'GET' || req.method === 'PUT')) {
+    const name = configMatch[1];
+    if (!isConfigName(name)) { res.writeHead(404).end('Unbekannte Konfiguration'); return; }
+
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ data: await readConfig(name), hasBackup: await hasBackup(name) }));
+      return;
+    }
+
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    let data: unknown;
+    try {
+      data = JSON.parse(body);
+    } catch (err) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ errors: [`Kein gültiges JSON: ${err instanceof Error ? err.message : String(err)}`] }));
+      return;
+    }
+    const errors = validateConfig(name, data);
+    if (errors.length > 0) {
+      res.writeHead(422, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ errors }));
+      return;
+    }
+    await writeConfig(name, data);
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    // scrapeRun.status mitschicken: loadSources() liest pro Nutzung frisch, ein
+    // laufender Scrape sieht die Aenderung also mitten drin. Gesperrt wird nicht (der
+    // Schaden ist eine Anfrage mehr oder weniger), aber die Seite soll es sagen koennen.
+    res.end(JSON.stringify({ ok: true, scrapeRunning: scrapeRun.status === 'running' }));
+    return;
+  }
+
+  const restoreMatch = url.pathname.match(/^\/api\/config\/([a-z]+)\/restore$/);
+  if (req.method === 'POST' && restoreMatch) {
+    const name = restoreMatch[1];
+    if (!isConfigName(name)) { res.writeHead(404).end('Unbekannte Konfiguration'); return; }
+    const restored = await restoreConfig(name);
+    res.writeHead(restored ? 200 : 404, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(restored ? { ok: true, data: await readConfig(name) } : { error: 'Keine gesicherte Fassung vorhanden' }));
+    return;
+  }
+
   if (req.method === 'GET' && url.pathname === '/api/scrape/sources') {
+    // Ausgangspunkt ist die Registry, nicht die Datei. Vorher lief das andersherum als
+    // in run-scrape.ts — ein Portalname in sources.json ohne Adapter erschien hier als
+    // auswählbare Quelle und lief dann in lib/scrape-runner.ts auf registry[name].kind
+    // eines undefined. Jetzt sind beide Wege gleich: Code sagt, was es gibt.
     const sources = loadSources();
-    const names = Object.entries(sources).filter(([, c]) => c.enabled).map(([name]) => name);
+    const names = Object.keys(adapterRegistry).filter(name => sources[name]?.enabled);
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(names));
     return;
@@ -609,7 +688,7 @@ const server = createServer(async (req, res) => {
       // nochmal) — hier vorab gefiltert, damit "skipped" korrekt zählt, statt
       // still Lücken aus fehlenden/ungeeigneten IDs zu übernehmen.
       const fetched = await Promise.all(jobIds.map(id => storage.get(id)));
-      const jobs = fetched.filter((j): j is Job => j !== null && j.status === 'triaged' && j.fit !== 'brutal');
+      const jobs = fetched.filter((j): j is Job => j !== null && canGenerateAnschreiben(j));
       const preSkipped = jobIds.length - jobs.length;
 
       if (jobs.length === 0) {
@@ -652,6 +731,71 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  // Rückwirkender Sync: liest Gesendet-Ordner und INBOX und trägt nach, was in den
+  // Job-JSONs fehlt. Manuell ausgelöst wie die anderen Mail-Features (kein Daemon).
+  //
+  // Drei Zusagen, die hier bewusst im Code stehen und nicht nur im Auftrag:
+  //  1. read-only gegenüber Gmail — beide Ordner werden mit readOnly:true geöffnet,
+  //     nichts wird gesendet, gelöscht, verschoben oder als gelesen markiert;
+  //  2. füllt nur Lücken — ein vorhandenes sentAt/replyReceivedAt bleibt unangetastet,
+  //     damit ein heuristischer Treffer nie einen echten Wert überschreibt;
+  //  3. ändert keinen Status — geschrieben werden ausschließlich die zwei Datumsfelder.
+  if (req.method === 'POST' && url.pathname === '/api/gmail-sync') {
+    try {
+      const jobs = await storage.list();
+      const kandidaten = jobs.filter(j => j.email && !j.sentAt);
+      // Fester Startpunkt statt aus scrapedAt abgeleitet: gescannt wird der Zeitraum,
+      // den auch der Kalender anzeigt (siehe lib/calendar.ts HISTORY_START).
+      const since = new Date(HISTORY_START);
+
+      // Der Scan läuft auch ohne Kandidaten. Er schreibt dann nichts, aber die Zahl der
+      // gelesenen Mails macht sichtbar, ob das Postfach überhaupt etwas hergibt — ein
+      // stilles "0 ergänzt" verrät nicht, ob nichts da war oder nichts zugeordnet wurde.
+      const alleSent = await fetchSentMails(since);
+      // Nur was du in Gmail als Bewerbung markiert hast — sonst landete jede private
+      // Mail im Kalender.
+      const sentMails = alleSent.filter(istBewerbung);
+      let sentGefuellt = 0;
+      const zugeordnet = new Set<SentMail>();
+      for (const { job, date, mail } of matchSent(sentMails, jobs)) {
+        await storage.update(job.id, { sentAt: date.toISOString() });
+        zugeordnet.add(mail);
+        sentGefuellt++;
+      }
+
+      // Gelabelte Mails ohne Job: als eigene Kalender-Ereignisse ablegen, damit der
+      // Zeitraum vollständig sichtbar ist statt an Lücken im Job-Bestand zu scheitern.
+      const ohneJob = sentMails.filter(m => !zugeordnet.has(m));
+      await saveMailEvents(toMailEvents(ohneJob));
+
+      // Frisch aus dem Sent-Scan gesetzte sentAt sollen sofort für die Antwort-Zuordnung
+      // zählen, deshalb die Liste neu laden statt die veraltete weiterzureichen.
+      const nachSent = await storage.list();
+      const replies = await fetchInboxReplies(since);
+      let replyGefuellt = 0;
+      for (const { job, reply } of matchReplies(replies, nachSent)) {
+        if (job.replyReceivedAt) continue; // Lücken füllen, nicht überschreiben
+        await storage.update(job.id, { replyReceivedAt: reply.date.toISOString() });
+        replyGefuellt++;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        sentGescannt: alleSent.length,
+        markiert: sentMails.length,
+        sentGefuellt,
+        ohneJob: ohneJob.length,
+        replyGescannt: replies.length,
+        replyGefuellt,
+        seit: HISTORY_START,
+      }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
+    }
+    return;
+  }
+
   // Manuell auslösbarer Fetch statt Auto-Polling-Daemon (siehe Auftrag: Prototyp reicht
   // ein Button/eine Route, systemd-Scheduling wäre ein separater Auftrag).
   if (req.method === 'POST' && url.pathname === '/api/mail/replies/fetch') {
@@ -691,6 +835,37 @@ const server = createServer(async (req, res) => {
     const updated = await storage.update(job.id, patch);
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(updated));
+    return;
+  }
+
+  // Nachfass: eine Route für beide Wege, weil sich nur der letzte Schritt unterscheidet
+  // (Entwurf anlegen vs. senden) — Betreff, Text und die Historie sind identisch.
+  // Anders als /send ändert das den Status NICHT: die Bewerbung war schon gesendet und
+  // bleibt es, ein Nachfass ist kein neuer Zustand, sondern ein weiterer Kontakt.
+  const followUpMatch = url.pathname.match(/^\/api\/jobs\/([a-f0-9]+)\/followup$/);
+  if (req.method === 'POST' && followUpMatch) {
+    const job = await storage.get(followUpMatch[1]);
+    if (!job) { res.writeHead(404).end('Job nicht gefunden'); return; }
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    let via: 'draft' | 'sent' = 'draft';
+    try {
+      via = (JSON.parse(body) as { via?: 'draft' | 'sent' }).via === 'sent' ? 'sent' : 'draft';
+    } catch {
+      // kein Body — bleibt beim sichereren Entwurf
+    }
+    try {
+      const email = await composeFollowUp(job, profile);
+      if (via === 'sent') await sendMail(email); else await createDraft(email);
+      const updated = await storage.update(job.id, { followUps: recordFollowUp(job, via) });
+      await logMailAction(job, via === 'sent' ? 'followup-sent' : 'followup-drafted');
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(updated));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: `Nachfass fehlgeschlagen: ${message}` }));
+    }
     return;
   }
 

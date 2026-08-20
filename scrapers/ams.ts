@@ -1,5 +1,6 @@
 import { chromium, type Page } from 'playwright';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
+import { usableQueries } from '../lib/query-schema.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
 
 const BASE = 'https://jobs.ams.at/public/emps';
@@ -67,6 +68,14 @@ async function fetchSearchPage(page: Page, keyword: string, pageNum: number, loc
 export const amsAdapter: ScraperAdapter = {
   name: 'ams',
   kind: 'browser',
+  querySchema: [
+    { key: 'keyword', label: 'Suchbegriff', required: true, format: 'text', placeholder: 'junior software developer' },
+    { key: 'location', label: 'Suchgebiet', required: false, format: 'text', placeholder: 'Linz' },
+    // "Radius", nicht "Umkreis": Umkreis heisst in der UI der Nachfilter aus
+    // config/location.json. Dieses Feld geht ans Portal und meint etwas anderes —
+    // dieselben zwei Bedeutungen, die Ticket "Ort bedeutet zweierlei" getrennt hat.
+    { key: 'vicinity', label: 'Radius (km)', required: false, format: 'number', placeholder: '40' },
+  ],
   async scrape(
     queries: SourceQuery[],
     keep?: (job: ScrapedJob) => boolean,
@@ -77,9 +86,8 @@ export const amsAdapter: ScraperAdapter = {
     const browser = await chromium.launch({ headless: true });
     try {
       const page = await browser.newPage();
-      for (const query of queries) {
-        const keyword = query.keyword ?? '';
-        if (!keyword) continue;
+      for (const query of usableQueries(amsAdapter, queries)) {
+        const keyword = query.keyword;
 
         let locationParam = '';
         if (query.location) {
