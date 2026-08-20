@@ -2,8 +2,10 @@ import { readFileSync } from 'node:fs';
 
 interface LocationConfig { cities: string[]; regions: string[]; remote: string[] }
 
-// Genauer Länder-Match: unbekannter Ort → behalten, Detail/LLM/Mensch entscheidet
-const COUNTRY_ONLY = ['österreich', 'oesterreich', 'austria', 'at'];
+// Genauer Länder-Match: unbekannter Ort → behalten, Detail/LLM/Mensch entscheidet.
+// Die Liste selbst liegt in lib/location-terms.ts, weil die Einstellungsseite sie
+// ebenfalls braucht und diese Datei wegen readFileSync nicht ins Bundle darf.
+import { COUNTRY_ONLY } from './location-terms.ts';
 
 export function isInRange(location: string, cfg: LocationConfig): boolean {
   const loc = location.trim();

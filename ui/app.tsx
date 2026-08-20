@@ -29,6 +29,13 @@ import type { Job, Fit } from '../scrapers/interface.ts';
 import { FOLDER_IDS, inFolder, canGenerateAnschreiben, type FolderId } from '../lib/folders.ts';
 import { HISTORY_START, monthsDescending } from '../lib/calendar.ts';
 import { FOLLOW_UP_DAYS, dueFollowUps, daysSinceLastContact } from '../lib/followup.ts';
+import { COUNTRY_ONLY } from '../lib/location-terms.ts';
+// Dieselbe Funktion, die der Server vor dem Schreiben laufen lässt (lib/config-store.ts)
+// und die die Adapter beim Scrapen benutzen. lib/query-schema.ts importiert nur Typen,
+// darf also ins Bundle — so gibt es die Regeln genau einmal, statt einmal hier
+// nachgebaut und einmal dort.
+import { checkQuery, describeProblem } from '../lib/query-schema.ts';
+import type { QueryField } from '../scrapers/interface.ts';
 
 // /api/jobs joint das Anschreiben serverseitig dazu (siehe scripts/ui-server.ts) —
 // es lebt in data/anschreiben/{slug}.md, nicht im Job-JSON. Deshalb ist `brief` hier
@@ -72,6 +79,25 @@ type DuplicateGroup = { key: string; jobs: Job[] };
 // je gesetztem sentAt/replyReceivedAt, date als 'YYYY-MM-DD'. jobId ist null bei
 // gelabelten Bewerbungs-Mails, zu denen es keinen Job (mehr) gibt: die kommen aus
 // data/mail-events.json und haben nichts, wohin man springen könnte.
+// Spiegelt lib/sources.ts bzw. lib/location.ts — kein gemeinsames Modul, weil beide
+// readFileSync benutzen und nicht ins Browser-Bundle dürfen (siehe lib/location-terms.ts).
+type SourcesCfg = Record<string, { enabled: boolean; queries: Record<string, string>[] }>;
+type LocationCfg = { cities: string[]; regions: string[]; remote: string[] };
+
+const UMKREIS_GRUPPEN: { key: keyof LocationCfg; label: string; hint: string }[] = [
+  { key: 'cities', label: 'Orte', hint: 'Ort hinzufügen' },
+  { key: 'regions', label: 'Regionen', hint: 'Region hinzufügen' },
+  { key: 'remote', label: 'Zählt als „remote"', hint: 'Begriff hinzufügen' },
+];
+
+// Die eine Eingabe, die still das ganze Verhalten umdreht: COUNTRY_ONLY wird in
+// isInRange() EXAKT verglichen, eine Region dagegen per Substring. "Österreich" als
+// Region behält damit jeden Job mit "…, Österreich" — der Umkreisfilter ist praktisch
+// aus. Gewarnt, nicht verboten: wer wirklich alles will, darf das.
+function istLandesbegriff(wert: string): boolean {
+  return COUNTRY_ONLY.includes(wert.trim().toLowerCase());
+}
+
 type CalendarEvent = { date: string; type: 'sent' | 'reply' | 'followup'; jobId: string | null; title: string; company: string };
 
 /* ------------------------------------------------------------------ *
@@ -518,6 +544,80 @@ const CSS = `
 .cal__popup-foot { padding:8px 18px; border-top:1px solid var(--line-soft); font-family:var(--mono); font-size:10px; color:var(--dim); }
 
 /* ---------- Responsive ---------- */
+/* ---------- Einstellungsseite "Suche" ---------- */
+.cfg { display:flex; flex-direction:column; gap:34px; max-width:820px; }
+.cfg__block { display:flex; flex-direction:column; gap:12px; }
+.cfg__h {
+  display:flex; align-items:baseline; gap:10px; margin:0;
+  font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+}
+.cfg__h span { font-size:10.5px; letter-spacing:0; text-transform:none; color:var(--dim); }
+.cfg__erklaerung { margin:0; font-size:12px; color:var(--dim); max-width:60ch; }
+
+.cfg__portal { border:1px solid var(--line-soft); border-radius:6px; padding:11px 13px; display:flex; flex-direction:column; gap:9px; }
+.cfg__portal--aus { opacity:.55; }
+.cfg__portal--aus:focus-within, .cfg__portal--aus:hover { opacity:1; }
+.cfg__portal-kopf { display:flex; align-items:center; gap:10px; }
+.cfg__portal-name { font-weight:600; font-size:13px; flex:1; }
+.cfg__schalter { display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10.5px; color:var(--dim); cursor:pointer; }
+
+.cfg__chips { display:flex; flex-wrap:wrap; align-items:center; gap:5px; }
+.cfg__chip {
+  display:inline-flex; align-items:center; gap:5px; padding:3px 4px 3px 9px; border-radius:99px;
+  border:1px solid var(--line); color:var(--muted); font-size:11.5px; white-space:nowrap;
+}
+.cfg__chip-x { color:var(--dim); font-size:13px; line-height:1; padding:2px 5px; border-radius:99px; }
+.cfg__chip-x:hover { color:var(--err); background:var(--raised); }
+.cfg__add {
+  flex:1; min-width:150px; background:var(--ink); border:1px dashed var(--line); border-radius:99px;
+  color:var(--text); font:inherit; font-size:11.5px; padding:3px 10px; outline:none;
+}
+.cfg__add:focus { border-style:solid; border-color:var(--dim); }
+.cfg__add::placeholder { color:var(--dim); }
+
+/* Zeilenform für Anfragen mit mehreren Feldern (linkedin, ams) — ein Chip müsste zum
+   Ändern ohnehin aufklappen, dann kann es gleich eine Zeile sein. */
+.cfg__zeilen { display:flex; flex-direction:column; gap:4px; }
+.cfg__zeile { display:grid; gap:6px; align-items:center; }
+.cfg__zeile--kopf { font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--dim); }
+.cfg__feld {
+  background:var(--ink); border:1px solid var(--line); border-radius:5px;
+  color:var(--text); font:inherit; font-size:12px; padding:4px 8px; outline:none; min-width:0;
+}
+.cfg__feld:focus { border-color:var(--dim); }
+.cfg__plus { align-self:flex-start; margin-top:2px; }
+
+.cfg__warn {
+  flex:1 0 100%; display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:4px;
+  border:1px solid rgba(232,176,75,.4); background:rgba(232,176,75,.07); border-radius:6px;
+  padding:9px 11px; font-size:12px; color:var(--fit-offstack);
+}
+.cfg__warn > span { flex:1 1 240px; }
+
+.cfg__kaputt, .cfg__verwaist {
+  border:1px solid rgba(232,98,42,.35); background:rgba(232,98,42,.06); border-radius:6px;
+  padding:11px 13px; font-size:12px; color:var(--muted);
+  display:flex; flex-direction:column; gap:7px;
+}
+.cfg__verwaist { flex-direction:row; align-items:center; gap:10px; }
+.cfg__kaputt b { color:var(--fit-brutal); font-size:12.5px; }
+.cfg__kaputt-zeile { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.cfg__kaputt-zeile > span { flex:1 1 260px; }
+
+.cfg__gruppe { display:flex; flex-direction:column; gap:6px; }
+.cfg__gruppe-name { font-size:12px; color:var(--dim); }
+
+.cfg__roh { display:flex; flex-direction:column; gap:8px; align-items:flex-start; margin-top:4px; }
+.cfg__roh-kopf { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--muted); }
+.cfg__roh-kopf:hover { color:var(--text); }
+.cfg__roh-hint { font-family:var(--mono); font-size:10px; color:var(--dim); }
+.cfg__roh-text {
+  width:100%; max-height:340px; overflow:auto; margin:0;
+  background:var(--ink); border:1px solid var(--line-soft); border-radius:6px; padding:11px 13px;
+  font-family:var(--mono); font-size:11px; line-height:1.6; color:var(--muted);
+}
+.cfg__leiste { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+
 /* ---------- Mobile Kopfzeile + Schublade ---------- */
 /* Beide existieren nur unterhalb von 1024. Darüber ist .sb eine normale Rasterspalte,
    und diese Regeln fassen sie nicht an. */
@@ -551,6 +651,18 @@ const CSS = `
   /* Kalender wächst mit, statt bei 7×34px stehenzubleiben. */
   .cal__weekday-row, .cal__grid { grid-template-columns:repeat(7, minmax(0, 1fr)); }
   .cal__sq { width:auto; }
+
+  /* Mehrfeldrige Anfragen stapeln statt nebeneinander — drei Felder auf 390px sind
+     drei unlesbare Spalten. Die Kopfzeile entfällt dabei, die Platzhalter tragen. */
+  .cfg__zeile { grid-template-columns:1fr auto !important; }
+  .cfg__zeile--kopf { display:none; }
+  .cfg__zeile .cfg__feld { grid-column:1; }
+  .cfg__zeile .cfg__chip-x { grid-row:1; grid-column:2; }
+  /* Gestapelt sind drei Anfragen zu je zwei Feldern sechs Kästen untereinander — ohne
+     Klammer sieht man nicht, welche zusammengehören. */
+  .cfg__zeilen .cfg__zeile:not(.cfg__zeile--kopf) {
+    border:1px solid var(--line-soft); border-radius:6px; padding:7px; background:var(--slate);
+  }
 
   /* Nachfass-Zeile zweizeilig: Firma+Titel oben, Adresse+Alter darunter. */
   .nf__row { grid-template-columns:auto 1fr; row-gap:4px; }
@@ -666,6 +778,7 @@ const FOLDER_LABEL: Record<string, string> = Object.fromEntries(
 const VIEW_LABEL: Partial<Record<string, string>> = {
   attachment: 'Anhang', cc: 'CC', calendar: 'Kalender', scrape: 'Scrape',
   filter: 'Filter', duplicates: 'Duplikate', anschreiben: 'Anschreiben', nachfass: 'Nachfassen',
+  suche: 'Suche',
 };
 
 const EMPTY_COPY: Record<FolderId, string> = {
@@ -1004,6 +1117,142 @@ function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; onOpenJo
   );
 }
 
+// Chip-Liste für Felder, die aus einer einzigen Textzeile bestehen: Suchbegriffe,
+// Orte, Regionen. Kompakt, weil sieben Begriffe sonst sieben Zeilen Höhe kosten.
+function ChipListe({ werte, hint, onChange, warnung }: {
+  werte: string[];
+  hint: string;
+  onChange: (next: string[]) => void;
+  warnung?: (wert: string) => string | null;
+}) {
+  const [entwurf, setEntwurf] = useState('');
+  const [nachfrage, setNachfrage] = useState<string | null>(null);
+
+  const uebernehmen = (wert: string, trotzWarnung = false) => {
+    const w = wert.trim();
+    if (!w || werte.includes(w)) { setEntwurf(''); return; }
+    const warn = warnung?.(w);
+    if (warn && !trotzWarnung) { setNachfrage(w); return; }
+    onChange([...werte, w]);
+    setEntwurf('');
+    setNachfrage(null);
+  };
+
+  return (
+    <div className="cfg__chips">
+      {werte.map(w => (
+        <span key={w} className="cfg__chip">
+          {w}
+          <button className="cfg__chip-x" onClick={() => onChange(werte.filter(x => x !== w))} aria-label={`${w} entfernen`}>×</button>
+        </span>
+      ))}
+      <input
+        className="cfg__add"
+        value={entwurf}
+        placeholder={hint}
+        onChange={e => { setEntwurf(e.target.value); setNachfrage(null); }}
+        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); uebernehmen(entwurf); } }}
+        onBlur={() => { if (!nachfrage) uebernehmen(entwurf); }}
+      />
+      {nachfrage && (
+        <div className="cfg__warn">
+          <span>{warnung?.(nachfrage)}</span>
+          <button className="btn" onClick={() => uebernehmen(nachfrage, true)}>Trotzdem eintragen</button>
+          <button className="btn btn--ghost" onClick={() => { setNachfrage(null); setEntwurf(''); }}>Abbrechen</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Ein Portalblock. Die Form folgt der Feldzahl, nicht dem Portalnamen: ein Feld wird zur
+// Chip-Wolke, mehrere werden zu beschrifteten Zeilen. Welche Form es ist, sagt das
+// querySchema des Adapters — ein künftiges Portal ordnet sich damit von selbst ein.
+function PortalBlock({ name, cfg, felder, onChange }: {
+  name: string;
+  cfg: { enabled: boolean; queries: Record<string, string>[] };
+  felder: QueryField[];
+  onChange: (next: { enabled: boolean; queries: Record<string, string>[] }) => void;
+}) {
+  const einfeldrig = felder.length === 1;
+  const feld = felder[0];
+
+  return (
+    <div className={'cfg__portal' + (cfg.enabled ? '' : ' cfg__portal--aus')}>
+      <div className="cfg__portal-kopf">
+        <span className="cfg__portal-name">{name}</span>
+        {/* Deaktivierte Portale bleiben sichtbar statt ausgeblendet — sonst verschwindet
+            die Konfiguration mitsamt dem Weg, sie zurückzuholen. */}
+        <label className="cfg__schalter">
+          <input type="checkbox" checked={cfg.enabled} onChange={e => onChange({ ...cfg, enabled: e.target.checked })} />
+          {cfg.enabled ? 'an' : 'aus'}
+        </label>
+      </div>
+
+      {einfeldrig ? (
+        <ChipListe
+          werte={cfg.queries.map(q => q[feld.key] ?? '').filter(Boolean)}
+          hint={`+ ${feld.label}`}
+          onChange={next => onChange({ ...cfg, queries: next.map(v => ({ [feld.key]: v })) })}
+        />
+      ) : (
+        <div className="cfg__zeilen">
+          <div className="cfg__zeile cfg__zeile--kopf" style={{ gridTemplateColumns: `repeat(${felder.length}, 1fr) auto` }}>
+            {felder.map(f => <span key={f.key}>{f.label}{f.required && ' *'}</span>)}
+            <span />
+          </div>
+          {cfg.queries.map((q, i) => (
+            <div key={i} className="cfg__zeile" style={{ gridTemplateColumns: `repeat(${felder.length}, 1fr) auto` }}>
+              {felder.map(f => (
+                <input
+                  key={f.key}
+                  className="cfg__feld"
+                  value={q[f.key] ?? ''}
+                  placeholder={f.placeholder}
+                  onChange={e => onChange({
+                    ...cfg,
+                    queries: cfg.queries.map((x, xi) => (xi === i ? { ...x, [f.key]: e.target.value } : x)),
+                  })}
+                />
+              ))}
+              <button className="cfg__chip-x" aria-label={`Anfrage ${i + 1} entfernen`}
+                onClick={() => onChange({ ...cfg, queries: cfg.queries.filter((_, xi) => xi !== i) })}>×</button>
+            </div>
+          ))}
+          <button className="btn btn--ghost cfg__plus"
+            onClick={() => onChange({ ...cfg, queries: [...cfg.queries, Object.fromEntries(felder.map(f => [f.key, ''])) ] })}>
+            + Anfrage
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Das Roh-JSON ist eine ANSICHT, kein zweiter Editor: es zeigt, was das Formular gerade
+// hält. Damit gibt es keine zweite Wahrheit, die mit der ersten in Konflikt geraten kann
+// (siehe .scratch/einstellungsseite, Ticket "Formular und Roh-JSON").
+function RohAnsicht({ offen, onToggle, data }: { offen: boolean; onToggle: () => void; data: unknown }) {
+  const text = JSON.stringify(data, null, 2);
+  return (
+    <div className="cfg__roh">
+      <button className="cfg__roh-kopf" onClick={onToggle} aria-expanded={offen}>
+        <span className={'cal__caret' + (offen ? ' cal__caret--offen' : '')}>▸</span>
+        Rohdaten (JSON)
+        <span className="cfg__roh-hint">nur lesen · spiegelt das Formular</span>
+      </button>
+      {offen && (
+        <>
+          <pre className="cfg__roh-text">{text}</pre>
+          <button className="btn btn--ghost" onClick={() => navigator.clipboard?.writeText(text)}>
+            <Copy /> Kopieren
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 // Hängt ein SSE-GridUnitEvent (eine fertige Zeile) an den bestehenden Sections-Baum an —
 // von Scrape/Filter/Anschreiben gleichermaßen genutzt, damit die Anhänge-Logik nicht
 // dreimal geschrieben wird.
@@ -1030,7 +1279,7 @@ export default function JobbotUI() {
   const drawerRef = useRef<HTMLElement>(null);
   // 'attachment'/'scrape'/'filter' sind keine Ordner (kein FolderId, kein Job-Filter)
   // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
-  const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben' | 'calendar' | 'nachfass'>('jobs');
+  const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben' | 'calendar' | 'nachfass' | 'suche'>('jobs');
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [attachment, setAttachment] = useState<AttachmentMeta | null | undefined>(undefined);
   const [cc, setCc] = useState<string | null | undefined>(undefined);
@@ -1070,6 +1319,17 @@ export default function JobbotUI() {
   // Ordnerwechsel geleert — der Nachfass-Tab ist kein Ordner.
   const [followUpSelection, setFollowUpSelection] = useState<Set<string>>(new Set());
   const [followUpBusy, setFollowUpBusy] = useState(false);
+
+  // Einstellungsseite "Suche". Zwei Dateien, zwei Zustände — sie werden getrennt
+  // geladen und getrennt gespeichert (ein PUT je Datei, siehe lib/config-store.ts).
+  const [schema, setSchema] = useState<Record<string, QueryField[]> | null>(null);
+  const [sources, setSources] = useState<SourcesCfg | null>(null);
+  const [umkreis, setUmkreis] = useState<LocationCfg | null>(null);
+  const [cfgBackup, setCfgBackup] = useState<{ sources: boolean; location: boolean }>({ sources: false, location: false });
+  const [cfgDirty, setCfgDirty] = useState<{ sources: boolean; location: boolean }>({ sources: false, location: false });
+  const [cfgErrors, setCfgErrors] = useState<string[]>([]);
+  const [cfgBusy, setCfgBusy] = useState(false);
+  const [rohOffen, setRohOffen] = useState<Record<string, boolean>>({});
   // Sidebar-Ordner mit frisch generierten Anschreiben, die noch nicht angesehen wurden —
   // nur im Speicher (kein localStorage, bewusst so einfach wie möglich): ein Reload
   // löscht die Markierung, das ist unkritisch, weil die betroffenen Jobs im Ordner
@@ -1593,6 +1853,115 @@ export default function JobbotUI() {
     else say(`${done.length} ${verb}`);
   }
 
+  // Beim Betreten der Seite laden, nicht beim Start — wie Duplikate und Kalender auch.
+  // Das Schema kommt aus der Adapter-Registry (GET /api/config/schema), nicht aus der
+  // Datei: der Code sagt, welche Portale es gibt und welche Felder sie kennen.
+  useEffect(() => {
+    if (view !== 'suche') return;
+    let abgebrochen = false;
+    (async () => {
+      const [sch, src, loc] = await Promise.all([
+        fetch('/api/config/schema').then(r => r.json()),
+        fetch('/api/config/sources').then(r => r.json()),
+        fetch('/api/config/location').then(r => r.json()),
+      ]);
+      if (abgebrochen) return;
+      setSchema(sch as Record<string, QueryField[]>);
+      setSources(src.data as SourcesCfg);
+      setUmkreis(loc.data as LocationCfg);
+      setCfgBackup({ sources: !!src.hasBackup, location: !!loc.hasBackup });
+      setCfgDirty({ sources: false, location: false });
+      setCfgErrors([]);
+    })();
+    return () => { abgebrochen = true; };
+  }, [view]);
+
+  async function saveConfig(name: 'sources' | 'location') {
+    const data = name === 'sources' ? sources : umkreis;
+    if (!data) return;
+    setCfgBusy(true);
+    setCfgErrors([]);
+    try {
+      const res = await fetch(`/api/config/${name}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const body = await res.json();
+      if (!res.ok) { setCfgErrors(body.errors ?? ['Speichern fehlgeschlagen']); return; }
+      setCfgDirty(d => ({ ...d, [name]: false }));
+      setCfgBackup(b => ({ ...b, [name]: true }));
+      // loadSources() liest pro Nutzung frisch — ein laufender Scrape sieht die Änderung
+      // mitten drin. Gesperrt wird nicht, aber ungesagt bleiben soll es auch nicht.
+      say(body.scrapeRunning ? 'Gespeichert — ein Scrape läuft gerade und sieht die Änderung noch' : 'Gespeichert');
+    } finally {
+      setCfgBusy(false);
+    }
+  }
+
+  async function restoreConfig(name: 'sources' | 'location') {
+    setCfgBusy(true);
+    try {
+      const res = await fetch(`/api/config/${name}/restore`, { method: 'POST' });
+      const body = await res.json();
+      if (!res.ok) { say(body.error ?? 'Zurückholen fehlgeschlagen', 'err'); return; }
+      if (name === 'sources') setSources(body.data as SourcesCfg); else setUmkreis(body.data as LocationCfg);
+      setCfgBackup(b => ({ ...b, [name]: false }));
+      setCfgDirty(d => ({ ...d, [name]: false }));
+      setCfgErrors([]);
+      say('Letzte Fassung zurückgeholt');
+    } finally {
+      setCfgBusy(false);
+    }
+  }
+
+  // Anfragen, die kein Adapter annehmen würde. Zwei Quellen: Handedits an der Datei —
+  // dafür war der Hinweis ursprünglich gedacht — und Tippen im Formular selbst, etwa eine
+  // frisch angelegte Zeile mit leerem Pflichtfeld. Deshalb hängt daran auch der
+  // Speichern-Knopf: die Rückmeldung kommt beim Tippen, nicht erst als 422 vom Server.
+  //
+  // "Reparieren" wird nur angeboten, wenn die Absicht eindeutig ist: genau ein
+  // unbekannter Schlüssel und genau ein fehlendes Pflichtfeld heisst Tippfehler im
+  // Namen, der Wert soll bleiben. Alles andere waere Raten.
+  const kaputteAnfragen = useMemo(() => {
+    if (!sources || !schema) return [];
+    const treffer: { portal: string; index: number; problem: string; fix?: { von: string; nach: string } }[] = [];
+    for (const [portal, cfg] of Object.entries(sources)) {
+      const felder = schema[portal];
+      if (!felder) continue;
+      cfg.queries.forEach((q, i) => {
+        const probleme = checkQuery(felder, q);
+        if (probleme.length === 0) return;
+        const fehlend = probleme.filter(p => p.kind === 'missing');
+        const unbekannt = probleme.filter(p => p.kind === 'unknown');
+        treffer.push({
+          portal, index: i,
+          problem: probleme.map(describeProblem).join('; '),
+          fix: fehlend.length === 1 && unbekannt.length === 1
+            ? { von: unbekannt[0].key, nach: fehlend[0].key }
+            : undefined,
+        });
+      });
+    }
+    return treffer;
+  }, [sources, schema]);
+
+  const sourcesFehlerhaft = kaputteAnfragen.length > 0;
+
+  // Benennt einen Schlüssel um und behält den Wert — der Tippfehler-Fall.
+  function repariereAnfrage(portal: string, index: number, von: string, nach: string) {
+    setSources(prev => {
+      if (!prev) return prev;
+      const queries = prev[portal].queries.map((q, qi) => {
+        if (qi !== index) return q;
+        const { [von]: wert, ...rest } = q;
+        return { ...rest, [nach]: wert };
+      });
+      return { ...prev, [portal]: { ...prev[portal], queries } };
+    });
+    setCfgDirty(d => ({ ...d, sources: true }));
+  }
+
   // Fällige Nachfassen. Die Regel lebt in lib/followup.ts, damit sie testbar ist und
   // nicht zwischen Server und UI auseinanderdriftet.
   const faellig = useMemo(() => dueFollowUps(jobs), [jobs]);
@@ -1839,6 +2208,10 @@ export default function JobbotUI() {
           <button className={'fld' + (view === 'cc' ? ' fld--on' : '')} onClick={() => setView('cc')}>
             <Copy />
             <span className="fld__label">CC</span>
+          </button>
+          <button className={'fld' + (view === 'suche' ? ' fld--on' : '')} onClick={() => setView('suche')}>
+            <Search />
+            <span className="fld__label">Suche</span>
           </button>
           <button className={'fld' + (view === 'calendar' ? ' fld--on' : '')} onClick={() => setView('calendar')}>
             <Calendar />
@@ -2226,6 +2599,133 @@ export default function JobbotUI() {
               Alle zusammenführen
             </button>
           </footer>
+        </section>
+      ) : view === 'suche' ? (
+        /* ---------- Suche: Suchgebiet + Umkreis ---------- */
+        <section className="att">
+          <header className="dt__head">
+            <div className="dt__firma">Suche</div>
+            <div className="dt__titel">
+              Was gesucht wird und was davon übrig bleibt. Beides wirkt sofort — beide Dateien
+              werden bei jedem Lauf frisch gelesen, ein Neustart ist nicht nötig.
+            </div>
+          </header>
+          <div className="dt__body">
+            {!sources || !umkreis || !schema ? (
+              <div className="empty"><div className="empty__h">Lädt…</div></div>
+            ) : (
+              <div className="cfg">
+                {cfgErrors.length > 0 && (
+                  <div className="errbox">
+                    <div className="errbox__h"><AlertTriangle /> Nicht gespeichert</div>
+                    <div className="errbox__msg">{cfgErrors.map((e, i) => <div key={i}>{e}</div>)}</div>
+                  </div>
+                )}
+
+                {/* Anfragen aus Handedits, die kein Adapter annehmen würde. Der Hinweis
+                    steht hier, weil man sie hier auch loswird. */}
+                {kaputteAnfragen.length > 0 && (
+                  <div className="cfg__kaputt">
+                    <b>
+                      {kaputteAnfragen.length} Anfrage{kaputteAnfragen.length > 1 ? 'n' : ''} unbrauchbar — solange
+                      das so ist, lässt sich das Suchgebiet nicht speichern
+                    </b>
+                    {kaputteAnfragen.map((k, i) => (
+                      <div key={i} className="cfg__kaputt-zeile">
+                        <span>{k.portal}, Anfrage {k.index + 1}: {k.problem}</span>
+                        {k.fix && (
+                          <button className="btn" onClick={() => repariereAnfrage(k.portal, k.index, k.fix!.von, k.fix!.nach)}>
+                            „{k.fix.von}" → „{k.fix.nach}"
+                          </button>
+                        )}
+                        <button className="btn btn--ghost btn--danger" onClick={() => {
+                          setSources(prev => prev && ({
+                            ...prev,
+                            [k.portal]: { ...prev[k.portal], queries: prev[k.portal].queries.filter((_, qi) => qi !== k.index) },
+                          }));
+                          setCfgDirty(d => ({ ...d, sources: true }));
+                        }}>Entfernen</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <section className="cfg__block">
+                  <h3 className="cfg__h">Suchgebiet <span>geht an das Portal</span></h3>
+                  {Object.keys(schema).map(name => {
+                    const cfg = sources[name] ?? { enabled: false, queries: [] };
+                    return (
+                      <PortalBlock
+                        key={name} name={name} cfg={cfg} felder={schema[name]}
+                        onChange={next => { setSources({ ...sources, [name]: next }); setCfgDirty(d => ({ ...d, sources: true })); }}
+                      />
+                    );
+                  })}
+                  {/* Verwaiste Einträge: in der Datei, aber ohne Adapter. Angezeigt statt
+                      angeboten — die Registry sagt, welche Portale es gibt. */}
+                  {Object.keys(sources).filter(n => !schema[n]).map(n => (
+                    <div key={n} className="cfg__verwaist">
+                      „{n}" steht in der Datei, es gibt aber kein Portal dieses Namens — wird ignoriert.
+                      <button className="btn btn--ghost btn--danger" onClick={() => {
+                        const { [n]: _weg, ...rest } = sources;
+                        setSources(rest); setCfgDirty(d => ({ ...d, sources: true }));
+                      }}>Entfernen</button>
+                    </div>
+                  ))}
+                  <RohAnsicht offen={!!rohOffen.sources} onToggle={() => setRohOffen(o => ({ ...o, sources: !o.sources }))} data={sources} />
+                  <div className="cfg__leiste">
+                    <button
+                      className="btn btn--primary"
+                      disabled={cfgBusy || !cfgDirty.sources || sourcesFehlerhaft}
+                      title={sourcesFehlerhaft ? 'Erst die unbrauchbaren Anfragen oben beheben' : undefined}
+                      onClick={() => saveConfig('sources')}
+                    >
+                      Speichern
+                    </button>
+                    {cfgBackup.sources && (
+                      <button className="btn btn--ghost" disabled={cfgBusy} onClick={() => restoreConfig('sources')}>
+                        <Undo2 /> Letzte Fassung zurückholen
+                      </button>
+                    )}
+                  </div>
+                </section>
+
+                <section className="cfg__block">
+                  <h3 className="cfg__h">Umkreis <span>wirft nach dem Scrapen weg</span></h3>
+                  <p className="cfg__erklaerung">
+                    Gilt für alle Quellen, auch für die, die österreichweit suchen. Geprüft wird gegen
+                    alle Begriffe zusammen — die Gruppen ordnen nur.
+                  </p>
+                  {UMKREIS_GRUPPEN.map(g => (
+                    <div key={g.key} className="cfg__gruppe">
+                      <span className="cfg__gruppe-name">{g.label}</span>
+                      <ChipListe
+                        werte={umkreis[g.key]}
+                        hint={`+ ${g.hint}`}
+                        warnung={g.key === 'regions'
+                          ? (w) => istLandesbegriff(w)
+                            ? `„${w}" als Region behielte jeden Job, dessen Ort auf „…, ${w}" endet — also praktisch alle. Der Umkreisfilter wäre damit aus.`
+                            : null
+                          : undefined}
+                        onChange={next => { setUmkreis({ ...umkreis, [g.key]: next }); setCfgDirty(d => ({ ...d, location: true })); }}
+                      />
+                    </div>
+                  ))}
+                  <RohAnsicht offen={!!rohOffen.location} onToggle={() => setRohOffen(o => ({ ...o, location: !o.location }))} data={umkreis} />
+                  <div className="cfg__leiste">
+                    <button className="btn btn--primary" disabled={cfgBusy || !cfgDirty.location} onClick={() => saveConfig('location')}>
+                      Speichern
+                    </button>
+                    {cfgBackup.location && (
+                      <button className="btn btn--ghost" disabled={cfgBusy} onClick={() => restoreConfig('location')}>
+                        <Undo2 /> Letzte Fassung zurückholen
+                      </button>
+                    )}
+                  </div>
+                </section>
+              </div>
+            )}
+          </div>
         </section>
       ) : view === 'nachfass' ? (
         /* ---------- Nachfassen ---------- */
