@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { config } from '../config.ts';
 
 interface LocationConfig { cities: string[]; regions: string[]; remote: string[] }
 
@@ -17,6 +19,6 @@ export function isInRange(location: string, cfg: LocationConfig): boolean {
 }
 
 export function loadLocationConfig(): LocationConfig {
-  const path = new URL('../config/location.json', import.meta.url);
+  const path = join(config.configDir, 'location.json');
   return JSON.parse(readFileSync(path, 'utf8')) as LocationConfig;
 }
