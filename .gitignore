@@ -7,6 +7,7 @@ data/skills/
 skills-lock.json
 .understand-anything/
 data/jobs/**/*.json
+data/mail-events.json
 data/anschreiben/**/*.md
 data/attachments/*.pdf
 data/backup-*/
@@ -15,3 +16,7 @@ config/profile.json
 *.log
 dist
 /brainstorm
+
+# Sicherung der letzten Config-Fassung (siehe lib/config-store.ts) — Arbeitsstand,
+# keine Fassung; git hat die Historie.
+config/*.json.bak

@@ -23,9 +23,19 @@ import {
   Copy,
   Layers,
   Calendar,
+  Menu,
 } from 'lucide-react';
 import type { Job, Fit } from '../scrapers/interface.ts';
-import { FOLDER_IDS, inFolder, type FolderId } from '../lib/folders.ts';
+import { FOLDER_IDS, inFolder, canGenerateAnschreiben, type FolderId } from '../lib/folders.ts';
+import { HISTORY_START, monthsDescending } from '../lib/calendar.ts';
+import { FOLLOW_UP_DAYS, dueFollowUps, daysSinceLastContact } from '../lib/followup.ts';
+import { COUNTRY_ONLY } from '../lib/location-terms.ts';
+// Dieselbe Funktion, die der Server vor dem Schreiben laufen lässt (lib/config-store.ts)
+// und die die Adapter beim Scrapen benutzen. lib/query-schema.ts importiert nur Typen,
+// darf also ins Bundle — so gibt es die Regeln genau einmal, statt einmal hier
+// nachgebaut und einmal dort.
+import { checkQuery, describeProblem } from '../lib/query-schema.ts';
+import type { QueryField } from '../scrapers/interface.ts';
 
 // /api/jobs joint das Anschreiben serverseitig dazu (siehe scripts/ui-server.ts) —
 // es lebt in data/anschreiben/{slug}.md, nicht im Job-JSON. Deshalb ist `brief` hier
@@ -66,8 +76,29 @@ type FilterMode = 'llm' | 'regex';
 // Grund wie oben (Job-Typ selbst kommt weiterhin aus scrapers/interface.ts).
 type DuplicateGroup = { key: string; jobs: Job[] };
 // Spiegelt die Ereignisliste von GET /api/calendar (scripts/ui-server.ts) — ein Eintrag
-// je gesetztem sentAt/replyReceivedAt, date als 'YYYY-MM-DD'.
-type CalendarEvent = { date: string; type: 'sent' | 'reply'; jobId: string; title: string; company: string };
+// je gesetztem sentAt/replyReceivedAt, date als 'YYYY-MM-DD'. jobId ist null bei
+// gelabelten Bewerbungs-Mails, zu denen es keinen Job (mehr) gibt: die kommen aus
+// data/mail-events.json und haben nichts, wohin man springen könnte.
+// Spiegelt lib/sources.ts bzw. lib/location.ts — kein gemeinsames Modul, weil beide
+// readFileSync benutzen und nicht ins Browser-Bundle dürfen (siehe lib/location-terms.ts).
+type SourcesCfg = Record<string, { enabled: boolean; queries: Record<string, string>[] }>;
+type LocationCfg = { cities: string[]; regions: string[]; remote: string[] };
+
+const UMKREIS_GRUPPEN: { key: keyof LocationCfg; label: string; hint: string }[] = [
+  { key: 'cities', label: 'Orte', hint: 'Ort hinzufügen' },
+  { key: 'regions', label: 'Regionen', hint: 'Region hinzufügen' },
+  { key: 'remote', label: 'Zählt als „remote"', hint: 'Begriff hinzufügen' },
+];
+
+// Die eine Eingabe, die still das ganze Verhalten umdreht: COUNTRY_ONLY wird in
+// isInRange() EXAKT verglichen, eine Region dagegen per Substring. "Österreich" als
+// Region behält damit jeden Job mit "…, Österreich" — der Umkreisfilter ist praktisch
+// aus. Gewarnt, nicht verboten: wer wirklich alles will, darf das.
+function istLandesbegriff(wert: string): boolean {
+  return COUNTRY_ONLY.includes(wert.trim().toLowerCase());
+}
+
+type CalendarEvent = { date: string; type: 'sent' | 'reply' | 'followup'; jobId: string | null; title: string; company: string };
 
 /* ------------------------------------------------------------------ *
  * Design tokens
@@ -83,6 +114,27 @@ type CalendarEvent = { date: string; type: 'sent' | 'reply'; jobId: string; titl
  * Das Anschreiben ist die einzige helle Fläche der App — weil es das
  * einzige ist, das die App verlässt.
  * ------------------------------------------------------------------ */
+
+// Ziele der Mehrfachaktion "Verschieben" — bewusst nur die drei Ordner, die reine
+// Einsortierung sind. Entwurf/Freigegeben/Postausgang/Gesendet sind Pipeline-Stufen
+// mit Vorbedingungen (Brief da? Gmail-Entwurf angelegt?), die ein Sammel-Zug still
+// überspringen würde; die bleiben bei ihren Einzelaktionen im Detail.
+//
+// "Jobs" und "Aussortiert" sind BEIDE status 'triaged' und unterscheiden sich nur im
+// fit (lib/folders.ts deriveStatus: brutal → aussortiert, sonst → jobs). Ein Zug nach
+// Jobs muss ein brutales Urteil deshalb mitnehmen, sonst fällt der Job sofort wieder
+// zurück nach Aussortiert — sichtbar als "nichts passiert".
+type MoveTarget = 'jobs' | 'aussortiert' | 'geloescht';
+const MOVE_TARGETS: { value: MoveTarget; label: string }[] = [
+  { value: 'jobs', label: 'Jobs' },
+  { value: 'aussortiert', label: 'Aussortiert' },
+  { value: 'geloescht', label: 'Gelöscht' },
+];
+const MOVE_PATCH: Record<MoveTarget, (job: Job) => Partial<Pick<Job, 'status' | 'fit'>>> = {
+  jobs: job => (job.fit === 'brutal' ? { status: 'triaged', fit: 'offstack' } : { status: 'triaged' }),
+  aussortiert: () => ({ status: 'triaged', fit: 'brutal' }),
+  geloescht: () => ({ status: 'geloescht' }),
+};
 
 const FIT: Record<Fit, { label: string; color: string }> = {
   matched: { label: 'Match', color: 'var(--fit-matched)' },
@@ -116,7 +168,13 @@ const CSS = `
   --serif:'IBM Plex Serif', Georgia, serif;
 
   position:fixed; inset:0;
-  display:grid; grid-template-columns:236px 372px 1fr;
+  /* Band B: stetig statt in Stufen. Die alte 1180er-Stufe (236/372 -> 208/320) sprang
+     sichtbar, und bei 1024px blieben der Detailspalte nur 496px — schmaler als das
+     Anschreiben selbst (.paper, max-width:660px). minmax(0,1fr) statt 1fr, damit die
+     Detailspalte beim Schrumpfen nicht ihre Mindest-Inhaltsbreite erzwingt und das
+     Raster über den Rand schiebt. */
+  display:grid;
+  grid-template-columns:clamp(200px, 16vw, 236px) clamp(320px, 26vw, 430px) minmax(0, 1fr);
   background:var(--ink); color:var(--text);
   font-family:var(--sans); font-size:13px; line-height:1.45;
   -webkit-font-smoothing:antialiased;
@@ -228,8 +286,13 @@ const CSS = `
 .srch input { flex:1; background:none; border:none; outline:none; color:var(--text); font:inherit; min-width:0; }
 .srch input::placeholder { color:var(--dim); }
 
-.chips { display:flex; gap:5px; padding:10px 0; overflow-x:auto; scrollbar-width:none; }
-.chips::-webkit-scrollbar { display:none; }
+/* Die Reihe war bei JEDER Fensterbreite breiter als ihre Spalte — bei 1024 um 168px, ab
+   1280 um 116px, selbst auf 2560 noch, weil die Listenspalte nie mitwächst. Sie lag in
+   einem overflow-x:auto mit scrollbar-width:none, sah also abgeschnitten aus statt
+   scrollbar. Umbruch statt Scrollen: eine Filterreihe, die man nicht ganz sieht, ist als
+   Filter wertlos, und zwei Zeilen kosten hier 28px. Erst mit einer Listenspalte jenseits
+   von 600px passte sie in eine Zeile — so breit soll die Liste aber gar nicht werden. */
+.chips { display:flex; flex-wrap:wrap; gap:5px; padding:10px 0; }
 .chip {
   display:flex; align-items:center; gap:6px; flex:none;
   padding:3px 9px; border-radius:99px; border:1px solid var(--line);
@@ -244,6 +307,10 @@ const CSS = `
 
 .row-wrap { display:flex; align-items:stretch; border-bottom:1px solid var(--line-soft); }
 .row__check { flex:none; align-self:center; margin-left:14px; accent-color:var(--text); cursor:pointer; }
+/* Ungefilterte Jobs (status "new") sitzen mit im "jobs"-Ordner, taugen aber nicht
+   fürs Anschreiben — Checkbox bleibt sichtbar (die Spalte soll nicht springen),
+   nur eben erkennbar tot. */
+.row__check:disabled { cursor:not-allowed; opacity:.3; }
 
 .row {
   position:relative; width:100%; display:block; text-align:left;
@@ -256,19 +323,42 @@ const CSS = `
 .row--dim:hover, .row--dim.row--on { opacity:1; }
 .rail { position:absolute; left:0; top:0; bottom:0; width:3px; }
 
+/* wrap, weil die Listenspalte schmal ist: mit fünf Aktionen passt die Leiste dort
+   nicht mehr in eine Zeile und die letzten Knöpfe verschwänden unter der Detailspalte.
+   Kein flex:1-Spacer mehr — der würde beim Umbruch eine ganze Zeile fressen. */
 .selbar {
-  display:flex; align-items:center; gap:10px; padding:8px 12px;
+  display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding:8px 12px;
   border-bottom:1px solid var(--line-soft); background:var(--raised);
   font-size:12px; color:var(--muted);
 }
-.selbar__n { font-weight:500; color:var(--text); }
-.selbar__spacer { flex:1; }
+.selbar__n { flex:none; font-weight:500; color:var(--text); margin-right:2px; }
+
+/* Nachfass-Zeile: flacher als .row (kein Snippet, kein Fit-Rail) — die Liste ist eine
+   Auswahlliste, kein Job-Browser. */
+.nf__row {
+  display:grid; grid-template-columns:auto 1fr 2fr auto; align-items:center; gap:10px;
+  padding:7px 4px; border-bottom:1px solid var(--line-soft); cursor:pointer; font-size:12.5px;
+}
+.nf__row:hover { background:var(--raised); }
+.nf__firma { color:var(--text); font-weight:500; }
+.nf__titel { color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nf__meta { display:flex; align-items:center; gap:6px; justify-self:end; }
+.selbar .btn { padding:5px 10px; white-space:nowrap; }
+.sel__hint { color:var(--dim); }
+/* Natives <select> auf .btn getrimmt: eigene Optik, aber das Menü bleibt das des
+   Betriebssystems (Tastatur, Touch, kein offener Zustand im React-State). */
+.selbar__menu { appearance:none; background:transparent; cursor:pointer; padding-right:11px; }
+.selbar__menu option { background:var(--panel); color:var(--text); }
 
 .row__l1 { display:flex; align-items:baseline; gap:8px; margin-bottom:2px; }
 .row__firma { font-weight:600; font-size:13px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .row__age { font-family:var(--mono); font-size:10.5px; color:var(--dim); flex:none; font-variant-numeric:tabular-nums; }
-.row__titel { font-size:12.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:4px; }
-.row__snip { font-size:11.5px; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* display:block ist hier Pflicht, nicht Kosmetik: als <span> sind beide inline, und an
+   inline-Elementen sind overflow/text-overflow/margin-bottom wirkungslos. Deshalb liefen
+   Titel und Ausschnitt bisher in einer Zeile ineinander ("…ADMINISTRATOR:INAls Quereinsteiger")
+   statt untereinander mit Auslassungspunkten. */
+.row__titel { display:block; font-size:12.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:4px; }
+.row__snip { display:block; font-size:11.5px; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .row__meta { display:flex; align-items:center; gap:7px; margin-top:6px; }
 .tag {
   font-family:var(--mono); font-size:9.5px; letter-spacing:.04em;
@@ -276,6 +366,7 @@ const CSS = `
 }
 .tag--nomail { border-style:dashed; }
 .tag--err { border-color:rgba(229,72,77,.4); color:var(--err); }
+.tag--roh { border-style:dotted; border-color:rgba(232,176,75,.45); color:var(--fit-offstack); }
 .tag--reply { border-color:rgba(53,208,165,.4); color:var(--ok); }
 
 .empty { padding:56px 24px; text-align:center; color:var(--dim); }
@@ -358,7 +449,7 @@ const CSS = `
 .errbox__h svg { width:14px; height:14px; }
 .errbox__msg { font-family:var(--mono); font-size:11.5px; line-height:1.6; color:var(--muted); }
 
-.bar { display:flex; align-items:center; gap:8px; padding:12px 24px; border-top:1px solid var(--line-soft); background:var(--slate); }
+.bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:12px 24px; border-top:1px solid var(--line-soft); background:var(--slate); }
 .btn { display:flex; align-items:center; gap:6px; padding:6px 13px; border-radius:5px; border:1px solid var(--line); color:var(--muted); font-size:12.5px; }
 .btn:hover { border-color:var(--dim); color:var(--text); }
 .btn svg { width:13px; height:13px; }
@@ -397,8 +488,20 @@ const CSS = `
    --fit-matched für "gesendet", --ok für "Antwort" (deckt sich mit .tag--reply, das
    dieselbe Farbe für "hat geantwortet" in der Job-Liste nutzt). */
 .cal { display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--ink); grid-column:span 2; }
+.cal__head-row { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.cal__legende { display:flex; gap:14px; margin-top:8px; font-size:11px; color:var(--dim); }
+.cal__legende > span { display:flex; align-items:center; gap:5px; }
 .cal__body { flex:1; min-height:0; overflow-y:auto; padding:22px 24px; display:flex; flex-direction:column; gap:28px; }
-.cal__month-h { font-size:13px; font-weight:600; color:var(--text); margin-bottom:8px; text-transform:capitalize; }
+.cal__month-h {
+  display:flex; align-items:center; gap:8px; width:100%; padding:4px 0;
+  font-size:13px; font-weight:600; color:var(--text); margin-bottom:8px;
+  text-transform:capitalize; text-align:left; cursor:pointer;
+}
+.cal__month-h:hover { color:var(--text); }
+.cal__month-h:hover .cal__month-sum { color:var(--muted); }
+.cal__caret { display:inline-block; color:var(--dim); font-size:10px; transition:transform .12s ease; }
+.cal__caret--offen { transform:rotate(90deg); }
+.cal__month-sum { font-family:var(--mono); font-size:10px; font-weight:400; color:var(--dim); text-transform:none; }
 .cal__weekday-row, .cal__grid { display:grid; grid-template-columns:repeat(7, 34px); gap:4px; }
 .cal__weekday-row { font-family:var(--mono); font-size:9.5px; color:var(--dim); text-align:center; margin-bottom:4px; }
 .cal__sq {
@@ -407,9 +510,10 @@ const CSS = `
   font-family:var(--mono); font-size:10px; color:var(--dim);
 }
 .cal__sq--pad { visibility:hidden; }
-.cal__sq--sent { background:var(--fit-matched); border-color:transparent; color:var(--ink); }
-.cal__sq--reply { background:var(--ok); border-color:transparent; color:var(--ink); }
-.cal__sq--both { border-color:transparent; color:var(--ink); background:linear-gradient(135deg, var(--fit-matched) 50%, var(--ok) 50%); }
+/* Farbe kommt inline aus CAL_COLOR (ein Tag kann gesendet + nachgefasst + Antwort
+   tragen, das wären sonst sieben Kombinationsklassen) — hier bleibt nur, was für
+   jeden gefüllten Tag gleich ist. */
+.cal__sq--filled { border-color:transparent; color:var(--ink); }
 .cal__sq--active { cursor:pointer; }
 .cal__sq--active:hover { filter:brightness(1.15); }
 
@@ -426,16 +530,104 @@ const CSS = `
 .cal__popup-list { flex:1; min-height:0; overflow-y:auto; padding:6px 8px; }
 .cal__entry { display:flex; align-items:center; gap:9px; width:100%; padding:8px 10px; border-radius:5px; text-align:left; }
 .cal__entry:hover { background:var(--raised); }
+/* Aus Gmail, kein Job dazu — nicht anklickbar, aber vollwertig sichtbar: der Eintrag
+   ist der einzige Beleg für diese Bewerbung. */
+.cal__entry--nurmail { cursor:default; }
+.cal__entry--nurmail:hover { background:transparent; }
+.cal__entry__quelle {
+  font-family:var(--mono); font-size:9px; letter-spacing:.04em; flex:none;
+  padding:1px 5px; border-radius:3px; border:1px dotted var(--line); color:var(--dim);
+}
 .cal__entry__dot { width:7px; height:7px; border-radius:99px; flex:none; }
 .cal__entry__firma { font-weight:500; font-size:12.5px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .cal__entry__titel { font-size:11px; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px; }
 .cal__popup-foot { padding:8px 18px; border-top:1px solid var(--line-soft); font-family:var(--mono); font-size:10px; color:var(--dim); }
 
 /* ---------- Responsive ---------- */
-@media (max-width:1180px) { .jb { grid-template-columns:208px 320px 1fr; } }
-@media (max-width:960px) {
-  .jb { grid-template-columns:1fr; }
-  .sb { display:none; }
+/* ---------- Einstellungsseite "Suche" ---------- */
+.cfg { display:flex; flex-direction:column; gap:34px; max-width:820px; }
+.cfg__block { display:flex; flex-direction:column; gap:12px; }
+.cfg__h {
+  display:flex; align-items:baseline; gap:10px; margin:0;
+  font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+}
+.cfg__h span { font-size:10.5px; letter-spacing:0; text-transform:none; color:var(--dim); }
+.cfg__erklaerung { margin:0; font-size:12px; color:var(--dim); max-width:60ch; }
+
+.cfg__portal { border:1px solid var(--line-soft); border-radius:6px; padding:11px 13px; display:flex; flex-direction:column; gap:9px; }
+.cfg__portal--aus { opacity:.55; }
+.cfg__portal--aus:focus-within, .cfg__portal--aus:hover { opacity:1; }
+.cfg__portal-kopf { display:flex; align-items:center; gap:10px; }
+.cfg__portal-name { font-weight:600; font-size:13px; flex:1; }
+.cfg__schalter { display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10.5px; color:var(--dim); cursor:pointer; }
+
+.cfg__chips { display:flex; flex-wrap:wrap; align-items:center; gap:5px; }
+.cfg__chip {
+  display:inline-flex; align-items:center; gap:5px; padding:3px 4px 3px 9px; border-radius:99px;
+  border:1px solid var(--line); color:var(--muted); font-size:11.5px; white-space:nowrap;
+}
+.cfg__chip-x { color:var(--dim); font-size:13px; line-height:1; padding:2px 5px; border-radius:99px; }
+.cfg__chip-x:hover { color:var(--err); background:var(--raised); }
+.cfg__add {
+  flex:1; min-width:150px; background:var(--ink); border:1px dashed var(--line); border-radius:99px;
+  color:var(--text); font:inherit; font-size:11.5px; padding:3px 10px; outline:none;
+}
+.cfg__add:focus { border-style:solid; border-color:var(--dim); }
+.cfg__add::placeholder { color:var(--dim); }
+
+/* Zeilenform für Anfragen mit mehreren Feldern (linkedin, ams) — ein Chip müsste zum
+   Ändern ohnehin aufklappen, dann kann es gleich eine Zeile sein. */
+.cfg__zeilen { display:flex; flex-direction:column; gap:4px; }
+.cfg__zeile { display:grid; gap:6px; align-items:center; }
+.cfg__zeile--kopf { font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--dim); }
+.cfg__feld {
+  background:var(--ink); border:1px solid var(--line); border-radius:5px;
+  color:var(--text); font:inherit; font-size:12px; padding:4px 8px; outline:none; min-width:0;
+}
+.cfg__feld:focus { border-color:var(--dim); }
+.cfg__plus { align-self:flex-start; margin-top:2px; }
+
+.cfg__warn {
+  flex:1 0 100%; display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:4px;
+  border:1px solid rgba(232,176,75,.4); background:rgba(232,176,75,.07); border-radius:6px;
+  padding:9px 11px; font-size:12px; color:var(--fit-offstack);
+}
+.cfg__warn > span { flex:1 1 240px; }
+
+.cfg__kaputt, .cfg__verwaist {
+  border:1px solid rgba(232,98,42,.35); background:rgba(232,98,42,.06); border-radius:6px;
+  padding:11px 13px; font-size:12px; color:var(--muted);
+  display:flex; flex-direction:column; gap:7px;
+}
+.cfg__verwaist { flex-direction:row; align-items:center; gap:10px; }
+.cfg__kaputt b { color:var(--fit-brutal); font-size:12.5px; }
+.cfg__kaputt-zeile { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.cfg__kaputt-zeile > span { flex:1 1 260px; }
+
+.cfg__gruppe { display:flex; flex-direction:column; gap:6px; }
+.cfg__gruppe-name { font-size:12px; color:var(--dim); }
+
+.cfg__roh { display:flex; flex-direction:column; gap:8px; align-items:flex-start; margin-top:4px; }
+.cfg__roh-kopf { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--muted); }
+.cfg__roh-kopf:hover { color:var(--text); }
+.cfg__roh-hint { font-family:var(--mono); font-size:10px; color:var(--dim); }
+.cfg__roh-text {
+  width:100%; max-height:340px; overflow:auto; margin:0;
+  background:var(--ink); border:1px solid var(--line-soft); border-radius:6px; padding:11px 13px;
+  font-family:var(--mono); font-size:11px; line-height:1.6; color:var(--muted);
+}
+.cfg__leiste { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+
+/* ---------- Mobile Kopfzeile + Schublade ---------- */
+/* Beide existieren nur unterhalb von 1024. Darüber ist .sb eine normale Rasterspalte,
+   und diese Regeln fassen sie nicht an. */
+.topbar { display:none; }
+.sb__overlay { display:none; }
+
+/* Umschaltpunkt von 960 auf 1024 gehoben: dazwischen standen drei Spalten auf zu wenig
+   Platz (bei 1024 waren es 208+320+496). Ab hier ist die Seitenleiste eine Schublade. */
+@media (max-width:1023px) {
+  .jb { grid-template-columns:minmax(0, 1fr); }
   .ls { border-right:none; }
   .dt { display:none; }
   .jb--detail .ls { display:none; }
@@ -444,7 +636,90 @@ const CSS = `
   .dt__back svg { width:14px; height:14px; }
   .dt__head, .dt__body, .tabs, .bar { padding-left:16px; padding-right:16px; }
   .paper { padding:24px 22px; }
+
+  /* Die Pipeline-Ansichten sind für zwei Spalten gebaut. Im Ein-Spalten-Raster erzeugt
+     span 2 eine implizite zweite Spalte — heute 0px breit und damit harmlos, aber sie
+     sitzen dort aus Versehen richtig statt aus Absicht. */
+  .att, .cal { grid-column:1 / -1; }
+
+  /* Trefferflächen: 13px-Zeilen und ein 13px-Kästchen sind für den Daumen zu klein. */
+  .fld { min-height:44px; }
+  .chip { padding:8px 12px; }
+  .row__check { width:20px; height:20px; margin-left:12px; }
+  .row { padding-top:14px; padding-bottom:14px; }
+
+  /* Kalender wächst mit, statt bei 7×34px stehenzubleiben. */
+  .cal__weekday-row, .cal__grid { grid-template-columns:repeat(7, minmax(0, 1fr)); }
+  .cal__sq { width:auto; }
+
+  /* Mehrfeldrige Anfragen stapeln statt nebeneinander — drei Felder auf 390px sind
+     drei unlesbare Spalten. Die Kopfzeile entfällt dabei, die Platzhalter tragen. */
+  .cfg__zeile { grid-template-columns:1fr auto !important; }
+  .cfg__zeile--kopf { display:none; }
+  .cfg__zeile .cfg__feld { grid-column:1; }
+  .cfg__zeile .cfg__chip-x { grid-row:1; grid-column:2; }
+  /* Gestapelt sind drei Anfragen zu je zwei Feldern sechs Kästen untereinander — ohne
+     Klammer sieht man nicht, welche zusammengehören. */
+  .cfg__zeilen .cfg__zeile:not(.cfg__zeile--kopf) {
+    border:1px solid var(--line-soft); border-radius:6px; padding:7px; background:var(--slate);
+  }
+
+  /* Nachfass-Zeile zweizeilig: Firma+Titel oben, Adresse+Alter darunter. */
+  .nf__row { grid-template-columns:auto 1fr; row-gap:4px; }
+  .nf__titel { grid-column:2; }
+  .nf__meta { grid-column:2; justify-self:start; }
+
+  /* top statt padding-top: .jb ist position:fixed;inset:0 und selbst NICHT von der
+     border-box-Regel erfasst (die gilt für .jb *), ein padding würde es zu hoch machen. */
+  .jb { top:48px; }
+  .topbar {
+    position:fixed; top:0; left:0; right:0; height:48px; z-index:58;
+    display:flex; align-items:center; gap:10px; padding:0 8px;
+    background:var(--slate); border-bottom:1px solid var(--line-soft);
+  }
+  .topbar__burger {
+    display:flex; align-items:center; justify-content:center;
+    width:40px; height:40px; border-radius:6px; color:var(--muted); flex:none;
+  }
+  .topbar__burger:hover { color:var(--text); background:var(--raised); }
+  .topbar__burger svg { width:18px; height:18px; }
+  .topbar__wo { font-weight:600; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .topbar__n { font-family:var(--mono); font-size:11px; color:var(--dim); flex:none; margin-left:auto; }
+
+  /* Schublade: fährt über den Inhalt statt ihn zu verschieben — der Inhalt ist hier
+     ohnehin nur eine Spalte breit, ein Wegschieben würde ihn unlesbar quetschen. */
+  .sb {
+    position:fixed; top:0; bottom:0; left:0; z-index:60;
+    width:min(300px, 84vw); transform:translateX(-100%);
+  }
+  .sb--offen { transform:none; box-shadow:0 0 40px rgba(0,0,0,.5); }
+  .sb__overlay { display:block; position:fixed; inset:0; z-index:59; background:rgba(0,0,0,.5); }
 }
+@media (max-width:1023px) and (prefers-reduced-motion:no-preference) {
+  .sb { transition:transform .18s ease-out; }
+}
+
+/* Band C: ab 2000px hat die Detailspalte Platz für zwei Bahnen (bei 2560 sind es 1894px).
+   Statt Anschreiben UND Inserat übereinander umzuschalten, stehen sie nebeneinander — beim
+   Prüfen liest man den Brief gegen das Inserat, und genau dafür war der Platz bisher leer.
+   Die Tabs verschwinden, weil es nichts mehr umzuschalten gibt. */
+.dt__panels--brief .dt__panel--inserat,
+.dt__panels--inserat .dt__panel--brief { display:none; }
+
+@media (min-width:2000px) {
+  .tabs { display:none; }
+  .dt__panels {
+    display:grid; grid-template-columns:minmax(0, 660px) minmax(0, 720px);
+    gap:36px; align-items:start; justify-content:start;
+  }
+  /* schlägt die Tab-Regel oben, weil gleich spezifisch und später im Stylesheet */
+  .dt__panels--brief .dt__panel--inserat,
+  .dt__panels--inserat .dt__panel--brief { display:block; }
+  /* Eine Zeile "Ort · Quelle · Alter · Hinweis" über 1500px ist keine Zeile mehr,
+     sondern eine Fährte. */
+  .dt__head > * { max-width:1100px; }
+}
+
 `;
 
 /* ------------------------------------------------------------------ *
@@ -494,6 +769,18 @@ const GROUPS: { head: string | null; icon: typeof Mail | null; folders: { id: Fo
 // Sagt, was der leere Zustand bedeutet, nicht dass er leer ist — "Keine Einträge" ist für
 // jeden Ordner wahr und hilft nirgends. "jobs" ist der Posteingang: eine leere Triage-Queue
 // heißt "nichts Neues reingekommen", kein Fehlerzustand.
+// Beschriftung fuer die mobile Kopfzeile — sie ist dort die einzige Ortsangabe, weil
+// die Seitenleiste mit ihrer Markierung hinter der Schublade liegt. Ordner-Namen kommen
+// aus GROUPS statt aus einer zweiten Liste, sonst driften sie auseinander.
+const FOLDER_LABEL: Record<string, string> = Object.fromEntries(
+  GROUPS.flatMap(g => g.folders.map(f => [f.id, f.label])),
+);
+const VIEW_LABEL: Partial<Record<string, string>> = {
+  attachment: 'Anhang', cc: 'CC', calendar: 'Kalender', scrape: 'Scrape',
+  filter: 'Filter', duplicates: 'Duplikate', anschreiben: 'Anschreiben', nachfass: 'Nachfassen',
+  suche: 'Suche',
+};
+
 const EMPTY_COPY: Record<FolderId, string> = {
   'jobs': 'Nichts Neues.',
   'mail/entwurf': 'Keine Entwürfe zu prüfen.',
@@ -562,7 +849,10 @@ function LoadGrid({ sections, ghost }: { sections: LoadGridSection[]; ghost?: bo
             // (letztes Quadrat bei (n-1)*step + Pop-Dauer), färbt sich die Zeile ein.
             const revealDelay = (r.squares.length - 1) * step + POP_DURATION_MS;
             return (
-              <div className="loadgrid__row" key={r.key}>
+              // data-row: Tschobbo (ui/tschobbo.js) muss bei parallelen Quellen die
+              // Zeile aus dem Event finden können, nicht raten — DOM-Reihenfolge ist
+              // nach Section gruppiert, nicht nach Event-Chronologie.
+              <div className="loadgrid__row" key={r.key} data-row={r.key}>
                 {r.squares.map((sq, i) => (
                   <span
                     key={sq.id}
@@ -607,21 +897,49 @@ function formatDayLong(date: string): string {
 function formatDayShort(date: string): string {
   return new Date(date + 'T00:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
 }
-function summarizeDay(date: string, sentN: number, replyN: number): string {
-  const parts: string[] = [];
-  if (sentN) parts.push(`${sentN} gesendet`);
-  if (replyN) parts.push(`${replyN} Antwort${replyN > 1 ? 'en' : ''}`);
+function summarizeDay(date: string, bucket: DayBucket | undefined): string {
+  const parts = CAL_TYPES.filter(t => bucket?.[t].length).map(t => CAL_LABEL[t](bucket![t].length));
   return `${formatDayShort(date)} · ${parts.join(' · ')}`;
 }
 
-type DayBucket = { sent: CalendarEvent[]; reply: CalendarEvent[] };
+type DayBucket = { sent: CalendarEvent[]; followup: CalendarEvent[]; reply: CalendarEvent[] };
+
+// Reihenfolge = Chronologie einer Bewerbung: raus, nachgehakt, Antwort. Sie bestimmt
+// auch, wie die Streifen im Tagesquadrat liegen und wie das Popup sortiert.
+const CAL_TYPES = ['sent', 'followup', 'reply'] as const;
+const CAL_COLOR: Record<CalendarEvent['type'], string> = {
+  sent: 'var(--fit-matched)',
+  followup: 'var(--fit-offstack)',
+  reply: 'var(--ok)',
+};
+const CAL_LABEL: Record<CalendarEvent['type'], (n: number) => string> = {
+  sent: n => `${n} gesendet`,
+  followup: n => `${n}× nachgefasst`,
+  reply: n => `${n} Antwort${n > 1 ? 'en' : ''}`,
+};
+
+// Ein Tag kann jetzt drei Sorten tragen — statt für jede Kombination eine eigene
+// CSS-Klasse (--sent/--reply/--both/…) wächst der Verlauf aus den tatsächlich
+// vorhandenen Farben. Eine Farbe bleibt einfarbig.
+function calBackground(farben: string[]): string {
+  if (farben.length === 1) return farben[0];
+  const stufe = 100 / farben.length;
+  const stops = farben.map((f, i) => `${f} ${i * stufe}% ${(i + 1) * stufe}%`);
+  return `linear-gradient(135deg, ${stops.join(', ')})`;
+}
+
+function calTypesOf(bucket: DayBucket | undefined): CalendarEvent['type'][] {
+  return CAL_TYPES.filter(t => (bucket?.[t].length ?? 0) > 0);
+}
 
 // Ein Monatsblock: Monatsüberschrift + 7-Spalten-Wochenraster (Mo–So), führende
 // Leerzellen für den Wochentags-Versatz des Monatsersten. Kein Auffüllen am Ende
 // der letzten Woche — optisch unauffällig, spart eine zweite Padding-Rechnung.
-function CalendarMonth({ month, byDate, onHover, onOpenDay }: {
+function CalendarMonth({ month, byDate, offen, onToggle, onHover, onOpenDay }: {
   month: string;
   byDate: Map<string, DayBucket>;
+  offen: boolean;
+  onToggle: () => void;
   onHover: (h: { x: number; y: number; text: string } | null) => void;
   onOpenDay: (date: string) => void;
 }) {
@@ -634,9 +952,23 @@ function CalendarMonth({ month, byDate, onHover, onOpenDay }: {
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
 
+  // Monatssumme in der Überschrift: ein eingeklappter Monat soll trotzdem sagen, ob
+  // sich das Aufklappen lohnt.
+  const summen: Record<CalendarEvent['type'], number> = { sent: 0, followup: 0, reply: 0 };
+  for (let d = 1; d <= daysInMonth; d++) {
+    const bucket = byDate.get(`${month}-${String(d).padStart(2, '0')}`);
+    for (const t of CAL_TYPES) summen[t] += bucket?.[t].length ?? 0;
+  }
+  const summe = CAL_TYPES.filter(t => summen[t]).map(t => CAL_LABEL[t](summen[t])).join(' · ');
+
   return (
     <div>
-      <div className="cal__month-h">{label}</div>
+      <button className="cal__month-h" onClick={onToggle} aria-expanded={offen}>
+        <span className={'cal__caret' + (offen ? ' cal__caret--offen' : '')}>▸</span>
+        {label}
+        <span className="cal__month-sum">{summe || 'keine Aktivität'}</span>
+      </button>
+      {!offen ? null : <>
       <div className="cal__weekday-row">
         {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(d => <span key={d}>{d}</span>)}
       </div>
@@ -645,18 +977,16 @@ function CalendarMonth({ month, byDate, onHover, onOpenDay }: {
           if (day == null) return <span key={'pad' + i} className="cal__sq cal__sq--pad" />;
           const date = `${month}-${String(day).padStart(2, '0')}`;
           const bucket = byDate.get(date);
-          const sentN = bucket?.sent.length ?? 0;
-          const replyN = bucket?.reply.length ?? 0;
-          const active = sentN > 0 || replyN > 0;
-          const cls = 'cal__sq'
-            + (sentN && replyN ? ' cal__sq--both' : sentN ? ' cal__sq--sent' : replyN ? ' cal__sq--reply' : '')
-            + (active ? ' cal__sq--active' : '');
+          const typen = calTypesOf(bucket);
+          const active = typen.length > 0;
+          const cls = 'cal__sq' + (active ? ' cal__sq--filled cal__sq--active' : '');
           return (
             <span
               key={date}
               className={cls}
+              style={active ? { background: calBackground(typen.map(t => CAL_COLOR[t])) } : undefined}
               onClick={active ? () => onOpenDay(date) : undefined}
-              onMouseMove={active ? (e) => onHover({ x: e.clientX, y: e.clientY, text: summarizeDay(date, sentN, replyN) }) : undefined}
+              onMouseMove={active ? (e) => onHover({ x: e.clientX, y: e.clientY, text: summarizeDay(date, bucket) }) : undefined}
               onMouseLeave={active ? () => onHover(null) : undefined}
             >
               {day}
@@ -664,6 +994,7 @@ function CalendarMonth({ month, byDate, onHover, onOpenDay }: {
           );
         })}
       </div>
+      </>}
     </div>
   );
 }
@@ -675,20 +1006,39 @@ function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; onOpenJo
   const byDate = useMemo(() => {
     const m = new Map<string, DayBucket>();
     for (const ev of events) {
-      const bucket = m.get(ev.date) ?? { sent: [], reply: [] };
+      const bucket = m.get(ev.date) ?? { sent: [], followup: [], reply: [] };
       bucket[ev.type].push(ev);
       m.set(ev.date, bucket);
     }
     return m;
   }, [events]);
 
+  // Durchgehende Reihe ab HISTORY_START bis mindestens heute — auch Monate ohne
+  // Aktivität bekommen einen Block, damit der Zeitraum, den der Gmail-Sync scannt,
+  // im Kalender vollständig sichtbar ist statt auf die Treffermonate zusammenzuschrumpfen.
   const months = useMemo(() => {
-    const set = new Set<string>();
-    for (const date of byDate.keys()) set.add(date.slice(0, 7));
-    return [...set].sort().reverse();
+    const letzter = [...byDate.keys()].sort().at(-1) ?? '';
+    const heute = new Date().toISOString().slice(0, 10);
+    return monthsDescending(HISTORY_START, letzter > heute ? letzter : heute);
   }, [byDate]);
 
   const activeDates = useMemo(() => [...byDate.keys()].sort(), [byDate]);
+
+  // Monate ohne Aktivität starten eingeklappt: sie sind nur da, um den Zeitraum
+  // lückenlos zu zeigen, und sollen die Monate mit Inhalt nicht wegdrücken. Gespeichert
+  // wird nur die Abweichung vom Standard, nicht der Zustand selbst — sonst müsste die
+  // Menge jedes Mal nachgezogen werden, wenn neue Ereignisse einen Monat füllen.
+  const [umgeschaltet, setUmgeschaltet] = useState<Set<string>>(new Set());
+  const mitAktivitaet = useMemo(
+    () => new Set([...byDate.keys()].map(d => d.slice(0, 7))),
+    [byDate]
+  );
+  const istOffen = (m: string) => (umgeschaltet.has(m) ? !mitAktivitaet.has(m) : mitAktivitaet.has(m));
+  const umschalten = (m: string) => setUmgeschaltet(prev => {
+    const next = new Set(prev);
+    if (next.has(m)) next.delete(m); else next.add(m);
+    return next;
+  });
 
   const [activeDay, setActiveDay] = useState<string | null>(null);
   const [hover, setHover] = useState<{ x: number; y: number; text: string } | null>(null);
@@ -710,21 +1060,32 @@ function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; onOpenJo
     return () => window.removeEventListener('keydown', onKey);
   }, [activeDay, activeDates]);
 
-  if (months.length === 0) {
+  // Ganz ohne Ereignisse wäre der Kalender nur eine Reihe leerer Monatsköpfe — die
+  // Erklärung ist dann nützlicher als das Raster.
+  if (events.length === 0) {
     return (
       <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
         <div className="empty__h">Noch keine Aktivität</div>
-        Sobald eine Bewerbung versendet wird oder eine Antwort eintrifft, erscheint sie hier.
+        Sobald eine Bewerbung versendet wird, du nachfasst oder eine Antwort eintrifft, erscheint sie hier.
       </div>
     );
   }
 
-  const dayEntries = activeDay ? [...(byDate.get(activeDay)?.sent ?? []), ...(byDate.get(activeDay)?.reply ?? [])] : [];
+  // Chronologisch nach CAL_TYPES: erst die Bewerbung, dann die Nachfassen, dann die Antwort.
+  const dayEntries = activeDay ? CAL_TYPES.flatMap(t => byDate.get(activeDay)?.[t] ?? []) : [];
 
   return (
     <>
       {months.map(month => (
-        <CalendarMonth key={month} month={month} byDate={byDate} onHover={setHover} onOpenDay={setActiveDay} />
+        <CalendarMonth
+          key={month}
+          month={month}
+          byDate={byDate}
+          offen={istOffen(month)}
+          onToggle={() => umschalten(month)}
+          onHover={setHover}
+          onOpenDay={setActiveDay}
+        />
       ))}
       {hover && <div className="cal__hover" style={{ left: hover.x + 14, top: hover.y + 14 }}>{hover.text}</div>}
       {activeDay && (
@@ -733,10 +1094,18 @@ function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; onOpenJo
             <div className="cal__popup-head">{formatDayLong(activeDay)}</div>
             <div className="cal__popup-list" ref={listRef}>
               {dayEntries.map((ev, i) => (
-                <button key={ev.jobId + ev.type + i} className="cal__entry" onClick={() => onOpenJob(ev.jobId)}>
-                  <span className="cal__entry__dot" style={{ background: ev.type === 'sent' ? 'var(--fit-matched)' : 'var(--ok)' }} />
+                <button
+                  key={(ev.jobId ?? 'mail') + ev.type + i}
+                  className={'cal__entry' + (ev.jobId ? '' : ' cal__entry--nurmail')}
+                  disabled={!ev.jobId}
+                  onClick={ev.jobId ? () => onOpenJob(ev.jobId!) : undefined}
+                  title={ev.jobId ? undefined : 'Aus Gmail — kein Job dazu im Bestand'}
+                >
+                  <span className="cal__entry__dot" style={{ background: CAL_COLOR[ev.type] }} />
+                  {ev.type === 'followup' && <span className="cal__entry__quelle">Nachfass</span>}
                   <span className="cal__entry__firma">{ev.company}</span>
                   <span className="cal__entry__titel">{ev.title}</span>
+                  {!ev.jobId && <span className="cal__entry__quelle">nur Mail</span>}
                 </button>
               ))}
             </div>
@@ -745,6 +1114,142 @@ function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; onOpenJo
         </div>
       )}
     </>
+  );
+}
+
+// Chip-Liste für Felder, die aus einer einzigen Textzeile bestehen: Suchbegriffe,
+// Orte, Regionen. Kompakt, weil sieben Begriffe sonst sieben Zeilen Höhe kosten.
+function ChipListe({ werte, hint, onChange, warnung }: {
+  werte: string[];
+  hint: string;
+  onChange: (next: string[]) => void;
+  warnung?: (wert: string) => string | null;
+}) {
+  const [entwurf, setEntwurf] = useState('');
+  const [nachfrage, setNachfrage] = useState<string | null>(null);
+
+  const uebernehmen = (wert: string, trotzWarnung = false) => {
+    const w = wert.trim();
+    if (!w || werte.includes(w)) { setEntwurf(''); return; }
+    const warn = warnung?.(w);
+    if (warn && !trotzWarnung) { setNachfrage(w); return; }
+    onChange([...werte, w]);
+    setEntwurf('');
+    setNachfrage(null);
+  };
+
+  return (
+    <div className="cfg__chips">
+      {werte.map(w => (
+        <span key={w} className="cfg__chip">
+          {w}
+          <button className="cfg__chip-x" onClick={() => onChange(werte.filter(x => x !== w))} aria-label={`${w} entfernen`}>×</button>
+        </span>
+      ))}
+      <input
+        className="cfg__add"
+        value={entwurf}
+        placeholder={hint}
+        onChange={e => { setEntwurf(e.target.value); setNachfrage(null); }}
+        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); uebernehmen(entwurf); } }}
+        onBlur={() => { if (!nachfrage) uebernehmen(entwurf); }}
+      />
+      {nachfrage && (
+        <div className="cfg__warn">
+          <span>{warnung?.(nachfrage)}</span>
+          <button className="btn" onClick={() => uebernehmen(nachfrage, true)}>Trotzdem eintragen</button>
+          <button className="btn btn--ghost" onClick={() => { setNachfrage(null); setEntwurf(''); }}>Abbrechen</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Ein Portalblock. Die Form folgt der Feldzahl, nicht dem Portalnamen: ein Feld wird zur
+// Chip-Wolke, mehrere werden zu beschrifteten Zeilen. Welche Form es ist, sagt das
+// querySchema des Adapters — ein künftiges Portal ordnet sich damit von selbst ein.
+function PortalBlock({ name, cfg, felder, onChange }: {
+  name: string;
+  cfg: { enabled: boolean; queries: Record<string, string>[] };
+  felder: QueryField[];
+  onChange: (next: { enabled: boolean; queries: Record<string, string>[] }) => void;
+}) {
+  const einfeldrig = felder.length === 1;
+  const feld = felder[0];
+
+  return (
+    <div className={'cfg__portal' + (cfg.enabled ? '' : ' cfg__portal--aus')}>
+      <div className="cfg__portal-kopf">
+        <span className="cfg__portal-name">{name}</span>
+        {/* Deaktivierte Portale bleiben sichtbar statt ausgeblendet — sonst verschwindet
+            die Konfiguration mitsamt dem Weg, sie zurückzuholen. */}
+        <label className="cfg__schalter">
+          <input type="checkbox" checked={cfg.enabled} onChange={e => onChange({ ...cfg, enabled: e.target.checked })} />
+          {cfg.enabled ? 'an' : 'aus'}
+        </label>
+      </div>
+
+      {einfeldrig ? (
+        <ChipListe
+          werte={cfg.queries.map(q => q[feld.key] ?? '').filter(Boolean)}
+          hint={`+ ${feld.label}`}
+          onChange={next => onChange({ ...cfg, queries: next.map(v => ({ [feld.key]: v })) })}
+        />
+      ) : (
+        <div className="cfg__zeilen">
+          <div className="cfg__zeile cfg__zeile--kopf" style={{ gridTemplateColumns: `repeat(${felder.length}, 1fr) auto` }}>
+            {felder.map(f => <span key={f.key}>{f.label}{f.required && ' *'}</span>)}
+            <span />
+          </div>
+          {cfg.queries.map((q, i) => (
+            <div key={i} className="cfg__zeile" style={{ gridTemplateColumns: `repeat(${felder.length}, 1fr) auto` }}>
+              {felder.map(f => (
+                <input
+                  key={f.key}
+                  className="cfg__feld"
+                  value={q[f.key] ?? ''}
+                  placeholder={f.placeholder}
+                  onChange={e => onChange({
+                    ...cfg,
+                    queries: cfg.queries.map((x, xi) => (xi === i ? { ...x, [f.key]: e.target.value } : x)),
+                  })}
+                />
+              ))}
+              <button className="cfg__chip-x" aria-label={`Anfrage ${i + 1} entfernen`}
+                onClick={() => onChange({ ...cfg, queries: cfg.queries.filter((_, xi) => xi !== i) })}>×</button>
+            </div>
+          ))}
+          <button className="btn btn--ghost cfg__plus"
+            onClick={() => onChange({ ...cfg, queries: [...cfg.queries, Object.fromEntries(felder.map(f => [f.key, ''])) ] })}>
+            + Anfrage
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Das Roh-JSON ist eine ANSICHT, kein zweiter Editor: es zeigt, was das Formular gerade
+// hält. Damit gibt es keine zweite Wahrheit, die mit der ersten in Konflikt geraten kann
+// (siehe .scratch/einstellungsseite, Ticket "Formular und Roh-JSON").
+function RohAnsicht({ offen, onToggle, data }: { offen: boolean; onToggle: () => void; data: unknown }) {
+  const text = JSON.stringify(data, null, 2);
+  return (
+    <div className="cfg__roh">
+      <button className="cfg__roh-kopf" onClick={onToggle} aria-expanded={offen}>
+        <span className={'cal__caret' + (offen ? ' cal__caret--offen' : '')}>▸</span>
+        Rohdaten (JSON)
+        <span className="cfg__roh-hint">nur lesen · spiegelt das Formular</span>
+      </button>
+      {offen && (
+        <>
+          <pre className="cfg__roh-text">{text}</pre>
+          <button className="btn btn--ghost" onClick={() => navigator.clipboard?.writeText(text)}>
+            <Copy /> Kopieren
+          </button>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -769,9 +1274,12 @@ export default function JobbotUI() {
   const [tab, setTab] = useState<'brief' | 'inserat'>('brief');
   const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'err' } | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const burgerRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
   // 'attachment'/'scrape'/'filter' sind keine Ordner (kein FolderId, kein Job-Filter)
   // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
-  const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben' | 'calendar'>('jobs');
+  const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben' | 'calendar' | 'nachfass' | 'suche'>('jobs');
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [attachment, setAttachment] = useState<AttachmentMeta | null | undefined>(undefined);
   const [cc, setCc] = useState<string | null | undefined>(undefined);
@@ -797,6 +1305,7 @@ export default function JobbotUI() {
   const [merging, setMerging] = useState(false);
   const [replyOnly, setReplyOnly] = useState(false);
   const [repliesFetching, setRepliesFetching] = useState(false);
+  const [gmailSyncing, setGmailSyncing] = useState(false);
   const [anschreibenStatus, setAnschreibenStatus] = useState<AnschreibenRunStatus | null>(null);
   const [anschreibenSections, setAnschreibenSections] = useState<LoadGridSection[]>([]);
   const [scrapeStarting, setScrapeStarting] = useState(false);
@@ -806,6 +1315,21 @@ export default function JobbotUI() {
   // (matched/uncertain landen laut STATUS_MAP nirgendwo sonst), deshalb bei
   // Ordnerwechsel zurückgesetzt statt über Ordner hinweg mitzuschleppen.
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
+  // Eigene Auswahl statt selectedJobIds: die hängt am Ordner und wird bei jedem
+  // Ordnerwechsel geleert — der Nachfass-Tab ist kein Ordner.
+  const [followUpSelection, setFollowUpSelection] = useState<Set<string>>(new Set());
+  const [followUpBusy, setFollowUpBusy] = useState(false);
+
+  // Einstellungsseite "Suche". Zwei Dateien, zwei Zustände — sie werden getrennt
+  // geladen und getrennt gespeichert (ein PUT je Datei, siehe lib/config-store.ts).
+  const [schema, setSchema] = useState<Record<string, QueryField[]> | null>(null);
+  const [sources, setSources] = useState<SourcesCfg | null>(null);
+  const [umkreis, setUmkreis] = useState<LocationCfg | null>(null);
+  const [cfgBackup, setCfgBackup] = useState<{ sources: boolean; location: boolean }>({ sources: false, location: false });
+  const [cfgDirty, setCfgDirty] = useState<{ sources: boolean; location: boolean }>({ sources: false, location: false });
+  const [cfgErrors, setCfgErrors] = useState<string[]>([]);
+  const [cfgBusy, setCfgBusy] = useState(false);
+  const [rohOffen, setRohOffen] = useState<Record<string, boolean>>({});
   // Sidebar-Ordner mit frisch generierten Anschreiben, die noch nicht angesehen wurden —
   // nur im Speicher (kein localStorage, bewusst so einfach wie möglich): ein Reload
   // löscht die Markierung, das ist unkritisch, weil die betroffenen Jobs im Ordner
@@ -817,6 +1341,10 @@ export default function JobbotUI() {
   const lastSeenScrapeRunId = useRef<string | null>(null);
   const lastSeenFilterRunId = useRef<string | null>(null);
   const lastSeenAnschreibenRunId = useRef<string | null>(null);
+  // Weckt die Status-Poll-Schleife (siehe unten) sofort auf, statt auf den nächsten
+  // 1.5s-Tick zu warten — gesetzt vom Poll-Effect, aufgerufen von runScrapeNow/
+  // runFilterNow/runAnschreibenNow direkt nach dem Start-POST.
+  const pollRunsNow = useRef<() => void>(() => {});
   const ta = useRef<HTMLTextAreaElement>(null);
   // Für den Tschobbo-Hook im Scrape-SSE-Effect unten (der nur einmal läuft,
   // `view` also sonst als Closure einfrieren würde).
@@ -844,11 +1372,19 @@ export default function JobbotUI() {
     fetch('/api/settings').then(r => r.json()).then((s: { filterMode: FilterMode }) => setFilterMode(s.filterMode));
   }, []);
 
-  // Ein einziges, immer laufendes Poll-Intervall für die gesamte Lebensdauer der
-  // App (nicht an eine bestimmte Ansicht gebunden) — nur so bleibt die Fortschritts-
-  // anzeige in der Sidebar sichtbar, auch wenn man zu einer anderen Ansicht wechselt.
+  // Poll-Schleife für die gesamte Lebensdauer der App (nicht an eine bestimmte
+  // Ansicht gebunden) — nur so bleibt die Fortschrittsanzeige in der Sidebar
+  // sichtbar, auch wenn man zu einer anderen Ansicht wechselt. Läuft aber nur,
+  // solange tatsächlich etwas läuft: selbst-planender setTimeout statt Dauer-
+  // Intervall, hört auf sobald alle drei Status nicht mehr "running" sind.
+  // runScrapeNow/runFilterNow/runAnschreibenNow wecken sie über pollRunsNow
+  // sofort nach dem Start-POST wieder auf, statt auf den nächsten Tick zu warten.
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
+
     const tick = async () => {
+      if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
       try {
         const [s, f, a] = await Promise.all([
           fetch('/api/scrape/status').then(r => r.json()) as Promise<ScrapeStatus>,
@@ -896,13 +1432,20 @@ export default function JobbotUI() {
             });
           }
         }
+
+        const stillRunning = s.status === 'running' || f.status === 'running' || a.status === 'running';
+        if (!cancelled && stillRunning) timeoutId = setTimeout(tick, 1500);
       } catch {
-        // Server kurz nicht erreichbar — nächster Tick versucht's wieder
+        // Server kurz nicht erreichbar — weiter versuchen statt die Schleife stillschweigend zu beenden
+        if (!cancelled) timeoutId = setTimeout(tick, 1500);
       }
     };
+    pollRunsNow.current = tick;
     tick();
-    const id = setInterval(tick, 1500);
-    return () => clearInterval(id);
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [refetchJobs, say]);
 
   // SSE statt Polling fürs Anschreiben-Lade-Grid — ein Event pro fertigem (oder
@@ -934,6 +1477,23 @@ export default function JobbotUI() {
     return () => es.close();
   }, []);
 
+  // Tschobbo-Hook Teil 2 (ui/tschobbo.js): Die geworfenen Klumpen hängen an
+  // <body>, nicht im React-Baum — ohne dieses Event blieben sie beim Wechsel auf
+  // Jobs/Kalender/… sichtbar. Beim Zurückkommen auf ein fertiges Grid wirft
+  // Tschobbo den letzten Stand neu auf (Animation wiederholt sich), weil die
+  // Klumpen beim Verlassen weggeräumt wurden. Läuft gerade ein Scrape, übernimmt
+  // der Stream oben — dann kein Nachbau.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('tschobbo:view', { detail: { active: view === 'scrape' } }));
+    if (view !== 'scrape' || scrapeStatus?.status === 'running' || scrapeSections.length === 0) return;
+    // Ein Frame Abstand: das Grid muss erst gemountet sein, sonst findet Tschobbo
+    // keine Quadrate als Wurfziele.
+    const raf = requestAnimationFrame(() => window.dispatchEvent(new CustomEvent('tschobbo:replay')));
+    return () => cancelAnimationFrame(raf);
+    // Absicht: nur beim Ansichtswechsel, nicht bei jeder Section-Änderung.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
+
   // Wie oben, fürs Filter-Lade-Grid — ein Event pro fertigem 10er-Batch je
   // Ergebnis-Kategorie (Match/Offstack/Brutal, siehe scripts/ui-server.ts).
   useEffect(() => {
@@ -955,6 +1515,7 @@ export default function JobbotUI() {
         body: JSON.stringify({ sources: [...selectedSources] }),
       });
       if (res.status === 409) say('Scrape läuft bereits', 'err');
+      pollRunsNow.current();
     } finally {
       setScrapeStarting(false);
     }
@@ -970,6 +1531,7 @@ export default function JobbotUI() {
         body: JSON.stringify({ mode: filterMode, scope: filterScope }),
       });
       if (res.status === 409) say('Filter läuft bereits', 'err');
+      pollRunsNow.current();
     } finally {
       setFilterStarting(false);
     }
@@ -995,6 +1557,38 @@ export default function JobbotUI() {
       say(`Antworten-Abruf fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`, 'err');
     } finally {
       setRepliesFetching(false);
+    }
+  }
+
+  // Trägt sentAt/replyReceivedAt nach, die im Job-JSON fehlen — read-only gegenüber
+  // Gmail, füllt nur Lücken (siehe POST /api/gmail-sync). Läuft synchron durch zwei
+  // IMAP-Ordner, kann bei großem Postfach also dauern; deshalb der Fetching-Zustand.
+  async function syncGmail() {
+    setGmailSyncing(true);
+    try {
+      const res = await fetch('/api/gmail-sync', { method: 'POST' });
+      const data = await res.json() as {
+        sentGescannt?: number; markiert?: number; sentGefuellt?: number; ohneJob?: number;
+        replyGescannt?: number; replyGefuellt?: number; seit?: string; error?: string;
+      };
+      if (!res.ok) { say(`Gmail-Sync fehlgeschlagen: ${data.error}`, 'err'); return; }
+      // Jede Stufe einzeln melden (gelesen → markiert → zugeordnet): ein blankes
+      // "0 ergänzt" ließe offen, ob das Postfach leer war, das Label fehlt oder die
+      // Zuordnung nichts fand — drei völlig verschiedene Ursachen.
+      say(
+        `Gmail-Sync ab ${data.seit ?? HISTORY_START}: ${data.sentGescannt ?? 0} gesendet gelesen, `
+        + `${data.markiert ?? 0} als Bewerbung markiert → ${data.sentGefuellt ?? 0} Jobs verknüpft, `
+        + `${data.ohneJob ?? 0} nur Mail · ${data.replyGefuellt ?? 0} Antworten`,
+        'ok'
+      );
+      if ((data.sentGefuellt ?? 0) > 0 || (data.replyGefuellt ?? 0) > 0) {
+        refetchJobs();
+        fetch('/api/calendar').then(r => r.json()).then(setCalendarEvents);
+      }
+    } catch (err) {
+      say(`Gmail-Sync fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`, 'err');
+    } finally {
+      setGmailSyncing(false);
     }
   }
 
@@ -1050,6 +1644,7 @@ export default function JobbotUI() {
       });
       if (res.status === 409) say('Anschreiben-Lauf läuft bereits', 'err');
       else setSelectedJobIds(new Set());
+      pollRunsNow.current();
     } finally {
       setAnschreibenStarting(false);
     }
@@ -1150,6 +1745,19 @@ export default function JobbotUI() {
       .sort((a, b) => daysAgo(a.scrapedAt) - daysAgo(b.scrapedAt));
   }, [inCurrentFolder, fit, q, folder, replyOnly]);
 
+  // Auswählbar ist alles ausser Gesendetem — das ist überall sonst in der UI
+  // schreibgeschützt (siehe Detail-Leiste), und eine Mehrfachaktion darf dieselbe
+  // Regel nicht hintenrum aushebeln.
+  const selectable = useMemo(() => list.filter(j => j.status !== 'gesendet'), [list]);
+  // Anschreiben ist die eine Mehrfachaktion mit einer engeren Bedingung als
+  // "ausgewählt": der Lauf verarbeitet nur getriagte, nicht-brutale Jobs
+  // (canGenerateAnschreiben). Statt sie unauswählbar zu machen — sie sind ja für
+  // Löschen/Verschieben sehr wohl gemeint — steht die Zahl am Knopf.
+  const briefbar = useMemo(
+    () => [...selectedJobIds].filter(id => { const j = jobs.find(x => x.id === id); return j != null && canGenerateAnschreiben(j); }),
+    [selectedJobIds, jobs],
+  );
+
   const job = jobs.find(j => j.id === sel) ?? null;
   const shown = list.some(j => j.id === sel) ? job : null;
 
@@ -1209,6 +1817,184 @@ export default function JobbotUI() {
     });
     if (res.ok) patch(id, { fit });
     else say('Speichern fehlgeschlagen', 'err');
+  }
+
+  // Mehrfachaktion = dieselbe Route wie die Einzelaktion (POST /api/jobs/:id), n-mal.
+  // Kein Sammel-Endpunkt: jeder Job ist eine eigene JSON-Datei (storage/json-store.ts),
+  // serverseitig wäre das exakt dieselbe Schleife — nur an einer Stelle mehr, die den
+  // Teilerfolg-Fall (k von n gespeichert) nochmal eigens beschreiben müsste.
+  //
+  // Pessimistisch wie move(): der lokale State wird erst nach der Antwort angefasst,
+  // und nur für die Jobs, die wirklich durchkamen.
+  async function runBulk(patchFor: (job: JobWithBrief) => Partial<Pick<Job, 'status' | 'fit'>>, verb: string) {
+    const targets = [...selectedJobIds]
+      .map(id => jobs.find(j => j.id === id))
+      .filter((j): j is JobWithBrief => j != null);
+    if (targets.length === 0) return;
+
+    const done = (
+      await Promise.all(
+        targets.map(async j => {
+          const p = patchFor(j);
+          const res = await fetch(`/api/jobs/${j.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(p),
+          });
+          return res.ok ? { id: j.id, p } : null;
+        }),
+      )
+    ).filter((r): r is { id: string; p: Partial<Pick<Job, 'status' | 'fit'>> } => r != null);
+
+    setJobs(js => js.map(j => { const hit = done.find(d => d.id === j.id); return hit ? { ...j, ...hit.p } : j; }));
+    setSelectedJobIds(new Set());
+    const failed = targets.length - done.length;
+    if (failed) say(`${done.length} ${verb}, ${failed} fehlgeschlagen`, 'err');
+    else say(`${done.length} ${verb}`);
+  }
+
+  // Beim Betreten der Seite laden, nicht beim Start — wie Duplikate und Kalender auch.
+  // Das Schema kommt aus der Adapter-Registry (GET /api/config/schema), nicht aus der
+  // Datei: der Code sagt, welche Portale es gibt und welche Felder sie kennen.
+  useEffect(() => {
+    if (view !== 'suche') return;
+    let abgebrochen = false;
+    (async () => {
+      const [sch, src, loc] = await Promise.all([
+        fetch('/api/config/schema').then(r => r.json()),
+        fetch('/api/config/sources').then(r => r.json()),
+        fetch('/api/config/location').then(r => r.json()),
+      ]);
+      if (abgebrochen) return;
+      setSchema(sch as Record<string, QueryField[]>);
+      setSources(src.data as SourcesCfg);
+      setUmkreis(loc.data as LocationCfg);
+      setCfgBackup({ sources: !!src.hasBackup, location: !!loc.hasBackup });
+      setCfgDirty({ sources: false, location: false });
+      setCfgErrors([]);
+    })();
+    return () => { abgebrochen = true; };
+  }, [view]);
+
+  async function saveConfig(name: 'sources' | 'location') {
+    const data = name === 'sources' ? sources : umkreis;
+    if (!data) return;
+    setCfgBusy(true);
+    setCfgErrors([]);
+    try {
+      const res = await fetch(`/api/config/${name}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const body = await res.json();
+      if (!res.ok) { setCfgErrors(body.errors ?? ['Speichern fehlgeschlagen']); return; }
+      setCfgDirty(d => ({ ...d, [name]: false }));
+      setCfgBackup(b => ({ ...b, [name]: true }));
+      // loadSources() liest pro Nutzung frisch — ein laufender Scrape sieht die Änderung
+      // mitten drin. Gesperrt wird nicht, aber ungesagt bleiben soll es auch nicht.
+      say(body.scrapeRunning ? 'Gespeichert — ein Scrape läuft gerade und sieht die Änderung noch' : 'Gespeichert');
+    } finally {
+      setCfgBusy(false);
+    }
+  }
+
+  async function restoreConfig(name: 'sources' | 'location') {
+    setCfgBusy(true);
+    try {
+      const res = await fetch(`/api/config/${name}/restore`, { method: 'POST' });
+      const body = await res.json();
+      if (!res.ok) { say(body.error ?? 'Zurückholen fehlgeschlagen', 'err'); return; }
+      if (name === 'sources') setSources(body.data as SourcesCfg); else setUmkreis(body.data as LocationCfg);
+      setCfgBackup(b => ({ ...b, [name]: false }));
+      setCfgDirty(d => ({ ...d, [name]: false }));
+      setCfgErrors([]);
+      say('Letzte Fassung zurückgeholt');
+    } finally {
+      setCfgBusy(false);
+    }
+  }
+
+  // Anfragen, die kein Adapter annehmen würde. Zwei Quellen: Handedits an der Datei —
+  // dafür war der Hinweis ursprünglich gedacht — und Tippen im Formular selbst, etwa eine
+  // frisch angelegte Zeile mit leerem Pflichtfeld. Deshalb hängt daran auch der
+  // Speichern-Knopf: die Rückmeldung kommt beim Tippen, nicht erst als 422 vom Server.
+  //
+  // "Reparieren" wird nur angeboten, wenn die Absicht eindeutig ist: genau ein
+  // unbekannter Schlüssel und genau ein fehlendes Pflichtfeld heisst Tippfehler im
+  // Namen, der Wert soll bleiben. Alles andere waere Raten.
+  const kaputteAnfragen = useMemo(() => {
+    if (!sources || !schema) return [];
+    const treffer: { portal: string; index: number; problem: string; fix?: { von: string; nach: string } }[] = [];
+    for (const [portal, cfg] of Object.entries(sources)) {
+      const felder = schema[portal];
+      if (!felder) continue;
+      cfg.queries.forEach((q, i) => {
+        const probleme = checkQuery(felder, q);
+        if (probleme.length === 0) return;
+        const fehlend = probleme.filter(p => p.kind === 'missing');
+        const unbekannt = probleme.filter(p => p.kind === 'unknown');
+        treffer.push({
+          portal, index: i,
+          problem: probleme.map(describeProblem).join('; '),
+          fix: fehlend.length === 1 && unbekannt.length === 1
+            ? { von: unbekannt[0].key, nach: fehlend[0].key }
+            : undefined,
+        });
+      });
+    }
+    return treffer;
+  }, [sources, schema]);
+
+  const sourcesFehlerhaft = kaputteAnfragen.length > 0;
+
+  // Benennt einen Schlüssel um und behält den Wert — der Tippfehler-Fall.
+  function repariereAnfrage(portal: string, index: number, von: string, nach: string) {
+    setSources(prev => {
+      if (!prev) return prev;
+      const queries = prev[portal].queries.map((q, qi) => {
+        if (qi !== index) return q;
+        const { [von]: wert, ...rest } = q;
+        return { ...rest, [nach]: wert };
+      });
+      return { ...prev, [portal]: { ...prev[portal], queries } };
+    });
+    setCfgDirty(d => ({ ...d, sources: true }));
+  }
+
+  // Fällige Nachfassen. Die Regel lebt in lib/followup.ts, damit sie testbar ist und
+  // nicht zwischen Server und UI auseinanderdriftet.
+  const faellig = useMemo(() => dueFollowUps(jobs), [jobs]);
+
+  // Sammelaktion, ausdrücklich so gewollt: "all masse nicht alles einzeln klicken".
+  // Sequentiell statt Promise.all — anders als beim Statuspatch geht hier je Job eine
+  // echte IMAP/SMTP-Verbindung raus, die parallel zu Rate-Limits bei Gmail führt.
+  async function runFollowUps(via: 'draft' | 'sent') {
+    const ids = [...followUpSelection];
+    if (ids.length === 0) return;
+    setFollowUpBusy(true);
+    let ok = 0;
+    let letzterFehler = '';
+    for (const id of ids) {
+      try {
+        const res = await fetch(`/api/jobs/${id}/followup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ via }),
+        });
+        if (!res.ok) { letzterFehler = ((await res.json()) as { error?: string }).error ?? 'Fehler'; continue; }
+        const updated = (await res.json()) as JobWithBrief;
+        patch(id, { followUps: updated.followUps });
+        ok++;
+      } catch (err) {
+        letzterFehler = err instanceof Error ? err.message : String(err);
+      }
+    }
+    setFollowUpBusy(false);
+    setFollowUpSelection(new Set());
+    const verb = via === 'sent' ? 'gesendet' : 'als Entwurf angelegt';
+    if (ok === ids.length) say(`${ok} Nachfass ${verb}`);
+    else say(`${ok} von ${ids.length} ${verb} — ${letzterFehler}`, 'err');
   }
 
   // "Entwurf erzeugen" heißt: echten Gmail-Entwurf per IMAP anlegen
@@ -1278,6 +2064,34 @@ export default function JobbotUI() {
     setDetailOpen(true);
   };
 
+  // Schublade: Esc schliesst, Fokus wandert beim Oeffnen hinein und beim Schliessen
+  // zurueck auf den Burger. Ohne das laesst eine Tastaturbedienung den Fokus hinter
+  // dem Overlay stehen und man tabbt durch eine Liste, die man nicht sieht.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    drawerRef.current?.querySelector<HTMLElement>('button')?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setDrawerOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      burgerRef.current?.focus();
+    };
+  }, [drawerOpen]);
+
+  // Startordner auf schmalen Schirmen: der erste nicht-leere. Ist gar nichts da, ist
+  // der Scraper der einzige sinnvolle Ort (Kevin). Fest auf mail/entwurf zu starten
+  // hiess auf dem Handy: leerer Bildschirm, und ohne Seitenleiste kein Weg heraus.
+  // Laeuft genau einmal, sobald die Jobs geladen sind — danach entscheidet der Nutzer.
+  const startGesetzt = useRef(false);
+  useEffect(() => {
+    if (startGesetzt.current || jobs.length === 0) return;
+    startGesetzt.current = true;
+    if (!window.matchMedia('(max-width:1023px)').matches) return;
+    const ersterVoller = FOLDER_IDS.find(id => jobs.some(j => inFolder(j, id)));
+    if (ersterVoller) setFolder(ersterVoller);
+    else setView('scrape');
+  }, [jobs]);
+
   // Grobe Summen-Fraktion über alle Quellen statt Fortschritt pro Quelle exakt zu
   // verrechnen (die "total"-Einheiten unterscheiden sich je Quelle) — reicht für
   // eine dekorative "es tut sich was"-Anzeige, siehe Grilling-Runde 1.
@@ -1308,8 +2122,33 @@ export default function JobbotUI() {
     <div className={'jb' + (detailOpen ? ' jb--detail' : '')}>
       <style>{CSS}</style>
 
+      {/* Nur unter 1024 sichtbar (siehe .topbar im CSS). Traegt den einzigen Zugang zur
+          Seitenleiste, sobald die zur Schublade wird — ohne ihn war die halbe App auf
+          schmalen Schirmen unerreichbar. */}
+      <div className="topbar">
+        <button
+          ref={burgerRef}
+          className="topbar__burger"
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Navigation öffnen"
+          aria-expanded={drawerOpen}
+        >
+          <Menu />
+        </button>
+        <span className="topbar__wo">{view === 'jobs' ? (FOLDER_LABEL[folder] ?? 'Jobs') : (VIEW_LABEL[view] ?? 'Jobs')}</span>
+        {view === 'jobs' && <span className="topbar__n">{list.length}</span>}
+      </div>
+
+      {drawerOpen && <div className="sb__overlay" onClick={() => setDrawerOpen(false)} />}
+
       {/* ---------- Sidebar ---------- */}
-      <nav className="sb">
+      {/* Ein Klick-Handler auf dem <nav> statt an jedem einzelnen Eintrag: die Leiste hat
+          inzwischen 17 Knoepfe, und ein vergessener liesse die Schublade offen stehen. */}
+      <nav
+        ref={drawerRef}
+        className={'sb' + (drawerOpen ? ' sb--offen' : '')}
+        onClick={e => { if ((e.target as HTMLElement).closest('.fld')) setDrawerOpen(false); }}
+      >
         <div className="sb__brand">
           <span className="sb__logo">
             <b>jobbot</b>
@@ -1370,6 +2209,10 @@ export default function JobbotUI() {
             <Copy />
             <span className="fld__label">CC</span>
           </button>
+          <button className={'fld' + (view === 'suche' ? ' fld--on' : '')} onClick={() => setView('suche')}>
+            <Search />
+            <span className="fld__label">Suche</span>
+          </button>
           <button className={'fld' + (view === 'calendar' ? ' fld--on' : '')} onClick={() => setView('calendar')}>
             <Calendar />
             <span className="fld__label">Kalender</span>
@@ -1405,6 +2248,11 @@ export default function JobbotUI() {
           <button className={'fld' + (view === 'anschreiben' ? ' fld--on' : '')} onClick={() => setView('anschreiben')}>
             <FileText />
             <span className="fld__label">Anschreiben</span>
+          </button>
+          <button className={'fld' + (view === 'nachfass' ? ' fld--on' : '')} onClick={() => setView('nachfass')}>
+            <RotateCw />
+            <span className="fld__label">Nachfassen</span>
+            {faellig.length > 0 && <span className="fld__n">{faellig.length}</span>}
           </button>
           {anschreibenStatus?.status === 'running' && (
             <div className="fld__bar">
@@ -1484,8 +2332,34 @@ export default function JobbotUI() {
         /* ---------- Kalender ---------- */
         <section className="cal">
           <header className="dt__head">
-            <div className="dt__firma">Kalender</div>
-            <div className="dt__titel">Wann Bewerbungen rausgingen und wann Antworten zurückkamen.</div>
+            <div className="cal__head-row">
+              <div>
+                <div className="dt__firma">Kalender</div>
+                <div className="dt__titel">
+                  Wann Bewerbungen rausgingen, wann nachgefasst wurde und wann Antworten zurückkamen.
+                </div>
+                {/* Ohne Legende ist der dreifarbige Verlauf im Tagesquadrat nicht lesbar. */}
+                <div className="cal__legende">
+                  {CAL_TYPES.map(t => (
+                    <span key={t}>
+                      <span className="cal__entry__dot" style={{ background: CAL_COLOR[t] }} />
+                      {{ sent: 'gesendet', followup: 'nachgefasst', reply: 'Antwort' }[t]}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {/* Sitzt hier statt in der Sidebar, weil der Sync genau das füllt, was
+                  diese Ansicht anzeigt — ein leerer Kalender ist der Moment, in dem
+                  man ihn sucht. */}
+              <button
+                className="btn btn--ghost"
+                disabled={gmailSyncing}
+                onClick={syncGmail}
+                title="Liest Gesendet-Ordner und Inbox und trägt fehlende Daten nach. Ändert in Gmail nichts."
+              >
+                <Mail /> {gmailSyncing ? 'Synct…' : 'Gmail-Sync'}
+              </button>
+            </div>
           </header>
           <div className="cal__body">
             <CalendarView
@@ -1564,7 +2438,12 @@ export default function JobbotUI() {
               <LoadGridPanel
                 running={scrapeStatus?.status === 'running'}
                 sections={scrapeSections}
-                onClose={() => setScrapeSections([])}
+                onClose={() => {
+                  setScrapeSections([]);
+                  // Mit dem Grid gehen auch Tschobbos Klumpen (ui/tschobbo.js) —
+                  // sonst bliebe der Haufen ohne Grid im Bild stehen.
+                  window.dispatchEvent(new CustomEvent('tschobbo:view', { detail: { active: false } }));
+                }}
                 ghost
               />
             ) : (
@@ -1721,6 +2600,215 @@ export default function JobbotUI() {
             </button>
           </footer>
         </section>
+      ) : view === 'suche' ? (
+        /* ---------- Suche: Suchgebiet + Umkreis ---------- */
+        <section className="att">
+          <header className="dt__head">
+            <div className="dt__firma">Suche</div>
+            <div className="dt__titel">
+              Was gesucht wird und was davon übrig bleibt. Beides wirkt sofort — beide Dateien
+              werden bei jedem Lauf frisch gelesen, ein Neustart ist nicht nötig.
+            </div>
+          </header>
+          <div className="dt__body">
+            {!sources || !umkreis || !schema ? (
+              <div className="empty"><div className="empty__h">Lädt…</div></div>
+            ) : (
+              <div className="cfg">
+                {cfgErrors.length > 0 && (
+                  <div className="errbox">
+                    <div className="errbox__h"><AlertTriangle /> Nicht gespeichert</div>
+                    <div className="errbox__msg">{cfgErrors.map((e, i) => <div key={i}>{e}</div>)}</div>
+                  </div>
+                )}
+
+                {/* Anfragen aus Handedits, die kein Adapter annehmen würde. Der Hinweis
+                    steht hier, weil man sie hier auch loswird. */}
+                {kaputteAnfragen.length > 0 && (
+                  <div className="cfg__kaputt">
+                    <b>
+                      {kaputteAnfragen.length} Anfrage{kaputteAnfragen.length > 1 ? 'n' : ''} unbrauchbar — solange
+                      das so ist, lässt sich das Suchgebiet nicht speichern
+                    </b>
+                    {kaputteAnfragen.map((k, i) => (
+                      <div key={i} className="cfg__kaputt-zeile">
+                        <span>{k.portal}, Anfrage {k.index + 1}: {k.problem}</span>
+                        {k.fix && (
+                          <button className="btn" onClick={() => repariereAnfrage(k.portal, k.index, k.fix!.von, k.fix!.nach)}>
+                            „{k.fix.von}" → „{k.fix.nach}"
+                          </button>
+                        )}
+                        <button className="btn btn--ghost btn--danger" onClick={() => {
+                          setSources(prev => prev && ({
+                            ...prev,
+                            [k.portal]: { ...prev[k.portal], queries: prev[k.portal].queries.filter((_, qi) => qi !== k.index) },
+                          }));
+                          setCfgDirty(d => ({ ...d, sources: true }));
+                        }}>Entfernen</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <section className="cfg__block">
+                  <h3 className="cfg__h">Suchgebiet <span>geht an das Portal</span></h3>
+                  {Object.keys(schema).map(name => {
+                    const cfg = sources[name] ?? { enabled: false, queries: [] };
+                    return (
+                      <PortalBlock
+                        key={name} name={name} cfg={cfg} felder={schema[name]}
+                        onChange={next => { setSources({ ...sources, [name]: next }); setCfgDirty(d => ({ ...d, sources: true })); }}
+                      />
+                    );
+                  })}
+                  {/* Verwaiste Einträge: in der Datei, aber ohne Adapter. Angezeigt statt
+                      angeboten — die Registry sagt, welche Portale es gibt. */}
+                  {Object.keys(sources).filter(n => !schema[n]).map(n => (
+                    <div key={n} className="cfg__verwaist">
+                      „{n}" steht in der Datei, es gibt aber kein Portal dieses Namens — wird ignoriert.
+                      <button className="btn btn--ghost btn--danger" onClick={() => {
+                        const { [n]: _weg, ...rest } = sources;
+                        setSources(rest); setCfgDirty(d => ({ ...d, sources: true }));
+                      }}>Entfernen</button>
+                    </div>
+                  ))}
+                  <RohAnsicht offen={!!rohOffen.sources} onToggle={() => setRohOffen(o => ({ ...o, sources: !o.sources }))} data={sources} />
+                  <div className="cfg__leiste">
+                    <button
+                      className="btn btn--primary"
+                      disabled={cfgBusy || !cfgDirty.sources || sourcesFehlerhaft}
+                      title={sourcesFehlerhaft ? 'Erst die unbrauchbaren Anfragen oben beheben' : undefined}
+                      onClick={() => saveConfig('sources')}
+                    >
+                      Speichern
+                    </button>
+                    {cfgBackup.sources && (
+                      <button className="btn btn--ghost" disabled={cfgBusy} onClick={() => restoreConfig('sources')}>
+                        <Undo2 /> Letzte Fassung zurückholen
+                      </button>
+                    )}
+                  </div>
+                </section>
+
+                <section className="cfg__block">
+                  <h3 className="cfg__h">Umkreis <span>wirft nach dem Scrapen weg</span></h3>
+                  <p className="cfg__erklaerung">
+                    Gilt für alle Quellen, auch für die, die österreichweit suchen. Geprüft wird gegen
+                    alle Begriffe zusammen — die Gruppen ordnen nur.
+                  </p>
+                  {UMKREIS_GRUPPEN.map(g => (
+                    <div key={g.key} className="cfg__gruppe">
+                      <span className="cfg__gruppe-name">{g.label}</span>
+                      <ChipListe
+                        werte={umkreis[g.key]}
+                        hint={`+ ${g.hint}`}
+                        warnung={g.key === 'regions'
+                          ? (w) => istLandesbegriff(w)
+                            ? `„${w}" als Region behielte jeden Job, dessen Ort auf „…, ${w}" endet — also praktisch alle. Der Umkreisfilter wäre damit aus.`
+                            : null
+                          : undefined}
+                        onChange={next => { setUmkreis({ ...umkreis, [g.key]: next }); setCfgDirty(d => ({ ...d, location: true })); }}
+                      />
+                    </div>
+                  ))}
+                  <RohAnsicht offen={!!rohOffen.location} onToggle={() => setRohOffen(o => ({ ...o, location: !o.location }))} data={umkreis} />
+                  <div className="cfg__leiste">
+                    <button className="btn btn--primary" disabled={cfgBusy || !cfgDirty.location} onClick={() => saveConfig('location')}>
+                      Speichern
+                    </button>
+                    {cfgBackup.location && (
+                      <button className="btn btn--ghost" disabled={cfgBusy} onClick={() => restoreConfig('location')}>
+                        <Undo2 /> Letzte Fassung zurückholen
+                      </button>
+                    )}
+                  </div>
+                </section>
+              </div>
+            )}
+          </div>
+        </section>
+      ) : view === 'nachfass' ? (
+        /* ---------- Nachfassen ---------- */
+        <section className="att">
+          <header className="dt__head">
+            <div className="dt__firma">Nachfassen</div>
+            <div className="dt__titel">
+              Bewerbungen ohne Rückmeldung seit mindestens {FOLLOW_UP_DAYS} Tagen. Die Uhr läuft ab dem letzten
+              Kontakt, ein Nachfass setzt sie zurück — es bleibt fällig, bis eine Antwort da ist.
+            </div>
+          </header>
+          <div className="dt__body">
+            {faellig.length === 0 ? (
+              <div className="empty">
+                <div className="empty__h">Nichts offen</div>
+                Keine Bewerbung wartet länger als {FOLLOW_UP_DAYS} Tage auf eine Antwort.
+              </div>
+            ) : (
+              <>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '0 0 10px', fontSize: 12, color: 'var(--muted)' }}>
+                  <input
+                    type="checkbox"
+                    className="row__check"
+                    style={{ marginLeft: 0 }}
+                    checked={faellig.every(j => followUpSelection.has(j.id))}
+                    onChange={e => setFollowUpSelection(e.target.checked ? new Set(faellig.map(j => j.id)) : new Set())}
+                  />
+                  Alle auswählen ({faellig.length})
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {faellig.map(j => {
+                    const tage = daysSinceLastContact(j) ?? 0;
+                    const versuche = j.followUps?.length ?? 0;
+                    return (
+                      <label key={j.id} className="nf__row">
+                        <input
+                          type="checkbox"
+                          className="row__check"
+                          style={{ marginLeft: 0 }}
+                          checked={followUpSelection.has(j.id)}
+                          onChange={() => setFollowUpSelection(prev => {
+                            const next = new Set(prev);
+                            if (next.has(j.id)) next.delete(j.id); else next.add(j.id);
+                            return next;
+                          })}
+                        />
+                        <span className="nf__firma">{j.company}</span>
+                        <span className="nf__titel">{j.title}</span>
+                        <span className="nf__meta">
+                          <span className="tag">{j.email}</span>
+                          {versuche > 0 && <span className="tag">{versuche}× nachgefasst</span>}
+                          <span className="row__age">{tage}d</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+          {/* Knöpfe links wie in den anderen Views: der Tschobbo-Schalter klebt fix unten
+              rechts (z-index 41) und läge sonst genau auf "Senden". */}
+          <footer className="bar">
+            <button
+              className="btn"
+              disabled={followUpBusy || followUpSelection.size === 0}
+              onClick={() => runFollowUps('draft')}
+            >
+              <FileText /> Als Entwurf ({followUpSelection.size})
+            </button>
+            <button
+              className="btn btn--primary"
+              disabled={followUpBusy || followUpSelection.size === 0}
+              onClick={() => runFollowUps('sent')}
+            >
+              <Send /> Senden ({followUpSelection.size})
+            </button>
+            <span className="bar__spacer" />
+            <span className="bar__hint">
+              {followUpBusy ? 'läuft…' : `${followUpSelection.size} von ${faellig.length} ausgewählt`}
+            </span>
+          </footer>
+        </section>
       ) : view === 'anschreiben' ? (
         /* ---------- Anschreiben ---------- */
         <section className="att">
@@ -1837,35 +2925,81 @@ export default function JobbotUI() {
               </button>
             </div>
           )}
-          {folder === 'jobs' && list.length > 0 && (
+          {selectable.length > 0 && (
             <label style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 0 4px', fontSize: 12, color: 'var(--muted)' }}>
               <input
                 type="checkbox"
                 className="row__check"
                 style={{ marginLeft: 0 }}
-                checked={list.every(j => selectedJobIds.has(j.id))}
-                onChange={e => setSelectedJobIds(e.target.checked ? new Set(list.map(j => j.id)) : new Set())}
+                checked={selectable.every(j => selectedJobIds.has(j.id))}
+                onChange={e => setSelectedJobIds(e.target.checked ? new Set(selectable.map(j => j.id)) : new Set())}
               />
-              Alle sichtbaren auswählen ({list.length})
+              Alle sichtbaren auswählen ({selectable.length})
             </label>
           )}
         </div>
 
-        {/* Auswahl nur im "jobs"-Ordner: matched/uncertain (die einzigen für
-            Anschreiben geeigneten Status) landen laut STATUS_MAP nirgendwo sonst. */}
-        {folder === 'jobs' && selectedJobIds.size > 0 && (
+        {/* Auswahl-Leiste, in jedem Ordner. Die Aktionen unterscheiden sich nicht nach
+            Ordner, sondern nach dem, was der einzelne Job hergibt: Anschreiben nur für
+            getriagte, nicht-brutale Jobs (briefbar), alles andere für jede Auswahl.
+            Die beiden Menüs sind native <select> — ein Klick, Tastatur inklusive, und
+            kein eigener Dropdown-Zustand, der offen bleiben könnte. */}
+        {selectedJobIds.size > 0 && (
           <div className="selbar">
             <span className="selbar__n">{selectedJobIds.size} ausgewählt</span>
-            <span className="selbar__spacer" />
-            <button className="btn btn--ghost" onClick={() => setSelectedJobIds(new Set())}>
-              Auswahl aufheben
+
+            <select
+              className="btn selbar__menu"
+              value=""
+              aria-label="Auswahl verschieben nach"
+              onChange={e => {
+                const t = e.target.value as MoveTarget | '';
+                if (t) runBulk(MOVE_PATCH[t], `nach ${MOVE_TARGETS.find(m => m.value === t)!.label} verschoben`);
+              }}
+            >
+              <option value="">Verschieben …</option>
+              {MOVE_TARGETS.map(m => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
+
+            <select
+              className="btn selbar__menu"
+              value=""
+              aria-label="Urteil für Auswahl setzen"
+              onChange={e => {
+                const f = e.target.value as Fit | '';
+                if (f) runBulk(() => ({ fit: f }), `auf ${FIT[f].label} gesetzt`);
+              }}
+            >
+              <option value="">Urteil …</option>
+              {(Object.keys(FIT) as Fit[]).map(f => (
+                <option key={f} value={f}>{FIT[f].label}</option>
+              ))}
+            </select>
+
+            <button
+              className="btn btn--ghost btn--danger"
+              onClick={() => runBulk(MOVE_PATCH.geloescht, 'gelöscht')}
+            >
+              <Trash2 /> Löschen
             </button>
+
             <button
               className="btn btn--primary"
-              disabled={anschreibenStarting || anschreibenStatus?.status === 'running'}
-              onClick={() => runAnschreibenNow([...selectedJobIds])}
+              disabled={briefbar.length === 0 || anschreibenStarting || anschreibenStatus?.status === 'running'}
+              title={
+                briefbar.length === selectedJobIds.size
+                  ? undefined
+                  : `Nur ${briefbar.length} der ${selectedJobIds.size} sind getriagt und nicht brutal — erst den Filter laufen lassen`
+              }
+              onClick={() => runAnschreibenNow(briefbar)}
             >
-              <FileText /> Anschreiben erstellen
+              <FileText /> Anschreiben ({briefbar.length})
+            </button>
+
+            <button className="btn btn--ghost" onClick={() => setSelectedJobIds(new Set())}>
+              <XCircle /> Aufheben
             </button>
           </div>
         )}
@@ -1879,16 +3013,20 @@ export default function JobbotUI() {
           ) : (
             list.map(j => (
               <div key={j.id} className="row-wrap">
-                {folder === 'jobs' && (
-                  <input
-                    type="checkbox"
-                    className="row__check"
-                    checked={selectedJobIds.has(j.id)}
-                    onChange={() => toggleSelect(j.id)}
-                    onClick={e => e.stopPropagation()}
-                    aria-label={`${j.title} auswählen`}
-                  />
-                )}
+                <input
+                  type="checkbox"
+                  className="row__check"
+                  disabled={j.status === 'gesendet'}
+                  checked={selectedJobIds.has(j.id)}
+                  onChange={() => toggleSelect(j.id)}
+                  onClick={e => e.stopPropagation()}
+                  title={j.status === 'gesendet' ? 'Gesendet — schreibgeschützt' : undefined}
+                  aria-label={
+                    j.status === 'gesendet'
+                      ? `${j.title} — gesendet, schreibgeschützt`
+                      : `${j.title} auswählen`
+                  }
+                />
                 <button
                   className={'row' + (sel === j.id ? ' row--on' : '') + (j.fit === 'brutal' ? ' row--dim' : '')}
                   onClick={() => open(j.id)}
@@ -1904,6 +3042,7 @@ export default function JobbotUI() {
                     <span className={'tag' + (j.email ? '' : ' tag--nomail')}>{j.email ? 'MAIL' : 'PORTAL'}</span>
                     <span className="tag">{j.source}</span>
                     {j.status === 'fehler' && <span className="tag tag--err">FEHLER</span>}
+                    {j.status === 'new' && <span className="tag tag--roh">UNGEFILTERT</span>}
                     {j.replyReceivedAt && <span className="tag tag--reply">ANTWORT ERHALTEN</span>}
                   </span>
                 </button>
@@ -1982,7 +3121,13 @@ export default function JobbotUI() {
                 </div>
               )}
 
-              {tab === 'brief' ? (
+              {/* Beide Bereiche sind immer im DOM; welcher zu sehen ist, entscheidet CSS.
+                  Unter 2000px blendet die Tab-Klasse den inaktiven aus, darüber stehen sie
+                  nebeneinander (Band C) — so bleibt der Umschalt-Zustand eine reine
+                  Darstellungsfrage und braucht keinen zweiten React-Zweig. */}
+              <div className={'dt__panels dt__panels--' + tab}>
+              <div className="dt__panel dt__panel--brief">
+              {(
                 shown.brief ? (
                   <div className="paper">
                     <div className="paper__to">
@@ -2006,16 +3151,22 @@ export default function JobbotUI() {
                 ) : (
                   <div className="empty" style={{ textAlign: 'left', padding: '8px 0' }}>
                     <div className="empty__h">Kein Anschreiben</div>
-                    Der Lauf ist vor der Generierung abgebrochen. Fehler oben beheben, dann neu
-                    generieren.
+                    {/* Ungefilterte Jobs hatten nie einen Lauf — "abgebrochen" wäre gelogen
+                        und schickt beim Suchen nach dem Fehler in die falsche Richtung. */}
+                    {shown.status === 'new'
+                      ? 'Noch nicht gefiltert — erst den Filter über diesen Job laufen lassen, danach ist ein Anschreiben möglich.'
+                      : 'Der Lauf ist vor der Generierung abgebrochen. Fehler oben beheben, dann neu generieren.'}
                   </div>
                 )
-              ) : (
+              )}
+              </div>
+              <div className="dt__panel dt__panel--inserat">
                 <div className="inserat">
                   <h4>Inserat · {shown.source}</h4>
                   {decodeEntities(shown.description)}
                 </div>
-              )}
+              </div>
+              </div>
             </div>
 
             <footer className="bar">

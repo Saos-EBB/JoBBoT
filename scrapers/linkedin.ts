@@ -1,6 +1,7 @@
 import { fetchPage, sleep } from '../lib/fetch-page.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
+import { usableQueries } from '../lib/query-schema.ts';
 
 const SEARCH_BASE = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search';
 const PAGES = [0, 25, 50];
@@ -57,6 +58,12 @@ async function fetchDetailPage(url: string): Promise<string> {
 export const linkedinAdapter: ScraperAdapter = {
   name: 'linkedin',
   kind: 'fetch', // nutzt fetchPage() (plain HTTP), kein Playwright-Browser
+  // format 'text', nicht 'slug': der Wert geht wörtlich in ?keywords= — ein hier
+  // eingetragener Slug würde mit Bindestrichen gesucht.
+  querySchema: [
+    { key: 'keyword', label: 'Suchbegriff', required: true, format: 'text', placeholder: 'junior software developer' },
+    { key: 'location', label: 'Suchgebiet', required: false, format: 'text', placeholder: 'Oberösterreich, Österreich' },
+  ],
   async scrape(
     queries: SourceQuery[],
     keep?: (job: ScrapedJob) => boolean,
@@ -64,10 +71,9 @@ export const linkedinAdapter: ScraperAdapter = {
     onUnitDone?: (items: ScrapedJob[]) => void,
   ) {
     const byUrl = new Map<string, ScrapedJob>();
-    for (const query of queries) {
-      const keyword = query.keyword ?? '';
+    for (const query of usableQueries(linkedinAdapter, queries)) {
+      const keyword = query.keyword;
       const location = query.location ?? 'Österreich';
-      if (!keyword) continue;
       for (let pi = 0; pi < PAGES.length; pi++) {
         const start = PAGES[pi];
         try {

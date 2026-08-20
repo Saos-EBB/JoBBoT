@@ -1,5 +1,6 @@
 import { sleep } from '../lib/fetch-page.ts';
-import { slugify } from '../lib/slugify.ts';
+import { searchSlug } from '../lib/slugify.ts';
+import { usableQueries } from '../lib/query-schema.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
 import { createBatcher } from '../lib/grid-batch.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
@@ -118,7 +119,7 @@ async function fetchJobsAt(url: string): Promise<string> {
 }
 
 async function fetchSearchPage(keyword: string): Promise<string> {
-  return fetchJobsAt(`${BASE}/j/${slugify(keyword)}`);
+  return fetchJobsAt(`${BASE}/j/${searchSlug(keyword)}`);
 }
 
 async function fetchDetailPage(url: string): Promise<string> {
@@ -129,6 +130,9 @@ async function fetchDetailPage(url: string): Promise<string> {
 export const jobsAtAdapter: ScraperAdapter = {
   name: 'jobs.at',
   kind: 'fetch',
+  querySchema: [
+    { key: 'keyword', label: 'Suchbegriff', required: true, format: 'slug', placeholder: 'java-entwickler' },
+  ],
   async scrape(
     queries: SourceQuery[],
     keep?: (job: ScrapedJob) => boolean,
@@ -137,13 +141,12 @@ export const jobsAtAdapter: ScraperAdapter = {
   ) {
     const byUrl = new Map<string, ScrapedJob>();
 
-    for (let qi = 0; qi < queries.length; qi++) {
-      const query = queries[qi];
-      const keyword = query.keyword ?? '';
-      if (!keyword) continue;
+    const usable = usableQueries(jobsAtAdapter, queries);
+    for (let qi = 0; qi < usable.length; qi++) {
+      const keyword = usable[qi].keyword;
 
       try {
-        onProgress?.(qi + 1, queries.length);
+        onProgress?.(qi + 1, usable.length);
         const cards = parseSearchPage(await fetchSearchPage(keyword));
 
         // STEP 2b: Ort ist in der Karte vorhanden → Gate hier, vor dem Detail-Fetch (wie devjobs.at)

@@ -73,10 +73,15 @@ export async function runScrape(options: RunScrapeOptions): Promise<SourceOutcom
   const scheduler = createScheduler(maxConcurrent, maxBrowsers);
 
   const settled = await Promise.allSettled(names.map(async name => {
-    const isBrowser = registry[name].kind === 'browser';
+    // Ohne diese Zeile wurde aus einem Portalnamen ohne Adapter ein
+    // "Cannot read properties of undefined (reading 'kind')" — als abgelehnte Promise
+    // getarnt als Quellen-Fehlschlag, ohne zu sagen woran es lag.
+    const adapter = registry[name];
+    if (!adapter) throw new Error(`Kein Adapter für Quelle "${name}" — bekannt sind: ${Object.keys(registry).join(', ')}`);
+    const isBrowser = adapter.kind === 'browser';
     await scheduler.acquire(isBrowser);
     try {
-      return await registry[name].scrape(
+      return await adapter.scrape(
         queriesFor(name),
         keep,
         (current, total) => onProgress?.(name, current, total),
