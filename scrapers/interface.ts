@@ -51,11 +51,38 @@ export interface Job extends ScrapedJob {
   sentAt?: string | null;
 }
 
+// Wie eine Suchanfrage in config/sources.json aussieht. Bleibt bewusst ein loser
+// Record: das ist die Form, in der die Datei geparst ankommt, und ein Schema-Typ hier
+// würde nur vortäuschen, dass die Datei geprüft wäre. Geprüft wird sie gegen
+// querySchema (siehe lib/query-schema.ts) — an der Grenze, nicht im Typsystem.
 export type SourceQuery = Record<string, string>;
+
+// Format eines einzelnen Feldes. Für die Einstellungsseite gedacht: sie muss wissen,
+// wie eine Eingabe zu behandeln ist, bevor sie in der Datei landet.
+//   'slug'   — wird als URL-Pfadsegment benutzt (karriere.at, jobs.at). searchSlug()
+//              normalisiert beim Abruf; das Portal selbst ist gegenüber Umlauten
+//              gleichgültig (nachgemessen), die Normalisierung dient der Einheitlichkeit.
+//   'text'   — geht wörtlich in einen Query-Parameter (linkedin, ams). Ein hier
+//              eingetragener Slug würde wörtlich mit Bindestrichen gesucht.
+//   'number' — Zahl als String (ams vicinity, in km).
+//   'raw'    — fertiger Query-String, wird unverändert angehängt (devjobs.at).
+export type QueryFieldFormat = 'slug' | 'text' | 'number' | 'raw';
+
+export interface QueryField {
+  key: string;
+  label: string;
+  required: boolean;
+  format: QueryFieldFormat;
+  placeholder?: string;
+}
 
 export interface ScraperAdapter {
   name: string;
   kind: 'fetch' | 'browser';
+  // Welche Felder eine Suchanfrage dieses Portals haben darf. Pflichtfeld, damit ein
+  // Adapter ohne Schema gar nicht erst compiliert — die Einstellungsseite baut ihr
+  // Formular daraus, und lib/query-schema.ts prüft die Datei dagegen.
+  querySchema: QueryField[];
   scrape(
     queries: SourceQuery[],
     keep?: (job: ScrapedJob) => boolean,
