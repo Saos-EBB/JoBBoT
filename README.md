@@ -31,12 +31,21 @@ Projekte und Links, die in jedes generierte Anschreiben einfließen.
 | Datei | Zweck |
 |---|---|
 | `profile.json` | Bewerberprofil für die Anschreiben-Generierung (aus `profile.example.json` kopieren) |
-| `sources.json` | Welche Portale aktiv sind (karriere.at, devjobs.at, LinkedIn, AMS, jobs.at) + Suchqueries pro Portal |
-| `location.json` | Whitelist an Städten/Regionen (Oberösterreich) + Remote-Keywords |
+| `sources.json` | Welche Portale aktiv sind (karriere.at, devjobs.at, LinkedIn, AMS, jobs.at) + Suchqueries pro Portal — **auch über die UI editierbar**, siehe [Einstellungsseite „Suche"](#einstellungsseite-suche) |
+| `location.json` | Whitelist an Städten/Regionen (Oberösterreich) + Remote-Keywords — **auch über die UI editierbar** |
 | `experience-rules.json` | Keyword-/Phrasenlisten für den Regex-Filter (Erfahrungsjahre, Junior-Signale, Ausschluss-/Negationswörter) |
 | `settings.json` | `filterMode` (`regex` oder `llm`) und Fallback-`filterModel` |
 
 ### Config anpassen
+
+`sources.json` und `location.json` lassen sich seit v0.5 über die
+Einstellungsseite **Suche** im Browser ändern — ohne Editor, ohne
+JSON-Kenntnisse, auch auf dem Handy. Die drei übrigen Dateien werden weiterhin
+von Hand bearbeitet.
+
+Alle Config-Dateien werden bei jeder Nutzung frisch gelesen (`loadSources()`,
+`loadLocationConfig()` in `lib/scrape-setup.ts`) — ein Server-Neustart ist nach
+einer Änderung nicht nötig.
 
 - **`sources.json`**: Portale ein-/ausschalten und Suchqueries pro Portal
   ändern, wenn zu wenig/zu viele Treffer reinkommen.
@@ -169,13 +178,24 @@ klaren Fehlermeldung fehl statt die Seite zu blockieren.
   GET, synchron), `/api/duplicates/merge` (Duplikat-Gruppe zusammenführen),
   `/api/calendar` (Kalender-Ereignisse, GET, synchron), `/api/mail/replies/fetch`
   (Gmail-Inbox nach Antworten durchsuchen), `/api/gmail-sync` (rückwirkend
-  `sentAt`/`replyReceivedAt` nachtragen, read-only gegenüber Gmail) sowie `/api/scrape/*` und
-  `/api/filter/*` (siehe unten).
+  `sentAt`/`replyReceivedAt` nachtragen, read-only gegenüber Gmail),
+  `/api/jobs/:id/followup` (Nachfass als Entwurf oder Versand),
+  `/api/config/schema` (Suchfelder je Portal), `/api/config/sources` und
+  `/api/config/location` (GET/PUT) samt `/api/config/:name/restore` sowie
+  `/api/scrape/*` und `/api/filter/*` (siehe unten).
+
+Die Oberfläche hat drei Breitenbänder:
+
+- **unter 1024px** wird die Seitenleiste zu einer Schublade (Burger in einer
+  Kopfzeile, Overlay, Esc). Der Startordner ist dort der erste nicht-leere,
+  sonst der Scraper — sonst landet man auf einem leeren Ordner ohne Weg heraus.
+- **1024–2000px**: drei Spalten, stetig über `clamp()` statt in Stufen.
+- **ab 2000px** stehen Anschreiben und Inserat nebeneinander statt in Tabs.
 
 ### Scrape/Filter aus der UI
 
 Die Sidebar hat eine eigene „Pipeline"-Gruppe mit den Einträgen **Scrape**,
-**Filter**, **Duplikate** und **Anschreiben**, die die jeweiligen
+**Filter**, **Duplikate**, **Anschreiben** und **Nachfassen**, die die jeweiligen
 `npm run <x>`-Skripte aus dem Browser statt vom Terminal aus anstoßen.
 Scrape/Filter/Anschreiben laufen nach demselben Muster:
 
@@ -204,11 +224,91 @@ Abruf an. Pro Gruppe (oder für alle auf einmal) lässt sich per
 aber das `scrapedAt` des ältesten Duplikats; die restlichen Dateien werden
 gelöscht.
 
+### Mehrfachauswahl in der Job-Liste
+
+Jede Zeile hat eine Checkbox, in jedem Ordner. Sobald etwas ausgewählt ist,
+erscheint eine Leiste mit **Verschieben** (Jobs / Aussortiert / Gelöscht),
+**Urteil** (Match / Offstack / Brutal), **Löschen** und **Anschreiben (n)**.
+
+Zwei Feinheiten, die nicht offensichtlich sind:
+
+- Die Zahl am Anschreiben-Knopf ist kleiner als die Auswahl, wenn darunter
+  ungefilterte oder als brutal bewertete Jobs sind — der Lauf kann die nicht
+  verarbeiten. Auswählbar bleiben sie trotzdem, weil sie fürs Löschen und
+  Verschieben sehr wohl gemeint sind.
+- „Verschieben → Jobs" nimmt ein brutales Urteil auf `offstack` mit. *Jobs* und
+  *Aussortiert* sind beide `status: triaged` und unterscheiden sich **nur** im
+  `fit` (siehe `lib/folders.ts`); ohne die Urteilsänderung fiele der Job sofort
+  zurück, was aussähe wie „nichts passiert".
+
+Gesendete Bewerbungen sind nicht auswählbar — sie sind überall sonst in der UI
+schreibgeschützt, und eine Mehrfachaktion soll das nicht hintenrum aushebeln.
+
+### Einstellungsseite „Suche"
+
+Der Eintrag **Suche** (bei Anhang und CC) macht `sources.json` und
+`location.json` im Browser editierbar. Zwei Abschnitte, weil es zwei
+verschiedene Dinge sind, die beide „Ort" heißen könnten:
+
+- **Suchgebiet** — geht an das Portal. Nur LinkedIn und AMS haben eins; die
+  übrigen drei suchen österreichweit und werden erst hinterher gefiltert.
+- **Umkreis** — `location.json`, wirkt **nach** dem Scrapen über `isInRange()`
+  und gilt für alle fünf Quellen.
+
+Die Form eines Portalblocks folgt der Feldzahl, nicht dem Portalnamen: ein Feld
+wird zur Chip-Wolke, mehrere werden zu beschrifteten Zeilen. Woher die Seite das
+weiß: jeder `ScraperAdapter` trägt seit v0.5 ein **`querySchema`** —
+Pflichtfeld, ein Portal ohne Schema compiliert nicht. `GET /api/config/schema`
+liefert es an den Browser.
+
+Dasselbe Schema prüft an drei Stellen: im Formular beim Tippen, im Server vor
+dem Schreiben und in den Adaptern beim Lesen. Alle drei rufen `checkQuery()`
+aus `lib/query-schema.ts` auf — die Regeln gibt es genau einmal. Eine Anfrage
+mit einem Tippfehler im Schlüssel (`keywords` statt `keyword`) wurde früher
+kommentarlos übersprungen; jetzt meldet der Adapter sie, und die Seite bietet
+„Reparieren" an, wenn die Absicht eindeutig ist.
+
+Das aufklappbare Roh-JSON ist eine **Ansicht**, kein zweiter Editor —
+schreibgeschützt mit Kopieren-Knopf, damit es keine zweite Wahrheit gibt.
+
+Beim Speichern wandert die bisherige Fassung nach `<datei>.bak`, und
+„Letzte Fassung zurückholen" holt sie zurück. Eine Stufe tief; alles Ältere
+holt git, denn beide Dateien sind versioniert.
+
+**Eine Warnung ist eingebaut**: „Österreich" als Region. `COUNTRY_ONLY`
+(`lib/location-terms.ts`) wird in `isInRange()` **exakt** verglichen, eine
+Region dagegen per Substring — „Österreich" dort einzutragen behielte also jeden
+Job mit „…, Österreich" und hängt den Umkreisfilter praktisch aus. Die
+naheliegendste Eingabe überhaupt, und die einzige, die still das ganze Verhalten
+umdreht. Gewarnt, nicht verboten.
+
+### Nachfassen
+
+Der Eintrag **Nachfassen** listet Bewerbungen, die seit mindestens
+`FOLLOW_UP_DAYS` (3, siehe `lib/followup.ts`) ohne Antwort sind — am längsten
+Wartende oben, mit Fällig-Zähler an der Sidebar. Auswahl einzeln oder alle, dann
+als Sammelaktion **Als Entwurf** (Gmail-Entwurf) oder **Senden**.
+
+Die Uhr läuft ab dem **letzten Kontakt**, nicht ab `sentAt`: nach einem Nachfass
+ist derselbe Job drei Tage später wieder fällig, und das wiederholt sich bis eine
+Antwort kommt. Ein angelegter Entwurf zählt dabei als erledigt — sonst bekäme
+derselbe Job beim nächsten Blick einen zweiten. Die Historie steht als
+`followUps: [{ at, via }]` am Job, daher auch „2× nachgefasst" in der Zeile.
+
+Der Betreff bleibt absichtlich der der Bewerbung (`Bewerbung als X bei Y`): so
+landet der Nachfass im selben Gmail-Thread, und `lib/mail-match.ts`
+rekonstruiert genau diesen Betreff, um eingehende Antworten einem Job zuzuordnen.
+Ein eigener Nachfass-Betreff ließe eine Antwort darauf am Betreff-Abgleich
+vorbeilaufen. Der Text ist neu und kurz, nicht das Anschreiben ein zweites Mal.
+
 ### Kalender
 
-Der Sidebar-Tab „Kalender" zeigt, wann Bewerbungen rausgingen (`sentAt`) und
-wann Antworten zurückkamen (`replyReceivedAt`) — Tag = Quadrat, Woche = Zeile,
-Monat = Block, neuester Monat zuerst. Klick auf einen Tag öffnet ein Popup mit
+Der Sidebar-Tab „Kalender" zeigt, wann Bewerbungen rausgingen (`sentAt`), wann
+nachgefasst wurde (`followUps`) und wann Antworten zurückkamen
+(`replyReceivedAt`) — Tag = Quadrat, Woche = Zeile, Monat = Block, neuester
+Monat zuerst. Drei Farben, Legende im Kopf; ein Tag mit mehreren Sorten wird
+entsprechend geteilt. Jeder Nachfass ist ein eigener Eintrag, nicht nur der
+letzte — der Kalender soll zeigen, wie oft nachgehakt wurde. Klick auf einen Tag öffnet ein Popup mit
 den Einträgen des Tages und springt von dort zur Job-Detailansicht.
 
 Die Monatsreihe läuft lückenlos von `HISTORY_START` (`lib/calendar.ts`, aktuell
@@ -318,6 +418,12 @@ selbst, nur bei tatsächlich erfolgreichem Gmail-Aufruf (kein Statuswechsel bei
 Fehlern, die landen stattdessen auf `fehler`). `geloescht` ist von den meisten
 Stellen aus erreichbar (Papierkorb, kein Datei-Löschen). Es gibt weiterhin
 keinen Auto-Send ohne den expliziten „Gesendet bestätigen"-Klick.
+
+`gesendet` ist nicht das Ende: `followUps` sammelt jeden Nachfass als
+`{ at, via }` (siehe [Nachfassen](#nachfassen)). Der Status ändert sich dabei
+**nicht** — die Bewerbung war gesendet und bleibt es, ein Nachfass ist kein
+neuer Zustand, sondern ein weiterer Kontakt. Ebenso `replyReceivedAt`: eine
+Antwort ist eine Zusatzinformation, kein Statuswechsel.
 
 ## Umgebungsvariablen
 
