@@ -16,3 +16,7 @@ config/profile.json
 *.log
 dist
 /brainstorm
+
+# Sicherung der letzten Config-Fassung (siehe lib/config-store.ts) — Arbeitsstand,
+# keine Fassung; git hat die Historie.
+config/*.json.bak
