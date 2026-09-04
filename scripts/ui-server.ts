@@ -47,7 +47,7 @@ interface ScrapeRunState {
   status: 'idle' | 'running' | 'done' | 'error';
   runId: string | null;
   sources: Record<string, { current: number; total: number }>;
-  result?: { newTotal: number; skipTotal: number; offlineTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; offlineCount: number; error?: string }[] };
+  result?: { newTotal: number; skipTotal: number; offlineTotal: number; backTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; offlineCount: number; backCount: number; error?: string }[] };
   error?: string;
 }
 interface FilterRunState {
@@ -554,7 +554,7 @@ const server = createServer(async (req, res) => {
     const names = requested.filter(name => enabled.has(name));
 
     if (names.length === 0) {
-      scrapeRun = { status: 'done', runId, sources: {}, result: { newTotal: 0, skipTotal: 0, offlineTotal: 0, perSource: [] } };
+      scrapeRun = { status: 'done', runId, sources: {}, result: { newTotal: 0, skipTotal: 0, offlineTotal: 0, backTotal: 0, perSource: [] } };
       return;
     }
 
@@ -587,12 +587,12 @@ const server = createServer(async (req, res) => {
           });
         },
       });
-      let newTotal = 0, skipTotal = 0, offlineTotal = 0;
+      let newTotal = 0, skipTotal = 0, offlineTotal = 0, backTotal = 0;
       const perSource = outcomes.map(o => {
-        if (o.ok) { newTotal += o.newCount; skipTotal += o.skipCount; offlineTotal += o.offlineCount; }
-        return { name: o.name, ok: o.ok, newCount: o.newCount, skipCount: o.skipCount, offlineCount: o.offlineCount, error: o.ok ? undefined : String(o.error) };
+        if (o.ok) { newTotal += o.newCount; skipTotal += o.skipCount; offlineTotal += o.offlineCount; backTotal += o.backCount; }
+        return { name: o.name, ok: o.ok, newCount: o.newCount, skipCount: o.skipCount, offlineCount: o.offlineCount, backCount: o.backCount, error: o.ok ? undefined : String(o.error) };
       });
-      scrapeRun = { status: 'done', runId, sources: scrapeRun.sources, result: { newTotal, skipTotal, offlineTotal, perSource } };
+      scrapeRun = { status: 'done', runId, sources: scrapeRun.sources, result: { newTotal, skipTotal, offlineTotal, backTotal, perSource } };
     } catch (err) {
       scrapeRun = { status: 'error', runId, sources: scrapeRun.sources, error: err instanceof Error ? err.message : String(err) };
     }
