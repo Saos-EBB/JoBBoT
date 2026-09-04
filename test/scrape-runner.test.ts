@@ -511,3 +511,97 @@ test('offline: hoechstens maxOfflineChecks Abrufe pro Lauf, aeltestes Inserat zu
 
   assert.deepEqual(check.gefragt, [alt.url, mittel.url]);
 });
+
+// Reversibilitaet: ein Archiv, aus dem nichts zurueckkommt, waere ein Loeschen mit
+// besserem Namen. Ohne gespeichertes previousStatus — new und triaged unterscheidet
+// genau das fit-Feld, und nur diese beiden werden ueberhaupt archiviert.
+test('offline: wieder aufgetauchter getriagter Job kommt als "triaged" zurueck', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const wieder = jobVon('a', 'Wieder da', 'Firma A');
+  const archiviert = await gespeichert(storage, wieder, { status: 'offline', fit: 'matched' });
+
+  const outcomes = await runScrape({
+    names: ['a'],
+    registry: { a: okAdapter('a', [wieder]) },
+    queriesFor: () => [],
+    storage,
+    checkOnline: async () => 'offline' as OnlineVerdict,
+    ...offlineOpts,
+  });
+
+  const zurueck = (await storage.get(archiviert.id))!;
+  assert.equal(zurueck.status, 'triaged');
+  assert.equal(zurueck.fit, 'matched');
+  assert.equal(outcomes[0].backCount, 1);
+  // Zurueckgeholt heisst nicht neu: die Datei war ja schon da.
+  assert.equal(outcomes[0].newCount, 0);
+  assert.equal(outcomes[0].skipCount, 1);
+});
+
+test('offline: ein nie getriagter Job kommt als "new" zurueck', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const wieder = jobVon('a', 'Ungefiltert', 'Firma A');
+  const archiviert = await gespeichert(storage, wieder, { status: 'offline', fit: null });
+
+  await runScrape({
+    names: ['a'],
+    registry: { a: okAdapter('a', [wieder]) },
+    queriesFor: () => [],
+    storage,
+    ...offlineOpts,
+  });
+
+  assert.equal((await storage.get(archiviert.id))!.status, 'new');
+});
+
+// Nur der Status wird angefasst. Alles, was seit dem Archivieren am Job haengt
+// (gefundene Mailadresse, Antwortdatum), muss den Weg zurueck ueberleben.
+test('offline: das Zurueckholen setzt nur den Status, nichts sonst', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const wieder = jobVon('a', 'Mit Mail', 'Firma A');
+  const archiviert = await gespeichert(storage, wieder, {
+    status: 'offline', fit: 'offstack', email: 'bewerbung@firma.at',
+  });
+
+  await runScrape({
+    names: ['a'],
+    registry: { a: okAdapter('a', [wieder]) },
+    queriesFor: () => [],
+    storage,
+    ...offlineOpts,
+  });
+
+  const zurueck = (await storage.get(archiviert.id))!;
+  assert.equal(zurueck.status, 'triaged');
+  assert.equal(zurueck.email, 'bewerbung@firma.at');
+  assert.equal(zurueck.scrapedAt, archiviert.scrapedAt);
+});
+
+// Ein zurueckgeholter Job ist in diesem Lauf gesehen worden — er darf im selben
+// Durchgang nicht gleich wieder als Offline-Kandidat auftauchen.
+test('offline: ein zurueckgeholter Job wird im selben Lauf nicht erneut geprueft', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const wieder = jobVon('a', 'Wieder da', 'Firma A');
+  const archiviert = await gespeichert(storage, wieder, { status: 'offline', fit: 'matched' });
+
+  const check = fakeCheck({ [wieder.url]: 'offline' });
+  await runScrape({
+    names: ['a'],
+    registry: { a: okAdapter('a', [wieder]) },
+    queriesFor: () => [],
+    storage,
+    checkOnline: check.fn,
+    ...offlineOpts,
+  });
+
+  assert.deepEqual(check.gefragt, []);
+  assert.equal((await storage.get(archiviert.id))!.status, 'triaged');
+});

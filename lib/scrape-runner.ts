@@ -12,6 +12,8 @@ export interface SourceOutcome {
   skipCount: number;
   // In diesem Lauf ins Offline-Archiv verschoben (siehe Offline-Durchgang unten).
   offlineCount: number;
+  // Aus dem Offline-Archiv zurueckgeholt, weil das Inserat wieder aufgetaucht ist.
+  backCount: number;
   error?: unknown;
 }
 
@@ -19,8 +21,16 @@ export interface SourceOutcome {
 // ein geschriebenes Anschreiben, eine Freigabe, ein Versand. Die wegzusortieren, weil
 // das Portal das Inserat gezogen hat, waere falsch: die Bewerbung laeuft ja.
 // Nebenwirkung, auf die sich das Zurueckholen stuetzt: aus diesen zwei Status ist der
-// Vorzustand verlustfrei ableitbar (fit == null ? 'new' : 'triaged').
+// Vorzustand verlustfrei ableitbar (siehe zurueckAusArchiv()).
 const ARCHIVIERBAR = new Set<JobStatus>(['new', 'triaged']);
+
+// Der Weg zurueck aus dem Archiv. Kein gespeichertes previousStatus noetig: archiviert
+// werden ausschliesslich new und triaged, und die beiden unterscheidet genau das Feld,
+// das den Unterschied ohnehin traegt — ein getriagter Job hat ein fit, ein ungefilterter
+// nicht. Die Ableitung ist damit verlustfrei, solange ARCHIVIERBAR so bleibt.
+function zurueckAusArchiv(job: Job): JobStatus {
+  return job.fit == null ? 'new' : 'triaged';
+}
 
 // Obergrenze fuer Nachprueffungen PRO LAUF. Ohne sie feuerte jeder Scrape-Lauf einen
 // Request pro nicht gefundenem Job — beim aktuellen Bestand ~250, davon ~200 an
@@ -143,16 +153,28 @@ export async function runScrape(options: RunScrapeOptions): Promise<SourceOutcom
     const result = settled[i];
 
     if (result.status === 'rejected') {
-      outcomes.push({ name, ok: false, newCount: 0, skipCount: 0, offlineCount: 0, error: result.reason });
+      outcomes.push({ name, ok: false, newCount: 0, skipCount: 0, offlineCount: 0, backCount: 0, error: result.reason });
       continue;
     }
     gelaufen.add(name);
 
-    let newCount = 0, skipCount = 0;
+    let newCount = 0, skipCount = 0, backCount = 0;
     for (const scraped of result.value) {
       const id = jobId(scraped);
       gesehen.add(id);
-      if (bekannt.has(id)) { skipCount++; }
+      const vorhanden = bekannt.get(id);
+      if (vorhanden) {
+        skipCount++;
+        // Wieder da: das Inserat steht erneut in den Suchergebnissen, also war das
+        // Archivieren entweder verfrueht oder die Stelle ist neu ausgeschrieben.
+        // Nur `status` wird zurueckgesetzt — Beschreibung, email und alles andere
+        // bleiben, wie sie sind (storage.update() merged auf den Diskstand).
+        if (vorhanden.status === 'offline') {
+          const zurueck = await storage.update(id, { status: zurueckAusArchiv(vorhanden) });
+          bekannt.set(id, zurueck);
+          backCount++;
+        }
+      }
       else {
         const job = toJob(scraped);
         await storage.save(job);
@@ -162,7 +184,7 @@ export async function runScrape(options: RunScrapeOptions): Promise<SourceOutcom
         newCount++;
       }
     }
-    outcomes.push({ name, ok: true, newCount, skipCount, offlineCount: 0 });
+    outcomes.push({ name, ok: true, newCount, skipCount, offlineCount: 0, backCount });
   }
 
   await archiviereOffline({
