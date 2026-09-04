@@ -5,7 +5,7 @@ import type { Job, JobStatus } from '../scrapers/interface.ts';
 // hier zusammengefasst, UI-Zone-Werte laufen 1:1 durch.
 export type Status =
   | 'jobs' | 'entwurf' | 'freigegeben' | 'postausgang'
-  | 'gesendet' | 'aussortiert' | 'geloescht' | 'fehler';
+  | 'gesendet' | 'aussortiert' | 'geloescht' | 'fehler' | 'offline';
 
 // "triaged" fehlt hier bewusst — sitzt weder fix auf "jobs" noch auf "aussortiert",
 // sondern hängt von fit ab (brutal → aussortiert, sonst → jobs), siehe deriveStatus().
@@ -17,6 +17,7 @@ const STATUS_MAP: Record<Exclude<JobStatus, 'triaged'>, Status> = {
   gesendet: 'gesendet',
   geloescht: 'geloescht',
   fehler: 'fehler',
+  offline: 'offline',
 };
 
 export function deriveStatus(job: Job): Status {
@@ -38,14 +39,14 @@ function hasMail(job: Job): boolean {
 }
 
 // "jobs" (Triage-Warteschlange, kein Anschreiben) sowie aussortiert/gesendet/
-// geloescht/fehler sind je ein einzelner Ordner (Mail-Status ist dort irrelevant);
+// offline/geloescht/fehler sind je ein einzelner Ordner (Mail-Status ist dort irrelevant);
 // nur entwurf/freigegeben splitten nach Mail; postausgang ist per Definition
 // immer mail/* (kein Draft ohne Empfängeradresse).
 export const FOLDER_IDS = [
   'jobs',
   'mail/entwurf', 'mail/freigegeben', 'mail/postausgang',
   'nomail/entwurf', 'nomail/freigegeben',
-  'log/gesendet', 'log/aussortiert', 'log/geloescht', 'log/fehler',
+  'log/gesendet', 'log/aussortiert', 'log/offline', 'log/geloescht', 'log/fehler',
 ] as const;
 
 export type FolderId = (typeof FOLDER_IDS)[number];

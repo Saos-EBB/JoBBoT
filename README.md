@@ -128,21 +128,28 @@ Status `triaged` + `fit` (siehe Lifecycle unten) und schreibt einen Report nach
 `data/filter-log.md`; mit `--scope=all` werden dabei alle vorhandenen Jobs neu
 triagiert statt nur die mit Status `new` — nützlich nach einer Änderung an den
 Filterregeln, damit die Datenbank nicht auf alten Urteilen sitzen bleibt.
+Ein Re-Triage fällt nur das **Urteil** (`fit`) neu; den Status setzt es
+ausschließlich für Jobs, die noch in der Triage stecken (`new`/`triaged`) —
+ein Job mit fertigem Anschreiben oder eine versendete Bewerbung bleibt, wo
+sie ist.
 `npm run duplicates` findet Jobs, deren Titel+Firma nach Normalisierung
 (Kleinschreibung, Gendermarker wie `(m/w/d)`, Rechtsformen wie `GmbH`) auf
 dieselbe ID zusammenfallen — reiner Report, keine automatische Löschung.
 `npm run anschreiben` legt fertige Briefe unter
-`data/anschreiben/titel_firma_datum_id8.md` ab, versucht dabei zusätzlich
+`data/anschreiben/titel_firma_id8.md` ab, versucht dabei zusätzlich
 eine Bewerbungs-E-Mail-Adresse zu finden (Regex im Inserat, sonst Fallback
 über firmenabc.at) und protokolliert jeden Lauf (Modell, `--data`-Filter,
 Anzahl, gefundene E-Mails) in `data/anschreiben/AnschreibenLog.md`.
+
+Der Dateiname trägt bewusst **kein Datum** — und gesucht wird ohnehin nur über
+das `id8`-Präfix, siehe [Storage](#storage).
 
 `scripts/anschreiben-model-bench.ts` ist kein Pipeline-Schritt, sondern ein
 Dev-Tool zum Vergleichen mehrerer Ollama-Modelle auf denselben Test-Jobs.
 
 ### Gmail-Anbindung
 
-`npm run ui` zeigt pro Job (sobald Status `reviewed` ist) eine editierbare
+`npm run ui` zeigt pro Job (sobald Status `freigegeben` ist) eine editierbare
 E-Mail-Vorschau (An/Betreff/Text) mit zwei Aktionen: **Entwurf erstellen**
 (landet als echter, editierbarer Entwurf in Gmail) oder **Direkt senden**
 (mit Bestätigungsdialog). Beide laufen über ein Gmail App-Passwort, nicht
@@ -189,6 +196,11 @@ Die Oberfläche hat drei Breitenbänder:
 - **unter 1024px** wird die Seitenleiste zu einer Schublade (Burger in einer
   Kopfzeile, Overlay, Esc). Der Startordner ist dort der erste nicht-leere,
   sonst der Scraper — sonst landet man auf einem leeren Ordner ohne Weg heraus.
+
+Der zuletzt gewählte Ordner wird in `localStorage` gemerkt und überlebt einen
+Reload. Vorher startete jedes F5 hart auf „Mit Mail → Entwürfe"; wer in „Ohne
+Mail → Entwürfe" stand, landete danach im gleichnamigen, aber leeren
+Nachbarordner — es sah aus, als wären die Entwürfe verschwunden.
 - **1024–2000px**: drei Spalten, stetig über `clamp()` statt in Stufen.
 - **ab 2000px** stehen Anschreiben und Inserat nebeneinander statt in Tabs.
 
@@ -222,7 +234,9 @@ beim Öffnen der Ansicht auf; ein „Neu prüfen"-Button stößt einen erneuten
 Abruf an. Pro Gruppe (oder für alle auf einmal) lässt sich per
 „Zusammenführen"-Button konsolidieren: Das neueste Inserat bleibt, übernimmt
 aber das `scrapedAt` des ältesten Duplikats; die restlichen Dateien werden
-gelöscht.
+gelöscht. Hat der behaltene Job noch kein Anschreiben, einer der entfernten
+Zwillinge aber schon, wandert dessen Brief mit — sonst bliebe er als Datei
+zurück, die kein Job mehr findet.
 
 ### Mehrfachauswahl in der Job-Liste
 
@@ -401,11 +415,50 @@ Das gesamte System redet nur über das `Storage`-Interface (`storage/index.ts`)
 mit dem Speicher — austauschbar gegen SQLite ohne Codeänderungen außerhalb
 von `storage/`.
 
+### Wie eine Datei ihren Job findet
+
+Sowohl Job-JSONs als auch Anschreiben werden **über das `id8`-Präfix am Ende
+des Dateinamens** gesucht, nie über den ganzen Namen. Der lesbare Teil davor
+ist Dekoration:
+
+```
+data/jobs/titel_firma_datum_id8.json      JsonStore.findFile()
+data/anschreiben/titel_firma_id8.md       findAnschreiben()  (lib/anschreiben-datei.ts)
+```
+
+Der Grund ist Erfahrung, nicht Geschmack. Das Anschreiben wurde früher über
+den vollen Namen inklusive **Datum** gesucht — und das Datum ist kein Teil der
+Identität, sondern ein Wert, der sich ändert:
+
+- ein **Re-Scrape** derselben Stelle liefert ein neues `postedAt`
+- ein **Duplikat-Merge** setzt `keep.scrapedAt` auf das des ältesten Zwillings
+
+In beiden Fällen war der bereits geschriebene Brief für seinen eigenen Job
+unsichtbar — beim Merge sogar für den Job, den der Merge behält. Am
+2026-09-04 betraf das 46 von 101 Dateien. Deshalb steht die Auflösung jetzt an
+genau einer Stelle (`lib/anschreiben-datei.ts`) statt an vieren, ein
+Schreibvorgang räumt eine Datei unter altem Namen weg, und ein Merge nimmt das
+Anschreiben eines entfernten Zwillings mit.
+
+### Einmal-Skripte
+
+Reparaturen am Bestand, kein Teil der Pipeline. Alle laufen ohne Argument als
+**Dry-Run** und legen mit `--apply` vorher ein Backup unter `data/backup-*/`
+an (gitignored):
+
+```bash
+npx tsx scripts/repair-status.ts          # Status aus Anschreiben-Datei + mail-log herstellen
+npx tsx scripts/repair-anschreiben.ts     # Briefe ihren Jobs zuordnen, Waisen entfernen
+npx tsx scripts/migrate-descriptions.ts   # Beschreibungen nachträglich normalisieren
+```
+
 ## Job-Lifecycle
 
 ```
 new → triaged → generated → freigegeben → postausgang → gesendet
                                               (+ geloescht/fehler als Sonderpfade)
+
+new/triaged ⇄ offline   (Offline-Archiv, siehe unten — beide Richtungen automatisch)
 ```
 
 `scrape` erzeugt `new`. `filter` setzt Status `triaged` — das eigentliche
@@ -419,11 +472,64 @@ Fehlern, die landen stattdessen auf `fehler`). `geloescht` ist von den meisten
 Stellen aus erreichbar (Papierkorb, kein Datei-Löschen). Es gibt weiterhin
 keinen Auto-Send ohne den expliziten „Gesendet bestätigen"-Klick.
 
+**Die Pipeline läuft nur vorwärts.** Ein Re-Triage (`--scope=all`) fällt das
+`fit`-Urteil neu, setzt den Status aber nur für Jobs, die noch in der Triage
+stecken. Vorher tat er das bedingungslos — jeder solche Lauf warf
+`generated`/`postausgang`/`gesendet` auf Anfang zurück, und die betroffenen
+Bewerbungen standen wieder im „Jobs"-Ordner, als wäre nie eine geschrieben
+oder versendet worden. Am 2026-09-04 betraf das 21 versendete Bewerbungen und
+33 Jobs mit fertigem Anschreiben; `scripts/repair-status.ts` hat sie aus
+Anschreiben-Dateien und `data/mail-log.md` wiederhergestellt.
+
 `gesendet` ist nicht das Ende: `followUps` sammelt jeden Nachfass als
 `{ at, via }` (siehe [Nachfassen](#nachfassen)). Der Status ändert sich dabei
 **nicht** — die Bewerbung war gesendet und bleibt es, ein Nachfass ist kein
 neuer Zustand, sondern ein weiterer Kontakt. Ebenso `replyReceivedAt`: eine
 Antwort ist eine Zusatzinformation, kein Statuswechsel.
+
+## Offline-Archiv
+
+Beim Scrapen prüft der Lauf, ob gespeicherte Inserate noch online stehen. Ist
+eins nachweislich weg, wandert der Job in den Status `offline` und erscheint im
+UI unter **Verlauf → Offline**. Taucht dasselbe Inserat später wieder in den
+Suchergebnissen auf, holt derselbe Lauf ihn automatisch zurück.
+
+**Zwei Stufen.** „Im Lauf nicht gefunden" wählt nur die *Kandidaten* aus (das
+kostet nichts, die Ergebnisse liegen ohnehin vor); archiviert wird erst, wenn
+ein Einzelabruf der Job-URL das *bestätigt*.
+
+Die billige Stufe allein reicht nicht: die Suchanfragen sind über die
+[Einstellungsseite](#einstellungsseite-suche) frei editierbar — nach einer
+Änderung von „Linz" auf „Wels" wäre der halbe Bestand nicht gefunden. Dazu
+kommen Pagination-Deckel: ein vor Wochen gescraptes Inserat steht längst nicht
+mehr auf Seite 1 und ist trotzdem online. Ein still archivierter lebender Job
+ist ein verpasster Job; ein Lauf zu spät archivierter kostet nichts.
+
+**Was archiviert wird — und was nicht:**
+
+| Schutz | Regel |
+| --- | --- |
+| Status | nur `new` und `triaged`. Ab `generated` steckt eigene Arbeit im Job (Anschreiben, Freigabe, Versand) — dass das Portal das Inserat gezogen hat, beendet die laufende Bewerbung nicht. |
+| Quelle | nur Quellen, die in **diesem** Lauf liefen **und** durchkamen. Ein Netzwerkausfall oder eine abgewählte Quelle archiviert nichts. |
+| Signal | nur ein **geprüftes** Offline-Signal. `unbekannt` (Rate-Limit, Timeout, Serverfehler) lässt den Job in Ruhe. |
+| Menge | höchstens 25 Nachprüfungen pro Lauf, 1 s Pause, ältestes Inserat zuerst. Der Rest kommt beim nächsten Lauf dran. |
+
+**Geprüfte Offline-Marker** (`lib/offline-check.ts`, nachgemessen am
+2026-09-04). Was hier fehlt, bekommt kein geratenes Muster:
+
+| Quelle | Marker |
+| --- | --- |
+| karriere.at | HTTP 404 **oder** 200 mit Weiterleitung weg von `/jobs/<nr>` — ein abgelaufenes Inserat antwortet dort mit 200 auf einer Suchseite, der Statuscode allein trennt tot und lebendig also nicht. |
+| jobs.at, linkedin, devjobs.at, ams | nur 404/410. Für diese Quellen lag kein Offline-Sample vor (devjobs.at antwortete auf den ersten Testabruf mit 429), also gibt es dort keinen zusätzlichen Marker. |
+
+**Zurückholen** braucht kein gespeichertes „vorher"-Feld: archiviert werden nur
+`new` und `triaged`, und die beiden unterscheidet genau das `fit`-Feld — ohne
+`fit` zurück auf `new`, mit `fit` zurück auf `triaged`. Nur der Status wird
+angefasst, `email`/`fit`/`scrapedAt` überleben unverändert.
+
+**Bekannte Einschränkung:** liegen für eine ID zwei Dateien (Altbestand aus
+einer Zeit vor der jetzigen `hash.ts`), trifft der Statuswechsel nur eine davon.
+Das ist das bestehende Duplikat-Thema — `npm run duplicates` zeigt es an.
 
 ## Umgebungsvariablen
 

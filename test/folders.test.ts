@@ -22,6 +22,23 @@ test('deriveStatus: UI-Zone-Werte laufen 1:1 durch', () => {
   }
 });
 
+// Archivierte Inserate bekommen einen eigenen Ordner statt in "aussortiert" mitzulaufen:
+// aussortiert ist ein Urteil ueber den Job (fit brutal), offline eine Tatsache ueber das
+// Inserat. Wer die zwei mischt, kann spaeter nicht mehr sagen, warum etwas weg ist.
+test('deriveStatus/inFolder: offline ist eine eigene Endstation, nicht "aussortiert"', () => {
+  assert.equal(deriveStatus(job('offline')), 'offline');
+  assert.equal(inFolder(job('offline'), 'log/offline'), true);
+  assert.equal(inFolder(job('offline'), 'log/aussortiert'), false);
+  assert.equal(inFolder(job('offline'), 'jobs'), false);
+});
+
+// Der Ordner sammelt archivierte Inserate unabhaengig davon, ob eine Mailadresse
+// gefunden war — wie die uebrigen Verlauf-Ordner.
+test('inFolder: log/offline ignoriert den Mail-Status', () => {
+  assert.equal(inFolder(job('offline', 'matched', 'a@b.at'), 'log/offline'), true);
+  assert.equal(inFolder(job('offline', null, null), 'log/offline'), true);
+});
+
 test('inFolder: entwurf mit/ohne Mail landet in unterschiedlichen Ordnern', () => {
   const mit = job('generated', null, 'firma@example.com');
   const ohne = job('generated', null, null);
@@ -70,6 +87,7 @@ test('folderCounts: jeder Job landet in genau einem Ordner', () => {
     job('freigegeben', null, 'a@b.at'), job('freigegeben', null, null),
     job('postausgang', null, 'a@b.at'),
     job('gesendet'), job('triaged', 'brutal'), job('geloescht'), job('fehler'),
+    job('offline', 'matched'),
   ];
   const counts = folderCounts(jobs);
   const total = Object.values(counts).reduce((a, b) => a + b, 0);

@@ -1,10 +1,10 @@
 import { createServer, type ServerResponse } from 'node:http';
-import { readFile, writeFile, mkdir, stat, unlink } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, stat, unlink, rename } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { createStorage } from '../storage/index.ts';
 import { config } from '../config.ts';
-import { jobBasename } from '../lib/slugify.ts';
+import { findAnschreiben, anschreibenZiel, anschreibenName } from '../lib/anschreiben-datei.ts';
 import { loadProfile } from '../lib/profile.ts';
 import { composeEmail, composeFollowUp, createDraft, sendMail, logMailAction, fetchInboxReplies, fetchSentMails, istBewerbung, type ComposedEmail, type SentMail } from '../mail/gmail.ts';
 import { matchReplies, matchSent } from '../lib/mail-match.ts';
@@ -47,7 +47,7 @@ interface ScrapeRunState {
   status: 'idle' | 'running' | 'done' | 'error';
   runId: string | null;
   sources: Record<string, { current: number; total: number }>;
-  result?: { newTotal: number; skipTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; error?: string }[] };
+  result?: { newTotal: number; skipTotal: number; offlineTotal: number; backTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; offlineCount: number; backCount: number; error?: string }[] };
   error?: string;
 }
 interface FilterRunState {
@@ -158,9 +158,11 @@ button.danger { background: var(--danger); color: #fff; border-color: transparen
 </style></head><body>${body}</body></html>`;
 }
 
-async function readCoverLetter(job: { title: string; company: string; postedAt?: string | null; scrapedAt: string; id: string }): Promise<string | null> {
+async function readCoverLetter(job: { id: string }): Promise<string | null> {
+  const path = await findAnschreiben(job);
+  if (!path) return null;
   try {
-    return await readFile(join(config.anschreibenDir, `${jobBasename(job)}.md`), 'utf8');
+    return await readFile(path, 'utf8');
   } catch {
     return null;
   }
@@ -471,6 +473,20 @@ const server = createServer(async (req, res) => {
 
     for (const group of targets) {
       const plan = planMerge(group);
+      // Das Anschreiben lebt nicht im Job-JSON, wird hier also nicht automatisch
+      // mit-verschmolzen. Hat der behaltene Job noch keins, einer der entfernten
+      // Zwillinge aber schon, wandert dessen Brief mit — sonst löscht der Merge die
+      // Job-Datei und lässt einen Brief zurück, den kein Job mehr findet.
+      // Der jüngste Zwilling mit Brief gewinnt (plan.remove ist nach scrapedAt
+      // aufsteigend sortiert, siehe findDuplicates).
+      if (!await findAnschreiben(plan.keep)) {
+        for (const alt of [...plan.remove].reverse()) {
+          const brief = await findAnschreiben(alt);
+          if (!brief) continue;
+          await rename(brief, join(config.anschreibenDir, `${anschreibenName(plan.keep)}.md`));
+          break;
+        }
+      }
       for (const job of plan.remove) await storage.deleteJob(job);
       // Alte Datei exakt löschen statt update() (das den Dateinamen aus dem
       // gepatchten scrapedAt neu ableitet — bei gleichem Zielordner bliebe die
@@ -554,7 +570,7 @@ const server = createServer(async (req, res) => {
     const names = requested.filter(name => enabled.has(name));
 
     if (names.length === 0) {
-      scrapeRun = { status: 'done', runId, sources: {}, result: { newTotal: 0, skipTotal: 0, perSource: [] } };
+      scrapeRun = { status: 'done', runId, sources: {}, result: { newTotal: 0, skipTotal: 0, offlineTotal: 0, backTotal: 0, perSource: [] } };
       return;
     }
 
@@ -587,12 +603,12 @@ const server = createServer(async (req, res) => {
           });
         },
       });
-      let newTotal = 0, skipTotal = 0;
+      let newTotal = 0, skipTotal = 0, offlineTotal = 0, backTotal = 0;
       const perSource = outcomes.map(o => {
-        if (o.ok) { newTotal += o.newCount; skipTotal += o.skipCount; }
-        return { name: o.name, ok: o.ok, newCount: o.newCount, skipCount: o.skipCount, error: o.ok ? undefined : String(o.error) };
+        if (o.ok) { newTotal += o.newCount; skipTotal += o.skipCount; offlineTotal += o.offlineCount; backTotal += o.backCount; }
+        return { name: o.name, ok: o.ok, newCount: o.newCount, skipCount: o.skipCount, offlineCount: o.offlineCount, backCount: o.backCount, error: o.ok ? undefined : String(o.error) };
       });
-      scrapeRun = { status: 'done', runId, sources: scrapeRun.sources, result: { newTotal, skipTotal, perSource } };
+      scrapeRun = { status: 'done', runId, sources: scrapeRun.sources, result: { newTotal, skipTotal, offlineTotal, backTotal, perSource } };
     } catch (err) {
       scrapeRun = { status: 'error', runId, sources: scrapeRun.sources, error: err instanceof Error ? err.message : String(err) };
     }
@@ -918,7 +934,7 @@ const server = createServer(async (req, res) => {
     // nicht im Job-JSON, also schreibt eine Bearbeitung dorthin statt über
     // storage.update() — ein Status-Wechsel und eine Anschreiben-Bearbeitung sind zwei
     // unabhängige Schreibpfade, die zufällig denselben Job betreffen.
-    await writeFile(join(config.anschreibenDir, `${jobBasename(job)}.md`), text, 'utf8');
+    await writeFile(await anschreibenZiel(job), text, 'utf8');
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ ok: true }));
     return;
