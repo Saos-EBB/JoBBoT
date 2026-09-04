@@ -228,7 +228,10 @@ is a synchronous read with no background run/polling — it returns the
 duplicate groups directly in the response. The UI calls it when the view
 opens; a "Check again" button triggers a refetch. Per group (or all at once)
 a "Merge" button consolidates them: the newest listing survives but takes on
-the oldest duplicate's `scrapedAt`; the remaining files get deleted.
+the oldest duplicate's `scrapedAt`; the remaining files get deleted. If the
+surviving job has no cover letter yet but one of the removed twins does, that
+letter comes along — otherwise it would be left behind as a file no job can
+find any more.
 
 ### Bulk selection in the job list
 
@@ -314,7 +317,16 @@ follow-ups were sent (`followUps`), and when replies came back
 first. Three colours, legend in the header; a day carrying several kinds is
 split accordingly. Every follow-up is its own entry, not just the last one —
 the calendar should show how often you chased. Clicking a day opens a popup with that day's
-entries and jumps from there to the job detail view. Replies aren't detected
+entries and jumps from there to the job detail view.
+
+The month row runs without gaps from `HISTORY_START` (`lib/calendar.ts`,
+currently `2026-07-01`) to today — the same span the Gmail sync scans. Months
+without activity still get a block, so that months far apart don't fake
+adjacency; they start collapsed. Every month header is a toggle, and the
+summary next to it ("2 sent · 1 reply") tells you even while collapsed whether
+expanding is worth it.
+
+Replies aren't detected
 automatically: a "Fetch replies" button in the "Sent" folder (history) scans
 the Gmail inbox via `POST /api/mail/replies/fetch` (email+subject matching,
 no message ID) and sets `replyReceivedAt` on hits — jobs with a reply then
@@ -330,11 +342,46 @@ before these fields existed, or by hand past the bot — live sends write their
 own `sentAt` anyway.
 
 Scanning starts at `HISTORY_START` (`lib/calendar.ts`, currently `2026-07-01`)
-— the same span the calendar displays. Only mails you labelled as an
-application in Gmail are pulled; labelled mails without a matching job are
-stored as standalone calendar entries so the period stays complete. The sync
-is read-only towards Gmail and never overwrites an existing value, it only
-fills gaps.
+— the same starting point the calendar displays from.
+
+**Which mails count:** only those labelled `Bewerbung` or `Beworben` in Gmail
+(`BEWERBUNGS_LABELS` in `mail/gmail.ts`). The label is the most reliable
+source: `job.email` is lost on a re-scrape and the subject changes when a
+listing is re-read — your marking stays. Without a label nothing happens, and
+private mail never ends up in the calendar.
+
+**Matching to a job** runs on two equivalent keys: the reconstructed subject
+(`Bewerbung als … bei …`, recomputable from title+company at any time) and the
+recipient address. If either hits, the job gets its `sentAt`.
+
+**Mails without a job** — because the listing was deleted, re-read, or written
+by hand — don't disappear; they land in `data/mail-events.json` and show up in
+the calendar as their own entry marked "nur Mail" (not clickable, there is no
+detail view for them). Title and company come from the subject; if that doesn't
+match the pattern, the recipient domain serves as the label. The file is a
+snapshot of the mailbox, not a history: every run rewrites it completely, and
+it is gitignored because it contains recipient addresses.
+
+The message after a run names each stage separately — read, labelled, linked,
+mail-only — because a bare "0 backfilled" would leave open whether the mailbox
+was empty, the label is missing, or the matching found nothing.
+
+Three properties you can rely on:
+
+- **Read-only towards Gmail.** Both folders are opened with `readOnly: true`;
+  the sync sends, deletes, and moves nothing, and doesn't mark anything as
+  read either. The Sent folder is found via the IMAP flag `\Sent`, not via the
+  (localized) folder name.
+- **Fills gaps only.** An existing `sentAt`/`replyReceivedAt` is never
+  overwritten, so a heuristic hit can't destroy a real value. Repeated runs
+  are therefore harmless.
+- **Changes no status.** Only the two date fields are ever written.
+
+The matching is a heuristic, not an exact mapping: the message ID was never
+stored when the mail was originally sent. Matching goes by the exact recipient
+address; the reconstructed subject (`Bewerbung als … bei …`) only serves as a
+tiebreaker when several jobs share the same company address. If it stays
+ambiguous, nothing is set — unmatched jobs simply stay undated.
 
 ## Tests
 
