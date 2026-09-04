@@ -1,6 +1,6 @@
 import { readdir, readFile, writeFile, mkdir, cp } from 'node:fs/promises';
 import { join, dirname, relative } from 'node:path';
-import { jobBasename } from '../lib/slugify.ts';
+import { findAnschreiben } from '../lib/anschreiben-datei.ts';
 import { config } from '../config.ts';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 
@@ -94,11 +94,10 @@ async function main() {
   const merke = (id: string, b: Beleg) => { if (staerker(b, belege.get(id))) belege.set(id, b); };
 
   // Beleg 1: eine Anschreiben-Datei => das Anschreiben WURDE geschrieben.
-  const briefe = new Set(
-    (await readdir(config.anschreibenDir)).filter(f => f.endsWith('.md')).map(f => f.slice(0, -3)),
-  );
+  // Gesucht wird ueber findAnschreiben() (id-Praefix), nicht ueber den Dateinamen —
+  // sonst haengt der Beleg wieder am Datum, siehe lib/anschreiben-datei.ts.
   for (const { job } of jobs.values()) {
-    if (briefe.has(jobBasename(job))) {
+    if (await findAnschreiben(job)) {
       merke(job.id, { status: 'generated', datum: null, email: null, quelle: 'anschreiben-datei' });
     }
   }
