@@ -189,6 +189,11 @@ Die Oberfläche hat drei Breitenbänder:
 - **unter 1024px** wird die Seitenleiste zu einer Schublade (Burger in einer
   Kopfzeile, Overlay, Esc). Der Startordner ist dort der erste nicht-leere,
   sonst der Scraper — sonst landet man auf einem leeren Ordner ohne Weg heraus.
+
+Der zuletzt gewählte Ordner wird in `localStorage` gemerkt und überlebt einen
+Reload. Vorher startete jedes F5 hart auf „Mit Mail → Entwürfe"; wer in „Ohne
+Mail → Entwürfe" stand, landete danach im gleichnamigen, aber leeren
+Nachbarordner — es sah aus, als wären die Entwürfe verschwunden.
 - **1024–2000px**: drei Spalten, stetig über `clamp()` statt in Stufen.
 - **ab 2000px** stehen Anschreiben und Inserat nebeneinander statt in Tabs.
 
@@ -406,6 +411,8 @@ von `storage/`.
 ```
 new → triaged → generated → freigegeben → postausgang → gesendet
                                               (+ geloescht/fehler als Sonderpfade)
+
+new/triaged ⇄ offline   (Offline-Archiv, siehe unten — beide Richtungen automatisch)
 ```
 
 `scrape` erzeugt `new`. `filter` setzt Status `triaged` — das eigentliche
@@ -424,6 +431,50 @@ keinen Auto-Send ohne den expliziten „Gesendet bestätigen"-Klick.
 **nicht** — die Bewerbung war gesendet und bleibt es, ein Nachfass ist kein
 neuer Zustand, sondern ein weiterer Kontakt. Ebenso `replyReceivedAt`: eine
 Antwort ist eine Zusatzinformation, kein Statuswechsel.
+
+## Offline-Archiv
+
+Beim Scrapen prüft der Lauf, ob gespeicherte Inserate noch online stehen. Ist
+eins nachweislich weg, wandert der Job in den Status `offline` und erscheint im
+UI unter **Verlauf → Offline**. Taucht dasselbe Inserat später wieder in den
+Suchergebnissen auf, holt derselbe Lauf ihn automatisch zurück.
+
+**Zwei Stufen.** „Im Lauf nicht gefunden" wählt nur die *Kandidaten* aus (das
+kostet nichts, die Ergebnisse liegen ohnehin vor); archiviert wird erst, wenn
+ein Einzelabruf der Job-URL das *bestätigt*.
+
+Die billige Stufe allein reicht nicht: die Suchanfragen sind über die
+[Einstellungsseite](#einstellungsseite-suche) frei editierbar — nach einer
+Änderung von „Linz" auf „Wels" wäre der halbe Bestand nicht gefunden. Dazu
+kommen Pagination-Deckel: ein vor Wochen gescraptes Inserat steht längst nicht
+mehr auf Seite 1 und ist trotzdem online. Ein still archivierter lebender Job
+ist ein verpasster Job; ein Lauf zu spät archivierter kostet nichts.
+
+**Was archiviert wird — und was nicht:**
+
+| Schutz | Regel |
+| --- | --- |
+| Status | nur `new` und `triaged`. Ab `generated` steckt eigene Arbeit im Job (Anschreiben, Freigabe, Versand) — dass das Portal das Inserat gezogen hat, beendet die laufende Bewerbung nicht. |
+| Quelle | nur Quellen, die in **diesem** Lauf liefen **und** durchkamen. Ein Netzwerkausfall oder eine abgewählte Quelle archiviert nichts. |
+| Signal | nur ein **geprüftes** Offline-Signal. `unbekannt` (Rate-Limit, Timeout, Serverfehler) lässt den Job in Ruhe. |
+| Menge | höchstens 25 Nachprüfungen pro Lauf, 1 s Pause, ältestes Inserat zuerst. Der Rest kommt beim nächsten Lauf dran. |
+
+**Geprüfte Offline-Marker** (`lib/offline-check.ts`, nachgemessen am
+2026-09-04). Was hier fehlt, bekommt kein geratenes Muster:
+
+| Quelle | Marker |
+| --- | --- |
+| karriere.at | HTTP 404 **oder** 200 mit Weiterleitung weg von `/jobs/<nr>` — ein abgelaufenes Inserat antwortet dort mit 200 auf einer Suchseite, der Statuscode allein trennt tot und lebendig also nicht. |
+| jobs.at, linkedin, devjobs.at, ams | nur 404/410. Für diese Quellen lag kein Offline-Sample vor (devjobs.at antwortete auf den ersten Testabruf mit 429), also gibt es dort keinen zusätzlichen Marker. |
+
+**Zurückholen** braucht kein gespeichertes „vorher"-Feld: archiviert werden nur
+`new` und `triaged`, und die beiden unterscheidet genau das `fit`-Feld — ohne
+`fit` zurück auf `new`, mit `fit` zurück auf `triaged`. Nur der Status wird
+angefasst, `email`/`fit`/`scrapedAt` überleben unverändert.
+
+**Bekannte Einschränkung:** liegen für eine ID zwei Dateien (Altbestand aus
+einer Zeit vor der jetzigen `hash.ts`), trifft der Statuswechsel nur eine davon.
+Das ist das bestehende Duplikat-Thema — `npm run duplicates` zeigt es an.
 
 ## Umgebungsvariablen
 
