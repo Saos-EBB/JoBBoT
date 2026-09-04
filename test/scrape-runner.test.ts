@@ -2,7 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { runScrape } from '../lib/scrape-runner.ts';
 import { createStorage } from '../storage/index.ts';
-import type { ScraperAdapter, ScrapedJob } from '../scrapers/interface.ts';
+import type { Job, ScraperAdapter, ScrapedJob } from '../scrapers/interface.ts';
+import type { OnlineVerdict } from '../lib/offline-check.ts';
+import { toJob } from '../lib/normalize.ts';
 import { tmpDir, rmTmp } from './helpers.ts';
 
 const job = (title: string, company: string): ScrapedJob => ({
@@ -298,4 +300,214 @@ test('unbekannte Quelle: sprechender Fehler statt undefined-Zugriff', async (t) 
   assert.match(String(fehlt.error), /Kein Adapter für Quelle "gibtsnicht"/);
   assert.match(String(fehlt.error), /bekannt sind: a/);
   assert.equal(outcomes.find(o => o.name === 'a')!.ok, true);
+});
+
+// ── Offline-Archiv ───────────────────────────────────────────────────────────
+//
+// Zwei Stufen: "im Lauf nicht gefunden" waehlt die Kandidaten aus, ein Einzelabruf
+// bestaetigt. Geprueft wird hier vor allem, dass die BESTAETIGUNG das letzte Wort hat —
+// die billige erste Stufe hat in der Praxis regelmaessig unrecht (geaenderte
+// Suchanfrage, Pagination-Deckel).
+
+// Legt einen Job direkt im Store an, so wie ihn ein frueherer Lauf hinterlassen haette.
+async function gespeichert(
+  storage: ReturnType<typeof createStorage>,
+  scraped: ScrapedJob,
+  patch: Partial<Job> = {},
+): Promise<Job> {
+  const j = { ...toJob(scraped), ...patch };
+  await storage.save(j);
+  return j;
+}
+
+// Der Offline-Durchgang prueft nur Jobs, deren Quelle in DIESEM Lauf lief. Gespeicherte
+// Jobs muessen also dieselbe `source` tragen wie der Adapter heisst — sonst testet man
+// versehentlich nur, dass gar nichts passiert.
+const jobVon = (quelle: string, title: string, company: string): ScrapedJob =>
+  ({ ...job(title, company), source: quelle });
+
+// Fake-Pruefung: Urteil je URL, Standard 'unbekannt'. Zaehlt mit, was abgefragt wurde.
+function fakeCheck(urteile: Record<string, OnlineVerdict>) {
+  const gefragt: string[] = [];
+  const fn = async (j: { source: string; url: string }) => {
+    gefragt.push(j.url);
+    return urteile[j.url] ?? 'unbekannt';
+  };
+  return { fn, gefragt };
+}
+
+const offlineOpts = { maxOfflineChecks: 50, offlineCheckPauseMs: 0 };
+
+test('offline: nicht gefunden UND bestaetigt offline → wandert ins Archiv', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const alt = await gespeichert(storage, jobVon('a', 'Alter Job', 'Firma A'), { status: 'triaged', fit: 'matched' });
+
+  const check = fakeCheck({ [alt.url]: 'offline' });
+  const outcomes = await runScrape({
+    names: ['a'],
+    registry: { a: okAdapter('a', [job('Neuer Job', 'Firma A')]) },
+    queriesFor: () => [],
+    storage,
+    checkOnline: check.fn,
+    ...offlineOpts,
+  });
+
+  assert.equal((await storage.get(alt.id))!.status, 'offline');
+  assert.equal(outcomes[0].offlineCount, 1);
+  assert.deepEqual(check.gefragt, [alt.url]);
+});
+
+// Der Kern der Entscheidung fuer die zweite Stufe: eine geaenderte Suchanfrage oder ein
+// Pagination-Deckel laesst lebende Jobs aus dem Lauf verschwinden. Wuerde schon
+// "nicht gefunden" archivieren, waeren sie still weg.
+test('offline: nicht gefunden, aber noch online → bleibt unangetastet', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const alt = await gespeichert(storage, jobVon('a', 'Alter Job', 'Firma A'), { status: 'triaged', fit: 'matched' });
+
+  const outcomes = await runScrape({
+    names: ['a'],
+    registry: { a: okAdapter('a', []) },
+    queriesFor: () => [],
+    storage,
+    checkOnline: fakeCheck({ [alt.url]: 'online' }).fn,
+    ...offlineOpts,
+  });
+
+  assert.equal((await storage.get(alt.id))!.status, 'triaged');
+  assert.equal(outcomes[0].offlineCount, 0);
+});
+
+test('offline: "unbekannt" (Rate-Limit, Timeout) archiviert nicht', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const alt = await gespeichert(storage, jobVon('a', 'Alter Job', 'Firma A'), { status: 'new' });
+
+  await runScrape({
+    names: ['a'],
+    registry: { a: okAdapter('a', []) },
+    queriesFor: () => [],
+    storage,
+    checkOnline: async () => 'unbekannt' as OnlineVerdict,
+    ...offlineOpts,
+  });
+
+  assert.equal((await storage.get(alt.id))!.status, 'new');
+});
+
+test('offline: im Lauf gefundene Jobs werden gar nicht erst geprueft', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const da = jobVon('a', 'Immer noch da', 'Firma A');
+  await gespeichert(storage, da, { status: 'triaged', fit: 'matched' });
+
+  const check = fakeCheck({});
+  await runScrape({
+    names: ['a'],
+    registry: { a: okAdapter('a', [da]) },
+    queriesFor: () => [],
+    storage,
+    checkOnline: check.fn,
+    ...offlineOpts,
+  });
+
+  assert.deepEqual(check.gefragt, []);
+});
+
+// Eine gescheiterte Quelle liefert null Treffer — waere ihr Bestand Kandidat, loeschte
+// ein einziger Netzwerkausfall die halbe Bibliothek ins Archiv.
+test('offline: gescheiterte Quelle archiviert ihren Bestand nicht', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const alt = await gespeichert(storage, jobVon('kaputt', 'Alter Job', 'Firma A'), { status: 'new' });
+
+  const check = fakeCheck({ [alt.url]: 'offline' });
+  await runScrape({
+    names: ['kaputt'],
+    registry: { kaputt: failingAdapter('kaputt', 'netz weg') },
+    queriesFor: () => [],
+    storage,
+    checkOnline: check.fn,
+    ...offlineOpts,
+  });
+
+  assert.equal((await storage.get(alt.id))!.status, 'new');
+  assert.deepEqual(check.gefragt, []);
+});
+
+// Das UI laesst eine Teilmenge der Quellen scrapen. Wer nicht mitlief, darf auch nichts
+// verlieren.
+test('offline: eine Quelle, die in diesem Lauf gar nicht lief, bleibt aussen vor', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const fremd = await gespeichert(storage, jobVon('b', 'Fremder Job', 'Firma B'), { status: 'new' });
+
+  const check = fakeCheck({ [fremd.url]: 'offline' });
+  await runScrape({
+    names: ['a'],
+    registry: { a: okAdapter('a', []), b: okAdapter('b', []) },
+    queriesFor: () => [],
+    storage,
+    checkOnline: check.fn,
+    ...offlineOpts,
+  });
+
+  assert.equal((await storage.get(fremd.id))!.status, 'new');
+  assert.deepEqual(check.gefragt, []);
+});
+
+// Ab "generated" steckt eigene Arbeit im Job (Anschreiben, Freigabe, Versand). Dass das
+// Portal das Inserat gezogen hat, beendet die laufende Bewerbung nicht.
+test('offline: ab "generated" wird nicht archiviert, auch wenn das Inserat weg ist', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const eigene: Job[] = [];
+  for (const [i, status] of (['generated', 'freigegeben', 'postausgang', 'gesendet'] as const).entries()) {
+    eigene.push(await gespeichert(storage, jobVon('a', `Job ${i}`, 'Firma A'), { status }));
+  }
+
+  const check = fakeCheck(Object.fromEntries(eigene.map(j => [j.url, 'offline' as OnlineVerdict])));
+  await runScrape({
+    names: ['a'],
+    registry: { a: okAdapter('a', []) },
+    queriesFor: () => [],
+    storage,
+    checkOnline: check.fn,
+    ...offlineOpts,
+  });
+
+  for (const j of eigene) assert.notEqual((await storage.get(j.id))!.status, 'offline');
+  assert.deepEqual(check.gefragt, []);
+});
+
+// Ohne Deckel feuerte jeder Lauf einen Request pro nicht gefundenem Job — beim
+// aktuellen Bestand ~250. Der Rest kommt beim naechsten Lauf dran.
+test('offline: hoechstens maxOfflineChecks Abrufe pro Lauf, aeltestes Inserat zuerst', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const alt = await gespeichert(storage, jobVon('a', 'Ganz alt', 'Firma A'), { status: 'new', scrapedAt: '2020-01-01T00:00:00.000Z' });
+  const mittel = await gespeichert(storage, jobVon('a', 'Mittelalt', 'Firma A'), { status: 'new', scrapedAt: '2024-01-01T00:00:00.000Z' });
+  await gespeichert(storage, jobVon('a', 'Frisch', 'Firma A'), { status: 'new', scrapedAt: '2026-01-01T00:00:00.000Z' });
+
+  const check = fakeCheck({});
+  await runScrape({
+    names: ['a'],
+    registry: { a: okAdapter('a', []) },
+    queriesFor: () => [],
+    storage,
+    checkOnline: check.fn,
+    maxOfflineChecks: 2,
+    offlineCheckPauseMs: 0,
+  });
+
+  assert.deepEqual(check.gefragt, [alt.url, mittel.url]);
 });

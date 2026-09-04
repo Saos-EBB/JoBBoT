@@ -45,11 +45,15 @@ const outcomes = await runScrape({
 });
 prog.stop();
 
-let newTotal = 0, skipTotal = 0;
+let newTotal = 0, skipTotal = 0, offlineTotal = 0;
 for (const o of outcomes) {
   if (!o.ok) { console.log(`✗ ${o.name}: Fehler — ${o.error}`); continue; }
-  console.log(`✓ ${o.name}: ${o.newCount} neu, ${o.skipCount} dedup`);
-  newTotal += o.newCount; skipTotal += o.skipCount;
+  // "offline" nur anzeigen, wenn tatsächlich etwas archiviert wurde — die Null in
+  // jeder Zeile wäre nur Rauschen, der Regelfall ist ein leerer Durchgang.
+  const off = o.offlineCount > 0 ? `, ${o.offlineCount} offline archiviert` : '';
+  console.log(`✓ ${o.name}: ${o.newCount} neu, ${o.skipCount} dedup${off}`);
+  newTotal += o.newCount; skipTotal += o.skipCount; offlineTotal += o.offlineCount;
 }
 
-console.log(`\nGesamt: ${newTotal} neu, ${skipTotal} dedup.`);
+const offGesamt = offlineTotal > 0 ? `, ${offlineTotal} offline archiviert` : '';
+console.log(`\nGesamt: ${newTotal} neu, ${skipTotal} dedup${offGesamt}.`);
