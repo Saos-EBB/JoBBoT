@@ -794,6 +794,30 @@ const EMPTY_COPY: Record<FolderId, string> = {
   'log/fehler': 'Keine Fehler.',
 };
 
+// Der zuletzt gewählte Ordner, damit er einen Reload überlebt. Vorher war der
+// Startwert hart 'mail/entwurf': nach F5 landete man dort, auch wenn man vorher in
+// 'nomail/entwurf' stand — und weil BEIDE Ordner in der Seitenleiste "Entwürfe"
+// heißen (siehe GROUPS), sah der leere Nachbarordner aus, als wären die Entwürfe
+// verschwunden. Der Ordner ist eine Ortsangabe des Nutzers, kein Zustand eines Laufs;
+// deshalb hier localStorage, anders als bei highlightFolders (bewusst nur im Speicher).
+const FOLDER_KEY = 'jobbot.folder';
+const FOLDER_DEFAULT: FolderId = 'mail/entwurf';
+
+// Beide Zugriffe können werfen (privates Fenster, blockierte Site-Daten) — und ein
+// gespeicherter Wert kann aus einer Fassung mit anderen FOLDER_IDS stammen. Beides
+// fällt still auf den Standard zurück: eine vergessene Ortsangabe ist kein Fehler.
+function ladeOrdner(): FolderId {
+  try {
+    const gespeichert = localStorage.getItem(FOLDER_KEY);
+    if (gespeichert && (FOLDER_IDS as readonly string[]).includes(gespeichert)) return gespeichert as FolderId;
+  } catch { /* kein localStorage — Standard */ }
+  return FOLDER_DEFAULT;
+}
+
+function merkeOrdner(id: FolderId): void {
+  try { localStorage.setItem(FOLDER_KEY, id); } catch { /* nicht merkbar — dann eben nicht */ }
+}
+
 function firstLine(t: string | null): string {
   if (!t) return '—';
   const l = t.split('\n').filter(x => x.trim() && !/^Sehr geehrte/.test(x));
@@ -1267,7 +1291,9 @@ function appendGridRow(sections: LoadGridSection[], e: GridUnitEvent): LoadGridS
 
 export default function JobbotUI() {
   const [jobs, setJobs] = useState<JobWithBrief[]>([]);
-  const [folder, setFolder] = useState<FolderId>('mail/entwurf');
+  // Lazy Initializer (Funktion statt Aufruf): localStorage wird einmal beim Mount
+  // gelesen, nicht bei jedem Render.
+  const [folder, setFolder] = useState<FolderId>(ladeOrdner);
   const [fit, setFit] = useState<Fit | 'alle' | 'unbewertet'>('alle');
   const [q, setQ] = useState('');
   const [sel, setSel] = useState<string | null>(null);
@@ -1768,6 +1794,11 @@ export default function JobbotUI() {
   // Auswahl nur im "jobs"-Ordner sinnvoll (siehe selectedJobIds oben) — beim
   // Verlassen zurücksetzen, sonst überlebt eine Auswahl unsichtbar den Wechsel.
   useEffect(() => { setSelectedJobIds(new Set()); }, [folder]);
+
+  // Jeden Ordnerwechsel merken — egal wodurch ausgelöst (Klick, Schublade, oder der
+  // Startordner-Effekt weiter unten). Ein Effect statt eines Aufrufs in jedem
+  // Klick-Handler: sonst gäbe es Wege, den Ordner zu wechseln, ohne ihn zu merken.
+  useEffect(() => { merkeOrdner(folder); }, [folder]);
 
   function toggleSelect(id: string) {
     setSelectedJobIds(prev => {
