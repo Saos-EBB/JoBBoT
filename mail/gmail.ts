@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer';
 import MailComposer from 'nodemailer/lib/mail-composer/index.js';
 import type { Job } from '../scrapers/interface.ts';
 import type { ProfileData } from '../lib/profile.ts';
-import { jobBasename } from '../lib/slugify.ts';
+import { findAnschreiben } from '../lib/anschreiben-datei.ts';
 import { config } from '../config.ts';
 import { ATTACHMENT_PATH, ATTACHMENT_FILENAME } from '../lib/attachment.ts';
 import { loadCc } from '../lib/cc.ts';
@@ -34,7 +34,8 @@ function requireGmailCredentials(): { user: string; pass: string } {
 export async function composeEmail(job: Job, profile: ProfileData): Promise<ComposedEmail> {
   if (!job.email) throw new Error(`Job ${job.id} hat keine E-Mail-Adresse`);
 
-  const letterPath = join(config.anschreibenDir, `${jobBasename(job)}.md`);
+  const letterPath = await findAnschreiben(job);
+  if (!letterPath) throw new Error(`Job ${job.id} hat kein Anschreiben in ${config.anschreibenDir}`);
   const body = (await readFile(letterPath, 'utf8')).trim();
 
   const cvLink = profile.links?.website && !profile.links.website.startsWith('TODO')

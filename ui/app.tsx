@@ -24,6 +24,7 @@ import {
   Layers,
   Calendar,
   Menu,
+  Archive,
 } from 'lucide-react';
 import type { Job, Fit } from '../scrapers/interface.ts';
 import { FOLDER_IDS, inFolder, canGenerateAnschreiben, type FolderId } from '../lib/folders.ts';
@@ -51,7 +52,7 @@ type ScrapeStatus = {
   status: 'idle' | 'running' | 'done' | 'error';
   runId: string | null;
   sources: Record<string, { current: number; total: number }>;
-  result?: { newTotal: number; skipTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; error?: string }[] };
+  result?: { newTotal: number; skipTotal: number; offlineTotal: number; backTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; offlineCount: number; backCount: number; error?: string }[] };
   error?: string;
 };
 type FilterRunStatus = {
@@ -760,6 +761,11 @@ const GROUPS: { head: string | null; icon: typeof Mail | null; folders: { id: Fo
     folders: [
       { id: 'log/gesendet', label: 'Gesendet', icon: Send },
       { id: 'log/aussortiert', label: 'Aussortiert', icon: XCircle },
+      // Nicht mehr online — vom Scrape-Lauf archiviert, nicht vom Nutzer aussortiert
+      // (siehe lib/scrape-runner.ts). Steht hier statt in einer eigenen Gruppe, weil
+      // es wie gesendet/geloescht eine Endstation ist, aus der ein neuer Scrape-Lauf
+      // den Job von selbst zurueckholt, wenn das Inserat wieder auftaucht.
+      { id: 'log/offline', label: 'Offline', icon: Archive },
       { id: 'log/geloescht', label: 'Gelöscht', icon: Trash2 },
       { id: 'log/fehler', label: 'Fehler', icon: AlertTriangle, err: true },
     ],
@@ -790,9 +796,34 @@ const EMPTY_COPY: Record<FolderId, string> = {
   'nomail/freigegeben': 'Nichts bereit zum Bewerben.',
   'log/gesendet': 'Noch nichts gesendet.',
   'log/aussortiert': 'Nichts aussortiert.',
+  'log/offline': 'Kein Inserat ist offline gegangen.',
   'log/geloescht': 'Nichts gelöscht.',
   'log/fehler': 'Keine Fehler.',
 };
+
+// Der zuletzt gewählte Ordner, damit er einen Reload überlebt. Vorher war der
+// Startwert hart 'mail/entwurf': nach F5 landete man dort, auch wenn man vorher in
+// 'nomail/entwurf' stand — und weil BEIDE Ordner in der Seitenleiste "Entwürfe"
+// heißen (siehe GROUPS), sah der leere Nachbarordner aus, als wären die Entwürfe
+// verschwunden. Der Ordner ist eine Ortsangabe des Nutzers, kein Zustand eines Laufs;
+// deshalb hier localStorage, anders als bei highlightFolders (bewusst nur im Speicher).
+const FOLDER_KEY = 'jobbot.folder';
+const FOLDER_DEFAULT: FolderId = 'mail/entwurf';
+
+// Beide Zugriffe können werfen (privates Fenster, blockierte Site-Daten) — und ein
+// gespeicherter Wert kann aus einer Fassung mit anderen FOLDER_IDS stammen. Beides
+// fällt still auf den Standard zurück: eine vergessene Ortsangabe ist kein Fehler.
+function ladeOrdner(): FolderId {
+  try {
+    const gespeichert = localStorage.getItem(FOLDER_KEY);
+    if (gespeichert && (FOLDER_IDS as readonly string[]).includes(gespeichert)) return gespeichert as FolderId;
+  } catch { /* kein localStorage — Standard */ }
+  return FOLDER_DEFAULT;
+}
+
+function merkeOrdner(id: FolderId): void {
+  try { localStorage.setItem(FOLDER_KEY, id); } catch { /* nicht merkbar — dann eben nicht */ }
+}
 
 function firstLine(t: string | null): string {
   if (!t) return '—';
@@ -1267,7 +1298,9 @@ function appendGridRow(sections: LoadGridSection[], e: GridUnitEvent): LoadGridS
 
 export default function JobbotUI() {
   const [jobs, setJobs] = useState<JobWithBrief[]>([]);
-  const [folder, setFolder] = useState<FolderId>('mail/entwurf');
+  // Lazy Initializer (Funktion statt Aufruf): localStorage wird einmal beim Mount
+  // gelesen, nicht bei jedem Render.
+  const [folder, setFolder] = useState<FolderId>(ladeOrdner);
   const [fit, setFit] = useState<Fit | 'alle' | 'unbewertet'>('alle');
   const [q, setQ] = useState('');
   const [sel, setSel] = useState<string | null>(null);
@@ -1399,7 +1432,12 @@ export default function JobbotUI() {
           lastSeenScrapeRunId.current = s.runId;
           refetchJobs();
           say(
-            s.status === 'error' ? `Scrape fehlgeschlagen: ${s.error}` : `Scrape: ${s.result?.newTotal ?? 0} neu, ${s.result?.skipTotal ?? 0} dedup`,
+            s.status === 'error' ? `Scrape fehlgeschlagen: ${s.error}`
+            // Der Offline-Teil steht nur da, wenn wirklich etwas archiviert wurde —
+            // ein "0 offline" in jedem Toast wäre eine Meldung ohne Nachricht.
+            : `Scrape: ${s.result?.newTotal ?? 0} neu, ${s.result?.skipTotal ?? 0} dedup`
+              + ((s.result?.offlineTotal ?? 0) > 0 ? `, ${s.result?.offlineTotal} offline archiviert` : '')
+              + ((s.result?.backTotal ?? 0) > 0 ? `, ${s.result?.backTotal} zurückgeholt` : ''),
             s.status === 'error' ? 'err' : 'ok'
           );
         }
@@ -1768,6 +1806,11 @@ export default function JobbotUI() {
   // Auswahl nur im "jobs"-Ordner sinnvoll (siehe selectedJobIds oben) — beim
   // Verlassen zurücksetzen, sonst überlebt eine Auswahl unsichtbar den Wechsel.
   useEffect(() => { setSelectedJobIds(new Set()); }, [folder]);
+
+  // Jeden Ordnerwechsel merken — egal wodurch ausgelöst (Klick, Schublade, oder der
+  // Startordner-Effekt weiter unten). Ein Effect statt eines Aufrufs in jedem
+  // Klick-Handler: sonst gäbe es Wege, den Ordner zu wechseln, ohne ihn zu merken.
+  useEffect(() => { merkeOrdner(folder); }, [folder]);
 
   function toggleSelect(id: string) {
     setSelectedJobIds(prev => {

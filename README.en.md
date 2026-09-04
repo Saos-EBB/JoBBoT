@@ -125,15 +125,21 @@ can be combined, e.g. `npm run anschreiben -- --data=save --limit=3`.
 status `triaged` + `fit` (see lifecycle below) and writes a report to
 `data/filter-log.md`; with `--scope=all` it re-triages every existing job
 instead of only those with status `new` — useful after tweaking the filter
-rules, so the database doesn't sit on stale judgments. `npm run duplicates`
+rules, so the database doesn't sit on stale judgments. A re-triage only
+re-decides the **verdict** (`fit`); it sets the status exclusively for jobs
+still in triage (`new`/`triaged`) — a job with a finished cover letter or a
+sent application stays where it is. `npm run duplicates`
 finds jobs whose title+company collide once normalized (lowercased, gender
 markers like `(m/w/d)`, legal-form suffixes like `GmbH` stripped) — a plain
 report, nothing gets deleted automatically. `npm run anschreiben` places
 finished letters under
-`data/anschreiben/title_company_date_id8.md`, also tries to find an
+`data/anschreiben/title_company_id8.md`, also tries to find an
 application email address (regex on the listing, then a firmenabc.at
 fallback), and logs every run (model, `--data` filter, count, emails found)
 to `data/anschreiben/AnschreibenLog.md`.
+
+The filename deliberately carries **no date** — and lookup goes by the `id8`
+prefix anyway, see [Storage](#storage).
 
 `scripts/anschreiben-model-bench.ts` is not a pipeline step — it's a dev
 tool for comparing several Ollama models on the same test jobs.
@@ -190,6 +196,11 @@ The interface has three width bands:
 - **from 2000px** the cover letter and the posting sit side by side instead of
   behind tabs.
 
+The most recently selected folder is remembered in `localStorage` and survives
+a reload. Before, every F5 landed hard on "With mail → Drafts"; anyone sitting
+in "Without mail → Drafts" ended up in the identically named but empty
+neighbouring folder — it looked as if the drafts had vanished.
+
 ### Scrape/Filter from the UI
 
 The sidebar has its own "Pipeline" group with entries **Scrape**, **Filter**,
@@ -217,7 +228,10 @@ is a synchronous read with no background run/polling — it returns the
 duplicate groups directly in the response. The UI calls it when the view
 opens; a "Check again" button triggers a refetch. Per group (or all at once)
 a "Merge" button consolidates them: the newest listing survives but takes on
-the oldest duplicate's `scrapedAt`; the remaining files get deleted.
+the oldest duplicate's `scrapedAt`; the remaining files get deleted. If the
+surviving job has no cover letter yet but one of the removed twins does, that
+letter comes along — otherwise it would be left behind as a file no job can
+find any more.
 
 ### Bulk selection in the job list
 
@@ -303,7 +317,16 @@ follow-ups were sent (`followUps`), and when replies came back
 first. Three colours, legend in the header; a day carrying several kinds is
 split accordingly. Every follow-up is its own entry, not just the last one —
 the calendar should show how often you chased. Clicking a day opens a popup with that day's
-entries and jumps from there to the job detail view. Replies aren't detected
+entries and jumps from there to the job detail view.
+
+The month row runs without gaps from `HISTORY_START` (`lib/calendar.ts`,
+currently `2026-07-01`) to today — the same span the Gmail sync scans. Months
+without activity still get a block, so that months far apart don't fake
+adjacency; they start collapsed. Every month header is a toggle, and the
+summary next to it ("2 sent · 1 reply") tells you even while collapsed whether
+expanding is worth it.
+
+Replies aren't detected
 automatically: a "Fetch replies" button in the "Sent" folder (history) scans
 the Gmail inbox via `POST /api/mail/replies/fetch` (email+subject matching,
 no message ID) and sets `replyReceivedAt` on hits — jobs with a reply then
@@ -319,11 +342,46 @@ before these fields existed, or by hand past the bot — live sends write their
 own `sentAt` anyway.
 
 Scanning starts at `HISTORY_START` (`lib/calendar.ts`, currently `2026-07-01`)
-— the same span the calendar displays. Only mails you labelled as an
-application in Gmail are pulled; labelled mails without a matching job are
-stored as standalone calendar entries so the period stays complete. The sync
-is read-only towards Gmail and never overwrites an existing value, it only
-fills gaps.
+— the same starting point the calendar displays from.
+
+**Which mails count:** only those labelled `Bewerbung` or `Beworben` in Gmail
+(`BEWERBUNGS_LABELS` in `mail/gmail.ts`). The label is the most reliable
+source: `job.email` is lost on a re-scrape and the subject changes when a
+listing is re-read — your marking stays. Without a label nothing happens, and
+private mail never ends up in the calendar.
+
+**Matching to a job** runs on two equivalent keys: the reconstructed subject
+(`Bewerbung als … bei …`, recomputable from title+company at any time) and the
+recipient address. If either hits, the job gets its `sentAt`.
+
+**Mails without a job** — because the listing was deleted, re-read, or written
+by hand — don't disappear; they land in `data/mail-events.json` and show up in
+the calendar as their own entry marked "nur Mail" (not clickable, there is no
+detail view for them). Title and company come from the subject; if that doesn't
+match the pattern, the recipient domain serves as the label. The file is a
+snapshot of the mailbox, not a history: every run rewrites it completely, and
+it is gitignored because it contains recipient addresses.
+
+The message after a run names each stage separately — read, labelled, linked,
+mail-only — because a bare "0 backfilled" would leave open whether the mailbox
+was empty, the label is missing, or the matching found nothing.
+
+Three properties you can rely on:
+
+- **Read-only towards Gmail.** Both folders are opened with `readOnly: true`;
+  the sync sends, deletes, and moves nothing, and doesn't mark anything as
+  read either. The Sent folder is found via the IMAP flag `\Sent`, not via the
+  (localized) folder name.
+- **Fills gaps only.** An existing `sentAt`/`replyReceivedAt` is never
+  overwritten, so a heuristic hit can't destroy a real value. Repeated runs
+  are therefore harmless.
+- **Changes no status.** Only the two date fields are ever written.
+
+The matching is a heuristic, not an exact mapping: the message ID was never
+stored when the mail was originally sent. Matching goes by the exact recipient
+address; the reconstructed subject (`Bewerbung als … bei …`) only serves as a
+tiebreaker when several jobs share the same company address. If it stays
+ambiguous, nothing is set — unmatched jobs simply stay undated.
 
 ## Tests
 
@@ -349,11 +407,49 @@ The whole system only talks to storage through the `Storage` interface
 (`storage/index.ts`) — swappable for SQLite without code changes outside
 `storage/`.
 
+### How a file finds its job
+
+Both job JSONs and cover letters are looked up **by the `id8` prefix at the
+end of the filename**, never by the full name. The readable part in front is
+decoration:
+
+```
+data/jobs/title_company_date_id8.json     JsonStore.findFile()
+data/anschreiben/title_company_id8.md     findAnschreiben()  (lib/anschreiben-datei.ts)
+```
+
+The reason is experience, not taste. Cover letters used to be looked up by the
+full name including the **date** — and the date is not part of the identity,
+it is a value that changes:
+
+- a **re-scrape** of the same posting yields a new `postedAt`
+- a **duplicate merge** sets `keep.scrapedAt` to that of the oldest twin
+
+In both cases the already-written letter was invisible to its own job — on a
+merge even to the job the merge keeps. On 2026-09-04 that affected 46 of 101
+files. So the resolution now lives in one place (`lib/anschreiben-datei.ts`)
+instead of four, a write cleans up a file sitting under an old name, and a
+merge carries over the cover letter of a removed twin.
+
+### One-off scripts
+
+Repairs to existing data, not part of the pipeline. All run as a **dry run**
+without arguments and take a backup under `data/backup-*/` (gitignored)
+before writing with `--apply`:
+
+```bash
+npx tsx scripts/repair-status.ts          # restore status from cover-letter files + mail-log
+npx tsx scripts/repair-anschreiben.ts     # match letters to their jobs, drop orphans
+npx tsx scripts/migrate-descriptions.ts   # normalize descriptions retroactively
+```
+
 ## Job lifecycle
 
 ```
 new → triaged → generated → freigegeben → postausgang → gesendet
                                     (+ geloescht/fehler as side paths)
+
+new/triaged ⇄ offline   (offline archive, see below — both directions automatic)
 ```
 
 Status names are German in the data model (`freigegeben` = reviewed,
@@ -369,11 +465,63 @@ actually successful Gmail call (no status change on failure — those land on
 not a file delete). There is still no auto-send without the explicit
 "confirm sent" click.
 
+**The pipeline only moves forward.** A re-triage (`--scope=all`) re-decides the
+`fit` verdict but only sets the status for jobs still in triage. It used to do
+so unconditionally — every such run threw `generated`/`postausgang`/`gesendet`
+back to the start, and the affected applications reappeared in the "Jobs"
+folder as if no cover letter had ever been written or application sent. On
+2026-09-04 that affected 21 sent applications and 33 jobs with a finished
+cover letter; `scripts/repair-status.ts` restored them from the cover-letter
+files and `data/mail-log.md`.
+
 `gesendet` isn't the end: `followUps` collects every follow-up as
 `{ at, via }` (see [Follow-ups](#follow-ups)). The status does **not** change —
 the application was sent and stays sent; a follow-up isn't a new state but
 another contact. Same for `replyReceivedAt`: a reply is additional information,
 not a status change.
+
+## Offline archive
+
+While scraping, the run checks whether stored postings are still online. If one
+is provably gone, the job moves to status `offline` and shows up in the UI
+under **History → Offline**. If the same posting later reappears in the search
+results, the same run brings it back automatically.
+
+**Two stages.** "Not found in this run" only picks the *candidates* (that costs
+nothing, the results are already at hand); archiving happens only once a single
+fetch of the job URL *confirms* it.
+
+The cheap stage alone is not enough: search queries are freely editable in the
+settings page — after changing "Linz" to "Wels" half the library would be
+missing. Add pagination caps: a posting scraped weeks ago is long off page 1
+and still online. A silently archived live job is a missed job; one archived a
+run too late costs nothing.
+
+**What gets archived — and what doesn't:**
+
+| Guard | Rule |
+| --- | --- |
+| Status | only `new` and `triaged`. From `generated` onwards the job carries your own work (cover letter, approval, send) — the portal pulling the posting doesn't end the application in flight. |
+| Source | only sources that ran **and** succeeded in **this** run. A network failure or a deselected source archives nothing. |
+| Signal | only a **verified** offline signal. `unbekannt` (rate limit, timeout, server error) leaves the job alone. |
+| Volume | at most 25 re-checks per run, 1 s apart, oldest posting first. The rest waits for the next run. |
+
+**Verified offline markers** (`lib/offline-check.ts`, measured 2026-09-04).
+Anything missing here gets no guessed pattern:
+
+| Source | Marker |
+| --- | --- |
+| karriere.at | HTTP 404 **or** 200 with a redirect away from `/jobs/<nr>` — an expired posting answers with 200 on a search page there, so the status code alone doesn't separate dead from alive. |
+| jobs.at, linkedin, devjobs.at, ams | 404/410 only. No offline sample was available for these (devjobs.at answered the first test fetch with 429), so there is no additional marker. |
+
+**Bringing a job back** needs no stored "previous" field: only `new` and
+`triaged` are archived, and those two differ exactly by the `fit` field —
+without `fit` back to `new`, with `fit` back to `triaged`. Only the status is
+touched; `email`/`fit`/`scrapedAt` survive unchanged.
+
+**Known limitation:** if two files exist for one ID (legacy data from before
+the current `hash.ts`), the status change hits only one of them. That's the
+existing duplicate topic — `npm run duplicates` reports it.
 
 ## Environment variables
 

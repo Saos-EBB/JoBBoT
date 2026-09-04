@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { Job } from '../scrapers/interface.ts';
 import type { Storage } from '../storage/index.ts';
 import type { ProfileData } from './profile.ts';
-import { jobBasename } from './slugify.ts';
+import { anschreibenZiel } from './anschreiben-datei.ts';
 import { config } from '../config.ts';
 
 export const SYSTEM = `Du bist ein erfahrener Karriereberater. Du schreibst präzise, authentische Bewerbungsanschreiben auf Deutsch.
@@ -119,7 +119,9 @@ function logSuccess(job: Job, model: string, path: string, logPath: string): voi
 
 export async function saveAnschreiben(job: Job, text: string, dir = config.anschreibenDir): Promise<string> {
   await mkdir(dir, { recursive: true });
-  const path = join(dir, `${jobBasename(job)}.md`);
+  // anschreibenZiel() räumt dabei eine Datei weg, die denselben Job unter einem
+  // alten Namen meint — siehe lib/anschreiben-datei.ts.
+  const path = await anschreibenZiel(job, dir);
   await writeFile(path, text, 'utf8');
   return path;
 }

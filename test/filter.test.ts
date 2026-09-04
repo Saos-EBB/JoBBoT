@@ -171,6 +171,70 @@ function decision(overrides: Partial<FilterDecision> & { job: ReturnType<typeof 
   };
 }
 
+// ── Re-Triage darf die Pipeline nicht zurueckspulen ──────────────────────────
+//
+// Der Bug, der 21 nachweislich versendete Bewerbungen und 33 Jobs mit fertigem
+// Anschreiben zurueck in den "Jobs"-Ordner geworfen hat: filterJob() setzte status
+// bedingungslos auf "triaged", also warf jeder --scope=all-Lauf alles auf Anfang.
+
+test('filterJob: ein Job ab "generated" behaelt seinen Status, nur fit wird neu gesetzt', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+
+  for (const status of ['generated', 'freigegeben', 'postausgang', 'gesendet', 'geloescht', 'fehler', 'offline'] as const) {
+    const job = { ...sample(`Junior Developer ${status}`), status, fit: 'offstack' as const };
+    await storage.save(job);
+
+    const { url, close } = await mockChatSequence([judgmentJson()]);
+    t.after(close);
+    await filterJob(job, storage, url, 'llm');
+
+    const stored = await storage.get(job.id);
+    assert.equal(stored?.status, status, `Status von "${status}" wurde zurueckgesetzt`);
+    // Das Urteil selbst wird sehr wohl aktualisiert — nur die Pipeline-Stufe bleibt.
+    assert.equal(stored?.fit, 'matched');
+  }
+});
+
+test('filterJob: "new" und "triaged" werden weiterhin auf "triaged" gesetzt', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+
+  for (const status of ['new', 'triaged'] as const) {
+    const job = { ...sample(`Junior Developer ${status}`), status };
+    await storage.save(job);
+
+    const { url, close } = await mockChatSequence([judgmentJson()]);
+    t.after(close);
+    await filterJob(job, storage, url, 'llm');
+
+    assert.equal((await storage.get(job.id))?.status, 'triaged');
+  }
+});
+
+// Der Lauf kann Minuten dauern. Wird waehrend dieser Zeit ein Anschreiben fertig,
+// darf das Ergebnis den Job nicht nachtraeglich doch noch zurueckwerfen — deshalb
+// entscheidet filterJob() am aktuellen Diskstand, nicht am uebergebenen Objekt.
+test('filterJob: Statuswechsel WAEHREND des Laufs gewinnt gegen das veraltete Objekt', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = createStorage(dir);
+  const job = sample();
+  await storage.save(job);
+
+  const { url, close } = await mockChatSequence([judgmentJson()]);
+  t.after(close);
+
+  // Das, was der Aufrufer in der Hand hat, ist noch "new" — auf Platte steht inzwischen
+  // "generated", so wie es lib/anschreiben.ts nach getaner Arbeit hinterlaesst.
+  await storage.update(job.id, { status: 'generated' });
+  await filterJob(job, storage, url, 'llm');
+
+  assert.equal((await storage.get(job.id))?.status, 'generated');
+});
+
 test('writeFilterReport: drei Fächer mit Aggregat und Summenzeile', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
