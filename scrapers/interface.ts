@@ -5,9 +5,15 @@
 // "triaged" ersetzt die vormals getrennten filtered_out/uncertain/matched — das Urteil
 // selbst lebt jetzt ausschließlich in `fit` (einheitliches Vokabular, kein zweites Feld
 // das dieselbe Aussage in anderen Worten trifft).
+// "offline" gehört zur Pipeline-Zone: gesetzt von lib/scrape-runner.ts, wenn ein
+// gespeichertes Inserat beim Scrapen nachweislich nicht mehr online steht (siehe
+// lib/offline-check.ts). Kein eigener Ordner im Storage nötig — wie geloescht/fehler
+// bleibt die Datei im Basisordner liegen, JsonStore.dirFor() sortiert ohnehin nur
+// "triaged" nach fit ein. Der Weg zurück ist offen: taucht das Inserat wieder auf,
+// setzt derselbe Lauf den Status zurück.
 export type JobStatus =
   | 'new' | 'triaged' | 'generated'
-  | 'freigegeben' | 'postausgang' | 'gesendet' | 'geloescht' | 'fehler';
+  | 'freigegeben' | 'postausgang' | 'gesendet' | 'geloescht' | 'fehler' | 'offline';
 
 export type Fit = 'matched' | 'offstack' | 'brutal';
 

@@ -24,6 +24,7 @@ import {
   Layers,
   Calendar,
   Menu,
+  Archive,
 } from 'lucide-react';
 import type { Job, Fit } from '../scrapers/interface.ts';
 import { FOLDER_IDS, inFolder, canGenerateAnschreiben, type FolderId } from '../lib/folders.ts';
@@ -760,6 +761,11 @@ const GROUPS: { head: string | null; icon: typeof Mail | null; folders: { id: Fo
     folders: [
       { id: 'log/gesendet', label: 'Gesendet', icon: Send },
       { id: 'log/aussortiert', label: 'Aussortiert', icon: XCircle },
+      // Nicht mehr online — vom Scrape-Lauf archiviert, nicht vom Nutzer aussortiert
+      // (siehe lib/scrape-runner.ts). Steht hier statt in einer eigenen Gruppe, weil
+      // es wie gesendet/geloescht eine Endstation ist, aus der ein neuer Scrape-Lauf
+      // den Job von selbst zurueckholt, wenn das Inserat wieder auftaucht.
+      { id: 'log/offline', label: 'Offline', icon: Archive },
       { id: 'log/geloescht', label: 'Gelöscht', icon: Trash2 },
       { id: 'log/fehler', label: 'Fehler', icon: AlertTriangle, err: true },
     ],
@@ -790,6 +796,7 @@ const EMPTY_COPY: Record<FolderId, string> = {
   'nomail/freigegeben': 'Nichts bereit zum Bewerben.',
   'log/gesendet': 'Noch nichts gesendet.',
   'log/aussortiert': 'Nichts aussortiert.',
+  'log/offline': 'Kein Inserat ist offline gegangen.',
   'log/geloescht': 'Nichts gelöscht.',
   'log/fehler': 'Keine Fehler.',
 };
