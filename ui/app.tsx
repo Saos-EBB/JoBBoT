@@ -52,7 +52,7 @@ type ScrapeStatus = {
   status: 'idle' | 'running' | 'done' | 'error';
   runId: string | null;
   sources: Record<string, { current: number; total: number }>;
-  result?: { newTotal: number; skipTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; error?: string }[] };
+  result?: { newTotal: number; skipTotal: number; offlineTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; offlineCount: number; error?: string }[] };
   error?: string;
 };
 type FilterRunStatus = {
@@ -1432,7 +1432,11 @@ export default function JobbotUI() {
           lastSeenScrapeRunId.current = s.runId;
           refetchJobs();
           say(
-            s.status === 'error' ? `Scrape fehlgeschlagen: ${s.error}` : `Scrape: ${s.result?.newTotal ?? 0} neu, ${s.result?.skipTotal ?? 0} dedup`,
+            s.status === 'error' ? `Scrape fehlgeschlagen: ${s.error}`
+            // Der Offline-Teil steht nur da, wenn wirklich etwas archiviert wurde —
+            // ein "0 offline" in jedem Toast wäre eine Meldung ohne Nachricht.
+            : `Scrape: ${s.result?.newTotal ?? 0} neu, ${s.result?.skipTotal ?? 0} dedup`
+              + ((s.result?.offlineTotal ?? 0) > 0 ? `, ${s.result?.offlineTotal} offline archiviert` : ''),
             s.status === 'error' ? 'err' : 'ok'
           );
         }
