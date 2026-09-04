@@ -234,7 +234,9 @@ beim Öffnen der Ansicht auf; ein „Neu prüfen"-Button stößt einen erneuten
 Abruf an. Pro Gruppe (oder für alle auf einmal) lässt sich per
 „Zusammenführen"-Button konsolidieren: Das neueste Inserat bleibt, übernimmt
 aber das `scrapedAt` des ältesten Duplikats; die restlichen Dateien werden
-gelöscht.
+gelöscht. Hat der behaltene Job noch kein Anschreiben, einer der entfernten
+Zwillinge aber schon, wandert dessen Brief mit — sonst bliebe er als Datei
+zurück, die kein Job mehr findet.
 
 ### Mehrfachauswahl in der Job-Liste
 
@@ -409,6 +411,10 @@ deterministischer 16-stelliger SHA-256-Hash aus Titel + Firma (die ersten 8
 Zeichen davon stecken im Dateinamen) — derselbe Job wird beim erneuten
 Scrapen nie doppelt angelegt.
 
+Das gesamte System redet nur über das `Storage`-Interface (`storage/index.ts`)
+mit dem Speicher — austauschbar gegen SQLite ohne Codeänderungen außerhalb
+von `storage/`.
+
 ### Wie eine Datei ihren Job findet
 
 Sowohl Job-JSONs als auch Anschreiben werden **über das `id8`-Präfix am Ende
@@ -445,10 +451,6 @@ npx tsx scripts/repair-status.ts          # Status aus Anschreiben-Datei + mail-
 npx tsx scripts/repair-anschreiben.ts     # Briefe ihren Jobs zuordnen, Waisen entfernen
 npx tsx scripts/migrate-descriptions.ts   # Beschreibungen nachträglich normalisieren
 ```
-
-Das gesamte System redet nur über das `Storage`-Interface (`storage/index.ts`)
-mit dem Speicher — austauschbar gegen SQLite ohne Codeänderungen außerhalb
-von `storage/`.
 
 ## Job-Lifecycle
 
