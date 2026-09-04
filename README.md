@@ -128,21 +128,28 @@ Status `triaged` + `fit` (siehe Lifecycle unten) und schreibt einen Report nach
 `data/filter-log.md`; mit `--scope=all` werden dabei alle vorhandenen Jobs neu
 triagiert statt nur die mit Status `new` — nützlich nach einer Änderung an den
 Filterregeln, damit die Datenbank nicht auf alten Urteilen sitzen bleibt.
+Ein Re-Triage fällt nur das **Urteil** (`fit`) neu; den Status setzt es
+ausschließlich für Jobs, die noch in der Triage stecken (`new`/`triaged`) —
+ein Job mit fertigem Anschreiben oder eine versendete Bewerbung bleibt, wo
+sie ist.
 `npm run duplicates` findet Jobs, deren Titel+Firma nach Normalisierung
 (Kleinschreibung, Gendermarker wie `(m/w/d)`, Rechtsformen wie `GmbH`) auf
 dieselbe ID zusammenfallen — reiner Report, keine automatische Löschung.
 `npm run anschreiben` legt fertige Briefe unter
-`data/anschreiben/titel_firma_datum_id8.md` ab, versucht dabei zusätzlich
+`data/anschreiben/titel_firma_id8.md` ab, versucht dabei zusätzlich
 eine Bewerbungs-E-Mail-Adresse zu finden (Regex im Inserat, sonst Fallback
 über firmenabc.at) und protokolliert jeden Lauf (Modell, `--data`-Filter,
 Anzahl, gefundene E-Mails) in `data/anschreiben/AnschreibenLog.md`.
+
+Der Dateiname trägt bewusst **kein Datum** — und gesucht wird ohnehin nur über
+das `id8`-Präfix, siehe [Storage](#storage).
 
 `scripts/anschreiben-model-bench.ts` ist kein Pipeline-Schritt, sondern ein
 Dev-Tool zum Vergleichen mehrerer Ollama-Modelle auf denselben Test-Jobs.
 
 ### Gmail-Anbindung
 
-`npm run ui` zeigt pro Job (sobald Status `reviewed` ist) eine editierbare
+`npm run ui` zeigt pro Job (sobald Status `freigegeben` ist) eine editierbare
 E-Mail-Vorschau (An/Betreff/Text) mit zwei Aktionen: **Entwurf erstellen**
 (landet als echter, editierbarer Entwurf in Gmail) oder **Direkt senden**
 (mit Bestätigungsdialog). Beide laufen über ein Gmail App-Passwort, nicht
@@ -402,6 +409,43 @@ deterministischer 16-stelliger SHA-256-Hash aus Titel + Firma (die ersten 8
 Zeichen davon stecken im Dateinamen) — derselbe Job wird beim erneuten
 Scrapen nie doppelt angelegt.
 
+### Wie eine Datei ihren Job findet
+
+Sowohl Job-JSONs als auch Anschreiben werden **über das `id8`-Präfix am Ende
+des Dateinamens** gesucht, nie über den ganzen Namen. Der lesbare Teil davor
+ist Dekoration:
+
+```
+data/jobs/titel_firma_datum_id8.json      JsonStore.findFile()
+data/anschreiben/titel_firma_id8.md       findAnschreiben()  (lib/anschreiben-datei.ts)
+```
+
+Der Grund ist Erfahrung, nicht Geschmack. Das Anschreiben wurde früher über
+den vollen Namen inklusive **Datum** gesucht — und das Datum ist kein Teil der
+Identität, sondern ein Wert, der sich ändert:
+
+- ein **Re-Scrape** derselben Stelle liefert ein neues `postedAt`
+- ein **Duplikat-Merge** setzt `keep.scrapedAt` auf das des ältesten Zwillings
+
+In beiden Fällen war der bereits geschriebene Brief für seinen eigenen Job
+unsichtbar — beim Merge sogar für den Job, den der Merge behält. Am
+2026-09-04 betraf das 46 von 101 Dateien. Deshalb steht die Auflösung jetzt an
+genau einer Stelle (`lib/anschreiben-datei.ts`) statt an vieren, ein
+Schreibvorgang räumt eine Datei unter altem Namen weg, und ein Merge nimmt das
+Anschreiben eines entfernten Zwillings mit.
+
+### Einmal-Skripte
+
+Reparaturen am Bestand, kein Teil der Pipeline. Alle laufen ohne Argument als
+**Dry-Run** und legen mit `--apply` vorher ein Backup unter `data/backup-*/`
+an (gitignored):
+
+```bash
+npx tsx scripts/repair-status.ts          # Status aus Anschreiben-Datei + mail-log herstellen
+npx tsx scripts/repair-anschreiben.ts     # Briefe ihren Jobs zuordnen, Waisen entfernen
+npx tsx scripts/migrate-descriptions.ts   # Beschreibungen nachträglich normalisieren
+```
+
 Das gesamte System redet nur über das `Storage`-Interface (`storage/index.ts`)
 mit dem Speicher — austauschbar gegen SQLite ohne Codeänderungen außerhalb
 von `storage/`.
@@ -425,6 +469,15 @@ selbst, nur bei tatsächlich erfolgreichem Gmail-Aufruf (kein Statuswechsel bei
 Fehlern, die landen stattdessen auf `fehler`). `geloescht` ist von den meisten
 Stellen aus erreichbar (Papierkorb, kein Datei-Löschen). Es gibt weiterhin
 keinen Auto-Send ohne den expliziten „Gesendet bestätigen"-Klick.
+
+**Die Pipeline läuft nur vorwärts.** Ein Re-Triage (`--scope=all`) fällt das
+`fit`-Urteil neu, setzt den Status aber nur für Jobs, die noch in der Triage
+stecken. Vorher tat er das bedingungslos — jeder solche Lauf warf
+`generated`/`postausgang`/`gesendet` auf Anfang zurück, und die betroffenen
+Bewerbungen standen wieder im „Jobs"-Ordner, als wäre nie eine geschrieben
+oder versendet worden. Am 2026-09-04 betraf das 21 versendete Bewerbungen und
+33 Jobs mit fertigem Anschreiben; `scripts/repair-status.ts` hat sie aus
+Anschreiben-Dateien und `data/mail-log.md` wiederhergestellt.
 
 `gesendet` ist nicht das Ende: `followUps` sammelt jeden Nachfass als
 `{ at, via }` (siehe [Nachfassen](#nachfassen)). Der Status ändert sich dabei
