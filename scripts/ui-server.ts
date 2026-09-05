@@ -6,7 +6,8 @@ import { createStorage } from '../storage/index.ts';
 import { config } from '../config.ts';
 import { findAnschreiben, anschreibenZiel, anschreibenName } from '../lib/anschreiben-datei.ts';
 import { loadProfile } from '../lib/profile.ts';
-import { composeEmail, composeFollowUp, createDraft, sendMail, logMailAction, fetchInboxReplies, fetchSentMails, istBewerbung, type SentMail } from '../mail/gmail.ts';
+import { fetchInboxReplies, fetchSentMails, istBewerbung, type SentMail } from '../mail/gmail.ts';
+import { versende } from '../lib/versand.ts';
 import { matchReplies, matchSent } from '../lib/mail-match.ts';
 import { HISTORY_START } from '../lib/calendar.ts';
 import { loadMailEvents, saveMailEvents, toMailEvents } from '../lib/mail-events.ts';
@@ -20,7 +21,6 @@ import { runScrape } from '../lib/scrape-runner.ts';
 import { runFilter } from '../lib/filter-runner.ts';
 import { createBatcher } from '../lib/grid-batch.ts';
 import { findDuplicates, planMerge } from '../lib/duplicates.ts';
-import { recordFollowUp } from '../lib/followup.ts';
 import { canGenerateAnschreiben } from '../lib/folders.ts';
 import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import type { Job } from '../scrapers/interface.ts';
@@ -773,10 +773,7 @@ const server = createServer(async (req, res) => {
       // kein Body — bleibt beim sichereren Entwurf
     }
     try {
-      const email = await composeFollowUp(job, profile);
-      if (via === 'sent') await sendMail(email); else await createDraft(email);
-      const updated = await storage.update(job.id, { followUps: recordFollowUp(job, via) });
-      await logMailAction(job, via === 'sent' ? 'followup-sent' : 'followup-drafted');
+      const updated = await versende({ job, art: 'nachfass', weg: via === 'sent' ? 'senden' : 'entwurf', storage, profile });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify(updated));
     } catch (err) {
@@ -792,10 +789,7 @@ const server = createServer(async (req, res) => {
     const job = await storage.get(apiDraftMatch[1]);
     if (!job) { res.writeHead(404).end('Job nicht gefunden'); return; }
     try {
-      const email = await composeEmail(job, profile);
-      await createDraft(email);
-      const updated = await storage.updateStatus(job.id, 'postausgang');
-      await logMailAction(job, 'drafted');
+      const updated = await versende({ job, art: 'bewerbung', weg: 'entwurf', storage, profile });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify(updated));
     } catch (err) {
@@ -811,10 +805,7 @@ const server = createServer(async (req, res) => {
     const job = await storage.get(apiSendMatch[1]);
     if (!job) { res.writeHead(404).end('Job nicht gefunden'); return; }
     try {
-      const email = await composeEmail(job, profile);
-      await sendMail(email);
-      const updated = await storage.update(job.id, { status: 'gesendet', sentAt: new Date().toISOString() });
-      await logMailAction(job, 'sent');
+      const updated = await versende({ job, art: 'bewerbung', weg: 'senden', storage, profile });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify(updated));
     } catch (err) {
