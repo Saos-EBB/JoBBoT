@@ -17,7 +17,7 @@ import { loadSettings, type FilterMode } from '../lib/settings.ts';
 import { adapterRegistry, buildScrapeSetup } from '../lib/scrape-setup.ts';
 import { isConfigName, readConfig, writeConfig, restoreConfig, hasBackup, validateConfig } from '../lib/config-store.ts';
 import { runScrape } from '../lib/scrape-runner.ts';
-import { filterJob } from '../lib/filter.ts';
+import { runFilter } from '../lib/filter-runner.ts';
 import { createBatcher } from '../lib/grid-batch.ts';
 import { findDuplicates, planMerge } from '../lib/duplicates.ts';
 import { recordFollowUp } from '../lib/followup.ts';
@@ -638,6 +638,7 @@ const server = createServer(async (req, res) => {
       // undefined -> filterJob fällt auf config/settings.json zurück
     }
 
+    filterRowCounters = { matched: 0, offstack: 0, brutal: 0 };
     // Ein Batcher pro Ergebnis-Kategorie (nicht einer über den ganzen Lauf) — sonst
     // würden Match/Offstack/Brutal wild gemischt in derselben Zeile landen, statt eigene
     // Abschnitte im Grid zu bilden (siehe ui/app.tsx LoadGrid). Kategorien und Farben
@@ -647,27 +648,30 @@ const server = createServer(async (req, res) => {
       uncertain: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'offstack', sectionLabel: 'Offstack', row: `offstack-${++filterRowCounters.offstack}`, items })),
       filtered_out: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'brutal', sectionLabel: 'Brutal', row: `brutal-${++filterRowCounters.brutal}`, items })),
     };
-    filterRowCounters = { matched: 0, offstack: 0, brutal: 0 };
 
     try {
-      // scope "all" triaged jede vorhandene Job-Datei neu — siehe scripts/run-filter.ts --scope.
-      const jobs = await storage.list(scope === 'all' ? undefined : { status: 'new' });
-      let matched = 0, offstack = 0, brutal = 0;
-      for (let i = 0; i < jobs.length; i++) {
-        const job = jobs[i];
-        filterRun.current = { i, total: jobs.length, title: job.title };
-        const d = await filterJob(job, storage, undefined, mode);
-        const ergebnis = d.status === 'matched' ? 'Match' : d.status === 'uncertain' ? 'Offstack' : 'Brutal';
-        const square: GridSquare = {
-          id: job.id,
-          tooltip: `${job.title} — ${job.company} — ${ergebnis}`,
-          state: d.status === 'matched' ? 'matched' : d.status === 'uncertain' ? 'offstack' : 'brutal',
-          url: job.url,
-        };
-        if (d.status === 'matched') { matched++; filterBatchers.matched.push(square); }
-        else if (d.status === 'uncertain') { offstack++; filterBatchers.uncertain.push(square); }
-        else { brutal++; filterBatchers.filtered_out.push(square); }
-      }
+      // Dieselbe Schleife wie das CLI (lib/filter-runner.ts) — der Runner schreibt dabei
+      // auch data/filter-log.md, was dieser Pfad vorher als einziger nicht tat.
+      const { matched, offstack, brutal } = await runFilter({
+        storage,
+        scope,
+        mode,
+        onProgress: (i, total, job) => {
+          filterRun.current = { i, total, title: job.title };
+        },
+        onDecision: d => {
+          const ergebnis = d.status === 'matched' ? 'Match' : d.status === 'uncertain' ? 'Offstack' : 'Brutal';
+          const square: GridSquare = {
+            id: d.job.id,
+            tooltip: `${d.job.title} — ${d.job.company} — ${ergebnis}`,
+            state: d.status === 'matched' ? 'matched' : d.status === 'uncertain' ? 'offstack' : 'brutal',
+            url: d.job.url,
+          };
+          if (d.status === 'matched') filterBatchers.matched.push(square);
+          else if (d.status === 'uncertain') filterBatchers.uncertain.push(square);
+          else filterBatchers.filtered_out.push(square);
+        },
+      });
       filterBatchers.matched.flush();
       filterBatchers.uncertain.flush();
       filterBatchers.filtered_out.flush();
