@@ -383,6 +383,13 @@ const CSS = `
 .dt__sep { color:var(--line); }
 .dt__mail { color:var(--muted); }
 .dt__nomail { color:var(--dim); font-style:italic; font-family:var(--sans); }
+/* Sieht aus wie Text, bis man draufzeigt — die Adresse ist meistens nur zu lesen,
+   aber sie muss von Hand korrigierbar sein (findEmail trifft nicht immer). */
+.dt__mailin { color:var(--muted); font:inherit; background:transparent; border:0;
+  border-bottom:1px dashed transparent; padding:0 0 1px; min-width:24ch; }
+.dt__mailin:hover { border-bottom-color:var(--line); }
+.dt__mailin:focus { outline:none; border-bottom-color:var(--accent); color:var(--ink); }
+.dt__mailin::placeholder { color:var(--dim); font-style:italic; font-family:var(--sans); }
 .lnk { display:inline-flex; align-items:center; gap:3px; color:var(--dim); }
 .lnk:hover { color:var(--text); }
 .lnk svg { width:10px; height:10px; }
@@ -2087,6 +2094,22 @@ export default function JobbotUI() {
       .catch(() => say('Speichern fehlgeschlagen', 'err'));
   }
 
+  // Die einzige Stelle, an der eine Empfängeradresse von Hand gesetzt wird. Vorher
+  // konnte das nur die servergerenderte /job/:id/email-Form, die niemand mehr erreichte
+  // (das UI verlinkt sie nicht) — nötig ist es trotzdem, weil findEmail() nicht immer
+  // trifft und eine falsche Adresse sonst nicht zu korrigieren wäre.
+  // Speichern beim Verlassen des Feldes, wie beim Anschreiben.
+  function saveEmail(id: string, value: string) {
+    const email = value.trim() || null;
+    fetch(`/api/jobs/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+      .then(r => { if (!r.ok) throw new Error(); patch(id, { email }); say(email ? 'Adresse gespeichert' : 'Adresse entfernt'); })
+      .catch(() => say('Speichern fehlgeschlagen', 'err'));
+  }
+
   // Gmail-Tastatur: j/k wandern, e gibt frei, # löscht.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -3120,11 +3143,15 @@ export default function JobbotUI() {
                 <span className="dt__sep">·</span>
                 <span>vor {daysAgo(shown.scrapedAt)} Tagen</span>
                 <span className="dt__sep">·</span>
-                {shown.email ? (
-                  <span className="dt__mail">{shown.email}</span>
-                ) : (
-                  <span className="dt__nomail">Keine Adresse im Inserat — Bewerbung übers Portal</span>
-                )}
+                <input
+                  className="dt__mailin"
+                  type="email"
+                  value={shown.email ?? ''}
+                  placeholder="Keine Adresse — übers Portal, oder hier eintragen"
+                  aria-label="E-Mail-Adresse des Empfängers"
+                  onChange={e => patch(shown.id, { email: e.target.value })}
+                  onBlur={e => saveEmail(shown.id, e.target.value)}
+                />
               </div>
 
               <div className="fitpick">
