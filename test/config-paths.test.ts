@@ -7,6 +7,7 @@ import { loadSources } from '../lib/sources.ts';
 import { loadLocationConfig } from '../lib/location.ts';
 import { loadSettings } from '../lib/settings.ts';
 import { loadProfile } from '../lib/profile.ts';
+import { loadExperienceRules } from '../lib/experience-regex.ts';
 
 // Der Grund für diese Datei: bis August 2026 lösten vier der fünf Config-Loader
 // modul-relativ auf (new URL('../config/…', import.meta.url)) und lasen damit IMMER aus
@@ -50,11 +51,22 @@ test('loadSettings folgt dem Arbeitsverzeichnis', async (t) => {
 
 // Die eine, die es schon immer richtig machte — mitgeprüft, damit die Reihe vollständig
 // ist und niemand sie beim nächsten Umbau in die andere Richtung "vereinheitlicht".
+// (Sie las den Pfad bis September 2026 als einzige fest verdrahtet statt über
+// config.configDir — gleiches Ergebnis, solange configDir "config" ist, aber eben
+// nur solange. Jetzt geht sie denselben Weg wie die anderen vier.)
 test('loadProfile folgt dem Arbeitsverzeichnis', async (t) => {
   const { dir, schreibe } = await tempConfig(t);
   await schreibe('profile.json', { name: 'Test Person' });
   process.chdir(dir);
   assert.equal(loadProfile().name, 'Test Person');
+});
+
+// Die fünfte im Bunde, bisher hier nicht vertreten.
+test('loadExperienceRules folgt dem Arbeitsverzeichnis', async (t) => {
+  const { dir, schreibe } = await tempConfig(t);
+  await schreibe('experience-rules.json', { minYears: 42, experienceWords: ['nur-hier'], disqualifyingPhrases: [], optionalMarkers: [], negationMarkers: [], juniorSignals: [], codingKeywords: [] });
+  process.chdir(dir);
+  assert.equal(loadExperienceRules().minYears, 42);
 });
 
 test('fehlende Datei im Arbeitsverzeichnis wird nicht still aus dem Repo ersetzt', async (t) => {

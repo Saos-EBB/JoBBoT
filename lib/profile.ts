@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { config } from '../config.ts';
 
 export interface ProfileData {
   name: string;
@@ -10,10 +12,14 @@ export interface ProfileData {
   projekte: Array<{ name: string; beschreibung: string; tech?: string[]; anchor?: boolean }>;
 }
 
+// Über config.configDir wie die vier Nachbar-Loader. Vorher stand der Pfad hier als
+// einziger fest verdrahtet — heute derselbe Ort, weil configDir genau "config" ist,
+// aber ein anderer Wert hätte profile.json still woanders gesucht als den Rest.
 export function loadProfile(): ProfileData {
+  const path = join(config.configDir, 'profile.json');
   try {
-    return JSON.parse(readFileSync('config/profile.json', 'utf8')) as ProfileData;
+    return JSON.parse(readFileSync(path, 'utf8')) as ProfileData;
   } catch {
-    throw new Error('config/profile.json fehlt — kopiere config/profile.example.json und fülle es aus');
+    throw new Error(`${path} fehlt — kopiere profile.example.json daneben und fülle es aus`);
   }
 }
