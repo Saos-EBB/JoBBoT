@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { runFilter } from '../lib/filter-runner.ts';
-import type { FilterDecision } from '../lib/filter.ts';
+import type { TriagedDecision } from '../lib/filter.ts';
 import { createStorage } from '../storage/index.ts';
 import { toJob } from '../lib/normalize.ts';
 import type { Job } from '../scrapers/interface.ts';
@@ -18,7 +18,7 @@ const sample = (title: string) => toJob({
 
 // Urteil nach Titel-Präfix, damit ein Test die drei Fächer gezielt besetzen kann,
 // ohne Ollama oder die Regel-Dateien zu berühren.
-const fakeFilter = (job: Job): Promise<FilterDecision> => Promise.resolve({
+const fakeFilter = (job: Job): Promise<TriagedDecision> => Promise.resolve({
   job,
   status: job.title.startsWith('M') ? 'matched' : job.title.startsWith('B') ? 'filtered_out' : 'uncertain',
 });
