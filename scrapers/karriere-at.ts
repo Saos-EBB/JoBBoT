@@ -4,6 +4,7 @@ import { createBatcher } from '../lib/grid-batch.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 import { searchSlug } from '../lib/slugify.ts';
 import { usableQueries } from '../lib/query-schema.ts';
+import { logLocationGate } from '../lib/scrape-log.ts';
 
 const GRID_BATCH_SIZE = 10;
 
@@ -102,7 +103,7 @@ export const karriereAtAdapter: ScraperAdapter = {
     }
     const allJobs = [...byUrl.values()];
     const candidates = keep ? allJobs.filter(keep) : allJobs;
-    console.log(`[karriere.at] ${allJobs.length} Treffer, ${candidates.length} nach Location-Gate`);
+    logLocationGate('karriere.at', allJobs.length, candidates.length);
     const total = candidates.length;
     const results: ScrapedJob[] = [];
     const batcher = createBatcher(GRID_BATCH_SIZE, onUnitDone);

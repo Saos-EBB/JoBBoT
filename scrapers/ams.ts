@@ -2,6 +2,7 @@ import { chromium, type Page } from 'playwright';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 import { usableQueries } from '../lib/query-schema.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
+import { logLocationGate } from '../lib/scrape-log.ts';
 
 const BASE = 'https://jobs.ams.at/public/emps';
 const MAX_PAGES = 10;
@@ -123,7 +124,7 @@ export const amsAdapter: ScraperAdapter = {
 
     const allJobs = [...byUrl.values()];
     const candidates = keep ? allJobs.filter(keep) : allJobs;
-    console.log(`[ams] ${allJobs.length} Treffer, ${candidates.length} nach Location-Gate`);
+    logLocationGate('ams', allJobs.length, candidates.length);
     return candidates;
   },
 };
