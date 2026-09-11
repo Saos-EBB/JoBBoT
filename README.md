@@ -81,7 +81,7 @@ Getestet auf einem Lenovo T14 (AMD Ryzen 7 PRO 5850U), 6 CPU-Kernen, kein
 GPU-Support unter Ollama. CPU-Temperatur
 unter Last: Peak ~81°C, im Schnitt ~70°C. Ein Anschreiben dauert ~3-4 Min,
 abhängig davon wie gut Job und Profil zusammenpassen (vgl. die Testfälle
-`clean`/`offstack`/`brutal` in `scripts/anschreiben-model-bench.ts` — clean
+`clean`/`offstack`/`brutal` in `scripts/one-off/anschreiben-model-bench.ts` — clean
 = guter fachlicher Fit, offstack = Tech-Stack weicht ab, brutal = großer
 fachlicher Mismatch, mehr Text zu Lücken/Ehrlichkeit nötig).
 
@@ -144,7 +144,7 @@ Anzahl, gefundene E-Mails) in `data/anschreiben/AnschreibenLog.md`.
 Der Dateiname trägt bewusst **kein Datum** — und gesucht wird ohnehin nur über
 das `id8`-Präfix, siehe [Storage](#storage).
 
-`scripts/anschreiben-model-bench.ts` ist kein Pipeline-Schritt, sondern ein
+`scripts/one-off/anschreiben-model-bench.ts` ist kein Pipeline-Schritt, sondern ein
 Dev-Tool zum Vergleichen mehrerer Ollama-Modelle auf denselben Test-Jobs.
 
 ### Gmail-Anbindung
@@ -447,9 +447,9 @@ Reparaturen am Bestand, kein Teil der Pipeline. Alle laufen ohne Argument als
 an (gitignored):
 
 ```bash
-npx tsx scripts/repair-status.ts          # Status aus Anschreiben-Datei + mail-log herstellen
-npx tsx scripts/repair-anschreiben.ts     # Briefe ihren Jobs zuordnen, Waisen entfernen
-npx tsx scripts/migrate-descriptions.ts   # Beschreibungen nachträglich normalisieren
+npx tsx scripts/one-off/repair-status.ts          # Status aus Anschreiben-Datei + mail-log herstellen
+npx tsx scripts/one-off/repair-anschreiben.ts     # Briefe ihren Jobs zuordnen, Waisen entfernen
+npx tsx scripts/one-off/migrate-descriptions.ts   # Beschreibungen nachträglich normalisieren
 ```
 
 ## Job-Lifecycle
@@ -478,7 +478,7 @@ stecken. Vorher tat er das bedingungslos — jeder solche Lauf warf
 `generated`/`postausgang`/`gesendet` auf Anfang zurück, und die betroffenen
 Bewerbungen standen wieder im „Jobs"-Ordner, als wäre nie eine geschrieben
 oder versendet worden. Am 2026-09-04 betraf das 21 versendete Bewerbungen und
-33 Jobs mit fertigem Anschreiben; `scripts/repair-status.ts` hat sie aus
+33 Jobs mit fertigem Anschreiben; `scripts/one-off/repair-status.ts` hat sie aus
 Anschreiben-Dateien und `data/mail-log.md` wiederhergestellt.
 
 `gesendet` ist nicht das Ende: `followUps` sammelt jeden Nachfass als

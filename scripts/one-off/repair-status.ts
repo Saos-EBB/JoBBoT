@@ -1,8 +1,8 @@
 import { readdir, readFile, writeFile, mkdir, cp } from 'node:fs/promises';
 import { join, dirname, relative } from 'node:path';
-import { findAnschreiben } from '../lib/anschreiben-datei.ts';
-import { config } from '../config.ts';
-import type { Job, JobStatus } from '../scrapers/interface.ts';
+import { findAnschreiben } from '../../lib/anschreiben-datei.ts';
+import { config } from '../../config.ts';
+import type { Job, JobStatus } from '../../scrapers/interface.ts';
 
 // Einmal-Reparatur des Bestands, Gegenstück zum Fix in lib/filter.ts.
 //

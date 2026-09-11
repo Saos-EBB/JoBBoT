@@ -2,10 +2,10 @@ import { readFile, mkdir, writeFile, appendFile } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
-import { buildAnschreibenPrompt, parseAnschreibenResponse, SYSTEM, readNdjsonContent } from '../lib/anschreiben.ts';
-import { loadProfile, type ProfileData } from '../lib/profile.ts';
-import { config } from '../config.ts';
-import type { Job } from '../scrapers/interface.ts';
+import { buildAnschreibenPrompt, parseAnschreibenResponse, SYSTEM, readNdjsonContent } from '../../lib/anschreiben.ts';
+import { loadProfile, type ProfileData } from '../../lib/profile.ts';
+import { config } from '../../config.ts';
+import type { Job } from '../../scrapers/interface.ts';
 
 const execFileAsync = promisify(execFile);
 

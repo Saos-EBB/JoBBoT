@@ -1,7 +1,7 @@
 import { readdir, readFile, writeFile, mkdir, cp } from 'node:fs/promises';
 import { join, dirname, relative } from 'node:path';
-import { normalizeDescription } from '../lib/normalize-description.ts';
-import type { Job } from '../scrapers/interface.ts';
+import { normalizeDescription } from '../../lib/normalize-description.ts';
+import type { Job } from '../../scrapers/interface.ts';
 
 const JOBS_DIR = 'data/jobs';
 

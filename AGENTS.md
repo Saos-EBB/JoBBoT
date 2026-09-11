@@ -68,7 +68,7 @@ data: `data/anschreiben/test/AnschreibenTestLog.md`.
   a kernel OOM-kill of the *Ollama server process itself* (not just the
   request) — this actually happened during benchmarking. If you're
   switching models in a script, call `ollama stop <model>` after you're
-  done with it before loading the next (see `scripts/anschreiben-model-bench.ts`
+  done with it before loading the next (see `scripts/one-off/anschreiben-model-bench.ts`
   for the pattern).
 - Benchmarked model behavior (4 models × 3 fixed jobs, `think:false` +
   `ctx4096` + `temp0.3` on all): qwen3.5:9b is fastest (~115s/job) but
