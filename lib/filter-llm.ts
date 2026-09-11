@@ -119,5 +119,3 @@ export function createLlmStrategy(options: { ollama?: string; judge?: Judge } = 
     },
   };
 }
-
-export const llmStrategy = createLlmStrategy();
