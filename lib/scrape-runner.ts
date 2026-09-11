@@ -218,27 +218,27 @@ interface OfflinePassOptions {
 // lebender Job ist ein verpasster Job; ein Lauf zu spaet archivierter kostet nichts.
 //
 // Warum nicht die teure Stufe allein: das waeren ~250 Extra-Requests pro Lauf.
-async function archiviereOffline(o: OfflinePassOptions): Promise<void> {
-  const kandidaten = [...o.bekannt.values()]
-    .filter(job => ARCHIVIERBAR.has(job.status) && !o.gesehen.has(job.id) && o.gelaufen.has(job.source))
+async function archiviereOffline(options: OfflinePassOptions): Promise<void> {
+  const kandidaten = [...options.bekannt.values()]
+    .filter(job => ARCHIVIERBAR.has(job.status) && !options.gesehen.has(job.id) && options.gelaufen.has(job.source))
     // Aeltestes Inserat zuerst: dort ist die Trefferquote am hoechsten, und die Reihe
     // leert sich von selbst (was archiviert wird, faellt aus ARCHIVIERBAR heraus und
     // gibt seinen Platz frei). Der Preis dafuer ist ehrlich zu benennen: ein altes,
     // aber dauerhaft lebendes Inserat belegt seinen Platz Lauf fuer Lauf.
     .sort((a, b) => a.scrapedAt.localeCompare(b.scrapedAt))
-    .slice(0, o.maxOfflineChecks);
+    .slice(0, options.maxOfflineChecks);
 
-  const perSource = new Map(o.outcomes.map(out => [out.name, out]));
+  const perSource = new Map(options.outcomes.map(out => [out.name, out]));
 
   for (let i = 0; i < kandidaten.length; i++) {
     const job = kandidaten[i];
     // Nur ein GEPRUEFTES Offline-Signal archiviert. 'unbekannt' (Rate-Limit, Timeout,
     // oder eine Quelle ohne nachgemessenen Marker) laesst den Job unangetastet.
-    if (await o.checkOnline(job) === 'offline') {
-      await o.storage.update(job.id, { status: 'offline' });
+    if (await options.checkOnline(job) === 'offline') {
+      await options.storage.update(job.id, { status: 'offline' });
       const out = perSource.get(job.source);
       if (out) out.offlineCount++;
     }
-    if (i < kandidaten.length - 1 && o.offlineCheckPauseMs > 0) await sleep(o.offlineCheckPauseMs);
+    if (i < kandidaten.length - 1 && options.offlineCheckPauseMs > 0) await sleep(options.offlineCheckPauseMs);
   }
 }
