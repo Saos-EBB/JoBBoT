@@ -1,10 +1,10 @@
 import { readdir, stat, rename, unlink, mkdir, cp } from 'node:fs/promises';
 import { join } from 'node:path';
-import { createStorage } from '../storage/index.ts';
-import { slugify } from '../lib/slugify.ts';
-import { anschreibenName } from '../lib/anschreiben-datei.ts';
-import { config } from '../config.ts';
-import type { Job } from '../scrapers/interface.ts';
+import { createStorage } from '../../storage/index.ts';
+import { slugify } from '../../lib/slugify.ts';
+import { anschreibenName } from '../../lib/anschreiben-datei.ts';
+import { config } from '../../config.ts';
+import type { Job } from '../../scrapers/interface.ts';
 
 // Einmal-Reparatur von data/anschreiben/.
 //

@@ -79,7 +79,7 @@ Tested on a Lenovo T14 (AMD Ryzen 7 PRO 5850U), 6 CPU cores, no GPU support
 under Ollama. CPU temperature under
 load: peak ~81°C, ~70°C on average. One cover letter takes ~3-4 min,
 depending on how well the job matches the profile (see the `clean`/
-`offstack`/`brutal` test fixtures in `scripts/anschreiben-model-bench.ts` —
+`offstack`/`brutal` test fixtures in `scripts/one-off/anschreiben-model-bench.ts` —
 clean = good fit, offstack = tech stack diverges, brutal = big mismatch,
 needs more text honestly naming the gaps).
 
@@ -141,7 +141,7 @@ to `data/anschreiben/AnschreibenLog.md`.
 The filename deliberately carries **no date** — and lookup goes by the `id8`
 prefix anyway, see [Storage](#storage).
 
-`scripts/anschreiben-model-bench.ts` is not a pipeline step — it's a dev
+`scripts/one-off/anschreiben-model-bench.ts` is not a pipeline step — it's a dev
 tool for comparing several Ollama models on the same test jobs.
 
 ### Gmail integration
@@ -438,9 +438,9 @@ without arguments and take a backup under `data/backup-*/` (gitignored)
 before writing with `--apply`:
 
 ```bash
-npx tsx scripts/repair-status.ts          # restore status from cover-letter files + mail-log
-npx tsx scripts/repair-anschreiben.ts     # match letters to their jobs, drop orphans
-npx tsx scripts/migrate-descriptions.ts   # normalize descriptions retroactively
+npx tsx scripts/one-off/repair-status.ts          # restore status from cover-letter files + mail-log
+npx tsx scripts/one-off/repair-anschreiben.ts     # match letters to their jobs, drop orphans
+npx tsx scripts/one-off/migrate-descriptions.ts   # normalize descriptions retroactively
 ```
 
 ## Job lifecycle
@@ -471,7 +471,7 @@ so unconditionally — every such run threw `generated`/`postausgang`/`gesendet`
 back to the start, and the affected applications reappeared in the "Jobs"
 folder as if no cover letter had ever been written or application sent. On
 2026-09-04 that affected 21 sent applications and 33 jobs with a finished
-cover letter; `scripts/repair-status.ts` restored them from the cover-letter
+cover letter; `scripts/one-off/repair-status.ts` restored them from the cover-letter
 files and `data/mail-log.md`.
 
 `gesendet` isn't the end: `followUps` collects every follow-up as
