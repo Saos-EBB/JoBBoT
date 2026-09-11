@@ -2,6 +2,7 @@ import { fetchPage, sleep } from '../lib/fetch-page.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 import { usableQueries } from '../lib/query-schema.ts';
+import { logLocationGate } from '../lib/scrape-log.ts';
 
 const SEARCH_BASE = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search';
 const PAGES = [0, 25, 50];
@@ -92,7 +93,7 @@ export const linkedinAdapter: ScraperAdapter = {
     }
     const allJobs = [...byUrl.values()];
     const candidates = keep ? allJobs.filter(keep) : allJobs;
-    console.log(`[linkedin] ${allJobs.length} Treffer, ${candidates.length} nach Location-Gate`);
+    logLocationGate('linkedin', allJobs.length, candidates.length);
     const total = candidates.length;
     const results: ScrapedJob[] = [];
     for (let i = 0; i < total; i++) {
