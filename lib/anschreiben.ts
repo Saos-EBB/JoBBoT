@@ -1,6 +1,5 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { appendFileSync } from 'node:fs';
-import { join } from 'node:path';
 import type { Job } from '../scrapers/interface.ts';
 import type { Storage } from '../storage/index.ts';
 import type { ProfileData } from './profile.ts';
