@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { filterJob } from '../lib/filter.ts';
-import type { FilterDecision } from '../lib/filter.ts';
+import type { TriagedDecision } from '../lib/filter.ts';
 import { writeFilterReport } from '../lib/filter-report.ts';
 import { createStorage } from '../storage/index.ts';
 import { toJob } from '../lib/normalize.ts';
@@ -162,7 +162,7 @@ test('filterJob: 2× Müll → "uncertain" statt Absturz', async (t) => {
 
 // ── writeFilterReport ─────────────────────────────────────────────────────────
 
-function decision(overrides: Partial<FilterDecision> & { job: ReturnType<typeof sample> }): FilterDecision {
+function decision(overrides: Partial<TriagedDecision> & { job: ReturnType<typeof sample> }): TriagedDecision {
   return {
     job: overrides.job,
     status: overrides.status ?? 'matched',
@@ -241,7 +241,7 @@ test('writeFilterReport: drei Fächer mit Aggregat und Summenzeile', async (t) =
   const reportPath = join(dir, 'filter-log.md');
   const job = sample();
 
-  const decisions: FilterDecision[] = [
+  const decisions: TriagedDecision[] = [
     decision({ job, status: 'filtered_out', rejectedBy: 'Seniorität (Titel)' }),
     decision({
       job: { ...job, title: 'Frontend Dev' },

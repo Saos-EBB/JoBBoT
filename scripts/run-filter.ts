@@ -3,7 +3,7 @@ import { runFilter } from '../lib/filter-runner.ts';
 import type { FilterScope } from '../lib/filter-runner.ts';
 import { createProgress } from '../lib/progress.ts';
 import type { Progress } from '../lib/progress.ts';
-import type { FilterDecision } from '../lib/filter.ts';
+import type { TriagedDecision } from '../lib/filter.ts';
 import { loadSettings } from '../lib/settings.ts';
 import type { FilterMode } from '../lib/settings.ts';
 
@@ -31,7 +31,7 @@ const mode = parseModeOverride(process.argv.slice(2)) ?? loadSettings().filterMo
 const scope = parseScope(process.argv.slice(2));
 const storage = createStorage();
 
-function logLine(d: FilterDecision): void {
+function logLine(d: TriagedDecision): void {
   if (d.status === 'matched') {
     console.log(`✓ sicher   — ${d.job.title} — ${d.job.company}`);
   } else if (d.status === 'uncertain') {

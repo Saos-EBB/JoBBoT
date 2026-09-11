@@ -1,13 +1,13 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { logTimestamp } from './log-timestamp.ts';
-import type { FilterDecision } from './filter.ts';
+import type { TriagedDecision } from './filter.ts';
 import type { FilterJudgment } from './filter-llm.ts';
 import type { FilterMode } from './settings.ts';
 
 const KRITERIEN = ['it_rolle', 'erfahrung_ab_3j_erforderlich', 'lehre_coding', 'junior_signal'] as const;
 
-function unsureNote(d: FilterDecision, mode: FilterMode): string {
+function unsureNote(d: TriagedDecision, mode: FilterMode): string {
   if (!d.judgment) return mode === 'regex' ? 'kein Junior-Signal (Regex)' : 'kein JSON-Urteil (Parse-Fehler)';
   const j = d.judgment;
   const unsure = KRITERIEN.filter(k => j[k] === 'unsicher');
@@ -17,7 +17,7 @@ function unsureNote(d: FilterDecision, mode: FilterMode): string {
 
 // Aggregat pro Kriterium, damit sichtbar bleibt, wie oft das 7b-Modell "unsicher"
 // sagt — Kalibrierungssignal für die Prompt-Formulierung.
-function aggregate(decisions: FilterDecision[]): string {
+function aggregate(decisions: TriagedDecision[]): string {
   return KRITERIEN.map(key => {
     const counts: Record<string, number> = {};
     for (const d of decisions) {
@@ -30,7 +30,7 @@ function aggregate(decisions: FilterDecision[]): string {
   }).join('\n');
 }
 
-export function writeFilterReport(decisions: FilterDecision[], path = 'data/filter-log.md', mode: FilterMode = 'regex'): void {
+export function writeFilterReport(decisions: TriagedDecision[], path = 'data/filter-log.md', mode: FilterMode = 'regex'): void {
   const raus = decisions.filter(d => d.status === 'filtered_out');
   const unsicher = decisions.filter(d => d.status === 'uncertain');
   const sicher = decisions.filter(d => d.status === 'matched');

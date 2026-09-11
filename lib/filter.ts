@@ -5,7 +5,7 @@ import { decide } from './filter-decide.ts';
 import type { FilterJudgment } from './filter-llm.ts';
 import type { FilterMode } from './settings.ts';
 
-export interface FilterDecision {
+export interface TriagedDecision {
   job: Job;
   status: 'matched' | 'uncertain' | 'filtered_out';
   rejectedBy?: string;
@@ -17,7 +17,7 @@ export interface FilterDecision {
 // dieselbe Aussage nochmal in anderen Worten trifft). fit bleibt trotzdem ein eigenes,
 // manuell überschreibbares Feld (fitpick in ui/app.tsx) — dieser Filter-Lauf setzt nur
 // den Startwert, spätere manuelle Korrektur bleibt möglich.
-const STATUS_FIT: Record<FilterDecision['status'], Job['fit']> = {
+const STATUS_FIT: Record<TriagedDecision['status'], Job['fit']> = {
   matched: 'matched',
   uncertain: 'offstack',
   filtered_out: 'brutal',
@@ -37,7 +37,7 @@ const TRIAGIERBAR = new Set<JobStatus>(['new', 'triaged']);
 
 // filtered_out wird NICHT gelöscht (kein storage.delete): verlustfrei und re-runnbar.
 // Ein abgelehnter Job bleibt als Datei erhalten, nur fit ändert sich (auf "brutal").
-export async function filterJob(job: Job, storage: Storage, ollama = config.ollamaHost, mode?: FilterMode): Promise<FilterDecision> {
+export async function filterJob(job: Job, storage: Storage, ollama = config.ollamaHost, mode?: FilterMode): Promise<TriagedDecision> {
   const result = await decide(job, { ollama, mode });
 
   // Der Status wird am AKTUELLEN Diskstand entschieden, nicht am (womöglich veralteten)

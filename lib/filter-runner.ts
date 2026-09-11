@@ -1,7 +1,7 @@
 import type { Job } from '../scrapers/interface.ts';
 import type { Storage } from '../storage/index.ts';
 import { filterJob } from './filter.ts';
-import type { FilterDecision } from './filter.ts';
+import type { TriagedDecision } from './filter.ts';
 import { writeFilterReport } from './filter-report.ts';
 import { loadSettings } from './settings.ts';
 import type { FilterMode } from './settings.ts';
@@ -30,12 +30,12 @@ export interface RunFilterOptions {
   // Fortschrittszustand, bevor der (im llm-Modus langsame) Aufruf beginnt.
   onProgress?: (i: number, total: number, job: Job) => void;
   // Nach dem Urteil: eine Zeile im Terminal bzw. ein Quadrat im Lade-Grid.
-  onDecision?: (decision: FilterDecision, i: number, total: number) => void;
+  onDecision?: (decision: TriagedDecision, i: number, total: number) => void;
   // Injizierbar wie checkOnline in lib/scrape-runner.ts, damit Tests den Lauf ohne
   // Ollama und ohne Regel-Dateien durchspielen können. Was filterJob() selbst
   // entscheidet, deckt test/filter.test.ts ab — hier geht es um die Schleife.
-  filter?: (job: Job) => Promise<FilterDecision>;
-  writeReport?: (decisions: FilterDecision[], mode: FilterMode) => void;
+  filter?: (job: Job) => Promise<TriagedDecision>;
+  writeReport?: (decisions: TriagedDecision[], mode: FilterMode) => void;
 }
 
 export interface FilterOutcome {
@@ -45,7 +45,7 @@ export interface FilterOutcome {
   matched: number;
   offstack: number;
   brutal: number;
-  decisions: FilterDecision[];
+  decisions: TriagedDecision[];
 }
 
 export async function runFilter(options: RunFilterOptions): Promise<FilterOutcome> {
@@ -62,7 +62,7 @@ export async function runFilter(options: RunFilterOptions): Promise<FilterOutcom
 
   const jobs = await storage.list(scope === 'all' ? undefined : { status: 'new' });
 
-  const decisions: FilterDecision[] = [];
+  const decisions: TriagedDecision[] = [];
   let matched = 0, offstack = 0, brutal = 0;
 
   for (let i = 0; i < jobs.length; i++) {
