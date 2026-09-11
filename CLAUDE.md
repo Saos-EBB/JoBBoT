@@ -20,26 +20,26 @@ node --import tsx --test --test-reporter spec test/storage.test.ts
 
 ## Architecture
 
-This is a job-application automation bot, currently in early build-out (scraping recon phase). The intended pipeline:
-1. **Scrape** — fetch job listings from portals
-2. **Filter** — LLM decides if a job is worth applying to
-3. **Generate** — LLM writes a cover letter
-4. **Review / Send** — human-in-the-loop before anything goes out
+This is a job-application automation bot with a working end-to-end pipeline, driven either via CLI scripts or the local web UI (`npm run ui`):
+1. **Scrape** — fetch job listings from 5 portals (karriere.at, devjobs.at, LinkedIn, AMS, jobs.at)
+2. **Filter** — regex or LLM decides if a job is worth applying to (`fit: matched | offstack | brutal`)
+3. **Generate** — LLM writes a cover letter (Ollama, real inference)
+4. **Review / Send** — human-in-the-loop via the UI, then Gmail send/draft and reply/follow-up tracking
 
 ### Key data flow
 
 `ScrapedJob` → `toJob()` (adds `id`, `status: 'new'`, timestamps) → `JsonStore` (one JSON file per job in `data/jobs/`)
 
-Job status lifecycle: `new → filtered_out | matched → generated → reviewed → drafted → sent`
+Job status lifecycle: `new → triaged → generated → freigegeben → postausgang → gesendet`, with `geloescht`, `fehler` and `offline` as side states (see the vocabulary comment on `JobStatus` in `scrapers/interface.ts`). The filter verdict itself lives in the separate `fit` field, not in `status`.
 
 ### LLM setup
 
 Two local Ollama models, configured via `config.ts`:
-- `JOBBOT_MODEL_FILTER` (default `mistral-small3.2:latest`) — cheap filter pass
+- `JOBBOT_MODEL_FILTER` (default `mistral-small3.2:latest`) — used when `filterMode: "llm"` in `config/settings.json` (default mode is `regex`, no Ollama needed)
 - `JOBBOT_MODEL_WRITER` (default `mistral-small3.2:latest`) — cover letter generation
 - `OLLAMA_HOST` (default `http://localhost:11434`)
 
-`lib/ollama.ts` does model presence checks; actual inference is not yet wired up.
+`lib/ollama.ts` does model presence checks. Real inference is wired up in `lib/filter-llm.ts` (filter judgment) and `lib/anschreiben.ts` (cover letter text).
 
 ### Storage
 
@@ -47,7 +47,15 @@ Two local Ollama models, configured via `config.ts`:
 
 ### Scrapers
 
-Only the interface is defined (`scrapers/interface.ts`). Concrete `ScraperAdapter` implementations are not yet written. `scripts/recon-karriere.ts` is a one-off reconnaissance script that saves raw HTML fixtures to `test/fixtures/karriere-at/`.
+Five `ScraperAdapter` implementations in `scrapers/` (`karriere-at.ts`, `devjobs-at.ts`, `linkedin.ts`, `ams.ts`, `jobs-at.ts`), enabled/configured per portal via `config/sources.json`. `scripts/recon-karriere.ts` is a one-off reconnaissance script that saves raw HTML fixtures to `test/fixtures/karriere-at/`.
+
+### Mail
+
+`mail/gmail.ts` sends/drafts via Gmail (nodemailer) and fetches replies via IMAP (imapflow); `mail/transport.ts` defines the `MailTransport` seam, with a dry-run transport for tests and offline use (`MAIL_DRY_RUN`).
+
+### UI
+
+`scripts/ui-server.ts` is a plain Node HTTP server (no framework) exposing a JSON API under `/api/*` (jobs, scrape, filter, anschreiben, gmail-sync, calendar, attachments, CC, config) plus SSE streams for long-running runs; `ui/app.tsx` is the React frontend, built via `scripts/build-ui.ts` (esbuild).
 
 ### Tests
 
