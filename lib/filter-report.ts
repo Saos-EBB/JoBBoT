@@ -1,5 +1,6 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { logTimestamp } from './log-timestamp.ts';
 import type { FilterDecision } from './filter.ts';
 import type { FilterJudgment } from './filter-llm.ts';
 import type { FilterMode } from './settings.ts';
@@ -34,7 +35,7 @@ export function writeFilterReport(decisions: FilterDecision[], path = 'data/filt
   const unsicher = decisions.filter(d => d.status === 'uncertain');
   const sicher = decisions.filter(d => d.status === 'matched');
 
-  const ts = new Date().toISOString().slice(0, 16).replace('T', ' ');
+  const ts = logTimestamp();
   const lines: string[] = [
     `\n## Filter-Lauf ${ts}  Modus: ${mode}  (${sicher.length} sicher, ${unsicher.length} unsicher, ${raus.length} raus)\n`,
     '\n### Aggregat (Kriterien-Verteilung)\n',

@@ -1,6 +1,7 @@
 import { appendFile } from 'node:fs/promises';
 import { createStorage } from '../storage/index.ts';
 import { ANSCHREIBEN_LOG_PATH } from '../lib/anschreiben.ts';
+import { logTimestamp } from '../lib/log-timestamp.ts';
 import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import { loadProfile } from '../lib/profile.ts';
 import { createProgress } from '../lib/progress.ts';
@@ -53,5 +54,5 @@ const { generated, skipped, emailsFound } = await runAnschreiben({
 
 prog.succeed(`${generated} Anschreiben generiert, ${skipped} übersprungen, ${emailsFound} E-Mail-Adressen gefunden`);
 
-const ts = new Date().toISOString().slice(0, 16).replace('T', ' ');
+const ts = logTimestamp();
 await appendFile(ANSCHREIBEN_LOG_PATH, `\n## Anschreiben-Lauf ${ts} — Modell: ${model}${dataFilter ? `, --data=${dataFilter}` : ''}\n${generated} generiert, ${skipped} übersprungen, ${emailsFound} E-Mail-Adressen gefunden (${jobs.length} gesamt)\n`);

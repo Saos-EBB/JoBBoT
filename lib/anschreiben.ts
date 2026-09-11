@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { appendFileSync } from 'node:fs';
+import { logTimestamp } from './log-timestamp.ts';
 import type { Job } from '../scrapers/interface.ts';
 import type { Storage } from '../storage/index.ts';
 import type { ProfileData } from './profile.ts';
@@ -107,12 +108,12 @@ export function parseAnschreibenResponse(raw: string): string | null {
 export const ANSCHREIBEN_LOG_PATH = 'data/anschreiben/AnschreibenLog.md';
 
 function logSkip(job: Job, reason: string, logPath: string): void {
-  const ts = new Date().toISOString().slice(0, 16).replace('T', ' ');
+  const ts = logTimestamp();
   appendFileSync(logPath, `\n- Anschreiben-Skip ${ts}: ${job.title} — ${job.company} — Grund: ${reason}\n`);
 }
 
 function logSuccess(job: Job, model: string, path: string, logPath: string): void {
-  const ts = new Date().toISOString().slice(0, 16).replace('T', ' ');
+  const ts = logTimestamp();
   appendFileSync(logPath, `\n- Anschreiben-OK ${ts}: ${job.title} — ${job.company} — Modell: ${model} — ${path}\n`);
 }
 

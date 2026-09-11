@@ -5,6 +5,7 @@ import MailComposer from 'nodemailer/lib/mail-composer/index.js';
 import type { Job } from '../scrapers/interface.ts';
 import type { ProfileData } from '../lib/profile.ts';
 import { findAnschreiben } from '../lib/anschreiben-datei.ts';
+import { logTimestamp } from '../lib/log-timestamp.ts';
 import { config } from '../config.ts';
 import type { ComposedEmail, MailTransport } from './transport.ts';
 
@@ -15,7 +16,7 @@ export type { ComposedEmail } from './transport.ts';
 export const MAIL_LOG_PATH = 'data/mail-log.md';
 
 export async function logMailAction(job: Job, action: 'drafted' | 'sent' | 'followup-drafted' | 'followup-sent', logPath = MAIL_LOG_PATH): Promise<void> {
-  const ts = new Date().toISOString().slice(0, 16).replace('T', ' ');
+  const ts = logTimestamp();
   await appendFile(logPath, `\n- ${ts}: ${action} — ${job.title} — ${job.company} — ${job.email}\n`);
 }
 
