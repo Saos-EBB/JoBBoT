@@ -15,8 +15,8 @@ export interface ProfileData {
 // Über config.configDir wie die vier Nachbar-Loader. Vorher stand der Pfad hier als
 // einziger fest verdrahtet — heute derselbe Ort, weil configDir genau "config" ist,
 // aber ein anderer Wert hätte profile.json still woanders gesucht als den Rest.
-export function loadProfile(): ProfileData {
-  const path = join(config.configDir, 'profile.json');
+export function loadProfile(configDir: string = config.configDir): ProfileData {
+  const path = join(configDir, 'profile.json');
   try {
     return JSON.parse(readFileSync(path, 'utf8')) as ProfileData;
   } catch {

@@ -15,38 +15,35 @@ import { loadExperienceRules } from '../lib/experience-regex.ts';
 // einziges cwd-relativ. Wer den Server aus einem anderen Verzeichnis startete, bekam
 // fremde Config und eigene Daten, ohne dass irgendwo etwas fehlschlug.
 //
-// Der Test wechselt das Arbeitsverzeichnis und prüft, dass die Loader dorthin folgen.
-// process.chdir() ist globaler Zustand — node --test führt jede Datei in einem eigenen
-// Prozess aus, und t.after() stellt es zurück, damit die übrigen Tests dieser Datei
-// nicht betroffen sind.
-async function tempConfig(t: { after: (fn: () => void) => void }) {
+// Jeder Loader nimmt seither einen optionalen configDir-Parameter (Default:
+// config.configDir) — der Test übergibt den tmp-Pfad direkt, statt den Prozess mit
+// process.chdir() umzuschalten. Kein globaler Zustand mehr, den t.after() zurückdrehen
+// müsste.
+async function tempConfigDir(t: { after: (fn: () => void) => void }) {
   const dir = await tmpDir();
-  const zurueck = process.cwd();
-  t.after(() => { process.chdir(zurueck); rmTmp(dir); });
-  await mkdir(join(dir, 'config'), { recursive: true });
-  return { dir, schreibe: (name: string, data: unknown) =>
-    writeFile(join(dir, 'config', name), JSON.stringify(data), 'utf8') };
+  t.after(() => rmTmp(dir));
+  const configDir = join(dir, 'config');
+  await mkdir(configDir, { recursive: true });
+  return { configDir, schreibe: (name: string, data: unknown) =>
+    writeFile(join(configDir, name), JSON.stringify(data), 'utf8') };
 }
 
-test('loadSources liest aus dem Arbeitsverzeichnis, nicht aus dem Repo', async (t) => {
-  const { dir, schreibe } = await tempConfig(t);
+test('loadSources liest aus dem uebergebenen configDir, nicht aus dem Repo', async (t) => {
+  const { configDir, schreibe } = await tempConfigDir(t);
   await schreibe('sources.json', { 'karriere.at': { enabled: false, queries: [{ keyword: 'nur-hier' }] } });
-  process.chdir(dir);
-  assert.deepEqual(loadSources(), { 'karriere.at': { enabled: false, queries: [{ keyword: 'nur-hier' }] } });
+  assert.deepEqual(loadSources(configDir), { 'karriere.at': { enabled: false, queries: [{ keyword: 'nur-hier' }] } });
 });
 
-test('loadLocationConfig folgt dem Arbeitsverzeichnis', async (t) => {
-  const { dir, schreibe } = await tempConfig(t);
+test('loadLocationConfig folgt dem uebergebenen configDir', async (t) => {
+  const { configDir, schreibe } = await tempConfigDir(t);
   await schreibe('location.json', { cities: ['Testhausen'], regions: [], remote: [] });
-  process.chdir(dir);
-  assert.deepEqual(loadLocationConfig().cities, ['Testhausen']);
+  assert.deepEqual(loadLocationConfig(configDir).cities, ['Testhausen']);
 });
 
-test('loadSettings folgt dem Arbeitsverzeichnis', async (t) => {
-  const { dir, schreibe } = await tempConfig(t);
+test('loadSettings folgt dem uebergebenen configDir', async (t) => {
+  const { configDir, schreibe } = await tempConfigDir(t);
   await schreibe('settings.json', { filterMode: 'llm', filterModel: 'testmodell' });
-  process.chdir(dir);
-  assert.equal(loadSettings().filterModel, 'testmodell');
+  assert.equal(loadSettings(configDir).filterModel, 'testmodell');
 });
 
 // Die eine, die es schon immer richtig machte — mitgeprüft, damit die Reihe vollständig
@@ -54,23 +51,20 @@ test('loadSettings folgt dem Arbeitsverzeichnis', async (t) => {
 // (Sie las den Pfad bis September 2026 als einzige fest verdrahtet statt über
 // config.configDir — gleiches Ergebnis, solange configDir "config" ist, aber eben
 // nur solange. Jetzt geht sie denselben Weg wie die anderen vier.)
-test('loadProfile folgt dem Arbeitsverzeichnis', async (t) => {
-  const { dir, schreibe } = await tempConfig(t);
+test('loadProfile folgt dem uebergebenen configDir', async (t) => {
+  const { configDir, schreibe } = await tempConfigDir(t);
   await schreibe('profile.json', { name: 'Test Person' });
-  process.chdir(dir);
-  assert.equal(loadProfile().name, 'Test Person');
+  assert.equal(loadProfile(configDir).name, 'Test Person');
 });
 
 // Die fünfte im Bunde, bisher hier nicht vertreten.
-test('loadExperienceRules folgt dem Arbeitsverzeichnis', async (t) => {
-  const { dir, schreibe } = await tempConfig(t);
+test('loadExperienceRules folgt dem uebergebenen configDir', async (t) => {
+  const { configDir, schreibe } = await tempConfigDir(t);
   await schreibe('experience-rules.json', { minYears: 42, experienceWords: ['nur-hier'], disqualifyingPhrases: [], optionalMarkers: [], negationMarkers: [], juniorSignals: [], codingKeywords: [] });
-  process.chdir(dir);
-  assert.equal(loadExperienceRules().minYears, 42);
+  assert.equal(loadExperienceRules(configDir).minYears, 42);
 });
 
-test('fehlende Datei im Arbeitsverzeichnis wird nicht still aus dem Repo ersetzt', async (t) => {
-  const { dir } = await tempConfig(t);
-  process.chdir(dir);
-  assert.throws(() => loadSettings(), /settings\.json fehlt/);
+test('fehlende Datei im configDir wird nicht still aus dem Repo ersetzt', async (t) => {
+  const { configDir } = await tempConfigDir(t);
+  assert.throws(() => loadSettings(configDir), /settings\.json fehlt/);
 });

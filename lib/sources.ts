@@ -9,7 +9,7 @@ import type { SourceQuery } from '../scrapers/interface.ts';
 interface SourceConfig { enabled: boolean; queries: SourceQuery[] }
 export type SourcesConfig = Record<string, SourceConfig>;
 
-export function loadSources(): SourcesConfig {
-  const path = join(config.configDir, 'sources.json');
+export function loadSources(configDir: string = config.configDir): SourcesConfig {
+  const path = join(configDir, 'sources.json');
   return JSON.parse(readFileSync(path, 'utf8')) as SourcesConfig;
 }

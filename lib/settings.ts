@@ -9,8 +9,8 @@ export interface Settings {
   filterModel: string;
 }
 
-export function loadSettings(): Settings {
-  const path = join(config.configDir, 'settings.json');
+export function loadSettings(configDir: string = config.configDir): Settings {
+  const path = join(configDir, 'settings.json');
   let raw: string;
   try {
     raw = readFileSync(path, 'utf8');

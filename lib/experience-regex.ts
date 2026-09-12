@@ -17,8 +17,8 @@ export interface ExpResult {
   matched?: string;
 }
 
-export function loadExperienceRules(): ExperienceRules {
-  const path = join(config.configDir, 'experience-rules.json');
+export function loadExperienceRules(configDir: string = config.configDir): ExperienceRules {
+  const path = join(configDir, 'experience-rules.json');
   return JSON.parse(readFileSync(path, 'utf8')) as ExperienceRules;
 }
 

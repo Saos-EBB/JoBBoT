@@ -18,7 +18,7 @@ export function isInRange(location: string, cfg: LocationConfig): boolean {
   return all.some(term => low.includes(term.toLowerCase()));
 }
 
-export function loadLocationConfig(): LocationConfig {
-  const path = join(config.configDir, 'location.json');
+export function loadLocationConfig(configDir: string = config.configDir): LocationConfig {
+  const path = join(configDir, 'location.json');
   return JSON.parse(readFileSync(path, 'utf8')) as LocationConfig;
 }
