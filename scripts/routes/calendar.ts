@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { loadMailEvents } from '../../lib/mail-events.ts';
+import { respondJson } from './http.ts';
 import type { Ctx } from './context.ts';
 
 // Read-only, keine eigene Speicherung — reduziert Jobs auf Kalender-Ereignisse aus
@@ -24,8 +25,7 @@ export async function handleCalendarRoutes(req: IncomingMessage, res: ServerResp
     for (const ev of await loadMailEvents()) {
       events.push({ date: ev.date.slice(0, 10), type: 'sent', jobId: null, title: ev.title, company: ev.company });
     }
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(events));
+    respondJson(res, 200, events);
     return true;
   }
   return false;
