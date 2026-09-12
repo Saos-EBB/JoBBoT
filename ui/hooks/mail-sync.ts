@@ -2,6 +2,9 @@ import { useState } from 'react';
 import type { Job } from '../../scrapers/interface.ts';
 import type { CalendarEvent } from '../components/calendar.tsx';
 import { HISTORY_START } from '../../lib/calendar.ts';
+import type { RepliesFetchResponse } from '../../scripts/routes/gmail.ts';
+import type { GmailSyncResult } from '../../lib/gmail-sync.ts';
+import type { ErrorResponse } from '../../scripts/routes/http.ts';
 
 // patch/setDetailOpen sind Kern-State aus app.tsx (die lokale jobs-Liste bzw. die
 // Detailansicht), hier nur geschrieben — dieser Hook besitzt weder die Job-Liste noch
@@ -25,10 +28,11 @@ export function useMailSync(
     setRepliesFetching(true);
     try {
       const res = await fetch('/api/mail/replies/fetch', { method: 'POST' });
-      const data = await res.json() as { checked?: number; matched?: number; error?: string };
-      if (!res.ok) { say(`Antworten-Abruf fehlgeschlagen: ${data.error}`, 'err'); return; }
-      say(`Antworten-Abruf: ${data.matched ?? 0} von ${data.checked ?? 0} Mails zugeordnet`, 'ok');
-      if ((data.matched ?? 0) > 0) refetchJobs();
+      const data = await res.json() as RepliesFetchResponse | ErrorResponse;
+      if (!res.ok) { say(`Antworten-Abruf fehlgeschlagen: ${(data as ErrorResponse).error}`, 'err'); return; }
+      const ok = data as RepliesFetchResponse;
+      say(`Antworten-Abruf: ${ok.matched} von ${ok.checked} Mails zugeordnet`, 'ok');
+      if (ok.matched > 0) refetchJobs();
     } catch (err) {
       say(`Antworten-Abruf fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`, 'err');
     } finally {
@@ -43,21 +47,19 @@ export function useMailSync(
     setGmailSyncing(true);
     try {
       const res = await fetch('/api/gmail-sync', { method: 'POST' });
-      const data = await res.json() as {
-        sentGescannt?: number; markiert?: number; sentGefuellt?: number; ohneJob?: number;
-        replyGescannt?: number; replyGefuellt?: number; seit?: string; error?: string;
-      };
-      if (!res.ok) { say(`Gmail-Sync fehlgeschlagen: ${data.error}`, 'err'); return; }
+      const data = await res.json() as GmailSyncResult | ErrorResponse;
+      if (!res.ok) { say(`Gmail-Sync fehlgeschlagen: ${(data as ErrorResponse).error}`, 'err'); return; }
+      const ok = data as GmailSyncResult;
       // Jede Stufe einzeln melden (gelesen → markiert → zugeordnet): ein blankes
       // "0 ergänzt" ließe offen, ob das Postfach leer war, das Label fehlt oder die
       // Zuordnung nichts fand — drei völlig verschiedene Ursachen.
       say(
-        `Gmail-Sync ab ${data.seit ?? HISTORY_START}: ${data.sentGescannt ?? 0} gesendet gelesen, `
-        + `${data.markiert ?? 0} als Bewerbung markiert → ${data.sentGefuellt ?? 0} Jobs verknüpft, `
-        + `${data.ohneJob ?? 0} nur Mail · ${data.replyGefuellt ?? 0} Antworten`,
+        `Gmail-Sync ab ${ok.seit ?? HISTORY_START}: ${ok.sentGescannt} gesendet gelesen, `
+        + `${ok.markiert} als Bewerbung markiert → ${ok.sentGefuellt} Jobs verknüpft, `
+        + `${ok.ohneJob} nur Mail · ${ok.replyGefuellt} Antworten`,
         'ok'
       );
-      if ((data.sentGefuellt ?? 0) > 0 || (data.replyGefuellt ?? 0) > 0) {
+      if (ok.sentGefuellt > 0 || ok.replyGefuellt > 0) {
         refetchJobs();
         fetch('/api/calendar').then(r => r.json()).then(setCalendarEvents);
       }
@@ -84,8 +86,8 @@ export function useMailSync(
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ via }),
         });
-        if (!res.ok) { letzterFehler = ((await res.json()) as { error?: string }).error ?? 'Fehler'; continue; }
-        const updated = (await res.json()) as { followUps?: Job['followUps'] };
+        if (!res.ok) { letzterFehler = ((await res.json()) as ErrorResponse).error ?? 'Fehler'; continue; }
+        const updated = (await res.json()) as Job;
         patch(id, { followUps: updated.followUps });
         ok++;
       } catch (err) {
@@ -110,7 +112,7 @@ export function useMailSync(
       say(`Entwurf für ${email} erstellt`);
       setDetailOpen(false);
     } else {
-      const body = await res.json().catch(() => null);
+      const body = await res.json().catch(() => null) as ErrorResponse | null;
       say(body?.error ?? 'Entwurf fehlgeschlagen', 'err');
     }
   }
@@ -127,7 +129,7 @@ export function useMailSync(
       say('Gesendet');
       setDetailOpen(false);
     } else {
-      const body = await res.json().catch(() => null);
+      const body = await res.json().catch(() => null) as ErrorResponse | null;
       say(body?.error ?? 'Versand fehlgeschlagen', 'err');
     }
   }

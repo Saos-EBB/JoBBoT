@@ -6,13 +6,18 @@ import { createSseChannel, attachSseClient, type GridUnitEvent } from './sse-cha
 import { respondJson, readJsonBody } from './http.ts';
 import { createRunState } from './run-state.ts';
 import { beginRun, finishRun, parseBodyOrDefault } from './runnable-route.ts';
+import type { RunSnapshot } from './run-state.ts';
 import type { Ctx } from './context.ts';
 
 // ---------- Scrape-Run-State (in-memory, Prozesslebensdauer) ----------
 // Kein Persistieren auf Disk: Einzelnutzer-Lokaltool, ein Server-Neustart mitten
 // im Lauf verliert den Fortschritt (akzeptiert) — der Client erkennt das daran,
 // dass der Status auf 'idle' statt 'done'/'error' zurückfällt (siehe Client-Poll).
-type ScrapeResult = { newTotal: number; skipTotal: number; offlineTotal: number; backTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; offlineCount: number; backCount: number; error?: string }[] };
+export type ScrapeResult = { newTotal: number; skipTotal: number; offlineTotal: number; backTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; offlineCount: number; backCount: number; error?: string }[] };
+// GET /api/scrape/status — exportiert, damit ui/hooks/run-status-poll.ts diese Form
+// importiert statt sie von Hand nachzubauen (import type wird von esbuild vollständig
+// entfernt, zieht also keine node:fs-Importe dieser Datei ins Browser-Bundle).
+export type ScrapeStatusResponse = RunSnapshot<ScrapeResult> & { sources: Record<string, { current: number; total: number }> };
 const scrapeRun = createRunState<ScrapeResult>();
 // Fortschritt pro Quelle — eigene Variable statt Teil von RunSnapshot, weil ihre Form
 // (eine Map, kein einzelnes {i,total}) pro Route unterschiedlich ist (siehe run-state.ts).
@@ -41,7 +46,8 @@ export async function handleScrapeRoutes(req: IncomingMessage, res: ServerRespon
   }
 
   if (req.method === 'GET' && url.pathname === '/api/scrape/status') {
-    respondJson(res, 200, { ...scrapeRun.get(), sources: scrapeSources });
+    const response: ScrapeStatusResponse = { ...scrapeRun.get(), sources: scrapeSources };
+    respondJson(res, 200, response);
     return true;
   }
 

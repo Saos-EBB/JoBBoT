@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Job } from '../../scrapers/interface.ts';
+import type { DuplicateGroup } from '../../lib/duplicates.ts';
+import type { MergeResponse } from '../../scripts/routes/duplicates.ts';
 
-// Spiegelt lib/duplicates.ts DuplicateGroup — kein gemeinsames Modul, weil lib/duplicates.ts
-// node:fs anfasst und dieser Hook Teil des Browser-Bundles ist (Job-Typ selbst kommt
-// weiterhin aus scrapers/interface.ts, das ist reine Typen, kein I/O).
-type DuplicateGroup = { key: string; jobs: Job[] };
+// import type wird von esbuild vollständig entfernt (siehe scripts/build-ui.ts) — die
+// node:fs-Importe von lib/duplicates.ts landen dadurch nie im Browser-Bundle.
 
 // active = ob der Duplicates-Tab gerade sichtbar ist. Nur beim Betreten geladen (kein
 // Polling wie bei Scrape/Filter/Anschreiben) — Duplikatsuche ist eine synchrone, sofort
@@ -42,7 +41,7 @@ export function useDuplicates(
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(keys === 'all' ? { all: true } : { keys }),
       });
-      const data = await res.json() as { merged?: number };
+      const data = await res.json() as MergeResponse;
       say(`${data.merged ?? 0} Duplikat-Gruppe(n) zusammengeführt`, 'ok');
       setSelectedDupKeys(new Set());
       loadDuplicates();

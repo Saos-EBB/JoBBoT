@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGridStream, type LoadGridSection } from '../components/grid.tsx';
 import type { FilterRunStatus } from './run-status-poll.ts';
-
-type FilterMode = 'llm' | 'regex';
+import type { FilterMode } from '../../lib/settings.ts';
+import type { SettingsResponse } from '../../scripts/routes/filter.ts';
 
 // status/wake kommen aus useRunStatusPoll (gemeinsamer Poll-Tick für alle drei Läufe).
 export function useFilterRun(
@@ -20,7 +20,7 @@ export function useFilterRun(
   const lastSeenRunId = useRef<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/settings').then(r => r.json()).then((s: { filterMode: FilterMode }) => setFilterMode(s.filterMode));
+    fetch('/api/settings').then(r => r.json()).then((s: SettingsResponse) => setFilterMode(s.filterMode));
   }, []);
 
   // SSE fürs Lade-Grid — ein Event pro fertigem 10er-Batch je Ergebnis-Kategorie

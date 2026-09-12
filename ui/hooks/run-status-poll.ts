@@ -1,29 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
+import type { ScrapeStatusResponse } from '../../scripts/routes/scrape.ts';
+import type { FilterStatusResponse } from '../../scripts/routes/filter.ts';
+import type { AnschreibenStatusResponse } from '../../scripts/routes/anschreiben.ts';
 
-// Spiegelt scripts/routes/{scrape,filter,anschreiben}.ts RunSnapshot + laufspezifischen
-// Fortschritt — kein gemeinsames Typ-Modul, weil der Server sonst Browser-untaugliche
-// Imports (node:fs via lib/settings.ts etc.) ins UI-Bundle ziehen würde.
-export type ScrapeStatus = {
-  status: 'idle' | 'running' | 'done' | 'error';
-  runId: string | null;
-  sources: Record<string, { current: number; total: number }>;
-  result?: { newTotal: number; skipTotal: number; offlineTotal: number; backTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; offlineCount: number; backCount: number; error?: string }[] };
-  error?: string;
-};
-export type FilterRunStatus = {
-  status: 'idle' | 'running' | 'done' | 'error';
-  runId: string | null;
-  current?: { i: number; total: number; title: string };
-  result?: { matched: number; offstack: number; brutal: number };
-  error?: string;
-};
-export type AnschreibenRunStatus = {
-  status: 'idle' | 'running' | 'done' | 'error' | 'stopped';
-  runId: string | null;
-  current?: { i: number; total: number; title: string };
-  result?: { generated: number; skipped: number; emailsFound: number; mailGenerated: number; nomailGenerated: number };
-  error?: string;
-};
+// import type wird von esbuild vollständig entfernt (siehe scripts/build-ui.ts) — die
+// node:fs-Importe dieser Routendateien landen dadurch nie im Browser-Bundle, nur die
+// Typdeklaration selbst.
+export type ScrapeStatus = ScrapeStatusResponse;
+export type FilterRunStatus = FilterStatusResponse;
+export type AnschreibenRunStatus = AnschreibenStatusResponse;
 
 // Ein einziger Poll-Tick für alle drei Läufe statt drei unabhängiger Timer — Scrape,
 // Filter und Anschreiben teilen sich einen Promise.all-Request und einen selbst-

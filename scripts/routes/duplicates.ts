@@ -3,14 +3,17 @@ import { rename } from 'node:fs/promises';
 import { join } from 'node:path';
 import { config } from '../../config.ts';
 import { findAnschreiben, anschreibenName } from '../../lib/anschreiben-datei.ts';
-import { findDuplicates, planMerge } from '../../lib/duplicates.ts';
+import { findDuplicates, planMerge, type DuplicateGroup } from '../../lib/duplicates.ts';
 import { respondJson, readJsonBody } from './http.ts';
 import type { Ctx } from './context.ts';
+
+export type DuplicatesResponse = DuplicateGroup[];
+export type MergeResponse = { merged: number };
 
 export async function handleDuplicatesRoutes(req: IncomingMessage, res: ServerResponse, url: URL, ctx: Ctx): Promise<boolean> {
   if (req.method === 'GET' && url.pathname === '/api/duplicates') {
     const jobs = await ctx.storage.list();
-    const groups = findDuplicates(jobs);
+    const groups: DuplicatesResponse = findDuplicates(jobs);
     respondJson(res, 200, groups);
     return true;
   }
@@ -53,7 +56,8 @@ export async function handleDuplicatesRoutes(req: IncomingMessage, res: ServerRe
       await ctx.storage.save({ ...plan.keep, scrapedAt: plan.scrapedAt, updatedAt: new Date().toISOString() });
     }
 
-    respondJson(res, 200, { merged: targets.length });
+    const response: MergeResponse = { merged: targets.length };
+    respondJson(res, 200, response);
     return true;
   }
 

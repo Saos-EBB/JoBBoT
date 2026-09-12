@@ -5,6 +5,8 @@ import { runGmailSync } from '../../lib/gmail-sync.ts';
 import { respondJson } from './http.ts';
 import type { Ctx } from './context.ts';
 
+export type RepliesFetchResponse = { checked: number; matched: number };
+
 export async function handleGmailRoutes(req: IncomingMessage, res: ServerResponse, url: URL, ctx: Ctx): Promise<boolean> {
   if (req.method === 'POST' && url.pathname === '/api/gmail-sync') {
     try {
@@ -23,7 +25,8 @@ export async function handleGmailRoutes(req: IncomingMessage, res: ServerRespons
       const jobs = await ctx.storage.list();
       const gesendetDates = jobs.filter(j => j.status === 'gesendet' && j.email).map(j => new Date(j.updatedAt).getTime());
       if (gesendetDates.length === 0) {
-        respondJson(res, 200, { checked: 0, matched: 0 });
+        const response: RepliesFetchResponse = { checked: 0, matched: 0 };
+        respondJson(res, 200, response);
         return true;
       }
       const since = new Date(Math.min(...gesendetDates));
@@ -32,7 +35,8 @@ export async function handleGmailRoutes(req: IncomingMessage, res: ServerRespons
       for (const { job, reply } of matches) {
         await ctx.storage.update(job.id, { replyReceivedAt: reply.date.toISOString() });
       }
-      respondJson(res, 200, { checked: replies.length, matched: matches.length });
+      const response: RepliesFetchResponse = { checked: replies.length, matched: matches.length };
+      respondJson(res, 200, response);
     } catch (err) {
       respondJson(res, 500, { error: err instanceof Error ? err.message : String(err) });
     }

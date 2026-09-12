@@ -1,5 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
+// Die Fehlerform, die praktisch jede Route auf einem catch-Zweig sendet — an einer
+// Stelle benannt, statt dass jeder UI-Hook sie einzeln von Hand nachtippt.
+export type ErrorResponse = { error: string };
+
 export function respondJson(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(body));

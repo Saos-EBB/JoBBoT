@@ -5,10 +5,12 @@ import { createSseChannel, attachSseClient, type GridUnitEvent } from './sse-cha
 import { respondJson, readJsonBody } from './http.ts';
 import { createRunState } from './run-state.ts';
 import { beginRun, finishRun, parseBodyOrDefault } from './runnable-route.ts';
+import type { RunSnapshot } from './run-state.ts';
 import type { Ctx } from './context.ts';
 import type { Job } from '../../scrapers/interface.ts';
 
-type AnschreibenResult = { generated: number; skipped: number; emailsFound: number; mailGenerated: number; nomailGenerated: number };
+export type AnschreibenResult = { generated: number; skipped: number; emailsFound: number; mailGenerated: number; nomailGenerated: number };
+export type AnschreibenStatusResponse = RunSnapshot<AnschreibenResult> & { current?: { i: number; total: number; title: string } };
 const anschreibenRun = createRunState<AnschreibenResult>();
 let anschreibenCurrent: { i: number; total: number; title: string } | undefined;
 // Nur für Anschreiben abbrechbar (Scrape/Filter sind schnell genug, dass ein Stop-Button
@@ -18,7 +20,8 @@ const anschreibenSse = createSseChannel<GridUnitEvent>();
 
 export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerResponse, url: URL, ctx: Ctx): Promise<boolean> {
   if (req.method === 'GET' && url.pathname === '/api/anschreiben/status') {
-    respondJson(res, 200, { ...anschreibenRun.get(), current: anschreibenCurrent });
+    const response: AnschreibenStatusResponse = { ...anschreibenRun.get(), current: anschreibenCurrent };
+    respondJson(res, 200, response);
     return true;
   }
 

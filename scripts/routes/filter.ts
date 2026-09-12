@@ -6,9 +6,12 @@ import { createSseChannel, attachSseClient, type GridSquare, type GridUnitEvent 
 import { respondJson, readJsonBody } from './http.ts';
 import { createRunState } from './run-state.ts';
 import { beginRun, finishRun, parseBodyOrDefault } from './runnable-route.ts';
+import type { RunSnapshot } from './run-state.ts';
 import type { Ctx } from './context.ts';
 
-type FilterResult = { matched: number; offstack: number; brutal: number };
+export type FilterResult = { matched: number; offstack: number; brutal: number };
+export type FilterStatusResponse = RunSnapshot<FilterResult> & { current?: { i: number; total: number; title: string } };
+export type SettingsResponse = { filterMode: FilterMode };
 const filterRun = createRunState<FilterResult>();
 let filterCurrent: { i: number; total: number; title: string } | undefined;
 const filterSse = createSseChannel<GridUnitEvent>();
@@ -16,12 +19,14 @@ let filterRowCounters = { matched: 0, offstack: 0, brutal: 0 };
 
 export async function handleFilterRoutes(req: IncomingMessage, res: ServerResponse, url: URL, ctx: Ctx): Promise<boolean> {
   if (req.method === 'GET' && url.pathname === '/api/settings') {
-    respondJson(res, 200, { filterMode: loadSettings().filterMode });
+    const response: SettingsResponse = { filterMode: loadSettings().filterMode };
+    respondJson(res, 200, response);
     return true;
   }
 
   if (req.method === 'GET' && url.pathname === '/api/filter/status') {
-    respondJson(res, 200, { ...filterRun.get(), current: filterCurrent });
+    const response: FilterStatusResponse = { ...filterRun.get(), current: filterCurrent };
+    respondJson(res, 200, response);
     return true;
   }
 
