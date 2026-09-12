@@ -1,20 +1,15 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { randomUUID } from 'node:crypto';
 import { canGenerateAnschreiben } from '../../lib/folders.ts';
 import { runAnschreiben } from '../../lib/anschreiben-runner.ts';
 import { createSseChannel, attachSseClient, type GridUnitEvent } from './sse-channel.ts';
 import { respondJson, readJsonBody } from './http.ts';
+import { createRunState } from './run-state.ts';
 import type { Ctx } from './context.ts';
 import type { Job } from '../../scrapers/interface.ts';
 
-interface AnschreibenRunState {
-  status: 'idle' | 'running' | 'done' | 'error' | 'stopped';
-  runId: string | null;
-  current?: { i: number; total: number; title: string };
-  result?: { generated: number; skipped: number; emailsFound: number; mailGenerated: number; nomailGenerated: number };
-  error?: string;
-}
-let anschreibenRun: AnschreibenRunState = { status: 'idle', runId: null };
+type AnschreibenResult = { generated: number; skipped: number; emailsFound: number; mailGenerated: number; nomailGenerated: number };
+const anschreibenRun = createRunState<AnschreibenResult>();
+let anschreibenCurrent: { i: number; total: number; title: string } | undefined;
 // Nur für Anschreiben abbrechbar (Scrape/Filter sind schnell genug, dass ein Stop-Button
 // bisher niemand vermisst hat) — ein einzelner Lauf gleichzeitig, wie anschreibenRun selbst.
 let anschreibenAbort: AbortController | null = null;
@@ -22,7 +17,7 @@ const anschreibenSse = createSseChannel<GridUnitEvent>();
 
 export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerResponse, url: URL, ctx: Ctx): Promise<boolean> {
   if (req.method === 'GET' && url.pathname === '/api/anschreiben/status') {
-    respondJson(res, 200, anschreibenRun);
+    respondJson(res, 200, { ...anschreibenRun.get(), current: anschreibenCurrent });
     return true;
   }
 
@@ -32,12 +27,12 @@ export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerR
   }
 
   if (req.method === 'POST' && url.pathname === '/api/anschreiben') {
-    if (anschreibenRun.status === 'running') {
+    const runId = anschreibenRun.start();
+    if (!runId) {
       respondJson(res, 409, { started: false, reason: 'already-running' });
       return true;
     }
-    const runId = randomUUID();
-    anschreibenRun = { status: 'running', runId };
+    anschreibenCurrent = undefined;
     anschreibenAbort = new AbortController();
     respondJson(res, 200, { started: true, runId });
 
@@ -57,7 +52,7 @@ export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerR
       const preSkipped = jobIds.length - jobs.length;
 
       if (jobs.length === 0) {
-        anschreibenRun = { status: 'done', runId, result: { generated: 0, skipped: preSkipped, emailsFound: 0, mailGenerated: 0, nomailGenerated: 0 } };
+        anschreibenRun.succeed({ generated: 0, skipped: preSkipped, emailsFound: 0, mailGenerated: 0, nomailGenerated: 0 });
         return true;
       }
 
@@ -67,17 +62,16 @@ export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerR
         profile: ctx.profile,
         signal: anschreibenAbort.signal,
         onProgress: (i, total, title) => {
-          anschreibenRun.current = { i, total, title };
+          anschreibenCurrent = { i, total, title };
         },
         onItemDone: item => anschreibenSse.broadcast({ section: runId, sectionLabel: 'Anschreiben', row: item.id, items: [item] }),
       });
-      anschreibenRun = {
-        status: anschreibenAbort.signal.aborted ? 'stopped' : 'done',
-        runId,
-        result: { generated, skipped: skipped + preSkipped, emailsFound, mailGenerated, nomailGenerated },
-      };
+      anschreibenRun.succeed(
+        { generated, skipped: skipped + preSkipped, emailsFound, mailGenerated, nomailGenerated },
+        anschreibenAbort.signal.aborted ? 'stopped' : 'done',
+      );
     } catch (err) {
-      anschreibenRun = { status: 'error', runId, error: err instanceof Error ? err.message : String(err) };
+      anschreibenRun.fail(err);
     } finally {
       anschreibenAbort = null;
     }
@@ -85,7 +79,7 @@ export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerR
   }
 
   if (req.method === 'POST' && url.pathname === '/api/anschreiben/stop') {
-    if (anschreibenRun.status !== 'running' || !anschreibenAbort) {
+    if (!anschreibenRun.isRunning() || !anschreibenAbort) {
       respondJson(res, 409, { stopped: false, reason: 'not-running' });
       return true;
     }
