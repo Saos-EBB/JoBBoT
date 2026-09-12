@@ -5,6 +5,7 @@ import type { Job } from '../scrapers/interface.ts';
 import type { Storage } from '../storage/index.ts';
 import type { ProfileData } from './profile.ts';
 import { anschreibenZiel } from './anschreiben-datei.ts';
+import { canGenerateAnschreiben } from './folders.ts';
 import { config } from '../config.ts';
 
 export const SYSTEM = `Du bist ein erfahrener Karriereberater. Du schreibst präzise, authentische Bewerbungsanschreiben auf Deutsch.
@@ -190,7 +191,7 @@ export async function generateAnschreiben(
     signal,
   } = options;
 
-  if (job.status !== 'triaged' || job.fit === 'brutal') {
+  if (!canGenerateAnschreiben(job)) {
     console.warn(`[anschreiben] job ${job.id} hat status "${job.status}"/fit "${job.fit}", erwartet "triaged" mit fit "matched" oder "offstack"`);
     return null;
   }
