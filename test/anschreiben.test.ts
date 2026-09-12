@@ -1,13 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import type { AddressInfo } from 'node:net';
 import { buildAnschreibenPrompt, parseAnschreibenResponse, generateAnschreiben } from '../lib/anschreiben.ts';
 import type { ProfileData } from '../lib/profile.ts';
 import { createStorage } from '../storage/index.ts';
 import { toJob } from '../lib/normalize.ts';
-import { tmpDir, rmTmp } from './helpers.ts';
+import { tmpDir, rmTmp, mockChat, mockChatSequence } from './helpers.ts';
 
 const sample = () => toJob({
   source: 'karriere.at',
@@ -43,37 +41,6 @@ const VALID_LETTER = `Die Kombination aus autonomer Robotik und praxisnaher Soft
 Mit fundiertem Wissen in TypeScript und Node.js sowie SQL-Kenntnissen bringe ich die technische Basis mit, die für diese Junior-Stelle gefordert wird. Mein Praktikum hat gezeigt, dass ich Anforderungen strukturiert in lauffähigen Code umsetzen kann.
 
 Ich freue mich auf ein Gespräch, in dem wir gemeinsam prüfen können, ob wir gut zusammenpassen.`;
-
-function mockChat(content: string, onCall?: () => void): Promise<{ url: string; close: () => void }> {
-  return new Promise(resolve => {
-    const server = createServer((_, res) => {
-      onCall?.();
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: { role: 'assistant', content } }));
-    });
-    server.listen(0, '127.0.0.1', () => {
-      const { port } = server.address() as AddressInfo;
-      resolve({ url: `http://127.0.0.1:${port}`, close: () => server.close() });
-    });
-  });
-}
-
-// liefert pro Aufruf die nächste Antwort aus `contents` (bleibt auf der letzten, wenn erschöpft)
-function mockChatSequence(contents: string[]): Promise<{ url: string; close: () => void; calls: () => number }> {
-  return new Promise(resolve => {
-    let n = 0;
-    const server = createServer((_, res) => {
-      const content = contents[Math.min(n, contents.length - 1)];
-      n++;
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: { role: 'assistant', content } }));
-    });
-    server.listen(0, '127.0.0.1', () => {
-      const { port } = server.address() as AddressInfo;
-      resolve({ url: `http://127.0.0.1:${port}`, close: () => server.close(), calls: () => n });
-    });
-  });
-}
 
 const EIN_ABSATZ = 'Das ist nur ein einziger Absatz ohne Zeilenumbruch, also ungültig laut Formel.';
 
