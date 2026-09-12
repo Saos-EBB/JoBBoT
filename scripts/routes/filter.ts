@@ -4,6 +4,7 @@ import { loadSettings, type FilterMode } from '../../lib/settings.ts';
 import { runFilter } from '../../lib/filter-runner.ts';
 import { createBatcher } from '../../lib/grid-batch.ts';
 import { createSseChannel, type GridSquare, type GridUnitEvent } from './sse-channel.ts';
+import { respondJson, readJsonBody } from './http.ts';
 import type { Ctx } from './context.ts';
 
 interface FilterRunState {
@@ -19,14 +20,12 @@ let filterRowCounters = { matched: 0, offstack: 0, brutal: 0 };
 
 export async function handleFilterRoutes(req: IncomingMessage, res: ServerResponse, url: URL, ctx: Ctx): Promise<boolean> {
   if (req.method === 'GET' && url.pathname === '/api/settings') {
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ filterMode: loadSettings().filterMode }));
+    respondJson(res, 200, { filterMode: loadSettings().filterMode });
     return true;
   }
 
   if (req.method === 'GET' && url.pathname === '/api/filter/status') {
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(filterRun));
+    respondJson(res, 200, filterRun);
     return true;
   }
 
@@ -43,21 +42,17 @@ export async function handleFilterRoutes(req: IncomingMessage, res: ServerRespon
 
   if (req.method === 'POST' && url.pathname === '/api/filter') {
     if (filterRun.status === 'running') {
-      res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ started: false, reason: 'already-running' }));
+      respondJson(res, 409, { started: false, reason: 'already-running' });
       return true;
     }
     const runId = randomUUID();
     filterRun = { status: 'running', runId };
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ started: true, runId }));
+    respondJson(res, 200, { started: true, runId });
 
-    let body = '';
-    for await (const chunk of req) body += chunk;
     let mode: FilterMode | undefined;
     let scope: 'new' | 'all' = 'new';
     try {
-      const parsed = JSON.parse(body) as { mode?: FilterMode; scope?: 'new' | 'all' };
+      const parsed = await readJsonBody<{ mode?: FilterMode; scope?: 'new' | 'all' }>(req);
       mode = parsed.mode;
       if (parsed.scope === 'all') scope = 'all';
     } catch {
