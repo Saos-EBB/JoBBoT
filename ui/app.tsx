@@ -42,6 +42,7 @@ import { type CalendarEvent, CalendarView, CAL_TYPES, CAL_COLOR } from './compon
 import { type SourcesCfg, type LocationCfg, UMKREIS_GRUPPEN, istLandesbegriff, ChipListe, PortalBlock, RohAnsicht } from './components/settings.tsx';
 import { useAttachment } from './hooks/attachment.ts';
 import { useCcAddress } from './hooks/cc.ts';
+import { useDuplicates } from './hooks/duplicates.ts';
 
 // /api/jobs joint das Anschreiben serverseitig dazu (siehe scripts/ui-server.ts) —
 // es lebt in data/anschreiben/{slug}.md, nicht im Job-JSON. Deshalb ist `brief` hier
@@ -74,9 +75,6 @@ type AnschreibenRunStatus = {
   error?: string;
 };
 type FilterMode = 'llm' | 'regex';
-// Spiegelt lib/duplicates.ts DuplicateGroup — kein gemeinsames Modul aus demselben
-// Grund wie oben (Job-Typ selbst kommt weiterhin aus scrapers/interface.ts).
-type DuplicateGroup = { key: string; jobs: Job[] };
 
 /* ------------------------------------------------------------------ *
  * Design tokens
@@ -284,10 +282,6 @@ export default function JobbotUI() {
   const [scrapeSections, setScrapeSections] = useState<LoadGridSection[]>([]);
   const [filterStatus, setFilterStatus] = useState<FilterRunStatus | null>(null);
   const [filterSections, setFilterSections] = useState<LoadGridSection[]>([]);
-  const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[] | null>(null);
-  const [duplicatesLoading, setDuplicatesLoading] = useState(false);
-  const [selectedDupKeys, setSelectedDupKeys] = useState<Set<string>>(new Set());
-  const [merging, setMerging] = useState(false);
   const [replyOnly, setReplyOnly] = useState(false);
   const [repliesFetching, setRepliesFetching] = useState(false);
   const [gmailSyncing, setGmailSyncing] = useState(false);
@@ -351,6 +345,10 @@ export default function JobbotUI() {
 
   const { attachment, uploadAttachment, removeAttachment } = useAttachment(view === 'attachment', say);
   const { cc, ccInput, setCcInput, saveCcNow, removeCc } = useCcAddress(view === 'cc', say);
+  const {
+    duplicateGroups, duplicatesLoading, selectedDupKeys, setSelectedDupKeys,
+    merging, loadDuplicates, mergeDuplicates,
+  } = useDuplicates(view === 'duplicates', say, refetchJobs);
 
   useEffect(() => {
     fetch('/api/scrape/sources').then(r => r.json()).then((names: string[]) => {
@@ -511,14 +509,6 @@ export default function JobbotUI() {
     }
   }
 
-  const loadDuplicates = useCallback(() => {
-    setDuplicatesLoading(true);
-    fetch('/api/duplicates')
-      .then(r => r.json())
-      .then((groups: DuplicateGroup[]) => setDuplicateGroups(groups))
-      .finally(() => setDuplicatesLoading(false));
-  }, []);
-
   async function fetchReplies() {
     setRepliesFetching(true);
     try {
@@ -566,41 +556,11 @@ export default function JobbotUI() {
     }
   }
 
-  // Nur beim Betreten der Ansicht laden (kein Polling wie bei Scrape/Filter/Anschreiben)
-  // — Duplikatsuche ist eine synchrone, sofort fertige Leseoperation ohne Fortschritt,
-  // der sich zu beobachten lohnt.
-  useEffect(() => {
-    if (view === 'duplicates') loadDuplicates();
-  }, [view, loadDuplicates]);
-
   // Wie Duplikate: nur beim Betreten laden, kein Polling — der Kalender liest einen
   // Snapshot, keinen laufenden Prozess.
   useEffect(() => {
     if (view === 'calendar') fetch('/api/calendar').then(r => r.json()).then(setCalendarEvents);
   }, [view]);
-
-  // Behält je Gruppe das neueste Inserat (frischerer Titel/Beschreibung/Status),
-  // übernimmt aber das erste Pull-Datum der älteren Duplikate ins JSON des Behaltenen
-  // (siehe lib/duplicates.ts planMerge) — die älteren Dateien werden dabei gelöscht.
-  async function mergeDuplicates(keys: string[] | 'all') {
-    setMerging(true);
-    try {
-      const res = await fetch('/api/duplicates/merge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(keys === 'all' ? { all: true } : { keys }),
-      });
-      const data = await res.json() as { merged?: number };
-      say(`${data.merged ?? 0} Duplikat-Gruppe(n) zusammengeführt`, 'ok');
-      setSelectedDupKeys(new Set());
-      loadDuplicates();
-      refetchJobs();
-    } catch (err) {
-      say(`Zusammenführen fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`, 'err');
-    } finally {
-      setMerging(false);
-    }
-  }
 
   // Ein Aufruf für beides: die Mehrfachauswahl in der Liste UND den einzelnen
   // "Neu generieren"-Button im Detail (der bisher ein reiner Toast-Stub war,
