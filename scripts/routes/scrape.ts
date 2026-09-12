@@ -5,6 +5,7 @@ import { runScrape } from '../../lib/scrape-runner.ts';
 import { createSseChannel, attachSseClient, type GridUnitEvent } from './sse-channel.ts';
 import { respondJson, readJsonBody } from './http.ts';
 import { createRunState } from './run-state.ts';
+import { beginRun, finishRun, parseBodyOrDefault } from './runnable-route.ts';
 import type { Ctx } from './context.ts';
 
 // ---------- Scrape-Run-State (in-memory, Prozesslebensdauer) ----------
@@ -50,37 +51,22 @@ export async function handleScrapeRoutes(req: IncomingMessage, res: ServerRespon
   }
 
   if (req.method === 'POST' && url.pathname === '/api/scrape') {
-    // Lock synchron VOR dem ersten await setzen (der Body-Read ist async) — sonst
-    // könnten zwei fast gleichzeitige POSTs beide noch den alten Status sehen und
-    // beide einen Lauf starten (TOCTOU). Antwort geht sofort raus; der Rest läuft
-    // im Hintergrund weiter (Fire-and-Poll, siehe /api/scrape/status).
-    const runId = scrapeRun.start();
-    if (!runId) {
-      respondJson(res, 409, { started: false, reason: 'already-running' });
-      return true;
-    }
-    scrapeSources = {};
-    scrapeRowCounters = {};
-    respondJson(res, 200, { started: true, runId });
+    const runId = beginRun(res, scrapeRun, () => { scrapeSources = {}; scrapeRowCounters = {}; });
+    if (!runId) return true;
 
-    let requested: string[] = [];
-    try {
-      requested = (await readJsonBody<{ sources?: string[] }>(req)).sources ?? [];
-    } catch {
-      // leer bleiben — behandelt wie "keine Quelle ausgewählt"
-    }
+    const body = await parseBodyOrDefault(() => readJsonBody<{ sources?: string[] }>(req), {});
+    const requested = body.sources ?? [];
 
     const sourcesCfg = loadSources();
     const enabled = new Set(Object.entries(sourcesCfg).filter(([, c]) => c.enabled).map(([name]) => name));
     const names = requested.filter(name => enabled.has(name));
 
-    if (names.length === 0) {
-      scrapeRun.succeed({ newTotal: 0, skipTotal: 0, offlineTotal: 0, backTotal: 0, perSource: [] });
-      return true;
-    }
+    await finishRun(scrapeRun, async () => {
+      if (names.length === 0) {
+        return { result: { newTotal: 0, skipTotal: 0, offlineTotal: 0, backTotal: 0, perSource: [] } };
+      }
 
-    const { registry, keep } = buildScrapeSetup();
-    try {
+      const { registry, keep } = buildScrapeSetup();
       const outcomes = await runScrape({
         names,
         registry,
@@ -113,10 +99,8 @@ export async function handleScrapeRoutes(req: IncomingMessage, res: ServerRespon
         if (o.ok) { newTotal += o.newCount; skipTotal += o.skipCount; offlineTotal += o.offlineCount; backTotal += o.backCount; }
         return { name: o.name, ok: o.ok, newCount: o.newCount, skipCount: o.skipCount, offlineCount: o.offlineCount, backCount: o.backCount, error: o.ok ? undefined : String(o.error) };
       });
-      scrapeRun.succeed({ newTotal, skipTotal, offlineTotal, backTotal, perSource });
-    } catch (err) {
-      scrapeRun.fail(err);
-    }
+      return { result: { newTotal, skipTotal, offlineTotal, backTotal, perSource } };
+    });
     return true;
   }
 

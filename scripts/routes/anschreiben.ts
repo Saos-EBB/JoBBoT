@@ -4,6 +4,7 @@ import { runAnschreiben } from '../../lib/anschreiben-runner.ts';
 import { createSseChannel, attachSseClient, type GridUnitEvent } from './sse-channel.ts';
 import { respondJson, readJsonBody } from './http.ts';
 import { createRunState } from './run-state.ts';
+import { beginRun, finishRun, parseBodyOrDefault } from './runnable-route.ts';
 import type { Ctx } from './context.ts';
 import type { Job } from '../../scrapers/interface.ts';
 
@@ -27,51 +28,44 @@ export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerR
   }
 
   if (req.method === 'POST' && url.pathname === '/api/anschreiben') {
-    const runId = anschreibenRun.start();
-    if (!runId) {
-      respondJson(res, 409, { started: false, reason: 'already-running' });
-      return true;
-    }
-    anschreibenCurrent = undefined;
-    anschreibenAbort = new AbortController();
-    respondJson(res, 200, { started: true, runId });
+    const runId = beginRun(res, anschreibenRun, () => {
+      anschreibenCurrent = undefined;
+      anschreibenAbort = new AbortController();
+    });
+    if (!runId) return true;
+    const abort = anschreibenAbort!;
 
-    let jobIds: string[] = [];
-    try {
-      jobIds = (await readJsonBody<{ jobIds?: string[] }>(req)).jobIds ?? [];
-    } catch {
-      // leer bleiben — behandelt wie "keine Auswahl"
-    }
+    const body = await parseBodyOrDefault(() => readJsonBody<{ jobIds?: string[] }>(req), {});
+    const jobIds = body.jobIds ?? [];
 
     try {
-      // Nur triaged+nicht-brutal ist gültig (generateAnschreiben() prüft das selbst
-      // nochmal) — hier vorab gefiltert, damit "skipped" korrekt zählt, statt
-      // still Lücken aus fehlenden/ungeeigneten IDs zu übernehmen.
-      const fetched = await Promise.all(jobIds.map(id => ctx.storage.get(id)));
-      const jobs = fetched.filter((j): j is Job => j !== null && canGenerateAnschreiben(j));
-      const preSkipped = jobIds.length - jobs.length;
+      await finishRun(anschreibenRun, async () => {
+        // Nur triaged+nicht-brutal ist gültig (generateAnschreiben() prüft das selbst
+        // nochmal) — hier vorab gefiltert, damit "skipped" korrekt zählt, statt
+        // still Lücken aus fehlenden/ungeeigneten IDs zu übernehmen.
+        const fetched = await Promise.all(jobIds.map(id => ctx.storage.get(id)));
+        const jobs = fetched.filter((j): j is Job => j !== null && canGenerateAnschreiben(j));
+        const preSkipped = jobIds.length - jobs.length;
 
-      if (jobs.length === 0) {
-        anschreibenRun.succeed({ generated: 0, skipped: preSkipped, emailsFound: 0, mailGenerated: 0, nomailGenerated: 0 });
-        return true;
-      }
+        if (jobs.length === 0) {
+          return { result: { generated: 0, skipped: preSkipped, emailsFound: 0, mailGenerated: 0, nomailGenerated: 0 } };
+        }
 
-      const { generated, skipped, emailsFound, mailGenerated, nomailGenerated } = await runAnschreiben({
-        jobs,
-        storage: ctx.storage,
-        profile: ctx.profile,
-        signal: anschreibenAbort.signal,
-        onProgress: (i, total, title) => {
-          anschreibenCurrent = { i, total, title };
-        },
-        onItemDone: item => anschreibenSse.broadcast({ section: runId, sectionLabel: 'Anschreiben', row: item.id, items: [item] }),
+        const { generated, skipped, emailsFound, mailGenerated, nomailGenerated } = await runAnschreiben({
+          jobs,
+          storage: ctx.storage,
+          profile: ctx.profile,
+          signal: abort.signal,
+          onProgress: (i, total, title) => {
+            anschreibenCurrent = { i, total, title };
+          },
+          onItemDone: item => anschreibenSse.broadcast({ section: runId, sectionLabel: 'Anschreiben', row: item.id, items: [item] }),
+        });
+        return {
+          result: { generated, skipped: skipped + preSkipped, emailsFound, mailGenerated, nomailGenerated },
+          status: abort.signal.aborted ? 'stopped' as const : 'done' as const,
+        };
       });
-      anschreibenRun.succeed(
-        { generated, skipped: skipped + preSkipped, emailsFound, mailGenerated, nomailGenerated },
-        anschreibenAbort.signal.aborted ? 'stopped' : 'done',
-      );
-    } catch (err) {
-      anschreibenRun.fail(err);
     } finally {
       anschreibenAbort = null;
     }

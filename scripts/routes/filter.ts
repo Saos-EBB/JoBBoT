@@ -5,6 +5,7 @@ import { createBatcher } from '../../lib/grid-batch.ts';
 import { createSseChannel, attachSseClient, type GridSquare, type GridUnitEvent } from './sse-channel.ts';
 import { respondJson, readJsonBody } from './http.ts';
 import { createRunState } from './run-state.ts';
+import { beginRun, finishRun, parseBodyOrDefault } from './runnable-route.ts';
 import type { Ctx } from './context.ts';
 
 type FilterResult = { matched: number; offstack: number; brutal: number };
@@ -30,23 +31,12 @@ export async function handleFilterRoutes(req: IncomingMessage, res: ServerRespon
   }
 
   if (req.method === 'POST' && url.pathname === '/api/filter') {
-    const runId = filterRun.start();
-    if (!runId) {
-      respondJson(res, 409, { started: false, reason: 'already-running' });
-      return true;
-    }
-    filterCurrent = undefined;
-    respondJson(res, 200, { started: true, runId });
+    const runId = beginRun(res, filterRun, () => { filterCurrent = undefined; });
+    if (!runId) return true;
 
-    let mode: FilterMode | undefined;
-    let scope: 'new' | 'all' = 'new';
-    try {
-      const parsed = await readJsonBody<{ mode?: FilterMode; scope?: 'new' | 'all' }>(req);
-      mode = parsed.mode;
-      if (parsed.scope === 'all') scope = 'all';
-    } catch {
-      // undefined -> filterJob fällt auf config/settings.json zurück
-    }
+    const parsed = await parseBodyOrDefault(() => readJsonBody<{ mode?: FilterMode; scope?: 'new' | 'all' }>(req), {});
+    const mode = parsed.mode; // undefined -> filterJob fällt auf config/settings.json zurück
+    const scope: 'new' | 'all' = parsed.scope === 'all' ? 'all' : 'new';
 
     filterRowCounters = { matched: 0, offstack: 0, brutal: 0 };
     // Ein Batcher pro Ergebnis-Kategorie (nicht einer über den ganzen Lauf) — sonst
@@ -59,7 +49,7 @@ export async function handleFilterRoutes(req: IncomingMessage, res: ServerRespon
       filtered_out: createBatcher<GridSquare>(10, items => filterSse.broadcast({ section: 'brutal', sectionLabel: 'Brutal', row: `brutal-${++filterRowCounters.brutal}`, items })),
     };
 
-    try {
+    await finishRun(filterRun, async () => {
       // Dieselbe Schleife wie das CLI (lib/filter-runner.ts) — der Runner schreibt dabei
       // auch data/filter-log.md, was dieser Pfad vorher als einziger nicht tat.
       const { matched, offstack, brutal } = await runFilter({
@@ -85,10 +75,8 @@ export async function handleFilterRoutes(req: IncomingMessage, res: ServerRespon
       filterBatchers.matched.flush();
       filterBatchers.uncertain.flush();
       filterBatchers.filtered_out.flush();
-      filterRun.succeed({ matched, offstack, brutal });
-    } catch (err) {
-      filterRun.fail(err);
-    }
+      return { result: { matched, offstack, brutal } };
+    });
     return true;
   }
 
