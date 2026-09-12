@@ -168,16 +168,28 @@ const RETRY_CONFIG = [
   { numThread: 4, timeoutMs: 1_000_000 },
 ];
 
+export interface GenerateAnschreibenOptions {
+  ollama?: string;
+  anschreibenDir?: string;
+  model?: string;
+  logPath?: string;
+  signal?: AbortSignal;
+}
+
 export async function generateAnschreiben(
   job: Job,
   storage: Storage,
   profile: ProfileData,
-  ollama = config.ollamaHost,
-  anschreibenDir?: string,
-  model = config.modelWriter,
-  logPath = ANSCHREIBEN_LOG_PATH,
-  signal?: AbortSignal,
+  options: GenerateAnschreibenOptions = {},
 ): Promise<string | null> {
+  const {
+    ollama = config.ollamaHost,
+    anschreibenDir,
+    model = config.modelWriter,
+    logPath = ANSCHREIBEN_LOG_PATH,
+    signal,
+  } = options;
+
   if (job.status !== 'triaged' || job.fit === 'brutal') {
     console.warn(`[anschreiben] job ${job.id} hat status "${job.status}"/fit "${job.fit}", erwartet "triaged" mit fit "matched" oder "offstack"`);
     return null;

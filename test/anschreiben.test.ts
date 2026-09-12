@@ -163,7 +163,7 @@ test('generateAnschreiben: gültiger Response → status "generated", .md geschr
   const { url, close } = await mockChat(VALID_LETTER);
   t.after(close);
 
-  const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir, undefined, `${logDir}/log.md`);
+  const path = await generateAnschreiben(job, storage, profile, { ollama: url, anschreibenDir, logPath: `${logDir}/log.md` });
   assert.ok(path !== null, 'expected path to be returned');
   assert.strictEqual((await storage.get(job.id))?.status, 'generated');
   const content = await readFile(path!, 'utf8');
@@ -180,7 +180,7 @@ test('generateAnschreiben: leerer Response → status bleibt "triaged", path nul
   const { url, close } = await mockChat('');
   t.after(close);
 
-  const path = await generateAnschreiben(job, storage, profile, url);
+  const path = await generateAnschreiben(job, storage, profile, { ollama: url });
   assert.strictEqual(job.status, 'triaged');
   assert.strictEqual(path, null);
 });
@@ -197,7 +197,7 @@ test('generateAnschreiben: fit "offstack" → wird auch verarbeitet (nicht nur "
   const { url, close } = await mockChat(VALID_LETTER);
   t.after(close);
 
-  const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir, undefined, `${logDir}/log.md`);
+  const path = await generateAnschreiben(job, storage, profile, { ollama: url, anschreibenDir, logPath: `${logDir}/log.md` });
   assert.strictEqual((await storage.get(job.id))?.status, 'generated');
   assert.ok(path !== null, 'expected path to be returned');
 });
@@ -213,7 +213,7 @@ test('generateAnschreiben: status !== "triaged" → kein Ollama-Call', async (t)
   const { url, close } = await mockChat(VALID_LETTER, () => { called = true; });
   t.after(close);
 
-  const path = await generateAnschreiben(job, storage, profile, url);
+  const path = await generateAnschreiben(job, storage, profile, { ollama: url });
   assert.strictEqual(called, false);
   assert.strictEqual(job.status, 'new');
   assert.strictEqual(path, null);
@@ -233,7 +233,7 @@ test('generateAnschreiben: 1. Versuch ungültig (1 Absatz), 2. Versuch gültig �
   const { url, close, calls } = await mockChatSequence([EIN_ABSATZ, VALID_LETTER]);
   t.after(close);
 
-  const path = await generateAnschreiben(job, storage, profile, url, anschreibenDir, undefined, `${logDir}/log.md`);
+  const path = await generateAnschreiben(job, storage, profile, { ollama: url, anschreibenDir, logPath: `${logDir}/log.md` });
   assert.strictEqual((await storage.get(job.id))?.status, 'generated');
   assert.ok(path !== null, 'expected path to be returned');
   assert.strictEqual(calls(), 2);
@@ -251,7 +251,7 @@ test('generateAnschreiben: dauerhaft ungültig → Regenerierungen erschöpft, s
   t.after(close);
 
   const logPath = `${logDir}/anschreiben-skip.md`;
-  const path = await generateAnschreiben(job, storage, profile, url, undefined, undefined, logPath);
+  const path = await generateAnschreiben(job, storage, profile, { ollama: url, logPath });
   assert.strictEqual(path, null);
   assert.strictEqual(job.status, 'triaged');
   assert.strictEqual(calls(), 3); // 1 Versuch + 2 Regenerierungen
