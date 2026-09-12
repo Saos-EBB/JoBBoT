@@ -39,14 +39,13 @@ import { useCcAddress } from './hooks/cc.ts';
 import { useDuplicates } from './hooks/duplicates.ts';
 import { useRunStatusPoll } from './hooks/run-status-poll.ts';
 import { useScrapeRun } from './hooks/scrape-run.ts';
+import { useFilterRun } from './hooks/filter-run.ts';
 
 // /api/jobs joint das Anschreiben serverseitig dazu (siehe scripts/ui-server.ts) —
 // es lebt in data/anschreiben/{slug}.md, nicht im Job-JSON. Deshalb ist `brief` hier
 // und nicht auf dem Job-Typ selbst: ein Feld, das nur diese Antwort hat, kein Feld,
 // das je zurückgeschrieben wird (Speichern einer Bearbeitung ist ein eigener Endpunkt).
 type JobWithBrief = Job & { brief: string | null };
-
-type FilterMode = 'llm' | 'regex';
 
 /* ------------------------------------------------------------------ *
  * Design tokens
@@ -239,8 +238,6 @@ export default function JobbotUI() {
   // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
   const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben' | 'calendar' | 'nachfass' | 'suche'>('jobs');
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [filterMode, setFilterMode] = useState<FilterMode>('regex');
-  const [filterScope, setFilterScope] = useState<'new' | 'all'>('new');
   // Entspricht scripts/run-anschreiben.ts --data (matched/offstack) — "brutal" ist als
   // Kästchen trotzdem wählbar (Symmetrie mit den Fit-Chips oben in der Liste), landet aber
   // serverseitig immer bei "skipped" (generateAnschreiben() lehnt fit "brutal" grundsätzlich
@@ -248,12 +245,10 @@ export default function JobbotUI() {
   // getriagten Jobs außer brutal.
   const [anschreibenFits, setAnschreibenFits] = useState<Set<Fit>>(new Set(['matched', 'offstack']));
   const [anschreibenLimit, setAnschreibenLimit] = useState('');
-  const [filterSections, setFilterSections] = useState<LoadGridSection[]>([]);
   const [replyOnly, setReplyOnly] = useState(false);
   const [repliesFetching, setRepliesFetching] = useState(false);
   const [gmailSyncing, setGmailSyncing] = useState(false);
   const [anschreibenSections, setAnschreibenSections] = useState<LoadGridSection[]>([]);
-  const [filterStarting, setFilterStarting] = useState(false);
   const [anschreibenStarting, setAnschreibenStarting] = useState(false);
   // Auswahl für die "Anschreiben erstellen"-Aktion — nur im "jobs"-Ordner relevant
   // (matched/uncertain landen laut STATUS_MAP nirgendwo sonst), deshalb bei
@@ -272,7 +267,6 @@ export default function JobbotUI() {
   // Verhindert Toast/Refetch-Spam: der Server hält 'done' so lange, bis der
   // nächste Lauf startet — ohne diesen Merker würde jeder Poll-Tick (alle 1.5s)
   // erneut feiern, solange niemand einen neuen Lauf anstößt.
-  const lastSeenFilterRunId = useRef<string | null>(null);
   const lastSeenAnschreibenRunId = useRef<string | null>(null);
   const ta = useRef<HTMLTextAreaElement>(null);
   // Für den Tschobbo-Hook im Scrape-SSE-Effect unten (der nur einmal läuft,
@@ -305,33 +299,20 @@ export default function JobbotUI() {
     saveConfig, restoreConfig, kaputteAnfragen, sourcesFehlerhaft, repariereAnfrage,
   } = useSettingsConfig(view === 'suche', say);
 
-  useEffect(() => {
-    fetch('/api/settings').then(r => r.json()).then((s: { filterMode: FilterMode }) => setFilterMode(s.filterMode));
-  }, []);
-
   const { scrapeStatus, filterStatus, anschreibenStatus, wake: pollRunsNow } = useRunStatusPoll();
   const {
     scrapeSources, selectedSources, setSelectedSources,
     scrapeStarting, scrapeSections, setScrapeSections, runScrapeNow,
   } = useScrapeRun(scrapeStatus, pollRunsNow, say, refetchJobs, viewRef);
+  const {
+    filterMode, setFilterMode, filterScope, setFilterScope,
+    filterStarting, filterSections, setFilterSections, runFilterNow,
+  } = useFilterRun(filterStatus, pollRunsNow, say, refetchJobs);
 
   // Übergangs-Effekt: die Toast-/Refetch-/highlightFolders-Reaktion auf ein Lauf-Ende
   // lebte bisher IM Poll-Tick selbst (siehe useRunStatusPoll, jetzt reine Datenquelle).
-  // Scrape ist bereits nach useScrapeRun gewandert; Filter/Anschreiben folgen als
-  // nächste Schritte — bis dahin unverändertes Verhalten hier.
-
-  useEffect(() => {
-    if (!filterStatus) return;
-    const f = filterStatus;
-    if ((f.status === 'done' || f.status === 'error') && f.runId && f.runId !== lastSeenFilterRunId.current) {
-      lastSeenFilterRunId.current = f.runId;
-      refetchJobs();
-      say(
-        f.status === 'error' ? `Filter fehlgeschlagen: ${f.error}` : `Filter: ${f.result?.matched ?? 0} Match, ${f.result?.offstack ?? 0} Offstack, ${f.result?.brutal ?? 0} Brutal`,
-        f.status === 'error' ? 'err' : 'ok'
-      );
-    }
-  }, [filterStatus, refetchJobs, say]);
+  // Scrape und Filter sind bereits gewandert; Anschreiben folgt als nächster Schritt
+  // — bis dahin unverändertes Verhalten hier.
 
   useEffect(() => {
     if (!anschreibenStatus) return;
@@ -382,26 +363,6 @@ export default function JobbotUI() {
     // Absicht: nur beim Ansichtswechsel, nicht bei jeder Section-Änderung.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
-
-  // Wie oben, fürs Filter-Lade-Grid — ein Event pro fertigem 10er-Batch je
-  // Ergebnis-Kategorie (Match/Offstack/Brutal, siehe scripts/ui-server.ts).
-  useGridStream('/api/filter/stream', setFilterSections);
-
-  async function runFilterNow() {
-    setFilterStarting(true);
-    setFilterSections([]);
-    try {
-      const res = await fetch('/api/filter', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: filterMode, scope: filterScope }),
-      });
-      if (res.status === 409) say('Filter läuft bereits', 'err');
-      pollRunsNow();
-    } finally {
-      setFilterStarting(false);
-    }
-  }
 
   async function fetchReplies() {
     setRepliesFetching(true);
