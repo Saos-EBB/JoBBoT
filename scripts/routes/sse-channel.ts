@@ -1,4 +1,4 @@
-import type { ServerResponse } from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 
 // SSE statt Polling fürs Lade-Grid: der Server ist plain node:http ohne Build-Step,
 // SSE braucht dafür nur einen offen gehaltenen Response-Stream (kein zusätzliches
@@ -19,4 +19,17 @@ export function createSseChannel<T>() {
     for (const client of clients) client.write(data);
   }
   return { clients, broadcast };
+}
+
+// Öffnet den SSE-Stream und registriert den Client am Kanal — dieselben drei
+// Header und dieselbe close-Abmeldung standen vorher einzeln in scrape.ts,
+// filter.ts und anschreiben.ts.
+export function attachSseClient(req: IncomingMessage, res: ServerResponse, channel: { clients: Set<ServerResponse> }): void {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+  });
+  channel.clients.add(res);
+  req.on('close', () => channel.clients.delete(res));
 }
