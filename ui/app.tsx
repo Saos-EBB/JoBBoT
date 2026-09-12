@@ -37,6 +37,7 @@ import { UMKREIS_GRUPPEN, istLandesbegriff, ChipListe, PortalBlock, RohAnsicht, 
 import { useAttachment } from './hooks/attachment.ts';
 import { useCcAddress } from './hooks/cc.ts';
 import { useDuplicates } from './hooks/duplicates.ts';
+import { useRunStatusPoll } from './hooks/run-status-poll.ts';
 
 // /api/jobs joint das Anschreiben serverseitig dazu (siehe scripts/ui-server.ts) —
 // es lebt in data/anschreiben/{slug}.md, nicht im Job-JSON. Deshalb ist `brief` hier
@@ -44,30 +45,6 @@ import { useDuplicates } from './hooks/duplicates.ts';
 // das je zurückgeschrieben wird (Speichern einer Bearbeitung ist ein eigener Endpunkt).
 type JobWithBrief = Job & { brief: string | null };
 
-// Spiegeln die Server-Shapes aus scripts/ui-server.ts (ScrapeRunState/FilterRunState)
-// — kein gemeinsames Typ-Modul, weil der Server sonst Browser-untaugliche Imports
-// (node:fs via lib/settings.ts etc.) ins UI-Bundle ziehen würde.
-type ScrapeStatus = {
-  status: 'idle' | 'running' | 'done' | 'error';
-  runId: string | null;
-  sources: Record<string, { current: number; total: number }>;
-  result?: { newTotal: number; skipTotal: number; offlineTotal: number; backTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; offlineCount: number; backCount: number; error?: string }[] };
-  error?: string;
-};
-type FilterRunStatus = {
-  status: 'idle' | 'running' | 'done' | 'error';
-  runId: string | null;
-  current?: { i: number; total: number; title: string };
-  result?: { matched: number; offstack: number; brutal: number };
-  error?: string;
-};
-type AnschreibenRunStatus = {
-  status: 'idle' | 'running' | 'done' | 'error' | 'stopped';
-  runId: string | null;
-  current?: { i: number; total: number; title: string };
-  result?: { generated: number; skipped: number; emailsFound: number; mailGenerated: number; nomailGenerated: number };
-  error?: string;
-};
 type FilterMode = 'llm' | 'regex';
 
 /* ------------------------------------------------------------------ *
@@ -272,14 +249,11 @@ export default function JobbotUI() {
   // getriagten Jobs außer brutal.
   const [anschreibenFits, setAnschreibenFits] = useState<Set<Fit>>(new Set(['matched', 'offstack']));
   const [anschreibenLimit, setAnschreibenLimit] = useState('');
-  const [scrapeStatus, setScrapeStatus] = useState<ScrapeStatus | null>(null);
   const [scrapeSections, setScrapeSections] = useState<LoadGridSection[]>([]);
-  const [filterStatus, setFilterStatus] = useState<FilterRunStatus | null>(null);
   const [filterSections, setFilterSections] = useState<LoadGridSection[]>([]);
   const [replyOnly, setReplyOnly] = useState(false);
   const [repliesFetching, setRepliesFetching] = useState(false);
   const [gmailSyncing, setGmailSyncing] = useState(false);
-  const [anschreibenStatus, setAnschreibenStatus] = useState<AnschreibenRunStatus | null>(null);
   const [anschreibenSections, setAnschreibenSections] = useState<LoadGridSection[]>([]);
   const [scrapeStarting, setScrapeStarting] = useState(false);
   const [filterStarting, setFilterStarting] = useState(false);
@@ -304,10 +278,6 @@ export default function JobbotUI() {
   const lastSeenScrapeRunId = useRef<string | null>(null);
   const lastSeenFilterRunId = useRef<string | null>(null);
   const lastSeenAnschreibenRunId = useRef<string | null>(null);
-  // Weckt die Status-Poll-Schleife (siehe unten) sofort auf, statt auf den nächsten
-  // 1.5s-Tick zu warten — gesetzt vom Poll-Effect, aufgerufen von runScrapeNow/
-  // runFilterNow/runAnschreibenNow direkt nach dem Start-POST.
-  const pollRunsNow = useRef<() => void>(() => {});
   const ta = useRef<HTMLTextAreaElement>(null);
   // Für den Tschobbo-Hook im Scrape-SSE-Effect unten (der nur einmal läuft,
   // `view` also sonst als Closure einfrieren würde).
@@ -347,86 +317,68 @@ export default function JobbotUI() {
     fetch('/api/settings').then(r => r.json()).then((s: { filterMode: FilterMode }) => setFilterMode(s.filterMode));
   }, []);
 
-  // Poll-Schleife für die gesamte Lebensdauer der App (nicht an eine bestimmte
-  // Ansicht gebunden) — nur so bleibt die Fortschrittsanzeige in der Sidebar
-  // sichtbar, auch wenn man zu einer anderen Ansicht wechselt. Läuft aber nur,
-  // solange tatsächlich etwas läuft: selbst-planender setTimeout statt Dauer-
-  // Intervall, hört auf sobald alle drei Status nicht mehr "running" sind.
-  // runScrapeNow/runFilterNow/runAnschreibenNow wecken sie über pollRunsNow
-  // sofort nach dem Start-POST wieder auf, statt auf den nächsten Tick zu warten.
+  const { scrapeStatus, filterStatus, anschreibenStatus, wake: pollRunsNow } = useRunStatusPoll();
+
+  // Übergangs-Effekt: die Toast-/Refetch-/highlightFolders-Reaktion auf ein Lauf-Ende
+  // lebte bisher IM Poll-Tick selbst (siehe useRunStatusPoll, jetzt reine Datenquelle).
+  // Wandert stückweise in useScrapeRun/useFilterRun/useAnschreibenRun, sobald die
+  // jeweilige Aktion selbst dorthin zieht — bis dahin unverändertes Verhalten hier.
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    let cancelled = false;
+    if (!scrapeStatus) return;
+    const s = scrapeStatus;
+    if ((s.status === 'done' || s.status === 'error') && s.runId && s.runId !== lastSeenScrapeRunId.current) {
+      lastSeenScrapeRunId.current = s.runId;
+      refetchJobs();
+      say(
+        s.status === 'error' ? `Scrape fehlgeschlagen: ${s.error}`
+        // Der Offline-Teil steht nur da, wenn wirklich etwas archiviert wurde —
+        // ein "0 offline" in jedem Toast wäre eine Meldung ohne Nachricht.
+        : `Scrape: ${s.result?.newTotal ?? 0} neu, ${s.result?.skipTotal ?? 0} dedup`
+          + ((s.result?.offlineTotal ?? 0) > 0 ? `, ${s.result?.offlineTotal} offline archiviert` : '')
+          + ((s.result?.backTotal ?? 0) > 0 ? `, ${s.result?.backTotal} zurückgeholt` : ''),
+        s.status === 'error' ? 'err' : 'ok'
+      );
+    }
+  }, [scrapeStatus, refetchJobs, say]);
 
-    const tick = async () => {
-      if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
-      try {
-        const [s, f, a] = await Promise.all([
-          fetch('/api/scrape/status').then(r => r.json()) as Promise<ScrapeStatus>,
-          fetch('/api/filter/status').then(r => r.json()) as Promise<FilterRunStatus>,
-          fetch('/api/anschreiben/status').then(r => r.json()) as Promise<AnschreibenRunStatus>,
-        ]);
-        setScrapeStatus(s);
-        setFilterStatus(f);
-        setAnschreibenStatus(a);
+  useEffect(() => {
+    if (!filterStatus) return;
+    const f = filterStatus;
+    if ((f.status === 'done' || f.status === 'error') && f.runId && f.runId !== lastSeenFilterRunId.current) {
+      lastSeenFilterRunId.current = f.runId;
+      refetchJobs();
+      say(
+        f.status === 'error' ? `Filter fehlgeschlagen: ${f.error}` : `Filter: ${f.result?.matched ?? 0} Match, ${f.result?.offstack ?? 0} Offstack, ${f.result?.brutal ?? 0} Brutal`,
+        f.status === 'error' ? 'err' : 'ok'
+      );
+    }
+  }, [filterStatus, refetchJobs, say]);
 
-        if ((s.status === 'done' || s.status === 'error') && s.runId && s.runId !== lastSeenScrapeRunId.current) {
-          lastSeenScrapeRunId.current = s.runId;
-          refetchJobs();
-          say(
-            s.status === 'error' ? `Scrape fehlgeschlagen: ${s.error}`
-            // Der Offline-Teil steht nur da, wenn wirklich etwas archiviert wurde —
-            // ein "0 offline" in jedem Toast wäre eine Meldung ohne Nachricht.
-            : `Scrape: ${s.result?.newTotal ?? 0} neu, ${s.result?.skipTotal ?? 0} dedup`
-              + ((s.result?.offlineTotal ?? 0) > 0 ? `, ${s.result?.offlineTotal} offline archiviert` : '')
-              + ((s.result?.backTotal ?? 0) > 0 ? `, ${s.result?.backTotal} zurückgeholt` : ''),
-            s.status === 'error' ? 'err' : 'ok'
-          );
-        }
-        if ((f.status === 'done' || f.status === 'error') && f.runId && f.runId !== lastSeenFilterRunId.current) {
-          lastSeenFilterRunId.current = f.runId;
-          refetchJobs();
-          say(
-            f.status === 'error' ? `Filter fehlgeschlagen: ${f.error}` : `Filter: ${f.result?.matched ?? 0} Match, ${f.result?.offstack ?? 0} Offstack, ${f.result?.brutal ?? 0} Brutal`,
-            f.status === 'error' ? 'err' : 'ok'
-          );
-        }
-        if ((a.status === 'done' || a.status === 'error' || a.status === 'stopped') && a.runId && a.runId !== lastSeenAnschreibenRunId.current) {
-          lastSeenAnschreibenRunId.current = a.runId;
-          refetchJobs();
-          say(
-            a.status === 'error' ? `Anschreiben fehlgeschlagen: ${a.error}`
-            : a.status === 'stopped' ? `Anschreiben abgebrochen: ${a.result?.generated ?? 0} generiert, ${a.result?.emailsFound ?? 0} E-Mails gefunden`
-            : `Anschreiben: ${a.result?.generated ?? 0} generiert, ${a.result?.skipped ?? 0} übersprungen, ${a.result?.emailsFound ?? 0} E-Mails gefunden`,
-            a.status === 'error' ? 'err' : 'ok'
-          );
-          // Nur den Entwürfe-Ordner markieren, der wirklich einen neuen Job bekommen
-          // hat — mailGenerated/nomailGenerated sind die Aufschlüsselung von `generated`
-          // nach Mail-Status am Ende des Laufs (siehe lib/anschreiben-runner.ts).
-          if (a.status !== 'error') {
-            setHighlightFolders(prev => {
-              const next = new Set(prev);
-              if ((a.result?.mailGenerated ?? 0) > 0) next.add('mail/entwurf');
-              if ((a.result?.nomailGenerated ?? 0) > 0) next.add('nomail/entwurf');
-              return next;
-            });
-          }
-        }
-
-        const stillRunning = s.status === 'running' || f.status === 'running' || a.status === 'running';
-        if (!cancelled && stillRunning) timeoutId = setTimeout(tick, 1500);
-      } catch {
-        // Server kurz nicht erreichbar — weiter versuchen statt die Schleife stillschweigend zu beenden
-        if (!cancelled) timeoutId = setTimeout(tick, 1500);
+  useEffect(() => {
+    if (!anschreibenStatus) return;
+    const a = anschreibenStatus;
+    if ((a.status === 'done' || a.status === 'error' || a.status === 'stopped') && a.runId && a.runId !== lastSeenAnschreibenRunId.current) {
+      lastSeenAnschreibenRunId.current = a.runId;
+      refetchJobs();
+      say(
+        a.status === 'error' ? `Anschreiben fehlgeschlagen: ${a.error}`
+        : a.status === 'stopped' ? `Anschreiben abgebrochen: ${a.result?.generated ?? 0} generiert, ${a.result?.emailsFound ?? 0} E-Mails gefunden`
+        : `Anschreiben: ${a.result?.generated ?? 0} generiert, ${a.result?.skipped ?? 0} übersprungen, ${a.result?.emailsFound ?? 0} E-Mails gefunden`,
+        a.status === 'error' ? 'err' : 'ok'
+      );
+      // Nur den Entwürfe-Ordner markieren, der wirklich einen neuen Job bekommen
+      // hat — mailGenerated/nomailGenerated sind die Aufschlüsselung von `generated`
+      // nach Mail-Status am Ende des Laufs (siehe lib/anschreiben-runner.ts).
+      if (a.status !== 'error') {
+        setHighlightFolders(prev => {
+          const next = new Set(prev);
+          if ((a.result?.mailGenerated ?? 0) > 0) next.add('mail/entwurf');
+          if ((a.result?.nomailGenerated ?? 0) > 0) next.add('nomail/entwurf');
+          return next;
+        });
       }
-    };
-    pollRunsNow.current = tick;
-    tick();
-    return () => {
-      cancelled = true;
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [refetchJobs, say]);
+    }
+  }, [anschreibenStatus, refetchJobs, say]);
 
   // SSE statt Polling fürs Anschreiben-Lade-Grid — ein Event pro fertigem (oder
   // fehlgeschlagenem) Anschreiben, angehängt an anschreibenSections (siehe
@@ -476,7 +428,7 @@ export default function JobbotUI() {
         body: JSON.stringify({ sources: [...selectedSources] }),
       });
       if (res.status === 409) say('Scrape läuft bereits', 'err');
-      pollRunsNow.current();
+      pollRunsNow();
     } finally {
       setScrapeStarting(false);
     }
@@ -492,7 +444,7 @@ export default function JobbotUI() {
         body: JSON.stringify({ mode: filterMode, scope: filterScope }),
       });
       if (res.status === 409) say('Filter läuft bereits', 'err');
-      pollRunsNow.current();
+      pollRunsNow();
     } finally {
       setFilterStarting(false);
     }
@@ -567,7 +519,7 @@ export default function JobbotUI() {
       });
       if (res.status === 409) say('Anschreiben-Lauf läuft bereits', 'err');
       else setSelectedJobIds(new Set());
-      pollRunsNow.current();
+      pollRunsNow();
     } finally {
       setAnschreibenStarting(false);
     }
