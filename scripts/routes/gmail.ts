@@ -3,6 +3,7 @@ import { fetchInboxReplies, fetchSentMails, istBewerbung, type SentMail } from '
 import { matchReplies, matchSent } from '../../lib/mail-match.ts';
 import { HISTORY_START } from '../../lib/calendar.ts';
 import { saveMailEvents, toMailEvents } from '../../lib/mail-events.ts';
+import { respondJson } from './http.ts';
 import type { Ctx } from './context.ts';
 
 export async function handleGmailRoutes(req: IncomingMessage, res: ServerResponse, url: URL, ctx: Ctx): Promise<boolean> {
@@ -54,8 +55,7 @@ export async function handleGmailRoutes(req: IncomingMessage, res: ServerRespons
         replyGefuellt++;
       }
 
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({
+      respondJson(res, 200, {
         sentGescannt: alleSent.length,
         markiert: sentMails.length,
         sentGefuellt,
@@ -63,10 +63,9 @@ export async function handleGmailRoutes(req: IncomingMessage, res: ServerRespons
         replyGescannt: replies.length,
         replyGefuellt,
         seit: HISTORY_START,
-      }));
+      });
     } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
+      respondJson(res, 500, { error: err instanceof Error ? err.message : String(err) });
     }
     return true;
   }
@@ -78,8 +77,7 @@ export async function handleGmailRoutes(req: IncomingMessage, res: ServerRespons
       const jobs = await ctx.storage.list();
       const gesendetDates = jobs.filter(j => j.status === 'gesendet' && j.email).map(j => new Date(j.updatedAt).getTime());
       if (gesendetDates.length === 0) {
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ checked: 0, matched: 0 }));
+        respondJson(res, 200, { checked: 0, matched: 0 });
         return true;
       }
       const since = new Date(Math.min(...gesendetDates));
@@ -88,11 +86,9 @@ export async function handleGmailRoutes(req: IncomingMessage, res: ServerRespons
       for (const { job, reply } of matches) {
         await ctx.storage.update(job.id, { replyReceivedAt: reply.date.toISOString() });
       }
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ checked: replies.length, matched: matches.length }));
+      respondJson(res, 200, { checked: replies.length, matched: matches.length });
     } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
+      respondJson(res, 500, { error: err instanceof Error ? err.message : String(err) });
     }
     return true;
   }
