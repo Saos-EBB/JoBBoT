@@ -18,9 +18,11 @@ export function useAnschreibenRun(
   setHighlightFolders: (fn: (prev: Set<FolderId>) => Set<FolderId>) => void,
   onStarted: () => void,
 ) {
-  // serverseitig fällt fit "brutal" immer auf "skipped" (generateAnschreiben() lehnt
-  // das grundsätzlich ab, siehe lib/anschreiben.ts). Default spiegelt den CLI-Default
-  // ohne --data: alle getriagten Jobs außer brutal.
+  // Entspricht scripts/run-anschreiben.ts --data (matched/offstack) — "brutal" ist als
+  // Kästchen trotzdem wählbar (Symmetrie mit den Fit-Chips oben in der Liste), landet aber
+  // serverseitig immer bei "skipped" (generateAnschreiben() lehnt fit "brutal" grundsätzlich
+  // ab, siehe lib/anschreiben.ts). Default spiegelt den CLI-Default ohne --data: alle
+  // getriagten Jobs außer brutal.
   const [anschreibenFits, setAnschreibenFits] = useState<Set<Fit>>(new Set(['matched', 'offstack']));
   const [anschreibenLimit, setAnschreibenLimit] = useState('');
   const [anschreibenSections, setAnschreibenSections] = useState<LoadGridSection[]>([]);
