@@ -1,4 +1,5 @@
 import type React from 'react';
+import { useEffect } from 'react';
 
 // Spiegelt GridUnitEvent aus scripts/ui-server.ts — ein SSE-Event pro abgeschlossener
 // Grid-Zeile (Seite/Batch/Anschreiben-Item), siehe LoadGrid weiter unten.
@@ -93,4 +94,25 @@ export function appendGridRow(sections: LoadGridSection[], e: GridUnitEvent): Lo
   const next = [...sections];
   next[idx] = { ...next[idx], rows: [...next[idx].rows, row] };
   return next;
+}
+
+// Eine dauerhaft offene SSE-Verbindung, die jedes Event ans Sections-Grid anhängt —
+// von Scrape/Filter/Anschreiben gleichermaßen genutzt, damit die Verbindungslogik nicht
+// dreimal geschrieben wird (siehe appendGridRow oben). onEvent ist für Sonderfälle wie
+// den Tschobbo-Hook der Scrape-Section, der zusätzlich zum Anhängen selbst reagiert.
+export function useGridStream(
+  url: string,
+  setSections: React.Dispatch<React.SetStateAction<LoadGridSection[]>>,
+  onEvent?: (e: GridUnitEvent) => void,
+): void {
+  useEffect(() => {
+    const es = new EventSource(url);
+    es.onmessage = (e) => {
+      const event = JSON.parse(e.data) as GridUnitEvent;
+      setSections(prev => appendGridRow(prev, event));
+      onEvent?.(event);
+    };
+    return () => es.close();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url]);
 }
