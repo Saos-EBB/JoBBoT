@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { loadSources } from '../../lib/sources.ts';
 import { adapterRegistry, buildScrapeSetup } from '../../lib/scrape-setup.ts';
 import { runScrape } from '../../lib/scrape-runner.ts';
-import { createSseChannel, type GridUnitEvent } from './sse-channel.ts';
+import { createSseChannel, attachSseClient, type GridUnitEvent } from './sse-channel.ts';
 import { respondJson, readJsonBody } from './http.ts';
 import type { Ctx } from './context.ts';
 
@@ -48,13 +48,7 @@ export async function handleScrapeRoutes(req: IncomingMessage, res: ServerRespon
   }
 
   if (req.method === 'GET' && url.pathname === '/api/scrape/stream') {
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream; charset=utf-8',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-    });
-    scrapeSse.clients.add(res);
-    req.on('close', () => scrapeSse.clients.delete(res));
+    attachSseClient(req, res, scrapeSse);
     return true;
   }
 

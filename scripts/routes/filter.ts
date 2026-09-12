@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { loadSettings, type FilterMode } from '../../lib/settings.ts';
 import { runFilter } from '../../lib/filter-runner.ts';
 import { createBatcher } from '../../lib/grid-batch.ts';
-import { createSseChannel, type GridSquare, type GridUnitEvent } from './sse-channel.ts';
+import { createSseChannel, attachSseClient, type GridSquare, type GridUnitEvent } from './sse-channel.ts';
 import { respondJson, readJsonBody } from './http.ts';
 import type { Ctx } from './context.ts';
 
@@ -30,13 +30,7 @@ export async function handleFilterRoutes(req: IncomingMessage, res: ServerRespon
   }
 
   if (req.method === 'GET' && url.pathname === '/api/filter/stream') {
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream; charset=utf-8',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-    });
-    filterSse.clients.add(res);
-    req.on('close', () => filterSse.clients.delete(res));
+    attachSseClient(req, res, filterSse);
     return true;
   }
 

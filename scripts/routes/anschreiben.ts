@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { canGenerateAnschreiben } from '../../lib/folders.ts';
 import { runAnschreiben } from '../../lib/anschreiben-runner.ts';
-import { createSseChannel, type GridUnitEvent } from './sse-channel.ts';
+import { createSseChannel, attachSseClient, type GridUnitEvent } from './sse-channel.ts';
 import { respondJson, readJsonBody } from './http.ts';
 import type { Ctx } from './context.ts';
 import type { Job } from '../../scrapers/interface.ts';
@@ -27,13 +27,7 @@ export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerR
   }
 
   if (req.method === 'GET' && url.pathname === '/api/anschreiben/stream') {
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream; charset=utf-8',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-    });
-    anschreibenSse.clients.add(res);
-    req.on('close', () => anschreibenSse.clients.delete(res));
+    attachSseClient(req, res, anschreibenSse);
     return true;
   }
 
