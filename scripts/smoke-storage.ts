@@ -1,11 +1,10 @@
-import { createStorage } from '../storage/index.ts';
+import { JsonStore } from '../storage/json-store.ts';
 import { toJob } from '../lib/normalize.ts';
 import { readdir } from 'node:fs/promises';
 import { config } from '../config.ts';
 import type { ScrapedJob } from '../scrapers/interface.ts';
-import { JsonStore } from '../storage/json-store.ts';
 
-const store = createStorage();
+const store = new JsonStore();
 
 const fake: ScrapedJob = {
   source: 'smoke-test',
@@ -43,7 +42,7 @@ const triaged = await store.list({ status: 'triaged' });
 if (!triaged.some(j => j.id === id)) throw new Error('list(triaged) missing job');
 
 // cleanup
-await (store as JsonStore).delete(id);
+await store.delete(id);
 if (await store.exists(id)) throw new Error('cleanup failed');
 
 console.log('✓ Storage smoke OK');

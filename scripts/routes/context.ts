@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { Storage } from '../../storage/index.ts';
+import type { Storage } from '../../storage/json-store.ts';
 import type { ProfileData } from '../../lib/profile.ts';
 
 export interface Ctx {

@@ -1,5 +1,5 @@
 import type { Job, JobStatus } from '../scrapers/interface.ts';
-import type { Storage } from '../storage/index.ts';
+import type { Storage } from '../storage/json-store.ts';
 import { config } from '../config.ts';
 import { decide } from './filter-decide.ts';
 import type { FilterJudgment } from './filter-llm.ts';

@@ -1,7 +1,7 @@
-import { createStorage } from '../storage/index.ts';
+import { JsonStore } from '../storage/json-store.ts';
 import { findDuplicates } from '../lib/duplicates.ts';
 
-const storage = createStorage();
+const storage = new JsonStore();
 const jobs = await storage.list();
 const groups = findDuplicates(jobs);
 

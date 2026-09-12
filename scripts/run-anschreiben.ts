@@ -1,5 +1,5 @@
 import { appendFile } from 'node:fs/promises';
-import { createStorage } from '../storage/index.ts';
+import { JsonStore } from '../storage/json-store.ts';
 import { ANSCHREIBEN_LOG_PATH } from '../lib/anschreiben.ts';
 import { logTimestamp } from '../lib/log-timestamp.ts';
 import { runAnschreiben } from '../lib/anschreiben-runner.ts';
@@ -8,7 +8,7 @@ import { createProgress } from '../lib/progress.ts';
 import { config } from '../config.ts';
 
 const profile = loadProfile();
-const storage = createStorage();
+const storage = new JsonStore();
 
 // --data=save    -> nur data/jobs/matched/  (fit "matched")
 // --data=unsave  -> nur data/jobs/offstack/ (fit "offstack")

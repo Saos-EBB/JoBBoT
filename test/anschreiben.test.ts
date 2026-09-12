@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { buildAnschreibenPrompt, parseAnschreibenResponse, generateAnschreiben } from '../lib/anschreiben.ts';
 import type { ProfileData } from '../lib/profile.ts';
-import { createStorage } from '../storage/index.ts';
+import { JsonStore } from '../storage/json-store.ts';
 import { toJob } from '../lib/normalize.ts';
 import { tmpDir, rmTmp, mockChat, mockChatSequence } from './helpers.ts';
 
@@ -123,7 +123,7 @@ test('generateAnschreiben: gültiger Response → status "generated", .md geschr
   const anschreibenDir = await tmpDir();
   const logDir = await tmpDir();
   t.after(() => { rmTmp(dir); rmTmp(anschreibenDir); rmTmp(logDir); });
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const job = { ...sample(), status: 'triaged' as const, fit: 'matched' as const };
   await storage.save(job);
 
@@ -140,7 +140,7 @@ test('generateAnschreiben: gültiger Response → status "generated", .md geschr
 test('generateAnschreiben: leerer Response → status bleibt "triaged", path null', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const job = { ...sample(), status: 'triaged' as const, fit: 'matched' as const };
   await storage.save(job);
 
@@ -157,7 +157,7 @@ test('generateAnschreiben: fit "offstack" → wird auch verarbeitet (nicht nur "
   const anschreibenDir = await tmpDir();
   const logDir = await tmpDir();
   t.after(() => { rmTmp(dir); rmTmp(anschreibenDir); rmTmp(logDir); });
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const job = { ...sample(), status: 'triaged' as const, fit: 'offstack' as const };
   await storage.save(job);
 
@@ -172,7 +172,7 @@ test('generateAnschreiben: fit "offstack" → wird auch verarbeitet (nicht nur "
 test('generateAnschreiben: status !== "triaged" → kein Ollama-Call', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const job = sample(); // status is 'new'
   await storage.save(job);
 
@@ -193,7 +193,7 @@ test('generateAnschreiben: 1. Versuch ungültig (1 Absatz), 2. Versuch gültig �
   const anschreibenDir = await tmpDir();
   const logDir = await tmpDir();
   t.after(() => { rmTmp(dir); rmTmp(anschreibenDir); rmTmp(logDir); });
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const job = { ...sample(), status: 'triaged' as const, fit: 'matched' as const };
   await storage.save(job);
 
@@ -210,7 +210,7 @@ test('generateAnschreiben: dauerhaft ungültig → Regenerierungen erschöpft, s
   const dir = await tmpDir();
   const logDir = await tmpDir();
   t.after(() => { rmTmp(dir); rmTmp(logDir); });
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const job = { ...sample(), status: 'triaged' as const, fit: 'matched' as const };
   await storage.save(job);
 

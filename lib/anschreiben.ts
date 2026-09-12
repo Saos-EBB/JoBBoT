@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { appendFileSync } from 'node:fs';
 import { logTimestamp } from './log-timestamp.ts';
 import type { Job } from '../scrapers/interface.ts';
-import type { Storage } from '../storage/index.ts';
+import type { Storage } from '../storage/json-store.ts';
 import type { ProfileData } from './profile.ts';
 import { anschreibenZiel } from './anschreiben-datei.ts';
 import { canGenerateAnschreiben } from './folders.ts';

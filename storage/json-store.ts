@@ -2,9 +2,22 @@ import { mkdir, readdir, readFile, rename, writeFile, unlink } from 'node:fs/pro
 import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
-import type { Storage } from './index.ts';
 import { jobBasename } from '../lib/slugify.ts';
 import { config } from '../config.ts';
+
+export interface Storage {
+  exists(id: string): Promise<boolean>;
+  save(job: Job): Promise<void>;
+  get(id: string): Promise<Job | null>;
+  list(filter?: { status?: JobStatus }): Promise<Job[]>;
+  update(id: string, patch: Partial<Job>): Promise<Job>;
+  updateStatus(id: string, status: JobStatus): Promise<Job>;
+  delete(id: string): Promise<void>;
+  // Löscht exakt DIESES Job-Objekt (nicht per id-Präfix-Suche wie delete()) —
+  // nötig, sobald zwei Dateien dieselbe id tragen (echter Re-Scrape derselben
+  // Stelle), siehe lib/duplicates.ts planMerge().
+  deleteJob(job: Job): Promise<void>;
+}
 
 // Sortierte Unterordner für die drei Filter-Ergebnisse — nur für getriagte Jobs
 // (status "triaged") relevant, Ordnername === fit-Wert (matched/offstack/brutal).

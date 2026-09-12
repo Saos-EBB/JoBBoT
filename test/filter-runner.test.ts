@@ -2,10 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { runFilter } from '../lib/filter-runner.ts';
 import type { TriagedDecision } from '../lib/filter.ts';
-import { createStorage } from '../storage/index.ts';
+import { JsonStore } from '../storage/json-store.ts';
 import { toJob } from '../lib/normalize.ts';
 import type { Job } from '../scrapers/interface.ts';
-import type { Storage } from '../storage/index.ts';
+import type { Storage } from '../storage/json-store.ts';
 import { tmpDir, rmTmp } from './helpers.ts';
 
 const sample = (title: string) => toJob({
@@ -24,7 +24,7 @@ const fakeFilter = (job: Job): Promise<TriagedDecision> => Promise.resolve({
 });
 
 async function storageMit(dir: string, jobs: Job[]): Promise<Storage> {
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   for (const job of jobs) await storage.save(job);
   return storage;
 }
@@ -130,7 +130,7 @@ test('der Bericht wird vom Runner geschrieben, nicht vom Aufrufer', async (t) =>
 test('leerer Lauf schreibt keinen Bericht — sonst steht ein Kopf ohne Inhalt im Log', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
 
   let gerufen = 0;
   const outcome = await runFilter({

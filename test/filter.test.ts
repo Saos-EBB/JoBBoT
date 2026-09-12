@@ -7,7 +7,7 @@ import type { AddressInfo } from 'node:net';
 import { filterJob } from '../lib/filter.ts';
 import type { TriagedDecision } from '../lib/filter.ts';
 import { writeFilterReport } from '../lib/filter-report.ts';
-import { createStorage } from '../storage/index.ts';
+import { JsonStore } from '../storage/json-store.ts';
 import { toJob } from '../lib/normalize.ts';
 import { tmpDir, rmTmp } from './helpers.ts';
 
@@ -50,7 +50,7 @@ function mockChatSequence(contents: string[]): Promise<{ url: string; close: () 
 test('filterJob: it_rolle ja, erfahrung nein, junior_signal ja → status "matched"', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const job = sample();
   await storage.save(job);
 
@@ -68,7 +68,7 @@ test('filterJob: it_rolle ja, erfahrung nein, junior_signal ja → status "match
 test('filterJob: it_rolle nein → status "filtered_out", Datei bleibt erhalten (kein delete)', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const job = sample();
   await storage.save(job);
 
@@ -89,7 +89,7 @@ test('filterJob: it_rolle nein → status "filtered_out", Datei bleibt erhalten 
 test('filterJob: Titel-Regel ("Senior...") → status "filtered_out", KEIN Ollama-Call, Datei bleibt', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const job = sample('Senior Fullstack Developer');
   await storage.save(job);
 
@@ -113,7 +113,7 @@ test('filterJob: Titel-Regel ("Senior...") → status "filtered_out", KEIN Ollam
 test('filterJob: junior_signal nein → status "uncertain", Datei bleibt', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const job = sample();
   await storage.save(job);
 
@@ -132,7 +132,7 @@ test('filterJob: junior_signal nein → status "uncertain", Datei bleibt', async
 test('filterJob: Regex-Modus, disqualifizierende Erfahrung → filtered_out, Datei bleibt (Retain)', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const job = sample('Software Developer');
   job.description = 'Anforderungen: Mind. 3 Jahre Berufserfahrung erforderlich.';
   await storage.save(job);
@@ -149,7 +149,7 @@ test('filterJob: Regex-Modus, disqualifizierende Erfahrung → filtered_out, Dat
 test('filterJob: 2× Müll → "uncertain" statt Absturz', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const job = sample();
   await storage.save(job);
 
@@ -180,7 +180,7 @@ function decision(overrides: Partial<TriagedDecision> & { job: ReturnType<typeof
 test('filterJob: ein Job ab "generated" behaelt seinen Status, nur fit wird neu gesetzt', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
 
   for (const status of ['generated', 'freigegeben', 'postausgang', 'gesendet', 'geloescht', 'fehler', 'offline'] as const) {
     const job = { ...sample(`Junior Developer ${status}`), status, fit: 'offstack' as const };
@@ -200,7 +200,7 @@ test('filterJob: ein Job ab "generated" behaelt seinen Status, nur fit wird neu 
 test('filterJob: "new" und "triaged" werden weiterhin auf "triaged" gesetzt', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
 
   for (const status of ['new', 'triaged'] as const) {
     const job = { ...sample(`Junior Developer ${status}`), status };
@@ -220,7 +220,7 @@ test('filterJob: "new" und "triaged" werden weiterhin auf "triaged" gesetzt', as
 test('filterJob: Statuswechsel WAEHREND des Laufs gewinnt gegen das veraltete Objekt', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const job = sample();
   await storage.save(job);
 

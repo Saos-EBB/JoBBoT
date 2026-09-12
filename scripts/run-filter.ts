@@ -1,4 +1,4 @@
-import { createStorage } from '../storage/index.ts';
+import { JsonStore } from '../storage/json-store.ts';
 import { runFilter } from '../lib/filter-runner.ts';
 import type { FilterScope } from '../lib/filter-runner.ts';
 import { createProgress } from '../lib/progress.ts';
@@ -29,7 +29,7 @@ function parseScope(argv: string[]): FilterScope {
 
 const mode = parseModeOverride(process.argv.slice(2)) ?? loadSettings().filterMode;
 const scope = parseScope(process.argv.slice(2));
-const storage = createStorage();
+const storage = new JsonStore();
 
 function logLine(d: TriagedDecision): void {
   if (d.status === 'matched') {

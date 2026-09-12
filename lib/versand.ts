@@ -1,5 +1,5 @@
 import type { Job } from '../scrapers/interface.ts';
-import type { Storage } from '../storage/index.ts';
+import type { Storage } from '../storage/json-store.ts';
 import type { ProfileData } from './profile.ts';
 import type { ComposedEmail, MailTransport } from '../mail/transport.ts';
 import { trockenTransport } from '../mail/transport.ts';

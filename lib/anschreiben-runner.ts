@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import { readFile } from 'node:fs/promises';
 import type { Job } from '../scrapers/interface.ts';
-import type { Storage } from '../storage/index.ts';
+import type { Storage } from '../storage/json-store.ts';
 import type { ProfileData } from './profile.ts';
 import { generateAnschreiben } from './anschreiben.ts';
 import { findEmail, FIRMENABC_USER_AGENT } from './find-email.ts';

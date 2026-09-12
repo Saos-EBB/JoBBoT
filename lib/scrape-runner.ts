@@ -1,5 +1,5 @@
 import type { Job, JobStatus, ScraperAdapter, ScrapedJob, SourceQuery } from '../scrapers/interface.ts';
-import type { Storage } from '../storage/index.ts';
+import type { Storage } from '../storage/json-store.ts';
 import { toJob } from './normalize.ts';
 import { jobId } from './hash.ts';
 import { checkOnline as checkOnlineDefault, type OnlineVerdict } from './offline-check.ts';

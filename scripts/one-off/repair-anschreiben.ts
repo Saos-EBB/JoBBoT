@@ -1,6 +1,6 @@
 import { readdir, stat, rename, unlink, mkdir, cp } from 'node:fs/promises';
 import { join } from 'node:path';
-import { createStorage } from '../../storage/index.ts';
+import { JsonStore } from '../../storage/json-store.ts';
 import { slugify } from '../../lib/slugify.ts';
 import { anschreibenName } from '../../lib/anschreiben-datei.ts';
 import { config } from '../../config.ts';
@@ -68,7 +68,7 @@ async function main() {
     console.log(`Backup fertig: ${await backup(dir)}/\n`);
   }
 
-  const jobs = await createStorage().list();
+  const jobs = await new JsonStore().list();
   // Ziel-Name im NEUEN Schema (ohne Datum). Eine Datei, die schon so heisst, bleibt.
   const perZielname = new Map(jobs.map(j => [anschreibenName(j), j]));
   // Und der Job, den eine Datei über ihr id-Präfix meint — unabhängig vom Rest des

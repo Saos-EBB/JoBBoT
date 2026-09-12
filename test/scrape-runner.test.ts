@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { runScrape } from '../lib/scrape-runner.ts';
-import { createStorage } from '../storage/index.ts';
+import { JsonStore } from '../storage/json-store.ts';
 import type { Job, ScraperAdapter, ScrapedJob } from '../scrapers/interface.ts';
 import type { OnlineVerdict } from '../lib/offline-check.ts';
 import { toJob } from '../lib/normalize.ts';
@@ -24,7 +24,7 @@ const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 test('2 erfolgreiche Quellen + 1 werfende → Erfolge liefern Jobs, Fehler wird gemeldet, Lauf bricht nicht ab', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
 
   const registry: Record<string, ScraperAdapter> = {
     a: okAdapter('a', [job('Job A1', 'Firma A')]),
@@ -55,7 +55,7 @@ test('2 erfolgreiche Quellen + 1 werfende → Erfolge liefern Jobs, Fehler wird 
 test('dieselbe jobId aus zwei Quellen → nur 1 Datei, Zähler stimmt (neu bei erster, dedup bei zweiter)', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
 
   const sameJob = job('Duplicate Job', 'Same Company');
   const registry: Record<string, ScraperAdapter> = {
@@ -83,7 +83,7 @@ test('dieselbe jobId aus zwei Quellen → nur 1 Datei, Zähler stimmt (neu bei e
 test('keep-Filter wird an jeden Adapter durchgereicht', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
 
   let receivedKeep: ((job: ScrapedJob) => boolean) | undefined;
   const registry: Record<string, ScraperAdapter> = {
@@ -106,7 +106,7 @@ test('keep-Filter wird an jeden Adapter durchgereicht', async (t) => {
 test('onProgress wird pro Quelle mit ihrem Namen aufgerufen', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
 
   const calls: { name: string; current: number; total: number }[] = [];
   const registry: Record<string, ScraperAdapter> = {
@@ -156,7 +156,7 @@ function trackingAdapter(name: string, kind: 'fetch' | 'browser', ms: number, tr
 test('Scheduler: nie mehr als 2 Adapter gleichzeitig aktiv', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
 
   const tracker = { active: 0, max: 0, activeBrowsers: 0, maxBrowsers: 0 };
   const registry: Record<string, ScraperAdapter> = {
@@ -173,7 +173,7 @@ test('Scheduler: nie mehr als 2 Adapter gleichzeitig aktiv', async (t) => {
 test('Scheduler: nie 2 Browser-Adapter gleichzeitig, auch wenn Gesamt-Slot frei wäre', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
 
   const tracker = { active: 0, max: 0, activeBrowsers: 0, maxBrowsers: 0 };
   const registry: Record<string, ScraperAdapter> = {
@@ -190,7 +190,7 @@ test('Scheduler: nie 2 Browser-Adapter gleichzeitig, auch wenn Gesamt-Slot frei 
 test('Scheduler: ein Fetch-Adapter darf neben einem laufenden Browser-Adapter laufen', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
 
   const tracker = { active: 0, max: 0, activeBrowsers: 0, maxBrowsers: 0 };
   const registry: Record<string, ScraperAdapter> = {
@@ -205,7 +205,7 @@ test('Scheduler: ein Fetch-Adapter darf neben einem laufenden Browser-Adapter la
 test('Scheduler: werfender Adapter blockiert die anderen nicht, auch unter Drosselung', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
 
   const tracker = { active: 0, max: 0, activeBrowsers: 0, maxBrowsers: 0 };
   const registry: Record<string, ScraperAdapter> = {
@@ -242,7 +242,7 @@ function timedAdapter(name: string, kind: 'fetch' | 'browser', ms: number, start
 test('Scheduler: ein wartender Browser-Adapter blockiert einen bereiten Fetch-Adapter NICHT', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
 
   const t0 = performance.now();
   const starts: Record<string, number> = {};
@@ -270,7 +270,7 @@ test('Scheduler: ein wartender Browser-Adapter blockiert einen bereiten Fetch-Ad
 test('Scheduler: maxConcurrent/maxBrowsers per Option überschreibbar', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
 
   const tracker = { active: 0, max: 0, activeBrowsers: 0, maxBrowsers: 0 };
   const registry: Record<string, ScraperAdapter> = {
@@ -288,7 +288,7 @@ test('Scheduler: maxConcurrent/maxBrowsers per Option überschreibbar', async (t
 test('unbekannte Quelle: sprechender Fehler statt undefined-Zugriff', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const outcomes = await runScrape({
     names: ['gibtsnicht', 'a'],
     registry: { a: okAdapter('a', [job('T', 'F')]) },
@@ -311,7 +311,7 @@ test('unbekannte Quelle: sprechender Fehler statt undefined-Zugriff', async (t) 
 
 // Legt einen Job direkt im Store an, so wie ihn ein frueherer Lauf hinterlassen haette.
 async function gespeichert(
-  storage: ReturnType<typeof createStorage>,
+  storage: JsonStore,
   scraped: ScrapedJob,
   patch: Partial<Job> = {},
 ): Promise<Job> {
@@ -341,7 +341,7 @@ const offlineOpts = { maxOfflineChecks: 50, offlineCheckPauseMs: 0 };
 test('offline: nicht gefunden UND bestaetigt offline → wandert ins Archiv', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const alt = await gespeichert(storage, jobVon('a', 'Alter Job', 'Firma A'), { status: 'triaged', fit: 'matched' });
 
   const check = fakeCheck({ [alt.url]: 'offline' });
@@ -365,7 +365,7 @@ test('offline: nicht gefunden UND bestaetigt offline → wandert ins Archiv', as
 test('offline: nicht gefunden, aber noch online → bleibt unangetastet', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const alt = await gespeichert(storage, jobVon('a', 'Alter Job', 'Firma A'), { status: 'triaged', fit: 'matched' });
 
   const outcomes = await runScrape({
@@ -384,7 +384,7 @@ test('offline: nicht gefunden, aber noch online → bleibt unangetastet', async 
 test('offline: "unbekannt" (Rate-Limit, Timeout) archiviert nicht', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const alt = await gespeichert(storage, jobVon('a', 'Alter Job', 'Firma A'), { status: 'new' });
 
   await runScrape({
@@ -402,7 +402,7 @@ test('offline: "unbekannt" (Rate-Limit, Timeout) archiviert nicht', async (t) =>
 test('offline: im Lauf gefundene Jobs werden gar nicht erst geprueft', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const da = jobVon('a', 'Immer noch da', 'Firma A');
   await gespeichert(storage, da, { status: 'triaged', fit: 'matched' });
 
@@ -424,7 +424,7 @@ test('offline: im Lauf gefundene Jobs werden gar nicht erst geprueft', async (t)
 test('offline: gescheiterte Quelle archiviert ihren Bestand nicht', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const alt = await gespeichert(storage, jobVon('kaputt', 'Alter Job', 'Firma A'), { status: 'new' });
 
   const check = fakeCheck({ [alt.url]: 'offline' });
@@ -446,7 +446,7 @@ test('offline: gescheiterte Quelle archiviert ihren Bestand nicht', async (t) =>
 test('offline: eine Quelle, die in diesem Lauf gar nicht lief, bleibt aussen vor', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const fremd = await gespeichert(storage, jobVon('b', 'Fremder Job', 'Firma B'), { status: 'new' });
 
   const check = fakeCheck({ [fremd.url]: 'offline' });
@@ -468,7 +468,7 @@ test('offline: eine Quelle, die in diesem Lauf gar nicht lief, bleibt aussen vor
 test('offline: ab "generated" wird nicht archiviert, auch wenn das Inserat weg ist', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const eigene: Job[] = [];
   for (const [i, status] of (['generated', 'freigegeben', 'postausgang', 'gesendet'] as const).entries()) {
     eigene.push(await gespeichert(storage, jobVon('a', `Job ${i}`, 'Firma A'), { status }));
@@ -493,7 +493,7 @@ test('offline: ab "generated" wird nicht archiviert, auch wenn das Inserat weg i
 test('offline: hoechstens maxOfflineChecks Abrufe pro Lauf, aeltestes Inserat zuerst', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const alt = await gespeichert(storage, jobVon('a', 'Ganz alt', 'Firma A'), { status: 'new', scrapedAt: '2020-01-01T00:00:00.000Z' });
   const mittel = await gespeichert(storage, jobVon('a', 'Mittelalt', 'Firma A'), { status: 'new', scrapedAt: '2024-01-01T00:00:00.000Z' });
   await gespeichert(storage, jobVon('a', 'Frisch', 'Firma A'), { status: 'new', scrapedAt: '2026-01-01T00:00:00.000Z' });
@@ -518,7 +518,7 @@ test('offline: hoechstens maxOfflineChecks Abrufe pro Lauf, aeltestes Inserat zu
 test('offline: wieder aufgetauchter getriagter Job kommt als "triaged" zurueck', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const wieder = jobVon('a', 'Wieder da', 'Firma A');
   const archiviert = await gespeichert(storage, wieder, { status: 'offline', fit: 'matched' });
 
@@ -543,7 +543,7 @@ test('offline: wieder aufgetauchter getriagter Job kommt als "triaged" zurueck',
 test('offline: ein nie getriagter Job kommt als "new" zurueck', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const wieder = jobVon('a', 'Ungefiltert', 'Firma A');
   const archiviert = await gespeichert(storage, wieder, { status: 'offline', fit: null });
 
@@ -563,7 +563,7 @@ test('offline: ein nie getriagter Job kommt als "new" zurueck', async (t) => {
 test('offline: das Zurueckholen setzt nur den Status, nichts sonst', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const wieder = jobVon('a', 'Mit Mail', 'Firma A');
   const archiviert = await gespeichert(storage, wieder, {
     status: 'offline', fit: 'offstack', email: 'bewerbung@firma.at',
@@ -588,7 +588,7 @@ test('offline: das Zurueckholen setzt nur den Status, nichts sonst', async (t) =
 test('offline: ein zurueckgeholter Job wird im selben Lauf nicht erneut geprueft', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const storage = createStorage(dir);
+  const storage = new JsonStore(dir);
   const wieder = jobVon('a', 'Wieder da', 'Firma A');
   const archiviert = await gespeichert(storage, wieder, { status: 'offline', fit: 'matched' });
 

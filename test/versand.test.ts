@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { versende } from '../lib/versand.ts';
 import type { MailTransport, ComposedEmail } from '../mail/transport.ts';
 import { anschreibenName } from '../lib/anschreiben-datei.ts';
-import { createStorage } from '../storage/index.ts';
+import { JsonStore } from '../storage/json-store.ts';
 import { toJob } from '../lib/normalize.ts';
 import type { Job } from '../scrapers/interface.ts';
 import type { ProfileData } from '../lib/profile.ts';
@@ -45,7 +45,7 @@ async function arbeitsplatz(t: { after: (fn: () => void) => void }, job: Job, mi
     await writeFile(join(dir, 'data', 'anschreiben', `${anschreibenName(job)}.md`), 'Der Brieftext.', 'utf8');
   }
   process.chdir(dir);
-  const storage = createStorage();
+  const storage = new JsonStore();
   await storage.save(job);
   return { dir, storage };
 }

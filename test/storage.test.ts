@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdir, writeFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { createStorage } from '../storage/index.ts';
+import { JsonStore } from '../storage/json-store.ts';
 import { toJob } from '../lib/normalize.ts';
 import { tmpDir, rmTmp } from './helpers.ts';
 import type { ScrapedJob } from '../scrapers/interface.ts';
@@ -20,7 +20,7 @@ function fakeScraped(title = 'Test Dev', company = 'Testcorp'): ScrapedJob {
 test('save → exists true; unknown → exists false', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
 
   await store.save(job);
@@ -31,7 +31,7 @@ test('save → exists true; unknown → exists false', async (t) => {
 test('get returns deep-equal job; unknown → null', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
 
   await store.save(job);
@@ -43,7 +43,7 @@ test('get returns deep-equal job; unknown → null', async (t) => {
 test('list() returns all; list({status}) filters', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const j1 = toJob(fakeScraped('Dev A', 'Corp A'));
   const j2 = toJob(fakeScraped('Dev B', 'Corp B'));
 
@@ -60,7 +60,7 @@ test('list() returns all; list({status}) filters', async (t) => {
 test('update merges, bumps updatedAt, keeps scrapedAt', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
   await store.save(job);
 
@@ -75,7 +75,7 @@ test('update merges, bumps updatedAt, keeps scrapedAt', async (t) => {
 test('updateStatus sets status correctly', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
   await store.save(job);
 
@@ -88,7 +88,7 @@ test('updateStatus sets status correctly', async (t) => {
 test('save same id twice → exactly one file', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
 
   await store.save(job);
@@ -101,7 +101,7 @@ test('save same id twice → exactly one file', async (t) => {
 test('no .tmp- leftovers after save', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   await store.save(toJob(fakeScraped()));
 
   const files = await readdir(dir);
@@ -113,7 +113,7 @@ test('no .tmp- leftovers after save', async (t) => {
 test('list() on non-existent dir → []', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(join(dir, 'does-not-exist'));
+  const store = new JsonStore(join(dir, 'does-not-exist'));
 
   const result = await store.list();
   assert.deepEqual(result, []);
@@ -122,7 +122,7 @@ test('list() on non-existent dir → []', async (t) => {
 test('corrupt JSON file → skipped, valid jobs returned', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
   await store.save(job);
 
@@ -136,7 +136,7 @@ test('corrupt JSON file → skipped, valid jobs returned', async (t) => {
 test('non-.json file in dir → ignored', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   await store.save(toJob(fakeScraped()));
   await writeFile(join(dir, 'notes.txt'), 'hello', 'utf8');
 
@@ -147,14 +147,14 @@ test('non-.json file in dir → ignored', async (t) => {
 test('update unknown id throws', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   await assert.rejects(() => store.update('000000000000dead', { status: 'gesendet' }));
 });
 
 test('updateStatus unknown id throws', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   await assert.rejects(() => store.updateStatus('000000000000dead', 'gesendet'));
 });
 
@@ -163,7 +163,7 @@ test('updateStatus unknown id throws', async (t) => {
 test('concurrent saves of different ids → all persisted', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const jobs = Array.from({ length: 10 }, (_, i) => toJob(fakeScraped(`Dev ${i}`, `Corp ${i}`)));
 
   await Promise.all(jobs.map(j => store.save(j)));
@@ -173,7 +173,7 @@ test('concurrent saves of different ids → all persisted', async (t) => {
 test('concurrent saves of same id → 1 file, valid JSON', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
 
   await Promise.all(Array.from({ length: 8 }, () => store.save(job)));
@@ -189,7 +189,7 @@ test('concurrent saves of same id → 1 file, valid JSON', async (t) => {
 test('get() returns independent copy — mutation does not affect stored data', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
   await store.save(job);
 
@@ -205,7 +205,7 @@ test('get() returns independent copy — mutation does not affect stored data', 
 test('save(job) → filename enthält slugified title + company', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped('Junior Developer', 'Test GmbH'));
   await store.save(job);
 
@@ -217,7 +217,7 @@ test('save(job) → filename enthält slugified title + company', async (t) => {
 test('save(job) → filename endet auf _${id.slice(0,8)}.json', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
   await store.save(job);
 
@@ -228,7 +228,7 @@ test('save(job) → filename endet auf _${id.slice(0,8)}.json', async (t) => {
 test('exists(id) → true nach save', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
   await store.save(job);
   assert.equal(await store.exists(job.id), true);
@@ -237,7 +237,7 @@ test('exists(id) → true nach save', async (t) => {
 test('delete(id) → Datei weg danach', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
   await store.save(job);
   await store.delete(job.id);
@@ -248,7 +248,7 @@ test('delete(id) → Datei weg danach', async (t) => {
 test('delete(nichtExistente id) → kein throw', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   await assert.doesNotReject(() => store.delete('000000000000dead'));
 });
 
@@ -257,7 +257,7 @@ test('delete(nichtExistente id) → kein throw', async (t) => {
 test('save(fit=matched) → Datei landet in <dir>/matched/', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
   job.status = 'triaged';
   job.fit = 'matched';
@@ -272,7 +272,7 @@ test('save(fit=matched) → Datei landet in <dir>/matched/', async (t) => {
 test('save(fit=offstack) → Datei landet in <dir>/offstack/', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
   job.status = 'triaged';
   job.fit = 'offstack';
@@ -285,7 +285,7 @@ test('save(fit=offstack) → Datei landet in <dir>/offstack/', async (t) => {
 test('save(fit=brutal) → Datei landet in <dir>/brutal/', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
   job.status = 'triaged';
   job.fit = 'brutal';
@@ -300,7 +300,7 @@ test('save(fit=brutal) → Datei landet in <dir>/brutal/', async (t) => {
 test('updateStatus new→triaged(matched)→generated: Datei wandert, kein Duplikat', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
   await store.save(job);
 
@@ -316,7 +316,7 @@ test('updateStatus new→triaged(matched)→generated: Datei wandert, kein Dupli
 test('get/exists/delete finden Jobs unabhängig vom Unterordner', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const job = toJob(fakeScraped());
   job.status = 'triaged';
   job.fit = 'matched';
@@ -333,7 +333,7 @@ test('get/exists/delete finden Jobs unabhängig vom Unterordner', async (t) => {
 test('list() findet Jobs aus Basisordner + allen drei Unterordnern zusammen', async (t) => {
   const dir = await tmpDir();
   t.after(() => rmTmp(dir));
-  const store = createStorage(dir);
+  const store = new JsonStore(dir);
   const jNew = toJob(fakeScraped('New Job', 'Corp N'));
   const jMatched = toJob(fakeScraped('Matched Job', 'Corp M'));
   const jUncertain = toJob(fakeScraped('Uncertain Job', 'Corp U'));

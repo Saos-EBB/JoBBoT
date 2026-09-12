@@ -1,5 +1,5 @@
 import { checkOllama } from './lib/ollama.ts';
-import { createStorage } from './storage/index.ts';
+import { JsonStore } from './storage/json-store.ts';
 import { config } from './config.ts';
 
 console.log('=== JobBot Health ===\n');
@@ -14,7 +14,7 @@ if (!ollama.ok) {
 }
 
 // Storage self-check
-const store = createStorage();
+const store = new JsonStore();
 const jobs = await store.list();
 console.log(`\nStorage: ✓ (${jobs.length} Jobs in ${config.dataDir})`);
 

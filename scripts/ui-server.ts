@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { createStorage } from '../storage/index.ts';
+import { JsonStore } from '../storage/json-store.ts';
 import { loadProfile } from '../lib/profile.ts';
 import type { Ctx, RouteHandler } from './routes/context.ts';
 import { handleJobsRoutes } from './routes/jobs.ts';
@@ -23,7 +23,7 @@ function portFromArgs(): string | undefined {
 }
 
 const PORT = Number(portFromArgs() ?? process.env.UI_PORT ?? 3000);
-const ctx: Ctx = { storage: createStorage(), profile: loadProfile() };
+const ctx: Ctx = { storage: new JsonStore(), profile: loadProfile() };
 
 // Whitelist statt generischem File-Server — ui-server.ts liefert sonst nur die
 // eine hartkodierte /app.js-Route (aus ui/dist/), kein Static-Handler existiert

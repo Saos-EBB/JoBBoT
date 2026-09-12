@@ -1,4 +1,4 @@
-import { createStorage } from '../storage/index.ts';
+import { JsonStore } from '../storage/json-store.ts';
 import { loadSources } from '../lib/sources.ts';
 import { createAggregateProgress } from '../lib/progress.ts';
 import { runScrape } from '../lib/scrape-runner.ts';
@@ -22,7 +22,7 @@ if (sourceArg) {
 }
 
 const sources = loadSources();
-const storage = createStorage();
+const storage = new JsonStore();
 
 const activeNames = selectedKeys.filter(name => {
   if (!sources[name]?.enabled) { console.log(`[${name}] deaktiviert — übersprungen`); return false; }
