@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { canGenerateAnschreiben } from '../../lib/folders.ts';
 import { runAnschreiben } from '../../lib/anschreiben-runner.ts';
 import { createSseChannel, type GridUnitEvent } from './sse-channel.ts';
+import { respondJson, readJsonBody } from './http.ts';
 import type { Ctx } from './context.ts';
 import type { Job } from '../../scrapers/interface.ts';
 
@@ -21,8 +22,7 @@ const anschreibenSse = createSseChannel<GridUnitEvent>();
 
 export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerResponse, url: URL, ctx: Ctx): Promise<boolean> {
   if (req.method === 'GET' && url.pathname === '/api/anschreiben/status') {
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(anschreibenRun));
+    respondJson(res, 200, anschreibenRun);
     return true;
   }
 
@@ -39,21 +39,17 @@ export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerR
 
   if (req.method === 'POST' && url.pathname === '/api/anschreiben') {
     if (anschreibenRun.status === 'running') {
-      res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ started: false, reason: 'already-running' }));
+      respondJson(res, 409, { started: false, reason: 'already-running' });
       return true;
     }
     const runId = randomUUID();
     anschreibenRun = { status: 'running', runId };
     anschreibenAbort = new AbortController();
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ started: true, runId }));
+    respondJson(res, 200, { started: true, runId });
 
-    let body = '';
-    for await (const chunk of req) body += chunk;
     let jobIds: string[] = [];
     try {
-      jobIds = (JSON.parse(body) as { jobIds?: string[] }).jobIds ?? [];
+      jobIds = (await readJsonBody<{ jobIds?: string[] }>(req)).jobIds ?? [];
     } catch {
       // leer bleiben — behandelt wie "keine Auswahl"
     }
@@ -96,13 +92,11 @@ export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerR
 
   if (req.method === 'POST' && url.pathname === '/api/anschreiben/stop') {
     if (anschreibenRun.status !== 'running' || !anschreibenAbort) {
-      res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ stopped: false, reason: 'not-running' }));
+      respondJson(res, 409, { stopped: false, reason: 'not-running' });
       return true;
     }
     anschreibenAbort.abort();
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ stopped: true }));
+    respondJson(res, 200, { stopped: true });
     return true;
   }
 
