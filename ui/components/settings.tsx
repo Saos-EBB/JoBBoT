@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Copy } from 'lucide-react';
 import type { QueryField } from '../../scrapers/interface.ts';
 import { COUNTRY_ONLY } from '../../lib/location-terms.ts';
+import { checkQuery, describeProblem } from '../../lib/query-schema.ts';
 
 // Spiegelt lib/sources.ts bzw. lib/location.ts — kein gemeinsames Modul, weil beide
 // readFileSync benutzen und nicht ins Browser-Bundle dürfen (siehe lib/location-terms.ts).
@@ -156,4 +157,131 @@ export function RohAnsicht({ offen, onToggle, data }: { offen: boolean; onToggle
       )}
     </div>
   );
+}
+
+// active = ob der Einstellungen-Tab ("suche" im view-State von app.tsx) gerade
+// sichtbar ist — beim Betreten geladen, nicht beim App-Start, wie Duplikate/Kalender.
+export function useSettingsConfig(active: boolean, say: (msg: string, kind?: 'ok' | 'err') => void) {
+  const [schema, setSchema] = useState<Record<string, QueryField[]> | null>(null);
+  const [sources, setSources] = useState<SourcesCfg | null>(null);
+  const [umkreis, setUmkreis] = useState<LocationCfg | null>(null);
+  const [cfgBackup, setCfgBackup] = useState<{ sources: boolean; location: boolean }>({ sources: false, location: false });
+  const [cfgDirty, setCfgDirty] = useState<{ sources: boolean; location: boolean }>({ sources: false, location: false });
+  const [cfgErrors, setCfgErrors] = useState<string[]>([]);
+  const [cfgBusy, setCfgBusy] = useState(false);
+  const [rohOffen, setRohOffen] = useState<Record<string, boolean>>({});
+
+  // Das Schema kommt aus der Adapter-Registry (GET /api/config/schema), nicht aus der
+  // Datei: der Code sagt, welche Portale es gibt und welche Felder sie kennen.
+  useEffect(() => {
+    if (!active) return;
+    let abgebrochen = false;
+    (async () => {
+      const [sch, src, loc] = await Promise.all([
+        fetch('/api/config/schema').then(r => r.json()),
+        fetch('/api/config/sources').then(r => r.json()),
+        fetch('/api/config/location').then(r => r.json()),
+      ]);
+      if (abgebrochen) return;
+      setSchema(sch as Record<string, QueryField[]>);
+      setSources(src.data as SourcesCfg);
+      setUmkreis(loc.data as LocationCfg);
+      setCfgBackup({ sources: !!src.hasBackup, location: !!loc.hasBackup });
+      setCfgDirty({ sources: false, location: false });
+      setCfgErrors([]);
+    })();
+    return () => { abgebrochen = true; };
+  }, [active]);
+
+  async function saveConfig(name: 'sources' | 'location') {
+    const data = name === 'sources' ? sources : umkreis;
+    if (!data) return;
+    setCfgBusy(true);
+    setCfgErrors([]);
+    try {
+      const res = await fetch(`/api/config/${name}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const body = await res.json();
+      if (!res.ok) { setCfgErrors(body.errors ?? ['Speichern fehlgeschlagen']); return; }
+      setCfgDirty(d => ({ ...d, [name]: false }));
+      setCfgBackup(b => ({ ...b, [name]: true }));
+      // loadSources() liest pro Nutzung frisch — ein laufender Scrape sieht die Änderung
+      // mitten drin. Gesperrt wird nicht, aber ungesagt bleiben soll es auch nicht.
+      say(body.scrapeRunning ? 'Gespeichert — ein Scrape läuft gerade und sieht die Änderung noch' : 'Gespeichert');
+    } finally {
+      setCfgBusy(false);
+    }
+  }
+
+  async function restoreConfig(name: 'sources' | 'location') {
+    setCfgBusy(true);
+    try {
+      const res = await fetch(`/api/config/${name}/restore`, { method: 'POST' });
+      const body = await res.json();
+      if (!res.ok) { say(body.error ?? 'Zurückholen fehlgeschlagen', 'err'); return; }
+      if (name === 'sources') setSources(body.data as SourcesCfg); else setUmkreis(body.data as LocationCfg);
+      setCfgBackup(b => ({ ...b, [name]: false }));
+      setCfgDirty(d => ({ ...d, [name]: false }));
+      setCfgErrors([]);
+      say('Letzte Fassung zurückgeholt');
+    } finally {
+      setCfgBusy(false);
+    }
+  }
+
+  // Anfragen, die kein Adapter annehmen würde. Zwei Quellen: Handedits an der Datei —
+  // dafür war der Hinweis ursprünglich gedacht — und Tippen im Formular selbst, etwa eine
+  // frisch angelegte Zeile mit leerem Pflichtfeld. Deshalb hängt daran auch der
+  // Speichern-Knopf: die Rückmeldung kommt beim Tippen, nicht erst als 422 vom Server.
+  //
+  // "Reparieren" wird nur angeboten, wenn die Absicht eindeutig ist: genau ein
+  // unbekannter Schlüssel und genau ein fehlendes Pflichtfeld heisst Tippfehler im
+  // Namen, der Wert soll bleiben. Alles andere waere Raten.
+  const kaputteAnfragen = useMemo(() => {
+    if (!sources || !schema) return [];
+    const treffer: { portal: string; index: number; problem: string; fix?: { von: string; nach: string } }[] = [];
+    for (const [portal, cfg] of Object.entries(sources)) {
+      const felder = schema[portal];
+      if (!felder) continue;
+      cfg.queries.forEach((q, i) => {
+        const probleme = checkQuery(felder, q);
+        if (probleme.length === 0) return;
+        const fehlend = probleme.filter(p => p.kind === 'missing');
+        const unbekannt = probleme.filter(p => p.kind === 'unknown');
+        treffer.push({
+          portal, index: i,
+          problem: probleme.map(describeProblem).join('; '),
+          fix: fehlend.length === 1 && unbekannt.length === 1
+            ? { von: unbekannt[0].key, nach: fehlend[0].key }
+            : undefined,
+        });
+      });
+    }
+    return treffer;
+  }, [sources, schema]);
+
+  const sourcesFehlerhaft = kaputteAnfragen.length > 0;
+
+  // Benennt einen Schlüssel um und behält den Wert — der Tippfehler-Fall.
+  function repariereAnfrage(portal: string, index: number, von: string, nach: string) {
+    setSources(prev => {
+      if (!prev) return prev;
+      const queries = prev[portal].queries.map((q, qi) => {
+        if (qi !== index) return q;
+        const { [von]: wert, ...rest } = q;
+        return { ...rest, [nach]: wert };
+      });
+      return { ...prev, [portal]: { ...prev[portal], queries } };
+    });
+    setCfgDirty(d => ({ ...d, sources: true }));
+  }
+
+  return {
+    schema, sources, setSources, umkreis, setUmkreis,
+    cfgBackup, cfgDirty, setCfgDirty, cfgErrors, cfgBusy, rohOffen, setRohOffen,
+    saveConfig, restoreConfig, kaputteAnfragen, sourcesFehlerhaft, repariereAnfrage,
+  };
 }
