@@ -40,13 +40,13 @@ import { CSS } from './styles.ts';
 import { type LoadGridSection, LoadGridPanel, useGridStream } from './components/grid.tsx';
 import { type CalendarEvent, CalendarView, CAL_TYPES, CAL_COLOR } from './components/calendar.tsx';
 import { type SourcesCfg, type LocationCfg, UMKREIS_GRUPPEN, istLandesbegriff, ChipListe, PortalBlock, RohAnsicht } from './components/settings.tsx';
+import { useAttachment } from './hooks/attachment.ts';
 
 // /api/jobs joint das Anschreiben serverseitig dazu (siehe scripts/ui-server.ts) —
 // es lebt in data/anschreiben/{slug}.md, nicht im Job-JSON. Deshalb ist `brief` hier
 // und nicht auf dem Job-Typ selbst: ein Feld, das nur diese Antwort hat, kein Feld,
 // das je zurückgeschrieben wird (Speichern einer Bearbeitung ist ein eigener Endpunkt).
 type JobWithBrief = Job & { brief: string | null };
-type AttachmentMeta = { filename: string; size: number; uploadedAt: string };
 
 // Spiegeln die Server-Shapes aus scripts/ui-server.ts (ScrapeRunState/FilterRunState)
 // — kein gemeinsames Typ-Modul, weil der Server sonst Browser-untaugliche Imports
@@ -268,7 +268,6 @@ export default function JobbotUI() {
   // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
   const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben' | 'calendar' | 'nachfass' | 'suche'>('jobs');
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [attachment, setAttachment] = useState<AttachmentMeta | null | undefined>(undefined);
   const [cc, setCc] = useState<string | null | undefined>(undefined);
   const [ccInput, setCcInput] = useState('');
   const [scrapeSources, setScrapeSources] = useState<string[]>([]);
@@ -350,6 +349,8 @@ export default function JobbotUI() {
   }, []);
 
   useEffect(() => { refetchJobs(); }, [refetchJobs]);
+
+  const { attachment, uploadAttachment, removeAttachment } = useAttachment(view === 'attachment', say);
 
   useEffect(() => {
     fetch('/api/scrape/sources').then(r => r.json()).then((names: string[]) => {
@@ -647,26 +648,6 @@ export default function JobbotUI() {
     if (!res.ok) { say('Zurücksetzen fehlgeschlagen', 'err'); return; }
     patch(job.id, { status });
     runAnschreibenNow([job.id]);
-  }
-
-  useEffect(() => {
-    if (view !== 'attachment') return;
-    fetch('/api/attachment')
-      .then(r => (r.ok ? r.json() : null))
-      .then(setAttachment);
-  }, [view]);
-
-  async function uploadAttachment(file: File) {
-    const res = await fetch('/api/attachment', { method: 'POST', body: file });
-    const body = await res.json().catch(() => null);
-    if (res.ok) { setAttachment(body); say('Anhang hochgeladen'); }
-    else say(body?.error ?? 'Upload fehlgeschlagen', 'err');
-  }
-
-  async function removeAttachment() {
-    await fetch('/api/attachment', { method: 'DELETE' });
-    setAttachment(null);
-    say('Anhang entfernt');
   }
 
   useEffect(() => {
