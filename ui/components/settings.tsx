@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Copy } from 'lucide-react';
 import type { QueryField } from '../../scrapers/interface.ts';
 import { COUNTRY_ONLY } from '../../lib/location-terms.ts';
+// Dieselbe Funktion, die der Server vor dem Schreiben laufen lässt (lib/config-store.ts)
+// und die die Adapter beim Scrapen benutzen. lib/query-schema.ts importiert nur Typen,
+// darf also ins Bundle — so gibt es die Regeln genau einmal, statt einmal hier
+// nachgebaut und einmal dort.
 import { checkQuery, describeProblem } from '../../lib/query-schema.ts';
 
 // Spiegelt lib/sources.ts bzw. lib/location.ts — kein gemeinsames Modul, weil beide
