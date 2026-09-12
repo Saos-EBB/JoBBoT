@@ -60,7 +60,7 @@ export async function runAnschreiben(options: RunAnschreibenOptions): Promise<An
       const job = jobs[i];
       processed++;
       onProgress?.(i, jobs.length, job.title);
-      const path = await generateAnschreiben(job, storage, profile, undefined, undefined, model, undefined, signal);
+      const path = await generateAnschreiben(job, storage, profile, { model, signal });
       if (path) {
         generated++;
         let hasMail = job.email != null;
