@@ -2863,3 +2863,2183 @@
 - Windows System Engineer / Server Administrator (m/w/d) — TODAY Experts GmbH
 
 ---
+
+## Filter-Lauf 2026-09-08 11:06  Modus: regex  (74 sicher, 189 unsicher, 63 raus)
+
+
+### Aggregat (Kriterien-Verteilung)
+
+- it_rolle → –
+- erfahrung_ab_3j_erforderlich → –
+- lehre_coding → –
+- junior_signal → –
+
+### Raus (63)
+
+- Backend Entwickler C#/.NET (w/m/div.) — Bosch Österreich — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Frontend Developer (Senior) (w/m/d) (unbefristete Einstellung) — Johannes Kepler Universität — Grund: Seniorität (Titel)
+- IT Service Desk Specialist (w/m/d) — TNT Personal — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Junior Java Developer (m/w/d) — Gepardec IT Services GmbH — Grund: Erfahrung ≥3J: 'einschlägige'
+- Product Owner Frontend Development (w/m/d) — Fabasoft — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Product Owner Webentwicklung (w/m/x) — epunkt GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Senior Java Developer (d/w/m) — EBCONT — Grund: Seniorität (Titel)
+- Senior Java Entwickler & Project Lead (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior MLOps (d/w/m) — EBCONT — Grund: Seniorität (Titel)
+- Software-Developer*in — Österreichische Gesundheitskasse — Grund: Erfahrung ≥3J: 'einschlägige'
+- Web - Frontend Entwickler React (m/w/d) — Hirelight EB Consulting — Grund: Erfahrung ≥3J: '3 – 4 jahre'
+- 1st Level Service Desk Mitarbeiter*in — Österreichische Gesundheitskasse — Grund: Erfahrung ≥3J: 'einschlägige'
+- AI & Machine Learning Engineer (all genders) — msg — Grund: Erfahrung ≥3J: '3–5 jahre'
+- Business Application Architect (m/w/d) — AGILOX Services GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Citrix IT-Engineer (m/w/d) — RAITEC GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Customer & Technical Service Specialist* — KTM AG — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Cybersecurity Engineer (w/m/d) — Stuhlberger IT GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Frontend Developer (Senior) (m/w/d) (unbefristete Einstellung) — Johannes Kepler Universität Linz JKU — Grund: Seniorität (Titel)
+- Fullstack-Entwickler (m/w/d) — Fronius Österreich — Grund: Erfahrung ≥3J: 'einschlägige'
+- IT-Manager (m/w/d) - 1st Level Support — Sikla GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Mitarbeiter:in — Raiffeisenlandesbank Oberösterreich — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Operations Spezialist — Barmherzige Brüder Linz — Grund: Erfahrung ≥3J: 'einschlägige'
+- IT Service Desk Specialist (w/m/d) — Michael Page International Austria GmbH — Grund: Erfahrung ≥3J: 'ab 50'
+- IT Support Engineer (w/m/d) — talentbird GmbH — Grund: Erfahrung ≥3J: '3 jahre'
+- IT-Support Spezialist:in (m/f/d) – Hagenberg i. M./Wien / Vollzeit — ventopay gmbh — Grund: Erfahrung ≥3J: '20 jahren'
+- IT-Systemtechniker (m/w/d), GM — microCAT GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Technik/System Engineer (m/w/d) — best4best consulting - Personalberatung & Talente Vermittlung — Grund: Erfahrung ≥3J: '5 jahre'
+- Java Backend Developer (m/w/d) —  — Grund: Erfahrung ≥3J: '3 jahre'
+- Junior HKLS-Projektleiter (m/w/d) — PKE Gebäudetechnik GmbH — Grund: Erfahrung ≥3J: 'langjährige'
+- Junior Projektleiter:in mit Schwerpunkt Elektro- &amp; Gebäudetechnik (m/w/d) — ETECH Schmid u Pachler Elektrotechnik GmbH &amp; Co KG — Grund: Erfahrung ≥3J: '3-5 jahre'
+- Junior/Senior IT User Services Specialist — KPMG Austria — Grund: Seniorität (Titel)
+- (Junior/Senior) SPS-Programmierer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Lead AI Engineer (Java or .NET) (m/w/d) —  — Grund: Seniorität (Titel)
+- Marketing &amp; Communications Manager 80-100 % (m/w/d) —  — Grund: Erfahrung ≥3J: '5+ years'
+- Marketing &amp; Communications Manager 80-100 % (m/w/d) —  — Grund: Erfahrung ≥3J: '5+ years'
+- Mobile Engineer (d/f/m) — hello again — Grund: Erfahrung ≥3J: '4 years'
+- Praktikum Research Human Machine Interface im Einsatz (m/w/d) — Rosenbauer Group — Grund: Erfahrung ≥3J: 'einschlägige'
+- SAP Accounting Systembetreuer | SAP FI, SAP CO, Projektleitung | Inhouse, bis 90.000 € (mwd) — Vesterling AG — Grund: Erfahrung ≥3J: 'mehrjährige'
+- SAP PP / SAP WM Systembetreuer | Logistik, Projektleitung, Produktionsunternehmen | Inhouse (mwd) — Vesterling AG — Grund: Erfahrung ≥3J: 'mehrjährige'
+- SAP UI5 / Fiori Developer (m/w/d) – Logistik & S/4HANA — voestalpine — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Senior Frontend Developer (w/m/d) — Fabasoft — Grund: Seniorität (Titel)
+- Senior Frontend Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior Full Stack Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- (Senior) Full Stack Developer* — KTM AG — Grund: Seniorität (Titel)
+- Senior Full Stack Entwickler*in (m/w/x) mit C# / .Net / Angular Know-How — DS Automotion GmbH — Grund: Seniorität (Titel)
+- Senior Fullstack Developer (d/m/w) — EBCONT — Grund: Seniorität (Titel)
+- Senior Fullstack Entwickler:in - Java/Angular (m/w/d) — ÖBB-Konzern — Grund: Seniorität (Titel)
+- (Senior) IT Consultant (m/w/d) — VACE Group — Grund: Seniorität (Titel)
+- Senior IT Operations Engineer (w/m/d) - Site & Field Services — REPLOID — Grund: Seniorität (Titel)
+- (Senior) IT Service Agent (w/m/x) — IBM iX DACH — Grund: Seniorität (Titel)
+- Senior Java Developer Materialflusssystem (m/w/d) — Schachermayer GmbH — Grund: Seniorität (Titel)
+- Senior Java-Softwareentwickler (m/w/d) — CPB SOFTWARE (AUSTRIA) GMBH — Grund: Seniorität (Titel)
+- Senior Operations Specialist (m/w/d) — sigmavista it consulting gmbh — Grund: Seniorität (Titel)
+- Senior SAP MM Inhouse Consultant (m/w/d) – S/4HANA & Teamaufbau — ISG Personalmanagement GmbH — Grund: Seniorität (Titel)
+- (Senior) Software Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Software Developer Lead & Product Track — TEC-IT — Grund: Seniorität (Titel)
+- Software Developer (m/w/d) — enjoy IT GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Software Entwickler C/C++ (m/w/d) — best4best consulting - Personalberatung & Talente Vermittlung — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Software Entwickler/in - Backend/Cloud (m/w/d) —  — Grund: Erfahrung ≥3J: '3 jahre'
+- Software Entwickler/in - Backend/Cloud (m/w/d) —  — Grund: Erfahrung ≥3J: '3 jahre'
+- Software Entwickler .NET-Bereich (m/f/d) – Hagenberg i. M. / Vollzeit — ventopay gmbh — Grund: Erfahrung ≥3J: 'ab 3'
+- Technischer IT-Projektmanager — ventopay gmbh — Grund: Erfahrung ≥3J: 'ab 3'
+- Windows Systemadministrator (w/m/x) — epunkt GmbH — Grund: Erfahrung ≥3J: 'langjährige'
+
+### Unsicher (189)
+
+- 2nd Level IT-Techniker (m/w/d) — Education Group GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7878272
+- 2nd-Level-Support V460 — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/2nd-level-support-v460-at-sprecher-automation-4451404367
+- AI Product Engineer (w/m/d) — AGILOX — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-product-engineer-w-m-d-at-agilox-4462214428
+- AI Solutions Engineer (d/f/m) — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-solutions-engineer-d-f-m-at-hello-again-4450472591
+- Applikationsbetreuer (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/applikationsbetreuer-w-m-x-at-beko-solutions-gmbh-4453533704
+- Development Engineer (m/f/d) Embedded Software — BRP-Rotax — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/development-engineer-m-f-d-embedded-software-at-brp-rotax-4391096590
+- Front-end Developer @ lingohub GmbH — DEVjobs — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/front-end-developer-%40-lingohub-gmbh-at-devjobs-4459791199
+- Frontend Web Developer*in (m/w/d) — karriere.at GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7889682
+- FRONTEND WEB DEVELOPER (m/w/d) — eurofunk Kappacher GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/frontend-web-developer-m-w-d-at-eurofunk-kappacher-gmbh-4317421237
+- Full Stack Developer für interne Applikationen & AI (m/w/d) — ENGEL Japan 株式会社 — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-f%C3%BCr-interne-applikationen-ai-m-w-d-at-engel-japan-kk-4448188870
+- Full Stack Developer für interne Applikationen & AI (m/w/d) — ENGEL Österreich - Wir sind ENGEL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-f%C3%BCr-interne-applikationen-ai-m-w-d-at-engel-%C3%B6sterreich-wir-sind-engel-4442643305
+- Full Stack Developer (m/w/d) — Trenkwalder Personaldienste GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7890381
+- Full Stack Developer (m/w/d) — WIOSS Witron On Site Services GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/10025311
+- Full Stack Developer (m/w/d) — WITRON Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-m-w-d-at-witron-group-4420147229
+- Full Stack / Web Developer (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-web-developer-m-w-x-at-ev-group-4295645097
+- Fullstack-Entwickler:in mit Java Backend und Vue/Nuxt Frontend — STRABAG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/fullstack-entwickler-in-mit-java-backend-und-vue-nuxt-frontend-at-strabag-4418142917
+- Fullstack Entwickler (Java/Angular) (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/fullstack-entwickler-java-angular-w-m-x-at-beko-solutions-gmbh-4453205342
+- Is flexible working important to you? — KEBA Industrial Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/is-flexible-working-important-to-you%3F-at-keba-industrial-automation-4448708741
+- IT Helpdesk & Field Service (m/w/x) — Scheuch USA — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-helpdesk-field-service-m-w-x-at-scheuch-usa-4440367401
+- IT Mitarbeiter — LORENZ SHOE GROUP — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-mitarbeiter-at-lorenz-shoe-group-4459689635
+- IT Service Desk Specialist (f/m/d) — LAT Nitrogen — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-service-desk-specialist-f-m-d-at-lat-nitrogen-4427540158
+- IT Support & Workplace Manager(in) — SONNHAUS GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/10024392
+- JAVA Developer (m/w/d) — IMA Engineering Services — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/java-developer-m-w-d-at-ima-engineering-services-4442605911
+- MES Software Engineer - Schwerpunkt ABAP OO Development (m/w/d) — voestalpine Additive Manufacturing North America — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mes-software-engineer-schwerpunkt-abap-oo-development-m-w-d-at-voestalpine-additive-manufacturing-north-america-4461364157
+- Mitarbeiter/in für technischen Support — VERSUSbet — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-in-f%C3%BCr-technischen-support-at-versusbet-4444101279
+- Mitarbeiter:in IT-Support - Life Cycle Cluster AT/CE — dm drogerie markt Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-in-it-support-life-cycle-cluster-at-ce-at-dm-drogerie-markt-%C3%B6sterreich-4460317793
+- React Native Developer (d/f/m) — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/react-native-developer-d-f-m-at-hello-again-4421105626
+- Software Developer Core Banking Systems (w/m/d) — Oberbank — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-core-banking-systems-w-m-d-at-oberbank-4461785381
+- SOFTWARE DEVELOPER*IN (M/W/D) — Ivm Consulting Co — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-in-m-w-d-at-ivm-consulting-co-4445935052
+- Software Developer*in (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-in-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455895256
+- Software Developer (m/w/d) — efinio IT & Engineering — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-w-d-at-efinio-it-engineering-4268563514
+- Software Engineer für APIs mit JAVA (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-f%C3%BCr-apis-mit-java-m-w-d-at-fronius-%C3%B6sterreich-4436087293
+- Software Entwickler:in mit Security Fokus (m/w/*) — Primetals Technologies Austria GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7827695
+- Softwareentwickler Embedded Systems m/w/x — WINTERSTEIGER Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-embedded-systems-m-w-x-at-wintersteiger-inc-4423166351
+- Softwareentwickler im Automatisierungsbereich (m/w/d) — ENGEL Japan 株式会社 — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-im-automatisierungsbereich-m-w-d-at-engel-japan-kk-4448184927
+- Softwareentwickler*in (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-in-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455818799
+- Softwareentwickler (w/m/d) - Frontend — Nürnberg Digital Festival NUEDIGITAL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-frontend-at-n%C3%BCrnberg-digital-festival-nuedigital-4419174064
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval France — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-france-4450688868
+- UI/UX Designer — solvistas GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/7f089a0ed9262a3c437b57eef83d7960
+- WebApp-Development (Linz, AT) — Develite GmbH & Co. KG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/webapp-development-linz-at-at-develite-gmbh-co-kg-4455251517
+- Workday Functional Service Owner (m/w/d) — XXXLdigital – Part of XXXL Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/workday-functional-service-owner-m-w-d-at-xxxldigital-%E2%80%93-part-of-xxxl-group-4443691825
+- AI Engineer (f/m/d) — Interdisciplinary Transformation University (IT:U) — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-engineer-f-m-d-at-interdisciplinary-transformation-university-it-u-4441961604
+- AI & ML Intern – Full Stack Developer (m/f/d) — Trench Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-ml-intern-%E2%80%93-full-stack-developer-m-f-d-at-trench-group-4453098505
+- AI Solutions Engineer — Schulmeister Management Consulting — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-solutions-engineer-at-schulmeister-management-consulting-4458707362
+- Allrounder für Wordpress, WooCommerce mit Programmier- u. Grafikkenntnissen — LINZKREATIV.AT — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/allrounder-f%C3%BCr-wordpress-woocommerce-mit-programmier-u-grafikkenntnissen-at-linzkreativ-at-4451036989
+- Application Management & GPS Telematics  (m/w/d) — GPS.at (Softwaro GmbH) — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/application-management-gps-telematics-m-w-d-at-software-management-gmbh-gps-at-4455838809
+- Applikationsentwickler für C++ / Linux (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/applikationsentwickler-f%C3%BCr-c%2B%2B-linux-m-w-d-at-fronius-%C3%B6sterreich-4452990617
+- Associate Digital Manufacturing & Low-Code Applications (f/m/d) - part time 27 hrs / week — PALFINGER — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/associate-digital-manufacturing-low-code-applications-f-m-d-part-time-27-hrs-week-at-palfinger-4455603508
+- Automatisierungstechniker Software (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/automatisierungstechniker-software-m-w-x-at-ev-group-4417208130
+- Backend Developer (m/w/d) - in Linz - Kotlin / Spring — Optimind — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/backend-developer-m-w-d-in-linz-kotlin-spring-at-optimind-4441524418
+- Berufsintegrierter Master – Entwicklung der Bedienoberfläche für ein Motorrad Dashboard (m/w/d) — Steinbeis Center of Management and Technology - SCMT GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/berufsintegrierter-master-%E2%80%93-entwicklung-der-bedienoberfl%C3%A4che-f%C3%BCr-ein-motorrad-dashboard-m-w-d-at-steinbeis-center-of-management-and-technology-scmt-gmbh-4354860619
+- BI-Developer / Data Engineer (m/w/d) — GARTNER - "THE WORLD OF TRANSPORT" — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/bi-developer-data-engineer-m-w-d-at-gartner-the-world-of-transport-4444761846
+- Business Software Developer (C#) — din - Sicherheitstechnik Italia GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/business-software-developer-c%23-at-din-sicherheitstechnik-italia-gmbh-4443427374
+- C#/.Net Softwareentwickler (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/c%23-net-softwareentwickler-m-w-x-at-ev-group-4417208131
+- Citrix Engineer (m/w/d) — Trenkwalder Personaldienste GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7884099
+- Client Service Desk — Computer Futures — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/client-service-desk-at-computer-futures-4450263374
+- Consultant (D365 & Azure Integration) (all genders welcome) — COSMO CONSULT — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/consultant-d365-azure-integration-all-genders-welcome-at-cosmo-consult-4445557553
+- Consultant SIEM, SOC & MDR (w/m/d) — EY — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/consultant-siem-soc-mdr-w-m-d-at-ey-4435211223
+- Customer Support Engineer (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/customer-support-engineer-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455833787
+- Data Analytics Engineer* — KTM AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-analytics-engineer-at-ktm-ag-4440005927
+- Data Center Technician - Austria - Linz - On-site — Reboot Monkey — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-center-technician-austria-linz-on-site-at-reboot-monkey-4382614771
+- Data Center Technician - Austria - Perg - On-site — Reboot Monkey — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-center-technician-austria-perg-on-site-at-reboot-monkey-4382606972
+- Data Centre Technicians - Austria — EOS IT Solutions — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-centre-technicians-austria-at-eos-it-solutions-4422000315
+- Data Centre Technicians - Expression of Interest — EOS IT Solutions — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-centre-technicians-expression-of-interest-at-eos-it-solutions-4422000315
+- Data Engineer (m/w/d) — XXXLdigital – Part of XXXL Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-engineer-m-w-d-at-xxxldigital-%E2%80%93-part-of-xxxl-group-4435677917
+- Data Engineer — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-engineer-at-acp-gruppe-4385247257
+- Data Scientist — IONO Robotics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-scientist-at-iono-robotics-4442581059
+- DevOps Engineer (w/m/d) — seele — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/devops-engineer-w-m-d-at-seele-4437272337
+- Embedded Developer @ WINTERSTEIGER AG — DEVjobs — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-developer-%40-wintersteiger-ag-at-devjobs-4448203465
+- Embedded Developer — Proactive Global — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-developer-at-proactive-global-4458091466
+- Embedded Software-Developer Linux (m/d/w) — ABATEC — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-software-developer-linux-m-d-w-at-abatec-4458065838
+- Embedded Software Developer — Frauscher Sensor Technology India — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-software-developer-at-frauscher-sensor-technology-india-4414219958
+- ERP Software Developer (C#) — din - Sicherheitstechnik Italia GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/erp-software-developer-c%23-at-din-sicherheitstechnik-italia-gmbh-4455623461
+- EUC Engineer — Swiss IT Solutions CH GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/euc-engineer-at-swiss-it-solutions-ch-gmbh-4449247475
+- Full-Stack-Entwickler .NET & Kotlin (m/w/d) — Atlas Blech Center GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-entwickler-net-kotlin-m-w-d-at-atlas-blech-center-gmbh-4452206954
+- Full Stack Software Developer (w/m/d) — 3 Banken IT GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-software-developer-w-m-d-at-3-banken-it-gmbh-4449447102
+- Fullstack Developer - Angular (m/w/d) — Gepardec IT Services GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/fullstack-developer-angular-m-w-d-at-gepardec-it-services-gmbh-4453068591
+- Fullstack-Web-Entwickler:in (C#/Angular) - ab 30h/Woche (m/w/d) — ÖBB-Konzern — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7894731
+- Graphic &amp; Web Designer (m/w/d) — offisy gmbh — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893337
+- Graphic & Web Designer (m/w/d) — Offisy GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/10027829
+- Information Technology Support Engineer — Swiss IT Solutions CH GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/information-technology-support-engineer-at-swiss-it-solutions-ch-gmbh-4459670877
+- Internship AI – Computer Vision & Multimodal AI — KEBA AG — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/9e988afadcc4ef24aff792ef07e05d1a
+- Internship - Automotive Radar R&D (f/m/div) — Infineon Technologies — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/internship-automotive-radar-r-d-f-m-div-at-infineon-technologies-4450683903
+- IoT Backend Entwickler (m/w/d) — ENGEL Österreich - Wir sind ENGEL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/iot-backend-entwickler-m-w-d-at-engel-%C3%B6sterreich-wir-sind-engel-4455680470
+- IT-Administrator (m/w/d) — Linde Material Handling Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-administrator-m-w-d-at-linde-material-handling-austria-4450227772
+- IT-Administrator (m/w/d) — Linde Material Handling — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-administrator-m-w-d-at-linde-material-handling-4448404426
+- IT-Administrator / Projektmitarbeiter (m/w/d) — NCE Computer GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-administrator-projektmitarbeiter-m-w-d-at-nce-computer-gmbh-4437932569
+- IT Application Manager (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-application-manager-w-m-x-at-beko-solutions-gmbh-4419072498
+- IT Application Manager — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-application-manager-at-sprecher-automation-4423938691
+- IT- Applikation Developer (m/w/d) — Oesterreichische Kontrollbank Aktiengesellschaft — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7898301
+- IT & Facilities Coordinator m/f/d — BOA® — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-facilities-coordinator-m-f-d-at-boa%C2%AE-4429214045
+- IT Infrastructure Engineer (w/m/d) - Schwerpunkt Client Management — Felbermayr Group — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7864825
+- IT Infrastructure Engineer — Felbermayr-Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-infrastructure-engineer-at-felbermayr-4457464465
+- IT-Infrastruktur-Techniker 2nd Level (m/w/d) — Hödlmayr International — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-infrastruktur-techniker-2nd-level-m-w-d-at-h%C3%B6dlmayr-international-ag-4425971723
+- IT Onsite Client Support 1st & 2nd  Level — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-onsite-client-support-1st-2nd-level-at-acp-gruppe-4430529669
+- IT Operations Engineer (w/m/d) — REPLOID — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-operations-engineer-w-m-d-at-reploid-4416255354
+- IT Operations Engineer — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-operations-engineer-at-acp-gruppe-4433695836
+- IT Service Agent (w/m/x) — IBM iX DACH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-service-agent-w-m-x-at-ibm-ix-dach-4437790401
+- IT Servicedesk Engineer (m/w/d) — sigmavista it consulting gmbh — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-servicedesk-engineer-m-w-d-at-sigmavista-it-consulting-gmbh-4449203488
+- IT Support Engineer (w/m/d) — KERN engineering careers GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7852112
+- IT Support Manager — DL Remote — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-manager-at-dl-remote-4457982715
+- IT Support Mitarbeiter 1st/2nd Level (m/w/d) — Atikon EDV &amp; Marketing GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893095
+- IT Support Mitarbeiter 1st/2nd Level (m/w/d) — Atikon EDV & Marketing GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7850672
+- IT Support Specialist - Application & Software (M/F/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-specialist-application-software-m-f-d-at-tgw-logistics-4413350285
+- IT Support Specialist (f/m/d) — Siemens Energy — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-specialist-f-m-d-at-siemens-energy-4440217097
+- IT Support Spezialist:in - Application & Software (M/W/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-spezialist-in-application-software-m-w-d-at-tgw-logistics-4410188556
+- IT Support Spezialist (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-spezialist-w-m-x-at-beko-solutions-gmbh-4436535334
+- IT-Support-Techniker — HCLTech — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-techniker-at-hcltech-4445920367
+- IT-Systemadministrator MSP Dienste (m/w/d) — NCE Computer GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-systemadministrator-msp-dienste-m-w-d-at-nce-computer-gmbh-4437930598
+- IT-Systemadministrator (w/m/d) — seele — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-systemadministrator-w-m-d-at-seele-4423644452
+- IT-Techniker für telefonischen Kundensupport — DIALOG telekom Gmbh & Co KG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-techniker-f%C3%BCr-telefonischen-kundensupport-at-dialog-telekom-gmbh-co-kg-4429406945
+- IT-Techniker:in - Produktions-IT/OT — Greiner — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-techniker-in-produktions-it-ot-at-greiner-4448268995
+- IT-Techniker, m/w/d — Peneder Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-techniker-m-w-d-at-peneder-gruppe-4428490053
+- IT-Techniker (m/w/x) — epunkt GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7782719
+- JOBS - Servicetechniker für audiovisuelle Systeme (m/w/d) — conex media gmbh — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/jobs-servicetechniker-f%C3%BCr-audiovisuelle-systeme-m-w-d-at-conex-media-gmbh-4442925085
+- Key Account & Business Development Manager im Software Umfeld (w/m/x) — epunkt GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7827260
+- Kundendienstmitarbeiter:in — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/kundendienstmitarbeiter-in-at-hello-again-4443282713
+- LINUX SYSTEMINGENIEUR*IN (M/W/D) — Ivm Consulting Co — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/linux-systemingenieur-in-m-w-d-at-ivm-consulting-co-4449481296
+- Linux Systemingenieur*in (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/linux-systemingenieur-in-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455838800
+- MES Software Engineer - Schwerpunkt ABAP OO Development (m/w/d) — voestalpine — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mes-software-engineer-schwerpunkt-abap-oo-development-m-w-d-at-voestalpine-4451528065
+- Microsoft Power Platform Developer (m/f/d) – Tieto Tech Consulting — Tieto — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/microsoft-power-platform-developer-m-f-d-%E2%80%93-tieto-tech-consulting-at-tieto-4450693732
+- Mitarbeiter IT Customer Support – First Level (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-it-customer-support-%E2%80%93-first-level-m-w-d-at-fronius-%C3%B6sterreich-4426481825
+- Mitarbeiter IT Support (m/w/d) — Richter Pharma AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-it-support-m-w-d-at-richter-pharma-ag-4456730011
+- Mitarbeiter IT-Support (w/m/d) — KERN engineering careers — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-it-support-w-m-d-at-kern-engineering-careers-4446194642
+- Mitarbeiter&shy; im technischen Kunden&shy;innen&shy;dienst* — HARGASSNER France — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-shy-im-technischen-kunden-shy-innen-shy-dienst-at-hargassner-france-4447225894
+- Mitarbeiter Team Windows (m/w/d) — Richter Pharma AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-team-windows-m-w-d-at-richter-pharma-ag-4419190680
+- .NET Developer — Noir — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/net-developer-at-noir-4447293462
+- Network Engineer (w/m/d) — Bechtle — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/network-engineer-w-m-d-at-bechtle-4431528221
+- Network & Security Engineer (m/w/d) Fortinet — Trenkwalder Personaldienste GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7884098
+- Operations Manager:in Basisnetze - Netzwerk & Automatisierung (m/w/d) — ÖBB-Konzern — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7882544
+- OT Technician (all genders) — Greiner — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ot-technician-all-genders-at-greiner-4448850456
+- OT-Techniker:in — Greiner — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ot-techniker-in-at-greiner-4448268995
+- PLC Software Engineer (Beckhoff TwinCAT) (m/w/d) — WHC Heads Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/plc-software-engineer-beckhoff-twincat-m-w-d-at-whc-heads-austria-4454601314
+- Process & AI Consultant — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/process-ai-consultant-at-acp-gruppe-4448992839
+- Product Owner Field Service (m/w/d) — S&amp;T AG — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7894987
+- Product Support Engineer (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/product-support-engineer-m-w-x-at-ev-group-4417210106
+- R&D Engineer – Firmware & Linear Drive Control (f/m/d) — ABB — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/r-d-engineer-%E2%80%93-firmware-linear-drive-control-f-m-d-at-abb-4455786216
+- SAP ABAP Entwickler (m/w/d) — INFORMATICS — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sap-abap-entwickler-m-w-d-at-informatics-consulting-development-gmbh-4448908173
+- SAP Fiori Entwickler (m/w/d) — INFORMATICS — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sap-fiori-entwickler-m-w-d-at-informatics-consulting-development-gmbh-4448900928
+- Service Competence Center (SCC) Techniker Innendienst für CAD/CAM (w/m/d) — TRUMPF Maschinen Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/service-competence-center-scc-techniker-innendienst-f%C3%BCr-cad-cam-w-m-d-at-trumpf-maschinen-austria-4431275882
+- Serviceengineer Halbleiterfertigung – Schwerpunkt Lithographie (m/w/d) — Vishay Intertechnology, Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/serviceengineer-halbleiterfertigung-%E2%80%93-schwerpunkt-lithographie-m-w-d-at-vishay-intertechnology-inc-4407847687
+- Software Consultant/ IT Consultant (m/w/d) — myneva — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-consultant-it-consultant-m-w-d-at-myneva-4427482543
+- Software Developer C#/.NET (m/w/d) | Business Applications — efinio IT & Engineering — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-c%23-net-m-w-d-business-applications-at-efinio-it-engineering-4439853120
+- Software Developer Core Banking Systems (w/m/d) — 3 Banken IT GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-core-banking-systems-w-m-d-at-3-banken-it-gmbh-4459574892
+- Software Developer Core Banking Systems (w/m/d) — Oberbank CZ — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-core-banking-systems-w-m-d-at-oberbank-cz-4461763629
+- Software Developer (M/F/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-f-d-at-tgw-logistics-4424889537
+- Software Engineer (Backend / Full Stack) — Vertice — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-backend-full-stack-at-vertice-4435450784
+- Software Engineer C++ & Automatisierung (m/w/d) — FERCHAU — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-c%2B%2B-automatisierung-m-w-d-at-ferchau-4441975474
+- Software Engineer – Content Services (w/m/d) — Fabasoft — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-%E2%80%93-content-services-w-m-d-at-fabasoft-4440458725
+- Software Engineer Embedded — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-embedded-at-sprecher-automation-4443164959
+- Software Engineer - Fabasphere Use-Cases — Fabasoft — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-fabasphere-use-cases-at-fabasoft-4458197618
+- Software Engineer Java (m/w/d) — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-java-m-w-d-at-sprecher-automation-4440228951
+- Software Engineer (m/f/d) — GE HealthCare — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-m-f-d-at-ge-healthcare-4423011705
+- Software Engineer (m/w/d) Vollzeit Linz — system7 rail — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-m-w-d-vollzeit-linz-at-system7-rail-4437698490
+- Software Engineer Sensor & Automation Solutions (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-sensor-automation-solutions-w-m-x-at-beko-solutions-gmbh-4446429529
+- Software Engineer — IONO Robotics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-at-iono-robotics-4442575340
+- Software Entwickler C# und .Net (m/w/d) — aqotec GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7889595
+- Software Entwickler:in Digital Twin (m/w/d)* — TGW Logistics GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7859198
+- Software Entwickler:in (m/w/d) — Hainzl Industriesysteme GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7785683
+- Software-Entwickler:in (m/w/d)* — TGW Logistics GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7842383
+- Software Entwickler (m/w/d) — KNP Financial Services GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7899173
+- Software Entwickler (m/w/d) — World-Direct eBusiness solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7888205
+- Software Entwickler mit Inbetriebnahmeanteil (m/w/d) — VESCON Systemtechnik GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7878831
+- Software Tester & Automation Engineer C# (m/w/x) — DS Automotion GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7710560
+- Softwareengineering SPS m/w/x — WINTERSTEIGER Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareengineering-sps-m-w-x-at-wintersteiger-inc-4412637870
+- Softwareentwickler C# für Testsysteme (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-c%23-f%C3%BCr-testsysteme-w-m-x-at-beko-solutions-gmbh-4428714443
+- Softwareentwickler C# / .NET | Microsoft - Technologien, MS SQL, Oracle | Inhouse (mwd) — Vesterling AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-c%23-net-microsoft-technologien-ms-sql-oracle-inhouse-mwd-at-vesterling-ag-4295964275
+- Softwareentwickler Embedded (m/w/d) — Inteff GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-embedded-m-w-d-at-inteff-gmbh-4448966255
+- Softwareentwickler Embedded Systems @ WINTERSTEIGER AG — DEVjobs — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-embedded-systems-%40-wintersteiger-ag-at-devjobs-4454760573
+- Softwareentwickler im Automatisierungsbereich (m/w/d) — ENGEL Österreich - Wir sind ENGEL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-im-automatisierungsbereich-m-w-d-at-engel-%C3%B6sterreich-wir-sind-engel-4442935043
+- Softwareentwickler (w/m/d) Robotik/Vision — TRUMPF Maschinen Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-robotik-vision-at-trumpf-maschinen-austria-4390144343
+- Specialist IT Infrastructure - Cloud and Datacenter (all genders) — TroGroup — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/specialist-it-infrastructure-cloud-and-datacenter-all-genders-at-trogroup-4428232825
+- SPS-Programmierer (m/w/d) – Digitalisierung & Systemintegration — AGRU Kunststofftechnik GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sps-programmierer-m-w-d-%E2%80%93-digitalisierung-systemintegration-at-agru-kunststofftechnik-gmbh-4439427156
+- Student (m/w/d) für eine Studien- oder Abschlussarbeit im Bereich Elektronik, Softwareentwicklung, Mechatronik, Maschinenbau, Mobilhydraulik, Konstruktion — Wacker Neuson Linz GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7847742
+- Studentenjob IT / Datenmanagement — Industrie Informatik GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/4b7b0d1c5113226898ac7716fe9d34b6
+- Support Engineer TopSolid CAM (m/w/d) — MAIT for business — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/support-engineer-topsolid-cam-m-w-d-at-mait-for-business-4447363656
+- Support Engineer (w/m/d) — ABB — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/support-engineer-w-m-d-at-abb-4430551937
+- System Developer (M/W/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/system-developer-m-w-d-at-tgw-logistics-4446260081
+- System Engineer Endpoint-Management (m/w/d) — GEMA Austria GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7888206
+- Technical Service Specialist (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technical-service-specialist-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455834860
+- Technical Support Manager (d/w/m) — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technical-support-manager-d-w-m-at-hello-again-4443786200
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-%C3%B6sterreich-4432676092
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval România — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-rom%C3%A2nia-4432698817
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval United Kingdom — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-united-kingdom-4450089501
+- Web Developer für Shopify und WordPress (m/w/d) — Make Branding — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/web-developer-f%C3%BCr-shopify-und-wordpress-m-w-d-at-make-branding-4449449198
+- Werkstudent Data & AI — TGW Logistics Group — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/f5d64512445a2f5761defc1d4b9232b7
+- Werkstudent für interne KI-Tool Entwicklung und Automatisierung — Promot Automation GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/0cd7c0196b1b9d7adde88b973b4d3b1b
+- Workday Functional Service Owner (m/w/d) —  — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893220
+- Workday Functional Service Owner (m/w/d) — banner — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893220
+
+### Sicher (74)
+
+- IT Cloud Division Lehrling — TOMORIS GmbH
+- IT Mitarbeiter (m/w/d) — Trenkwalder Personaldienste GmbH
+- IT Support Mitarbeiter:in — Sprecher Automation
+- IT-Support — Bio Austria
+- IT-SYSTEM-ADMINISTRATOR:IN — HENNLICH Österreich
+- IT System Administrator — KheepU GmbH
+- Junior Azure Cloud &amp; Application Developer (m/w/d) — Kurt Seidl Software Handelsgesellschaft m.b.H.
+- Junior Data Analyst — TD Trusted Decisions GmbH
+- Junior Full-Stack-Entwickler — Coiss GmbH
+- Junior Hardware Entwickler (w/m/d) — Dynell GmbH
+- Junior Inhouse Consultant (m/w/d) – SAP Commerce — Wacker Neuson
+- Junior IT Administrator — CADS GmbH
+- Junior IT Consultant — Hapeko
+- Junior Java/Jakarta EE Developer — Gepardec IT Services GmbH
+- Junior Javascript & Typescript Backend Engineer — Dynatrace GmbH
+- Junior Javascript & Typescript Engineer — Dynatrace GmbH
+- (Junior) Projektleiter/in Elektrotechnik für Straßen- und Sportstättenbeleuchtung — eww Gruppe
+- (Junior) Software Developer (m/w/d) — Richter Pharma AG
+- (Junior) Software Developer (w/m/x) — epunkt GmbH
+- Junior Softwareentwickler Für Intelligente Robotik (w/m/d) — KERN engineering careers GmbH
+- (Junior) Softwareentwickler Java (w/m/x) — epunkt GmbH
+- Lehre Applikationsentwickler - Coding — Starlim Spritzguss Gmbh
+- Lehre IT-Systemtechniker — EREMA Group
+- Lehrling Informationstechnologie - Schwerpunkt Systemtechnik — x-tention Informationstechnologie GmbH
+- Lehrstelle Applikationsentwicklung Coding — KEBA AG
+- Mitarbeiter:in IT-Support — dm drogerie markt Österreich
+- Mitarbeiter:in Ticketmanagement (w/m/d) — AGILOX Services GmbH
+- MITARBEITER IT & KÜNSTLICHE INTELLIGENZ — Dronetech Austria
+- Mitarbeiter IT-Support / IT-Service (m/w/d) — NCE Computer GmbH
+- Onsite IT-Support 2nd Level (m/w/d) - Eggelsberg — Hemmersbach
+- Praktikant Digitalisierung & Softwareentwicklung im Bereich E-Mobilität (w/m/x) — BMW Group
+- Praktikant Mediendesign — BMW Motoren GmbH
+- Praktikant — Ahoi Kapptn!
+- Praktikum im Bereich IT-Projektmanagement und Softwareentwicklung (m/w/d) — Mercedes-Benz G GmbH
+- Praktikum Junior App Manager — hello again GmbH
+- Software Engineer - Early Career — Dynatrace GmbH
+- Software-Entwickler (m/w/d) — 
+- Software-Entwickler (m/w/d) — 
+- Software-Entwickler (m/w/d) — banner
+- System- & Netzwerkadministrator (m/w/d) — GARTNER - "THE WORLD OF TRANSPORT"
+- Web-Developer (m/w/d) — RegionalMedien Oberösterreich
+- Atlassian Application Specialist (m/w/d) — KERN engineering careers
+- Expert:in für den technischen Support (m/w/d) — ETECH Schmid u. Pachler Elektrotechnik GmbH & CoKG
+- IT Application Specialist Shopfloor & Produktion (m/w/d) — Hammerer Aluminium Industries
+- IT Client-Administrator (m/w/d) — WFL Millturn Technologies GmbH & Co. KG
+- IT Enterprise Systems Lehrling — TOMORIS GmbH
+- IT Field Service Lehrling — TOMORIS GmbH
+- IT-Risk / IT-Governance Junior Manager — Partner Bank
+- IT Service Desk Engi­neer (m/w/d) — BWT Group
+- ITSM Process & Atlassian Specialist — Hödlmayr International
+- Junior Automation Software Engineer (m/w/d) — Miba Group
+- Junior Business IT Consultant - Integration Engineer  m / w / d — OBERNDORFER Betonfertigteile
+- Junior Citrix Operations Manager:in (m/w/d) — ÖBB-Konzern
+- Junior Data Analyst Controlling — Richter Pharma AG
+- Junior Digitalisierungsexperte für erneuerbare Energien (m/w/d) — Ingenieurbüro mitPlan GmbH
+- Junior-Elektrotechniker (m/w/d) — ISS Facility Services GmbH
+- Junior Entwicklungsingenieur/ Produktentwickler (m/w/d) — Alpen-Maykestag GmbH
+- Junior IT ProjektmanagerIn (m/w/d) — banner
+- Junior IT Systems Engineer — REDER TRANSPORTE KG
+- Junior Java Entwickler — BEKO Engineering & Informatik GmbH & Co KG
+- Junior Personalentwickler im Vertrieb (m/w/d) — Helvetia Versicherungen AG
+- Junior-Projektleiter Elektrotechnik (m/w/d) — ETZI-Group GmbH
+- Junior Projektmanager:in (m/w/d) — ÖAMTC Wien, Niederösterreich, Burgenland
+- (Junior) Technical SAP Consultant (all genders) — msg
+- Lehre Informationstechnologe Systemtechnik — Starlim Spritzguss Gmbh
+- Lehre Informationstechnologie & Systemtechnik — Elektroanlagen G. Klampfer GmbH
+- Lehre IT-Systemtechniker — HAUSER GmbH Österreich
+- Lehrling IT-Systemtechnik — CANCOM a+d IT Solutions GmbH
+- Linux System Administrator — Computer Futures
+- Mitarbeiter im Innendienst im Bereich Silikontechnik (m/w/d) - Silnova — REHAU Industrial Solutions
+- Praktikant Digitalisierung & Softwareentwicklung E-Mobilität — BMW Motoren GmbH
+- Praktikant Software Engineering (w/m/x) — BMW Group
+- Technical Support Engineer (m/w/d)  1st Level (AMR/Robotics) — AGILOX Services GmbH
+- Technical Support Engineer (m/w/x) — EV Group
+
+---
+
+## Filter-Lauf 2026-09-09 06:52  Modus: regex  (75 sicher, 190 unsicher, 63 raus)
+
+
+### Aggregat (Kriterien-Verteilung)
+
+- it_rolle → –
+- erfahrung_ab_3j_erforderlich → –
+- lehre_coding → –
+- junior_signal → –
+
+### Raus (63)
+
+- Frontend Developer (Senior) (w/m/d) (unbefristete Einstellung) — Johannes Kepler Universität — Grund: Seniorität (Titel)
+- Junior Java Developer (m/w/d) — Gepardec IT Services GmbH — Grund: Erfahrung ≥3J: 'einschlägige'
+- Product Owner Frontend Development (w/m/d) — Fabasoft — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Product Owner Webentwicklung (w/m/x) — epunkt GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Senior Java Developer (d/w/m) — EBCONT — Grund: Seniorität (Titel)
+- Senior Java Entwickler & Project Lead (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Software-Developer*in — Österreichische Gesundheitskasse — Grund: Erfahrung ≥3J: 'einschlägige'
+- Web - Frontend Entwickler React (m/w/d) — Hirelight EB Consulting — Grund: Erfahrung ≥3J: '3 – 4 jahre'
+- 1st Level Service Desk Mitarbeiter*in — Österreichische Gesundheitskasse — Grund: Erfahrung ≥3J: 'einschlägige'
+- AI & Machine Learning Engineer (all genders) — msg — Grund: Erfahrung ≥3J: '3–5 jahre'
+- Backend Entwickler C#/.NET (w/m/div.) — Bosch Österreich — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Business Application Architect (m/w/d) — AGILOX Services GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Citrix IT-Engineer (m/w/d) — RAITEC GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Customer & Technical Service Specialist* — KTM AG — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Cybersecurity Engineer (w/m/d) — Stuhlberger IT GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Frontend Developer (Senior) (m/w/d) (unbefristete Einstellung) — Johannes Kepler Universität Linz JKU — Grund: Seniorität (Titel)
+- Fullstack-Entwickler (m/w/d) — Fronius Österreich — Grund: Erfahrung ≥3J: 'einschlägige'
+- IT-Manager (m/w/d) - 1st Level Support — Sikla GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Mitarbeiter:in — Raiffeisenlandesbank Oberösterreich — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Operations Spezialist — Barmherzige Brüder Linz — Grund: Erfahrung ≥3J: 'einschlägige'
+- IT Service Desk Specialist (w/m/d) — Michael Page International Austria GmbH — Grund: Erfahrung ≥3J: 'ab 50'
+- IT Service Desk Specialist (w/m/d) — TNT Personal — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Support Engineer (w/m/d) — talentbird GmbH — Grund: Erfahrung ≥3J: '3 jahre'
+- IT-Support Spezialist:in (m/f/d) – Hagenberg i. M./Wien / Vollzeit — ventopay gmbh — Grund: Erfahrung ≥3J: '20 jahren'
+- IT-Systemtechniker (m/w/d), GM — microCAT GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Technik/System Engineer (m/w/d) — best4best consulting - Personalberatung & Talente Vermittlung — Grund: Erfahrung ≥3J: '5 jahre'
+- Java Backend Developer (m/w/d) —  — Grund: Erfahrung ≥3J: '3 jahre'
+- Junior HKLS-Projektleiter (m/w/d) — PKE Gebäudetechnik GmbH — Grund: Erfahrung ≥3J: 'langjährige'
+- Junior Projektleiter:in mit Schwerpunkt Elektro- &amp; Gebäudetechnik (m/w/d) — ETECH Schmid u Pachler Elektrotechnik GmbH &amp; Co KG — Grund: Erfahrung ≥3J: '3-5 jahre'
+- Junior/Senior IT User Services Specialist — KPMG Austria — Grund: Seniorität (Titel)
+- (Junior/Senior) SPS-Programmierer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Lead AI Engineer (Java or .NET) (m/w/d) —  — Grund: Seniorität (Titel)
+- Marketing &amp; Communications Manager 80-100 % (m/w/d) —  — Grund: Erfahrung ≥3J: '5+ years'
+- Marketing &amp; Communications Manager 80-100 % (m/w/d) —  — Grund: Erfahrung ≥3J: '5+ years'
+- Mobile Engineer (d/f/m) — hello again — Grund: Erfahrung ≥3J: '4 years'
+- Praktikum Research Human Machine Interface im Einsatz (m/w/d) — Rosenbauer Group — Grund: Erfahrung ≥3J: 'einschlägige'
+- SAP Accounting Systembetreuer | SAP FI, SAP CO, Projektleitung | Inhouse, bis 90.000 € (mwd) — Vesterling AG — Grund: Erfahrung ≥3J: 'mehrjährige'
+- SAP PP / SAP WM Systembetreuer | Logistik, Projektleitung, Produktionsunternehmen | Inhouse (mwd) — Vesterling AG — Grund: Erfahrung ≥3J: 'mehrjährige'
+- SAP UI5 / Fiori Developer (m/w/d) – Logistik & S/4HANA — voestalpine — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Senior Frontend Developer (w/m/d) — Fabasoft — Grund: Seniorität (Titel)
+- Senior Frontend Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior Full Stack Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- (Senior) Full Stack Developer* — KTM AG — Grund: Seniorität (Titel)
+- Senior Full Stack Entwickler*in (m/w/x) mit C# / .Net / Angular Know-How — DS Automotion GmbH — Grund: Seniorität (Titel)
+- Senior Fullstack Developer (d/m/w) — EBCONT — Grund: Seniorität (Titel)
+- Senior Fullstack Entwickler:in - Java/Angular (m/w/d) — ÖBB-Konzern — Grund: Seniorität (Titel)
+- (Senior) IT Consultant (m/w/d) — VACE Group — Grund: Seniorität (Titel)
+- Senior IT Operations Engineer (w/m/d) - Site & Field Services — REPLOID — Grund: Seniorität (Titel)
+- (Senior) IT Service Agent (w/m/x) — IBM iX DACH — Grund: Seniorität (Titel)
+- Senior Java Developer Materialflusssystem (m/w/d) — Schachermayer GmbH — Grund: Seniorität (Titel)
+- Senior Java-Softwareentwickler (m/w/d) — CPB SOFTWARE (AUSTRIA) GMBH — Grund: Seniorität (Titel)
+- Senior MLOps (d/w/m) — EBCONT — Grund: Seniorität (Titel)
+- Senior Operations Specialist (m/w/d) — sigmavista it consulting gmbh — Grund: Seniorität (Titel)
+- Senior SAP MM Inhouse Consultant (m/w/d) – S/4HANA & Teamaufbau — ISG Personalmanagement GmbH — Grund: Seniorität (Titel)
+- (Senior) Software Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Software Developer Lead & Product Track — TEC-IT — Grund: Seniorität (Titel)
+- Software Developer (m/w/d) — enjoy IT GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Software Entwickler C/C++ (m/w/d) — best4best consulting - Personalberatung & Talente Vermittlung — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Software Entwickler/in - Backend/Cloud (m/w/d) —  — Grund: Erfahrung ≥3J: '3 jahre'
+- Software Entwickler/in - Backend/Cloud (m/w/d) —  — Grund: Erfahrung ≥3J: '3 jahre'
+- Software Entwickler .NET-Bereich (m/f/d) – Hagenberg i. M. / Vollzeit — ventopay gmbh — Grund: Erfahrung ≥3J: 'ab 3'
+- Technischer IT-Projektmanager — ventopay gmbh — Grund: Erfahrung ≥3J: 'ab 3'
+- Windows Systemadministrator (w/m/x) — epunkt GmbH — Grund: Erfahrung ≥3J: 'langjährige'
+
+### Unsicher (190)
+
+- 2nd Level IT-Techniker (m/w/d) — Education Group GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7878272
+- 2nd-Level-Support V460 — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/2nd-level-support-v460-at-sprecher-automation-4451404367
+- AI Solutions Engineer (d/f/m) — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-solutions-engineer-d-f-m-at-hello-again-4450472591
+- AI Solutions Engineer — Schulmeister Management Consulting — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-solutions-engineer-at-schulmeister-management-consulting-4458707362
+- Applikationsbetreuer (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/applikationsbetreuer-w-m-x-at-beko-solutions-gmbh-4453533704
+- Development Engineer (m/f/d) Embedded Software — BRP-Rotax — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/development-engineer-m-f-d-embedded-software-at-brp-rotax-4391096590
+- Embedded Developer — Proactive Global — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-developer-at-proactive-global-4458091466
+- Front-end Developer @ lingohub GmbH — DEVjobs — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/front-end-developer-%40-lingohub-gmbh-at-devjobs-4459791199
+- Frontend Web Developer*in (m/w/d) — karriere.at GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7889682
+- FRONTEND WEB DEVELOPER (m/w/d) — eurofunk Kappacher GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/frontend-web-developer-m-w-d-at-eurofunk-kappacher-gmbh-4317421237
+- Full Stack Developer für interne Applikationen & AI (m/w/d) — ENGEL Japan 株式会社 — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-f%C3%BCr-interne-applikationen-ai-m-w-d-at-engel-japan-kk-4448188870
+- Full Stack Developer für interne Applikationen & AI (m/w/d) — ENGEL Österreich - Wir sind ENGEL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-f%C3%BCr-interne-applikationen-ai-m-w-d-at-engel-%C3%B6sterreich-wir-sind-engel-4442643305
+- Full Stack Developer (m/w/d) — Trenkwalder Personaldienste GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7890381
+- Full Stack Developer (m/w/d) — WIOSS Witron On Site Services GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/10025311
+- Full Stack Developer (m/w/d) — WITRON Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-m-w-d-at-witron-group-4420147229
+- Full Stack / Web Developer (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-web-developer-m-w-x-at-ev-group-4295645097
+- Fullstack-Entwickler:in mit Java Backend und Vue/Nuxt Frontend — STRABAG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/fullstack-entwickler-in-mit-java-backend-und-vue-nuxt-frontend-at-strabag-4418142917
+- Fullstack Entwickler (Java/Angular) (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/fullstack-entwickler-java-angular-w-m-x-at-beko-solutions-gmbh-4453205342
+- Is flexible working important to you? — KEBA Industrial Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/is-flexible-working-important-to-you%3F-at-keba-industrial-automation-4448708741
+- IT Helpdesk & Field Service (m/w/x) — Scheuch USA — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-helpdesk-field-service-m-w-x-at-scheuch-usa-4440367401
+- IT Mitarbeiter — LORENZ SHOE GROUP — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-mitarbeiter-at-lorenz-shoe-group-4459689635
+- IT Service Desk Specialist (f/m/d) — LAT Nitrogen — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-service-desk-specialist-f-m-d-at-lat-nitrogen-4427540158
+- IT Support & Workplace Manager(in) — SONNHAUS GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/10024392
+- JAVA Developer (m/w/d) — IMA Engineering Services — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/java-developer-m-w-d-at-ima-engineering-services-4442605911
+- Mitarbeiter/in für technischen Support — VERSUSbet — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-in-f%C3%BCr-technischen-support-at-versusbet-4444101279
+- Mitarbeiter:in IT-Support - Life Cycle Cluster AT/CE — dm drogerie markt Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-in-it-support-life-cycle-cluster-at-ce-at-dm-drogerie-markt-%C3%B6sterreich-4460317793
+- React Native Developer (d/f/m) — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/react-native-developer-d-f-m-at-hello-again-4421105626
+- Software Developer Core Banking Systems (w/m/d) — Oberbank — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-core-banking-systems-w-m-d-at-oberbank-4461785381
+- SOFTWARE DEVELOPER*IN (M/W/D) — Ivm Consulting Co — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-in-m-w-d-at-ivm-consulting-co-4445935052
+- Software Developer*in (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-in-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455895256
+- Software Developer (m/w/d) — efinio IT & Engineering — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-w-d-at-efinio-it-engineering-4268563514
+- Software Engineer für APIs mit JAVA (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-f%C3%BCr-apis-mit-java-m-w-d-at-fronius-%C3%B6sterreich-4436087293
+- Software Engineer Java (m/w/d) — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-java-m-w-d-at-sprecher-automation-4440228951
+- Software Entwickler:in mit Security Fokus (m/w/*) — Primetals Technologies Austria GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7827695
+- Softwareentwickler Embedded Systems m/w/x — WINTERSTEIGER Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-embedded-systems-m-w-x-at-wintersteiger-inc-4423166351
+- Softwareentwickler im Automatisierungsbereich (m/w/d) — ENGEL Japan 株式会社 — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-im-automatisierungsbereich-m-w-d-at-engel-japan-kk-4448184927
+- Softwareentwickler*in (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-in-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455818799
+- Softwareentwickler*in – Schwerpunkt KI (m/w/d) — Hartlauer HandelsgesmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7854638
+- Softwareentwickler (w/m/d) - Frontend — Nürnberg Digital Festival NUEDIGITAL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-frontend-at-n%C3%BCrnberg-digital-festival-nuedigital-4419174064
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval France — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-france-4450688868
+- UI/UX Designer — solvistas GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/7f089a0ed9262a3c437b57eef83d7960
+- WebApp-Development (Linz, AT) — Develite GmbH & Co. KG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/webapp-development-linz-at-at-develite-gmbh-co-kg-4455251517
+- Workday Functional Service Owner (m/w/d) — XXXLdigital – Part of XXXL Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/workday-functional-service-owner-m-w-d-at-xxxldigital-%E2%80%93-part-of-xxxl-group-4443691825
+- AI Engineer (f/m/d) — Interdisciplinary Transformation University (IT:U) — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-engineer-f-m-d-at-interdisciplinary-transformation-university-it-u-4441961604
+- AI & ML Intern – Full Stack Developer (m/f/d) — Trench Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-ml-intern-%E2%80%93-full-stack-developer-m-f-d-at-trench-group-4453098505
+- AI Product Engineer (w/m/d) — AGILOX — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-product-engineer-w-m-d-at-agilox-4462214428
+- Allrounder für Wordpress, WooCommerce mit Programmier- u. Grafikkenntnissen — LINZKREATIV.AT — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/allrounder-f%C3%BCr-wordpress-woocommerce-mit-programmier-u-grafikkenntnissen-at-linzkreativ-at-4451036989
+- Application Management & GPS Telematics  (m/w/d) — GPS.at (Softwaro GmbH) — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/application-management-gps-telematics-m-w-d-at-software-management-gmbh-gps-at-4455838809
+- Applikationsentwickler für C++ / Linux (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/applikationsentwickler-f%C3%BCr-c%2B%2B-linux-m-w-d-at-fronius-%C3%B6sterreich-4452990617
+- Associate Digital Manufacturing & Low-Code Applications (f/m/d) - part time 27 hrs / week — PALFINGER — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/associate-digital-manufacturing-low-code-applications-f-m-d-part-time-27-hrs-week-at-palfinger-4455603508
+- Automatisierungstechniker Software (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/automatisierungstechniker-software-m-w-x-at-ev-group-4417208130
+- Backend Developer (m/w/d) - in Linz - Kotlin / Spring — Optimind — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/backend-developer-m-w-d-in-linz-kotlin-spring-at-optimind-4441524418
+- Berufsintegrierter Master – Entwicklung der Bedienoberfläche für ein Motorrad Dashboard (m/w/d) — Steinbeis Center of Management and Technology - SCMT GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/berufsintegrierter-master-%E2%80%93-entwicklung-der-bedienoberfl%C3%A4che-f%C3%BCr-ein-motorrad-dashboard-m-w-d-at-steinbeis-center-of-management-and-technology-scmt-gmbh-4354860619
+- BI-Developer / Data Engineer (m/w/d) — GARTNER - "THE WORLD OF TRANSPORT" — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/bi-developer-data-engineer-m-w-d-at-gartner-the-world-of-transport-4444761846
+- Business Software Developer (C#) — din - Sicherheitstechnik Italia GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/business-software-developer-c%23-at-din-sicherheitstechnik-italia-gmbh-4443427374
+- C#/.Net Softwareentwickler (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/c%23-net-softwareentwickler-m-w-x-at-ev-group-4417208131
+- Citrix Engineer (m/w/d) — Trenkwalder Personaldienste GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7884099
+- Client Service Desk — Computer Futures — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/client-service-desk-at-computer-futures-4450263374
+- Consultant (D365 & Azure Integration) (all genders welcome) — COSMO CONSULT — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/consultant-d365-azure-integration-all-genders-welcome-at-cosmo-consult-4445557553
+- Consultant SIEM, SOC & MDR (w/m/d) — EY — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/consultant-siem-soc-mdr-w-m-d-at-ey-4435211223
+- Customer Support Engineer (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/customer-support-engineer-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455833787
+- Data Analytics Engineer* — KTM AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-analytics-engineer-at-ktm-ag-4440005927
+- Data Center Technician - Austria - Linz - On-site — Reboot Monkey — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-center-technician-austria-linz-on-site-at-reboot-monkey-4382614771
+- Data Center Technician - Austria - Perg - On-site — Reboot Monkey — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-center-technician-austria-perg-on-site-at-reboot-monkey-4382606972
+- Data Centre Technicians - Austria — EOS IT Solutions — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-centre-technicians-austria-at-eos-it-solutions-4422000315
+- Data Centre Technicians - Expression of Interest — EOS IT Solutions — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-centre-technicians-expression-of-interest-at-eos-it-solutions-4422000315
+- Data Engineer (m/w/d) — XXXLdigital – Part of XXXL Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-engineer-m-w-d-at-xxxldigital-%E2%80%93-part-of-xxxl-group-4435677917
+- Data Engineer — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-engineer-at-acp-gruppe-4385247257
+- Data Scientist — IONO Robotics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-scientist-at-iono-robotics-4442581059
+- DevOps Engineer (w/m/d) — seele — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/devops-engineer-w-m-d-at-seele-4437272337
+- Embedded Developer @ WINTERSTEIGER AG — DEVjobs — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-developer-%40-wintersteiger-ag-at-devjobs-4448203465
+- Embedded Software-Developer Linux (m/d/w) — ABATEC — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-software-developer-linux-m-d-w-at-abatec-4458065838
+- Embedded Software Developer — Frauscher Sensor Technology India — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-software-developer-at-frauscher-sensor-technology-india-4414219958
+- ERP Software Developer (C#) — din - Sicherheitstechnik Italia GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/erp-software-developer-c%23-at-din-sicherheitstechnik-italia-gmbh-4455623461
+- EUC Engineer — Swiss IT Solutions CH GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/euc-engineer-at-swiss-it-solutions-ch-gmbh-4449247475
+- Full-Stack-Entwickler .NET & Kotlin (m/w/d) — Atlas Blech Center GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-entwickler-net-kotlin-m-w-d-at-atlas-blech-center-gmbh-4452206954
+- Full Stack Software Developer (w/m/d) — 3 Banken IT GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-software-developer-w-m-d-at-3-banken-it-gmbh-4449447102
+- Fullstack Developer - Angular (m/w/d) — Gepardec IT Services GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/fullstack-developer-angular-m-w-d-at-gepardec-it-services-gmbh-4453068591
+- Fullstack-Web-Entwickler:in (C#/Angular) - ab 30h/Woche (m/w/d) — ÖBB-Konzern — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7894731
+- Graphic &amp; Web Designer (m/w/d) — offisy gmbh — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893337
+- Graphic & Web Designer (m/w/d) — Offisy GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/10027829
+- Information Technology Support Engineer — Swiss IT Solutions CH GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/information-technology-support-engineer-at-swiss-it-solutions-ch-gmbh-4459670877
+- Internship AI – Computer Vision & Multimodal AI — KEBA AG — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/9e988afadcc4ef24aff792ef07e05d1a
+- Internship - Automotive Radar R&D (f/m/div) — Infineon Technologies — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/internship-automotive-radar-r-d-f-m-div-at-infineon-technologies-4450683903
+- IoT Backend Entwickler (m/w/d) — ENGEL Österreich - Wir sind ENGEL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/iot-backend-entwickler-m-w-d-at-engel-%C3%B6sterreich-wir-sind-engel-4455680470
+- IT-Administrator (m/w/d) — Linde Material Handling Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-administrator-m-w-d-at-linde-material-handling-austria-4450227772
+- IT-Administrator (m/w/d) — Linde Material Handling — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-administrator-m-w-d-at-linde-material-handling-4448404426
+- IT-Administrator / Projektmitarbeiter (m/w/d) — NCE Computer GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-administrator-projektmitarbeiter-m-w-d-at-nce-computer-gmbh-4437932569
+- IT Application Manager (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-application-manager-w-m-x-at-beko-solutions-gmbh-4419072498
+- IT Application Manager — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-application-manager-at-sprecher-automation-4423938691
+- IT- Applikation Developer (m/w/d) — Oesterreichische Kontrollbank Aktiengesellschaft — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7898301
+- IT & Facilities Coordinator m/f/d — BOA® — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-facilities-coordinator-m-f-d-at-boa%C2%AE-4429214045
+- IT Infrastructure Engineer (w/m/d) - Schwerpunkt Client Management — Felbermayr Group — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7864825
+- IT Infrastructure Engineer — Felbermayr-Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-infrastructure-engineer-at-felbermayr-4457464465
+- IT-Infrastruktur-Techniker 2nd Level (m/w/d) — Hödlmayr International — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-infrastruktur-techniker-2nd-level-m-w-d-at-h%C3%B6dlmayr-international-ag-4425971723
+- IT Onsite Client Support 1st & 2nd  Level — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-onsite-client-support-1st-2nd-level-at-acp-gruppe-4430529669
+- IT Operations Engineer (w/m/d) — REPLOID — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-operations-engineer-w-m-d-at-reploid-4416255354
+- IT Operations Engineer — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-operations-engineer-at-acp-gruppe-4433695836
+- IT Service Agent (w/m/x) — IBM iX DACH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-service-agent-w-m-x-at-ibm-ix-dach-4437790401
+- IT Servicedesk Engineer (m/w/d) — sigmavista it consulting gmbh — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-servicedesk-engineer-m-w-d-at-sigmavista-it-consulting-gmbh-4449203488
+- IT Support Engineer (w/m/d) — KERN engineering careers GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7852112
+- IT Support Manager — DL Remote — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-manager-at-dl-remote-4457982715
+- IT Support Mitarbeiter 1st/2nd Level (m/w/d) — Atikon EDV &amp; Marketing GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893095
+- IT Support Mitarbeiter 1st/2nd Level (m/w/d) — Atikon EDV & Marketing GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7850672
+- IT Support Specialist - Application & Software (M/F/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-specialist-application-software-m-f-d-at-tgw-logistics-4413350285
+- IT Support Specialist (f/m/d) — Siemens Energy — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-specialist-f-m-d-at-siemens-energy-4440217097
+- IT Support Spezialist:in - Application & Software (M/W/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-spezialist-in-application-software-m-w-d-at-tgw-logistics-4410188556
+- IT Support Spezialist (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-spezialist-w-m-x-at-beko-solutions-gmbh-4436535334
+- IT-Support-Techniker — HCLTech — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-techniker-at-hcltech-4445920367
+- IT-Systemadministrator MSP Dienste (m/w/d) — NCE Computer GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-systemadministrator-msp-dienste-m-w-d-at-nce-computer-gmbh-4437930598
+- IT-Systemadministrator (w/m/d) — seele — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-systemadministrator-w-m-d-at-seele-4423644452
+- IT-Techniker für telefonischen Kundensupport — DIALOG telekom Gmbh & Co KG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-techniker-f%C3%BCr-telefonischen-kundensupport-at-dialog-telekom-gmbh-co-kg-4429406945
+- IT-Techniker:in - Produktions-IT/OT — Greiner — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-techniker-in-produktions-it-ot-at-greiner-4448268995
+- IT-Techniker, m/w/d — Peneder Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-techniker-m-w-d-at-peneder-gruppe-4428490053
+- IT-Techniker (m/w/x) — epunkt GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7782719
+- JOBS - Servicetechniker für audiovisuelle Systeme (m/w/d) — conex media gmbh — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/jobs-servicetechniker-f%C3%BCr-audiovisuelle-systeme-m-w-d-at-conex-media-gmbh-4442925085
+- Key Account & Business Development Manager im Software Umfeld (w/m/x) — epunkt GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7827260
+- Kundendienstmitarbeiter:in — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/kundendienstmitarbeiter-in-at-hello-again-4443282713
+- LINUX SYSTEMINGENIEUR*IN (M/W/D) — Ivm Consulting Co — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/linux-systemingenieur-in-m-w-d-at-ivm-consulting-co-4449481296
+- Linux Systemingenieur*in (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/linux-systemingenieur-in-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455838800
+- MES Software Engineer - Schwerpunkt ABAP OO Development (m/w/d) — voestalpine Additive Manufacturing North America — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mes-software-engineer-schwerpunkt-abap-oo-development-m-w-d-at-voestalpine-additive-manufacturing-north-america-4461364157
+- MES Software Engineer - Schwerpunkt ABAP OO Development (m/w/d) — voestalpine — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mes-software-engineer-schwerpunkt-abap-oo-development-m-w-d-at-voestalpine-4451528065
+- Microsoft Power Platform Developer (m/f/d) – Tieto Tech Consulting — Tieto — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/microsoft-power-platform-developer-m-f-d-%E2%80%93-tieto-tech-consulting-at-tieto-4450693732
+- Mitarbeiter IT Customer Support – First Level (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-it-customer-support-%E2%80%93-first-level-m-w-d-at-fronius-%C3%B6sterreich-4426481825
+- Mitarbeiter IT Support (m/w/d) — Richter Pharma AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-it-support-m-w-d-at-richter-pharma-ag-4456730011
+- Mitarbeiter IT-Support (w/m/d) — KERN engineering careers — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-it-support-w-m-d-at-kern-engineering-careers-4446194642
+- Mitarbeiter&shy; im technischen Kunden&shy;innen&shy;dienst* — HARGASSNER France — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-shy-im-technischen-kunden-shy-innen-shy-dienst-at-hargassner-france-4447225894
+- Mitarbeiter Team Windows (m/w/d) — Richter Pharma AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-team-windows-m-w-d-at-richter-pharma-ag-4419190680
+- .NET Developer — Noir — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/net-developer-at-noir-4447293462
+- Network Engineer (w/m/d) — Bechtle — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/network-engineer-w-m-d-at-bechtle-4431528221
+- Network & Security Engineer (m/w/d) Fortinet — Trenkwalder Personaldienste GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7884098
+- Operations Manager:in Basisnetze - Netzwerk & Automatisierung (m/w/d) — ÖBB-Konzern — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7882544
+- OT Technician (all genders) — Greiner — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ot-technician-all-genders-at-greiner-4448850456
+- OT-Techniker:in — Greiner — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ot-techniker-in-at-greiner-4448268995
+- PLC Software Engineer (Beckhoff TwinCAT) (m/w/d) — WHC Heads Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/plc-software-engineer-beckhoff-twincat-m-w-d-at-whc-heads-austria-4454601314
+- Process & AI Consultant — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/process-ai-consultant-at-acp-gruppe-4448992839
+- Product Owner Field Service (m/w/d) — S&amp;T AG — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7894987
+- Product Support Engineer (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/product-support-engineer-m-w-x-at-ev-group-4417210106
+- R&D Engineer – Firmware & Linear Drive Control (f/m/d) — ABB — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/r-d-engineer-%E2%80%93-firmware-linear-drive-control-f-m-d-at-abb-4455786216
+- SAP ABAP Entwickler (m/w/d) — INFORMATICS — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sap-abap-entwickler-m-w-d-at-informatics-consulting-development-gmbh-4448908173
+- SAP Fiori Entwickler (m/w/d) — INFORMATICS — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sap-fiori-entwickler-m-w-d-at-informatics-consulting-development-gmbh-4448900928
+- Service Competence Center (SCC) Techniker Innendienst für CAD/CAM (w/m/d) — TRUMPF Maschinen Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/service-competence-center-scc-techniker-innendienst-f%C3%BCr-cad-cam-w-m-d-at-trumpf-maschinen-austria-4431275882
+- Serviceengineer Halbleiterfertigung – Schwerpunkt Lithographie (m/w/d) — Vishay Intertechnology, Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/serviceengineer-halbleiterfertigung-%E2%80%93-schwerpunkt-lithographie-m-w-d-at-vishay-intertechnology-inc-4407847687
+- Software Consultant/ IT Consultant (m/w/d) — myneva — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-consultant-it-consultant-m-w-d-at-myneva-4427482543
+- Software Developer C#/.NET (m/w/d) | Business Applications — efinio IT & Engineering — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-c%23-net-m-w-d-business-applications-at-efinio-it-engineering-4439853120
+- Software Developer Core Banking Systems (w/m/d) — 3 Banken IT GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-core-banking-systems-w-m-d-at-3-banken-it-gmbh-4459574892
+- Software Developer Core Banking Systems (w/m/d) — Oberbank CZ — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-core-banking-systems-w-m-d-at-oberbank-cz-4461763629
+- Software Developer (M/F/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-f-d-at-tgw-logistics-4424889537
+- Software Engineer (Backend / Full Stack) — Vertice — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-backend-full-stack-at-vertice-4435450784
+- Software Engineer C++ & Automatisierung (m/w/d) — FERCHAU — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-c%2B%2B-automatisierung-m-w-d-at-ferchau-4441975474
+- Software Engineer – Content Services (w/m/d) — Fabasoft — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-%E2%80%93-content-services-w-m-d-at-fabasoft-4440458725
+- Software Engineer Embedded — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-embedded-at-sprecher-automation-4443164959
+- Software Engineer - Fabasphere Use-Cases — Fabasoft — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-fabasphere-use-cases-at-fabasoft-4458197618
+- Software Engineer (m/f/d) — GE HealthCare — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-m-f-d-at-ge-healthcare-4423011705
+- Software Engineer (m/w/d) Vollzeit Linz — system7 rail — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-m-w-d-vollzeit-linz-at-system7-rail-4437698490
+- Software Engineer Sensor & Automation Solutions (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-sensor-automation-solutions-w-m-x-at-beko-solutions-gmbh-4446429529
+- Software Engineer — IONO Robotics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-at-iono-robotics-4442575340
+- Software Entwickler C# und .Net (m/w/d) — aqotec GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7889595
+- Software Entwickler:in Digital Twin (m/w/d)* — TGW Logistics GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7859198
+- Software Entwickler:in (m/w/d) — Hainzl Industriesysteme GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7785683
+- Software-Entwickler:in (m/w/d)* — TGW Logistics GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7842383
+- Software Entwickler (m/w/d) — KNP Financial Services GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7899173
+- Software Entwickler (m/w/d) — World-Direct eBusiness solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7888205
+- Software Entwickler mit Inbetriebnahmeanteil (m/w/d) — VESCON Systemtechnik GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7878831
+- Software Tester & Automation Engineer C# (m/w/x) — DS Automotion GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7710560
+- Softwareengineering SPS m/w/x — WINTERSTEIGER Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareengineering-sps-m-w-x-at-wintersteiger-inc-4412637870
+- Softwareentwickler C# für Testsysteme (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-c%23-f%C3%BCr-testsysteme-w-m-x-at-beko-solutions-gmbh-4428714443
+- Softwareentwickler C# / .NET | Microsoft - Technologien, MS SQL, Oracle | Inhouse (mwd) — Vesterling AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-c%23-net-microsoft-technologien-ms-sql-oracle-inhouse-mwd-at-vesterling-ag-4295964275
+- Softwareentwickler Embedded (m/w/d) — Inteff GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-embedded-m-w-d-at-inteff-gmbh-4448966255
+- Softwareentwickler Embedded Systems @ WINTERSTEIGER AG — DEVjobs — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-embedded-systems-%40-wintersteiger-ag-at-devjobs-4454760573
+- Softwareentwickler im Automatisierungsbereich (m/w/d) — ENGEL Österreich - Wir sind ENGEL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-im-automatisierungsbereich-m-w-d-at-engel-%C3%B6sterreich-wir-sind-engel-4442935043
+- Softwareentwickler (w/m/d) Robotik/Vision — TRUMPF Maschinen Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-robotik-vision-at-trumpf-maschinen-austria-4390144343
+- Specialist IT Infrastructure - Cloud and Datacenter (all genders) — TroGroup — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/specialist-it-infrastructure-cloud-and-datacenter-all-genders-at-trogroup-4428232825
+- SPS-Programmierer (m/w/d) – Digitalisierung & Systemintegration — AGRU Kunststofftechnik GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sps-programmierer-m-w-d-%E2%80%93-digitalisierung-systemintegration-at-agru-kunststofftechnik-gmbh-4439427156
+- Student (m/w/d) für eine Studien- oder Abschlussarbeit im Bereich Elektronik, Softwareentwicklung, Mechatronik, Maschinenbau, Mobilhydraulik, Konstruktion — Wacker Neuson Linz GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7847742
+- Studentenjob IT / Datenmanagement — Industrie Informatik GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/4b7b0d1c5113226898ac7716fe9d34b6
+- Support Engineer TopSolid CAM (m/w/d) — MAIT for business — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/support-engineer-topsolid-cam-m-w-d-at-mait-for-business-4447363656
+- Support Engineer (w/m/d) — ABB — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/support-engineer-w-m-d-at-abb-4430551937
+- System Developer (M/W/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/system-developer-m-w-d-at-tgw-logistics-4446260081
+- System Engineer Endpoint-Management (m/w/d) — GEMA Austria GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7888206
+- Technical Service Specialist (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technical-service-specialist-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455834860
+- Technical Support Manager (d/w/m) — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technical-support-manager-d-w-m-at-hello-again-4443786200
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-%C3%B6sterreich-4432676092
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval România — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-rom%C3%A2nia-4432698817
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval United Kingdom — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-united-kingdom-4450089501
+- Web Developer für Shopify und WordPress (m/w/d) — Make Branding — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/web-developer-f%C3%BCr-shopify-und-wordpress-m-w-d-at-make-branding-4449449198
+- Werkstudent Data & AI — TGW Logistics Group — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/f5d64512445a2f5761defc1d4b9232b7
+- Werkstudent für interne KI-Tool Entwicklung und Automatisierung — Promot Automation GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/0cd7c0196b1b9d7adde88b973b4d3b1b
+- Workday Functional Service Owner (m/w/d) —  — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893220
+- Workday Functional Service Owner (m/w/d) — banner — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893220
+
+### Sicher (75)
+
+- IT Cloud Division Lehrling — TOMORIS GmbH
+- IT Mitarbeiter (m/w/d) — Trenkwalder Personaldienste GmbH
+- IT-SYSTEM-ADMINISTRATOR:IN — HENNLICH Österreich
+- IT System Administrator — KheepU GmbH
+- Junior Automation Software Engineer (m/w/d) — Miba Group
+- Junior Azure Cloud &amp; Application Developer (m/w/d) — Kurt Seidl Software Handelsgesellschaft m.b.H.
+- Junior Data Analyst — TD Trusted Decisions GmbH
+- Junior Full-Stack-Entwickler — Coiss GmbH
+- Junior Hardware Entwickler (w/m/d) — Dynell GmbH
+- Junior Inhouse Consultant (m/w/d) – SAP Commerce — Wacker Neuson
+- Junior IT Administrator — CADS GmbH
+- Junior IT Consultant — Hapeko
+- Junior Java/Jakarta EE Developer — Gepardec IT Services GmbH
+- Junior Javascript & Typescript Backend Engineer — Dynatrace GmbH
+- Junior Javascript & Typescript Engineer — Dynatrace GmbH
+- Junior Projektmanager:in / Projektassistent (m/w/d) — Schauerhuber Abfallwirtschaft GmbH
+- (Junior) Software Developer (m/w/d) — Richter Pharma AG
+- (Junior) Software Developer (w/m/x) — epunkt GmbH
+- Junior Softwareentwickler Für Intelligente Robotik (w/m/d) — KERN engineering careers GmbH
+- (Junior) Softwareentwickler Java (w/m/x) — epunkt GmbH
+- Lehre Applikationsentwickler - Coding — Starlim Spritzguss Gmbh
+- Lehre IT-Systemtechniker — EREMA Group
+- Lehrling Informationstechnologie - Schwerpunkt Systemtechnik — x-tention Informationstechnologie GmbH
+- Lehrstelle Applikationsentwicklung Coding — KEBA AG
+- Mitarbeiter:in IT-Support — dm drogerie markt Österreich
+- Mitarbeiter:in Ticketmanagement (w/m/d) — AGILOX Services GmbH
+- MITARBEITER IT & KÜNSTLICHE INTELLIGENZ — Dronetech Austria
+- Mitarbeiter IT-Support / IT-Service (m/w/d) — NCE Computer GmbH
+- Onsite IT-Support 2nd Level (m/w/d) - Eggelsberg — Hemmersbach
+- Praktikant Digitalisierung & Softwareentwicklung im Bereich E-Mobilität (w/m/x) — BMW Group
+- Praktikant Mediendesign — BMW Motoren GmbH
+- Praktikant — Ahoi Kapptn!
+- Praktikum im Bereich IT-Projektmanagement und Softwareentwicklung (m/w/d) — Mercedes-Benz G GmbH
+- Praktikum Junior App Manager — hello again GmbH
+- Software Engineer - Early Career — Dynatrace GmbH
+- Software-Entwickler (m/w/d) — 
+- Software-Entwickler (m/w/d) — 
+- Software-Entwickler (m/w/d) — banner
+- System- & Netzwerkadministrator (m/w/d) — GARTNER - "THE WORLD OF TRANSPORT"
+- Web-Developer (m/w/d) — RegionalMedien Oberösterreich
+- Atlassian Application Specialist (m/w/d) — KERN engineering careers
+- Expert:in für den technischen Support (m/w/d) — ETECH Schmid u. Pachler Elektrotechnik GmbH & CoKG
+- IT Application Specialist Shopfloor & Produktion (m/w/d) — Hammerer Aluminium Industries
+- IT Client-Administrator (m/w/d) — WFL Millturn Technologies GmbH & Co. KG
+- IT Enterprise Systems Lehrling — TOMORIS GmbH
+- IT Field Service Lehrling — TOMORIS GmbH
+- IT-Risk / IT-Governance Junior Manager — Partner Bank
+- IT Service Desk Engi­neer (m/w/d) — BWT Group
+- IT Support Mitarbeiter:in — Sprecher Automation
+- IT-Support — Bio Austria
+- ITSM Process & Atlassian Specialist — Hödlmayr International
+- Junior Business IT Consultant - Integration Engineer  m / w / d — OBERNDORFER Betonfertigteile
+- Junior Citrix Operations Manager:in (m/w/d) — ÖBB-Konzern
+- Junior Data Analyst Controlling — Richter Pharma AG
+- Junior Digitalisierungsexperte für erneuerbare Energien (m/w/d) — Ingenieurbüro mitPlan GmbH
+- Junior-Elektrotechniker (m/w/d) — ISS Facility Services GmbH
+- Junior Entwicklungsingenieur/ Produktentwickler (m/w/d) — Alpen-Maykestag GmbH
+- Junior IT ProjektmanagerIn (m/w/d) — banner
+- Junior IT Systems Engineer — REDER TRANSPORTE KG
+- Junior Java Entwickler — BEKO Engineering & Informatik GmbH & Co KG
+- Junior Personalentwickler im Vertrieb (m/w/d) — Helvetia Versicherungen AG
+- Junior-Projektleiter Elektrotechnik (m/w/d) — ETZI-Group GmbH
+- (Junior) Projektleiter/in Elektrotechnik für Straßen- und Sportstättenbeleuchtung — eww Gruppe
+- Junior Projektmanager:in (m/w/d) — ÖAMTC Wien, Niederösterreich, Burgenland
+- (Junior) Technical SAP Consultant (all genders) — msg
+- Lehre Informationstechnologe Systemtechnik — Starlim Spritzguss Gmbh
+- Lehre Informationstechnologie & Systemtechnik — Elektroanlagen G. Klampfer GmbH
+- Lehre IT-Systemtechniker — HAUSER GmbH Österreich
+- Lehrling IT-Systemtechnik — CANCOM a+d IT Solutions GmbH
+- Linux System Administrator — Computer Futures
+- Mitarbeiter im Innendienst im Bereich Silikontechnik (m/w/d) - Silnova — REHAU Industrial Solutions
+- Praktikant Digitalisierung & Softwareentwicklung E-Mobilität — BMW Motoren GmbH
+- Praktikant Software Engineering (w/m/x) — BMW Group
+- Technical Support Engineer (m/w/d)  1st Level (AMR/Robotics) — AGILOX Services GmbH
+- Technical Support Engineer (m/w/x) — EV Group
+
+---
+
+## Filter-Lauf 2026-09-11 17:20  Modus: regex  (77 sicher, 194 unsicher, 64 raus)
+
+
+### Aggregat (Kriterien-Verteilung)
+
+- it_rolle → –
+- erfahrung_ab_3j_erforderlich → –
+- lehre_coding → –
+- junior_signal → –
+
+### Raus (64)
+
+- Frontend Developer (Senior) (w/m/d) (unbefristete Einstellung) — Johannes Kepler Universität — Grund: Seniorität (Titel)
+- Junior Java Developer (m/w/d) — Gepardec IT Services GmbH — Grund: Erfahrung ≥3J: 'einschlägige'
+- Product Owner Frontend Development (w/m/d) — Fabasoft — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Product Owner Webentwicklung (w/m/x) — epunkt GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- SAP FI Systembetreuer | SAP FI, SAP CO, Projektleitung | Inhouse, bis 90.000 € (mwd) — Vesterling AG — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Senior Frontend Developer (w/m/d) — Fabasoft — Grund: Seniorität (Titel)
+- Senior Java Developer (d/w/m) — EBCONT — Grund: Seniorität (Titel)
+- Senior Java Entwickler & Project Lead (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Software-Developer*in — Österreichische Gesundheitskasse — Grund: Erfahrung ≥3J: 'einschlägige'
+- Web - Frontend Entwickler React (m/w/d) — Hirelight EB Consulting — Grund: Erfahrung ≥3J: '3 – 4 jahre'
+- 1st Level Service Desk Mitarbeiter*in — Österreichische Gesundheitskasse — Grund: Erfahrung ≥3J: 'einschlägige'
+- AI & Machine Learning Engineer (all genders) — msg — Grund: Erfahrung ≥3J: '3–5 jahre'
+- Backend Entwickler C#/.NET (w/m/div.) — Bosch Österreich — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Business Application Architect (m/w/d) — AGILOX Services GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Citrix IT-Engineer (m/w/d) — RAITEC GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Customer & Technical Service Specialist* — KTM AG — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Cybersecurity Engineer (w/m/d) — Stuhlberger IT GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Frontend Developer (Senior) (m/w/d) (unbefristete Einstellung) — Johannes Kepler Universität Linz JKU — Grund: Seniorität (Titel)
+- Fullstack-Entwickler (m/w/d) — Fronius Österreich — Grund: Erfahrung ≥3J: 'einschlägige'
+- IT-Manager (m/w/d) - 1st Level Support — Sikla GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Mitarbeiter:in — Raiffeisenlandesbank Oberösterreich — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Operations Spezialist — Barmherzige Brüder Linz — Grund: Erfahrung ≥3J: 'einschlägige'
+- IT Service Desk Specialist (w/m/d) — Michael Page International Austria GmbH — Grund: Erfahrung ≥3J: 'ab 50'
+- IT Service Desk Specialist (w/m/d) — TNT Personal — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Support Engineer (w/m/d) — talentbird GmbH — Grund: Erfahrung ≥3J: '3 jahre'
+- IT-Support Spezialist:in (m/f/d) – Hagenberg i. M./Wien / Vollzeit — ventopay gmbh — Grund: Erfahrung ≥3J: '20 jahren'
+- IT-Systemtechniker (m/w/d), GM — microCAT GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Technik/System Engineer (m/w/d) — best4best consulting - Personalberatung & Talente Vermittlung — Grund: Erfahrung ≥3J: '5 jahre'
+- Java Backend Developer (m/w/d) —  — Grund: Erfahrung ≥3J: '3 jahre'
+- Junior HKLS-Projektleiter (m/w/d) — PKE Gebäudetechnik GmbH — Grund: Erfahrung ≥3J: 'langjährige'
+- Junior Projektleiter:in mit Schwerpunkt Elektro- &amp; Gebäudetechnik (m/w/d) — ETECH Schmid u Pachler Elektrotechnik GmbH &amp; Co KG — Grund: Erfahrung ≥3J: '3-5 jahre'
+- Junior/Senior IT User Services Specialist — KPMG Austria — Grund: Seniorität (Titel)
+- (Junior/Senior) SPS-Programmierer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Lead AI Engineer (Java or .NET) (m/w/d) —  — Grund: Seniorität (Titel)
+- Marketing &amp; Communications Manager 80-100 % (m/w/d) —  — Grund: Erfahrung ≥3J: '5+ years'
+- Marketing &amp; Communications Manager 80-100 % (m/w/d) —  — Grund: Erfahrung ≥3J: '5+ years'
+- Mobile Engineer (d/f/m) — hello again — Grund: Erfahrung ≥3J: '4 years'
+- Praktikum Research Human Machine Interface im Einsatz (m/w/d) — Rosenbauer Group — Grund: Erfahrung ≥3J: 'einschlägige'
+- SAP Accounting Systembetreuer | SAP FI, SAP CO, Projektleitung | Inhouse, bis 90.000 € (mwd) — Vesterling AG — Grund: Erfahrung ≥3J: 'mehrjährige'
+- SAP PP / SAP WM Systembetreuer | Logistik, Projektleitung, Produktionsunternehmen | Inhouse (mwd) — Vesterling AG — Grund: Erfahrung ≥3J: 'mehrjährige'
+- SAP UI5 / Fiori Developer (m/w/d) – Logistik & S/4HANA — voestalpine — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Senior Frontend Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior Full Stack Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- (Senior) Full Stack Developer* — KTM AG — Grund: Seniorität (Titel)
+- Senior Full Stack Entwickler*in (m/w/x) mit C# / .Net / Angular Know-How — DS Automotion GmbH — Grund: Seniorität (Titel)
+- Senior Fullstack Developer (d/m/w) — EBCONT — Grund: Seniorität (Titel)
+- Senior Fullstack Entwickler:in - Java/Angular (m/w/d) — ÖBB-Konzern — Grund: Seniorität (Titel)
+- (Senior) IT Consultant (m/w/d) — VACE Group — Grund: Seniorität (Titel)
+- Senior IT Operations Engineer (w/m/d) - Site & Field Services — REPLOID — Grund: Seniorität (Titel)
+- (Senior) IT Service Agent (w/m/x) — IBM iX DACH — Grund: Seniorität (Titel)
+- Senior Java Developer Materialflusssystem (m/w/d) — Schachermayer GmbH — Grund: Seniorität (Titel)
+- Senior Java-Softwareentwickler (m/w/d) — CPB SOFTWARE (AUSTRIA) GMBH — Grund: Seniorität (Titel)
+- Senior MLOps (d/w/m) — EBCONT — Grund: Seniorität (Titel)
+- Senior Operations Specialist (m/w/d) — sigmavista it consulting gmbh — Grund: Seniorität (Titel)
+- Senior SAP MM Inhouse Consultant (m/w/d) – S/4HANA & Teamaufbau — ISG Personalmanagement GmbH — Grund: Seniorität (Titel)
+- (Senior) Software Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Software Developer Lead & Product Track — TEC-IT — Grund: Seniorität (Titel)
+- Software Developer (m/w/d) — enjoy IT GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Software Entwickler C/C++ (m/w/d) — best4best consulting - Personalberatung & Talente Vermittlung — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Software Entwickler/in - Backend/Cloud (m/w/d) —  — Grund: Erfahrung ≥3J: '3 jahre'
+- Software Entwickler/in - Backend/Cloud (m/w/d) —  — Grund: Erfahrung ≥3J: '3 jahre'
+- Software Entwickler .NET-Bereich (m/f/d) – Hagenberg i. M. / Vollzeit — ventopay gmbh — Grund: Erfahrung ≥3J: 'ab 3'
+- Technischer IT-Projektmanager — ventopay gmbh — Grund: Erfahrung ≥3J: 'ab 3'
+- Windows Systemadministrator (w/m/x) — epunkt GmbH — Grund: Erfahrung ≥3J: 'langjährige'
+
+### Unsicher (194)
+
+- 2nd Level IT-Techniker (m/w/d) — Education Group GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7878272
+- 2nd-Level-Support V460 — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/2nd-level-support-v460-at-sprecher-automation-4451404367
+- AI Product Engineer (w/m/d) — AGILOX — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-product-engineer-w-m-d-at-agilox-4462214428
+- AI Solutions Engineer (d/f/m) — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-solutions-engineer-d-f-m-at-hello-again-4450472591
+- AI Solutions Engineer — Schulmeister Management Consulting — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-solutions-engineer-at-schulmeister-management-consulting-4458707362
+- Applikationsbetreuer (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/applikationsbetreuer-w-m-x-at-beko-solutions-gmbh-4453533704
+- Development Engineer (m/f/d) Embedded Software — BRP-Rotax — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/development-engineer-m-f-d-embedded-software-at-brp-rotax-4391096590
+- Embedded Developer — Proactive Global — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-developer-at-proactive-global-4458091466
+- EWM Key User (m/f/d) — Arvato — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ewm-key-user-m-f-d-at-arvato-4459542177
+- Front-end Developer @ lingohub GmbH — DEVjobs — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/front-end-developer-%40-lingohub-gmbh-at-devjobs-4459791199
+- Frontend Web Developer*in (m/w/d) — karriere.at GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7889682
+- FRONTEND WEB DEVELOPER (m/w/d) — eurofunk Kappacher GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/frontend-web-developer-m-w-d-at-eurofunk-kappacher-gmbh-4317421237
+- Full Stack Developer für interne Applikationen & AI (m/w/d) — ENGEL Japan 株式会社 — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-f%C3%BCr-interne-applikationen-ai-m-w-d-at-engel-japan-kk-4448188870
+- Full Stack Developer für interne Applikationen & AI (m/w/d) — ENGEL Österreich - Wir sind ENGEL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-f%C3%BCr-interne-applikationen-ai-m-w-d-at-engel-%C3%B6sterreich-wir-sind-engel-4442643305
+- Full Stack Developer (m/w/d) — Trenkwalder Personaldienste GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7890381
+- Full Stack Developer (m/w/d) — WIOSS Witron On Site Services GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/10025311
+- Full Stack Developer (m/w/d) — WITRON Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-m-w-d-at-witron-group-4420147229
+- Full Stack / Web Developer (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-web-developer-m-w-x-at-ev-group-4295645097
+- Fullstack-Entwickler:in mit Java Backend und Vue/Nuxt Frontend — STRABAG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/fullstack-entwickler-in-mit-java-backend-und-vue-nuxt-frontend-at-strabag-4418142917
+- Fullstack Entwickler (Java/Angular) (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/fullstack-entwickler-java-angular-w-m-x-at-beko-solutions-gmbh-4453205342
+- Is flexible working important to you? — KEBA Industrial Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/is-flexible-working-important-to-you%3F-at-keba-industrial-automation-4448708741
+- IT Helpdesk & Field Service (m/w/x) — Scheuch USA — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-helpdesk-field-service-m-w-x-at-scheuch-usa-4440367401
+- IT Mitarbeiter — LORENZ SHOE GROUP — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-mitarbeiter-at-lorenz-shoe-group-4459689635
+- IT Service Desk Specialist (f/m/d) — LAT Nitrogen — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-service-desk-specialist-f-m-d-at-lat-nitrogen-4427540158
+- IT Support & Workplace Manager(in) — SONNHAUS GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/10024392
+- JAVA Developer (m/w/d) — IMA Engineering Services — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/java-developer-m-w-d-at-ima-engineering-services-4442605911
+- MES Software Engineer - Schwerpunkt ABAP OO Development (m/w/d) — voestalpine Additive Manufacturing North America — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mes-software-engineer-schwerpunkt-abap-oo-development-m-w-d-at-voestalpine-additive-manufacturing-north-america-4461364157
+- Mitarbeiter/in für technischen Support — VERSUSbet — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-in-f%C3%BCr-technischen-support-at-versusbet-4444101279
+- Mitarbeiter:in IT-Support - Life Cycle Cluster AT/CE — dm drogerie markt Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-in-it-support-life-cycle-cluster-at-ce-at-dm-drogerie-markt-%C3%B6sterreich-4460317793
+- React Native Developer (d/f/m) — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/react-native-developer-d-f-m-at-hello-again-4421105626
+- Software Developer Core Banking Systems (w/m/d) — Oberbank — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-core-banking-systems-w-m-d-at-oberbank-4461785381
+- SOFTWARE DEVELOPER*IN (M/W/D) — Ivm Consulting Co — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-in-m-w-d-at-ivm-consulting-co-4445935052
+- Software Developer*in (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-in-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455895256
+- Software Developer (m/w/d) — efinio IT & Engineering — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-w-d-at-efinio-it-engineering-4268563514
+- Software Engineer für APIs mit JAVA (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-f%C3%BCr-apis-mit-java-m-w-d-at-fronius-%C3%B6sterreich-4436087293
+- Software Engineer Java (m/w/d) — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-java-m-w-d-at-sprecher-automation-4440228951
+- Software Entwickler:in mit Security Fokus (m/w/*) — Primetals Technologies Austria GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7827695
+- Softwareentwickler Embedded Systems m/w/x — WINTERSTEIGER Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-embedded-systems-m-w-x-at-wintersteiger-inc-4423166351
+- Softwareentwickler im Automatisierungsbereich (m/w/d) — ENGEL Japan 株式会社 — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-im-automatisierungsbereich-m-w-d-at-engel-japan-kk-4448184927
+- Softwareentwickler*in (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-in-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455818799
+- Softwareentwickler*in – Schwerpunkt KI (m/w/d) — Hartlauer HandelsgesmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7854638
+- Softwareentwickler (w/m/d) - Frontend — Nürnberg Digital Festival NUEDIGITAL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-frontend-at-n%C3%BCrnberg-digital-festival-nuedigital-4419174064
+- Support Consultant/Developer (Microsoft Dynamics 365 F&SCM) — Belmont Lavan — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/support-consultant-developer-microsoft-dynamics-365-f-scm-at-belmont-lavan-4429799623
+- Support Engineer (m/w/d) — x-tention — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/support-engineer-m-w-d-at-x-tention-4465638531
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval France — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-france-4450688868
+- Test Automation Engineer C# (m/w/x) — DS Automotion GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/test-automation-engineer-c%23-m-w-x-at-ds-automotion-gmbh-4464193552
+- UI/UX Designer — solvistas GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/7f089a0ed9262a3c437b57eef83d7960
+- WebApp-Development (Linz, AT) — Develite GmbH & Co. KG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/webapp-development-linz-at-at-develite-gmbh-co-kg-4455251517
+- Workday Functional Service Owner (m/w/d) — XXXLdigital – Part of XXXL Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/workday-functional-service-owner-m-w-d-at-xxxldigital-%E2%80%93-part-of-xxxl-group-4443691825
+- AI Engineer (f/m/d) — Interdisciplinary Transformation University (IT:U) — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-engineer-f-m-d-at-interdisciplinary-transformation-university-it-u-4441961604
+- AI & ML Intern – Full Stack Developer (m/f/d) — Trench Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-ml-intern-%E2%80%93-full-stack-developer-m-f-d-at-trench-group-4453098505
+- Allrounder für Wordpress, WooCommerce mit Programmier- u. Grafikkenntnissen — LINZKREATIV.AT — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/allrounder-f%C3%BCr-wordpress-woocommerce-mit-programmier-u-grafikkenntnissen-at-linzkreativ-at-4451036989
+- Application Management & GPS Telematics  (m/w/d) — GPS.at (Softwaro GmbH) — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/application-management-gps-telematics-m-w-d-at-software-management-gmbh-gps-at-4455838809
+- Applikationsentwickler für C++ / Linux (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/applikationsentwickler-f%C3%BCr-c%2B%2B-linux-m-w-d-at-fronius-%C3%B6sterreich-4452990617
+- Associate Digital Manufacturing & Low-Code Applications (f/m/d) - part time 27 hrs / week — PALFINGER — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/associate-digital-manufacturing-low-code-applications-f-m-d-part-time-27-hrs-week-at-palfinger-4455603508
+- Automatisierungstechniker Software (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/automatisierungstechniker-software-m-w-x-at-ev-group-4417208130
+- Backend Developer (m/w/d) - in Linz - Kotlin / Spring — Optimind — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/backend-developer-m-w-d-in-linz-kotlin-spring-at-optimind-4441524418
+- Berufsintegrierter Master – Entwicklung der Bedienoberfläche für ein Motorrad Dashboard (m/w/d) — Steinbeis Center of Management and Technology - SCMT GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/berufsintegrierter-master-%E2%80%93-entwicklung-der-bedienoberfl%C3%A4che-f%C3%BCr-ein-motorrad-dashboard-m-w-d-at-steinbeis-center-of-management-and-technology-scmt-gmbh-4354860619
+- BI-Developer / Data Engineer (m/w/d) — GARTNER - "THE WORLD OF TRANSPORT" — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/bi-developer-data-engineer-m-w-d-at-gartner-the-world-of-transport-4444761846
+- Business Software Developer (C#) — din - Sicherheitstechnik Italia GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/business-software-developer-c%23-at-din-sicherheitstechnik-italia-gmbh-4443427374
+- C#/.Net Softwareentwickler (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/c%23-net-softwareentwickler-m-w-x-at-ev-group-4417208131
+- Citrix Engineer (m/w/d) — Trenkwalder Personaldienste GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7884099
+- Client Service Desk — Computer Futures — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/client-service-desk-at-computer-futures-4450263374
+- Consultant (D365 & Azure Integration) (all genders welcome) — COSMO CONSULT — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/consultant-d365-azure-integration-all-genders-welcome-at-cosmo-consult-4445557553
+- Consultant SIEM, SOC & MDR (w/m/d) — EY — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/consultant-siem-soc-mdr-w-m-d-at-ey-4435211223
+- Customer Support Engineer (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/customer-support-engineer-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455833787
+- Data Analytics Engineer* — KTM AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-analytics-engineer-at-ktm-ag-4440005927
+- Data Center Technician - Austria - Linz - On-site — Reboot Monkey — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-center-technician-austria-linz-on-site-at-reboot-monkey-4382614771
+- Data Center Technician - Austria - Perg - On-site — Reboot Monkey — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-center-technician-austria-perg-on-site-at-reboot-monkey-4382606972
+- Data Centre Technicians - Austria — EOS IT Solutions — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-centre-technicians-austria-at-eos-it-solutions-4422000315
+- Data Centre Technicians - Expression of Interest — EOS IT Solutions — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-centre-technicians-expression-of-interest-at-eos-it-solutions-4422000315
+- Data Engineer (m/w/d) — XXXLdigital – Part of XXXL Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-engineer-m-w-d-at-xxxldigital-%E2%80%93-part-of-xxxl-group-4435677917
+- Data Engineer — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-engineer-at-acp-gruppe-4385247257
+- Data Scientist — IONO Robotics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-scientist-at-iono-robotics-4442581059
+- DevOps Engineer (w/m/d) — seele — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/devops-engineer-w-m-d-at-seele-4437272337
+- Embedded Developer @ WINTERSTEIGER AG — DEVjobs — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-developer-%40-wintersteiger-ag-at-devjobs-4448203465
+- Embedded Software-Developer Linux (m/d/w) — ABATEC — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-software-developer-linux-m-d-w-at-abatec-4458065838
+- Embedded Software Developer — Frauscher Sensor Technology India — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-software-developer-at-frauscher-sensor-technology-india-4414219958
+- ERP Software Developer (C#) — din - Sicherheitstechnik Italia GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/erp-software-developer-c%23-at-din-sicherheitstechnik-italia-gmbh-4455623461
+- EUC Engineer — Swiss IT Solutions CH GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/euc-engineer-at-swiss-it-solutions-ch-gmbh-4449247475
+- Full-Stack-Entwickler .NET & Kotlin (m/w/d) — Atlas Blech Center GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-entwickler-net-kotlin-m-w-d-at-atlas-blech-center-gmbh-4452206954
+- Full Stack Software Developer (w/m/d) — 3 Banken IT GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-software-developer-w-m-d-at-3-banken-it-gmbh-4449447102
+- Fullstack Developer - Angular (m/w/d) — Gepardec IT Services GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/fullstack-developer-angular-m-w-d-at-gepardec-it-services-gmbh-4453068591
+- Fullstack-Web-Entwickler:in (C#/Angular) - ab 30h/Woche (m/w/d) — ÖBB-Konzern — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7894731
+- Graphic &amp; Web Designer (m/w/d) — offisy gmbh — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893337
+- Graphic & Web Designer (m/w/d) — Offisy GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/10027829
+- Information Technology Support Engineer — Swiss IT Solutions CH GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/information-technology-support-engineer-at-swiss-it-solutions-ch-gmbh-4459670877
+- Internship AI – Computer Vision & Multimodal AI — KEBA AG — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/9e988afadcc4ef24aff792ef07e05d1a
+- Internship - Automotive Radar R&D (f/m/div) — Infineon Technologies — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/internship-automotive-radar-r-d-f-m-div-at-infineon-technologies-4450683903
+- IoT Backend Entwickler (m/w/d) — ENGEL Österreich - Wir sind ENGEL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/iot-backend-entwickler-m-w-d-at-engel-%C3%B6sterreich-wir-sind-engel-4455680470
+- IT-Administrator (m/w/d) — Linde Material Handling Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-administrator-m-w-d-at-linde-material-handling-austria-4450227772
+- IT-Administrator (m/w/d) — Linde Material Handling — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-administrator-m-w-d-at-linde-material-handling-4448404426
+- IT-Administrator / Projektmitarbeiter (m/w/d) — NCE Computer GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-administrator-projektmitarbeiter-m-w-d-at-nce-computer-gmbh-4437932569
+- IT Application Manager (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-application-manager-w-m-x-at-beko-solutions-gmbh-4419072498
+- IT Application Manager — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-application-manager-at-sprecher-automation-4423938691
+- IT- Applikation Developer (m/w/d) — Oesterreichische Kontrollbank Aktiengesellschaft — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7898301
+- IT & Facilities Coordinator m/f/d — BOA® — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-facilities-coordinator-m-f-d-at-boa%C2%AE-4429214045
+- IT Infrastructure Engineer (w/m/d) - Schwerpunkt Client Management — Felbermayr Group — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7864825
+- IT Infrastructure Engineer — Felbermayr-Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-infrastructure-engineer-at-felbermayr-4457464465
+- IT-Infrastruktur-Techniker 2nd Level (m/w/d) — Hödlmayr International — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-infrastruktur-techniker-2nd-level-m-w-d-at-h%C3%B6dlmayr-international-ag-4425971723
+- IT Onsite Client Support 1st & 2nd  Level — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-onsite-client-support-1st-2nd-level-at-acp-gruppe-4430529669
+- IT Operations Engineer (w/m/d) — REPLOID — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-operations-engineer-w-m-d-at-reploid-4416255354
+- IT Operations Engineer — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-operations-engineer-at-acp-gruppe-4433695836
+- IT Service Agent (w/m/x) — IBM iX DACH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-service-agent-w-m-x-at-ibm-ix-dach-4437790401
+- IT Servicedesk Engineer (m/w/d) — sigmavista it consulting gmbh — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-servicedesk-engineer-m-w-d-at-sigmavista-it-consulting-gmbh-4449203488
+- IT Support Engineer (w/m/d) — KERN engineering careers GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7852112
+- IT Support Manager — DL Remote — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-manager-at-dl-remote-4457982715
+- IT Support Mitarbeiter 1st/2nd Level (m/w/d) — Atikon EDV &amp; Marketing GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893095
+- IT Support Mitarbeiter 1st/2nd Level (m/w/d) — Atikon EDV & Marketing GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7850672
+- IT Support Specialist - Application & Software (M/F/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-specialist-application-software-m-f-d-at-tgw-logistics-4413350285
+- IT Support Specialist (f/m/d) — Siemens Energy — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-specialist-f-m-d-at-siemens-energy-4440217097
+- IT Support Spezialist:in - Application & Software (M/W/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-spezialist-in-application-software-m-w-d-at-tgw-logistics-4410188556
+- IT Support Spezialist (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-spezialist-w-m-x-at-beko-solutions-gmbh-4436535334
+- IT-Support-Techniker — HCLTech — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-techniker-at-hcltech-4445920367
+- IT-Systemadministrator MSP Dienste (m/w/d) — NCE Computer GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-systemadministrator-msp-dienste-m-w-d-at-nce-computer-gmbh-4437930598
+- IT-Systemadministrator (w/m/d) — seele — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-systemadministrator-w-m-d-at-seele-4423644452
+- IT-Techniker für telefonischen Kundensupport — DIALOG telekom Gmbh & Co KG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-techniker-f%C3%BCr-telefonischen-kundensupport-at-dialog-telekom-gmbh-co-kg-4429406945
+- IT-Techniker:in - Produktions-IT/OT — Greiner — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-techniker-in-produktions-it-ot-at-greiner-4448268995
+- IT-Techniker, m/w/d — Peneder Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-techniker-m-w-d-at-peneder-gruppe-4428490053
+- IT-Techniker (m/w/x) — epunkt GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7782719
+- JOBS - Servicetechniker für audiovisuelle Systeme (m/w/d) — conex media gmbh — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/jobs-servicetechniker-f%C3%BCr-audiovisuelle-systeme-m-w-d-at-conex-media-gmbh-4442925085
+- Key Account & Business Development Manager im Software Umfeld (w/m/x) — epunkt GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7827260
+- Kundendienstmitarbeiter:in — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/kundendienstmitarbeiter-in-at-hello-again-4443282713
+- LINUX SYSTEMINGENIEUR*IN (M/W/D) — Ivm Consulting Co — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/linux-systemingenieur-in-m-w-d-at-ivm-consulting-co-4449481296
+- Linux Systemingenieur*in (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/linux-systemingenieur-in-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455838800
+- MES Software Engineer - Schwerpunkt ABAP OO Development (m/w/d) — voestalpine — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mes-software-engineer-schwerpunkt-abap-oo-development-m-w-d-at-voestalpine-4451528065
+- Microsoft Power Platform Developer (m/f/d) – Tieto Tech Consulting — Tieto — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/microsoft-power-platform-developer-m-f-d-%E2%80%93-tieto-tech-consulting-at-tieto-4450693732
+- Mitarbeiter IT Customer Support – First Level (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-it-customer-support-%E2%80%93-first-level-m-w-d-at-fronius-%C3%B6sterreich-4426481825
+- Mitarbeiter IT Support (m/w/d) — Richter Pharma AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-it-support-m-w-d-at-richter-pharma-ag-4456730011
+- Mitarbeiter IT-Support (w/m/d) — KERN engineering careers — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-it-support-w-m-d-at-kern-engineering-careers-4446194642
+- Mitarbeiter&shy; im technischen Kunden&shy;innen&shy;dienst* — HARGASSNER France — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-shy-im-technischen-kunden-shy-innen-shy-dienst-at-hargassner-france-4447225894
+- Mitarbeiter Team Windows (m/w/d) — Richter Pharma AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-team-windows-m-w-d-at-richter-pharma-ag-4419190680
+- .NET Developer — Noir — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/net-developer-at-noir-4447293462
+- Network Engineer (w/m/d) — Bechtle — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/network-engineer-w-m-d-at-bechtle-4431528221
+- Network & Security Engineer (m/w/d) Fortinet — Trenkwalder Personaldienste GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7884098
+- Operations Manager:in Basisnetze - Netzwerk & Automatisierung (m/w/d) — ÖBB-Konzern — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7882544
+- OT Technician (all genders) — Greiner — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ot-technician-all-genders-at-greiner-4448850456
+- OT-Techniker:in — Greiner — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ot-techniker-in-at-greiner-4448268995
+- PLC Software Engineer (Beckhoff TwinCAT) (m/w/d) — WHC Heads Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/plc-software-engineer-beckhoff-twincat-m-w-d-at-whc-heads-austria-4454601314
+- Process & AI Consultant — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/process-ai-consultant-at-acp-gruppe-4448992839
+- Product Owner Field Service (m/w/d) — S&amp;T AG — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7894987
+- Product Support Engineer (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/product-support-engineer-m-w-x-at-ev-group-4417210106
+- R&D Engineer – Firmware & Linear Drive Control (f/m/d) — ABB — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/r-d-engineer-%E2%80%93-firmware-linear-drive-control-f-m-d-at-abb-4455786216
+- SAP ABAP Entwickler (m/w/d) — INFORMATICS — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sap-abap-entwickler-m-w-d-at-informatics-consulting-development-gmbh-4448908173
+- SAP Fiori Entwickler (m/w/d) — INFORMATICS — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sap-fiori-entwickler-m-w-d-at-informatics-consulting-development-gmbh-4448900928
+- Service Competence Center (SCC) Techniker Innendienst für CAD/CAM (w/m/d) — TRUMPF Maschinen Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/service-competence-center-scc-techniker-innendienst-f%C3%BCr-cad-cam-w-m-d-at-trumpf-maschinen-austria-4431275882
+- Serviceengineer Halbleiterfertigung – Schwerpunkt Lithographie (m/w/d) — Vishay Intertechnology, Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/serviceengineer-halbleiterfertigung-%E2%80%93-schwerpunkt-lithographie-m-w-d-at-vishay-intertechnology-inc-4407847687
+- Software Consultant/ IT Consultant (m/w/d) — myneva — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-consultant-it-consultant-m-w-d-at-myneva-4427482543
+- Software Developer C#/.NET (m/w/d) | Business Applications — efinio IT & Engineering — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-c%23-net-m-w-d-business-applications-at-efinio-it-engineering-4439853120
+- Software Developer Core Banking Systems (w/m/d) — 3 Banken IT GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-core-banking-systems-w-m-d-at-3-banken-it-gmbh-4459574892
+- Software Developer Core Banking Systems (w/m/d) — Oberbank CZ — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-core-banking-systems-w-m-d-at-oberbank-cz-4461763629
+- Software Developer (M/F/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-f-d-at-tgw-logistics-4424889537
+- Software Engineer (Backend / Full Stack) — Vertice — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-backend-full-stack-at-vertice-4435450784
+- Software Engineer C++ & Automatisierung (m/w/d) — FERCHAU — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-c%2B%2B-automatisierung-m-w-d-at-ferchau-4441975474
+- Software Engineer – Content Services (w/m/d) — Fabasoft — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-%E2%80%93-content-services-w-m-d-at-fabasoft-4440458725
+- Software Engineer Embedded — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-embedded-at-sprecher-automation-4443164959
+- Software Engineer - Fabasphere Use-Cases — Fabasoft — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-fabasphere-use-cases-at-fabasoft-4458197618
+- Software Engineer (m/f/d) — GE HealthCare — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-m-f-d-at-ge-healthcare-4423011705
+- Software Engineer (m/w/d) Vollzeit Linz — system7 rail — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-m-w-d-vollzeit-linz-at-system7-rail-4437698490
+- Software Engineer Sensor & Automation Solutions (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-sensor-automation-solutions-w-m-x-at-beko-solutions-gmbh-4446429529
+- Software Engineer — IONO Robotics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-at-iono-robotics-4442575340
+- Software Entwickler C# und .Net (m/w/d) — aqotec GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7889595
+- Software Entwickler:in Digital Twin (m/w/d)* — TGW Logistics GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7859198
+- Software Entwickler:in (m/w/d) — Hainzl Industriesysteme GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7785683
+- Software-Entwickler:in (m/w/d)* — TGW Logistics GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7842383
+- Software Entwickler (m/w/d) — KNP Financial Services GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7899173
+- Software Entwickler (m/w/d) — World-Direct eBusiness solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7888205
+- Software Entwickler mit Inbetriebnahmeanteil (m/w/d) — VESCON Systemtechnik GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7878831
+- Software Tester & Automation Engineer C# (m/w/x) — DS Automotion GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7710560
+- Softwareengineering SPS m/w/x — WINTERSTEIGER Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareengineering-sps-m-w-x-at-wintersteiger-inc-4412637870
+- Softwareentwickler C# für Testsysteme (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-c%23-f%C3%BCr-testsysteme-w-m-x-at-beko-solutions-gmbh-4428714443
+- Softwareentwickler C# / .NET | Microsoft - Technologien, MS SQL, Oracle | Inhouse (mwd) — Vesterling AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-c%23-net-microsoft-technologien-ms-sql-oracle-inhouse-mwd-at-vesterling-ag-4295964275
+- Softwareentwickler Embedded (m/w/d) — Inteff GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-embedded-m-w-d-at-inteff-gmbh-4448966255
+- Softwareentwickler Embedded Systems @ WINTERSTEIGER AG — DEVjobs — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-embedded-systems-%40-wintersteiger-ag-at-devjobs-4454760573
+- Softwareentwickler im Automatisierungsbereich (m/w/d) — ENGEL Österreich - Wir sind ENGEL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-im-automatisierungsbereich-m-w-d-at-engel-%C3%B6sterreich-wir-sind-engel-4442935043
+- Softwareentwickler (w/m/d) Robotik/Vision — TRUMPF Maschinen Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-robotik-vision-at-trumpf-maschinen-austria-4390144343
+- Specialist IT Infrastructure - Cloud and Datacenter (all genders) — TroGroup — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/specialist-it-infrastructure-cloud-and-datacenter-all-genders-at-trogroup-4428232825
+- SPS-Programmierer (m/w/d) – Digitalisierung & Systemintegration — AGRU Kunststofftechnik GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sps-programmierer-m-w-d-%E2%80%93-digitalisierung-systemintegration-at-agru-kunststofftechnik-gmbh-4439427156
+- Student (m/w/d) für eine Studien- oder Abschlussarbeit im Bereich Elektronik, Softwareentwicklung, Mechatronik, Maschinenbau, Mobilhydraulik, Konstruktion — Wacker Neuson Linz GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7847742
+- Studentenjob IT / Datenmanagement — Industrie Informatik GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/4b7b0d1c5113226898ac7716fe9d34b6
+- Support Engineer TopSolid CAM (m/w/d) — MAIT for business — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/support-engineer-topsolid-cam-m-w-d-at-mait-for-business-4447363656
+- Support Engineer (w/m/d) — ABB — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/support-engineer-w-m-d-at-abb-4430551937
+- System Developer (M/W/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/system-developer-m-w-d-at-tgw-logistics-4446260081
+- System Engineer Endpoint-Management (m/w/d) — GEMA Austria GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7888206
+- Technical Service Specialist (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technical-service-specialist-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455834860
+- Technical Support Manager (d/w/m) — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technical-support-manager-d-w-m-at-hello-again-4443786200
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-%C3%B6sterreich-4432676092
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval România — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-rom%C3%A2nia-4432698817
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval United Kingdom — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-united-kingdom-4450089501
+- Web Developer für Shopify und WordPress (m/w/d) — Make Branding — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/web-developer-f%C3%BCr-shopify-und-wordpress-m-w-d-at-make-branding-4449449198
+- Werkstudent Data & AI — TGW Logistics Group — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/f5d64512445a2f5761defc1d4b9232b7
+- Werkstudent für interne KI-Tool Entwicklung und Automatisierung — Promot Automation GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/0cd7c0196b1b9d7adde88b973b4d3b1b
+- Workday Functional Service Owner (m/w/d) —  — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893220
+- Workday Functional Service Owner (m/w/d) — banner — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893220
+
+### Sicher (77)
+
+- IT Cloud Division Lehrling — TOMORIS GmbH
+- IT Mitarbeiter (m/w/d) — Trenkwalder Personaldienste GmbH
+- IT Support Mitarbeiter:in — Sprecher Automation
+- IT-Support — Bio Austria
+- IT-SYSTEM-ADMINISTRATOR:IN — HENNLICH Österreich
+- IT System Administrator — KheepU GmbH
+- Junior Applikationsentwickler für intelligente Robotik — Kern & Partner Personalmanagement GmbH - Personalberatung
+- Junior Automation Software Engineer (m/w/d) — Miba Group
+- Junior Azure Cloud &amp; Application Developer (m/w/d) — Kurt Seidl Software Handelsgesellschaft m.b.H.
+- Junior Data Analyst — TD Trusted Decisions GmbH
+- Junior Full-Stack-Entwickler — Coiss GmbH
+- Junior Hardware Entwickler (w/m/d) — Dynell GmbH
+- Junior Inhouse Consultant (m/w/d) – SAP Commerce — Wacker Neuson
+- Junior IT Administrator — CADS GmbH
+- Junior IT Consultant — Hapeko
+- Junior Java/Jakarta EE Developer — Gepardec IT Services GmbH
+- Junior Javascript & Typescript Backend Engineer — Dynatrace GmbH
+- Junior Javascript & Typescript Engineer — Dynatrace GmbH
+- Junior Projektmanager:in / Projektassistent (m/w/d) — Schauerhuber Abfallwirtschaft GmbH
+- (Junior) Software Developer (m/w/d) — Richter Pharma AG
+- (Junior) Software Developer (w/m/x) — epunkt GmbH
+- Junior Softwareentwickler Für Intelligente Robotik (w/m/d) — KERN engineering careers GmbH
+- (Junior) Softwareentwickler Java (w/m/x) — epunkt GmbH
+- Lehre Applikationsentwickler - Coding — Starlim Spritzguss Gmbh
+- Lehre IT-Systemtechniker — EREMA Group
+- Lehrling Informationstechnologie - Schwerpunkt Systemtechnik — x-tention Informationstechnologie GmbH
+- Lehrling Informationstechnologie-Systemtechnik — Oberösterreichische Gesundheitsholding GmbH 
+- Lehrstelle Applikationsentwicklung Coding — KEBA AG
+- Mitarbeiter:in IT-Support — dm drogerie markt Österreich
+- Mitarbeiter:in Ticketmanagement (w/m/d) — AGILOX Services GmbH
+- MITARBEITER IT & KÜNSTLICHE INTELLIGENZ — Dronetech Austria
+- Mitarbeiter IT-Support / IT-Service (m/w/d) — NCE Computer GmbH
+- Onsite IT-Support 2nd Level (m/w/d) - Eggelsberg — Hemmersbach
+- Praktikant Digitalisierung & Softwareentwicklung im Bereich E-Mobilität (w/m/x) — BMW Group
+- Praktikant Mediendesign — BMW Motoren GmbH
+- Praktikant — Ahoi Kapptn!
+- Praktikum im Bereich IT-Projektmanagement und Softwareentwicklung (m/w/d) — Mercedes-Benz G GmbH
+- Praktikum Junior App Manager — hello again GmbH
+- Software Engineer - Early Career — Dynatrace GmbH
+- Software-Entwickler (m/w/d) — 
+- Software-Entwickler (m/w/d) — 
+- Software-Entwickler (m/w/d) — banner
+- System- & Netzwerkadministrator (m/w/d) — GARTNER - "THE WORLD OF TRANSPORT"
+- Web-Developer (m/w/d) — RegionalMedien Oberösterreich
+- Atlassian Application Specialist (m/w/d) — KERN engineering careers
+- Expert:in für den technischen Support (m/w/d) — ETECH Schmid u. Pachler Elektrotechnik GmbH & CoKG
+- IT Application Specialist Shopfloor & Produktion (m/w/d) — Hammerer Aluminium Industries
+- IT Client-Administrator (m/w/d) — WFL Millturn Technologies GmbH & Co. KG
+- IT Enterprise Systems Lehrling — TOMORIS GmbH
+- IT Field Service Lehrling — TOMORIS GmbH
+- IT-Risk / IT-Governance Junior Manager — Partner Bank
+- IT Service Desk Engi­neer (m/w/d) — BWT Group
+- ITSM Process & Atlassian Specialist — Hödlmayr International
+- Junior Business IT Consultant - Integration Engineer  m / w / d — OBERNDORFER Betonfertigteile
+- Junior Citrix Operations Manager:in (m/w/d) — ÖBB-Konzern
+- Junior Data Analyst Controlling — Richter Pharma AG
+- Junior Digitalisierungsexperte für erneuerbare Energien (m/w/d) — Ingenieurbüro mitPlan GmbH
+- Junior-Elektrotechniker (m/w/d) — ISS Facility Services GmbH
+- Junior Entwicklungsingenieur/ Produktentwickler (m/w/d) — Alpen-Maykestag GmbH
+- Junior IT ProjektmanagerIn (m/w/d) — banner
+- Junior IT Systems Engineer — REDER TRANSPORTE KG
+- Junior Java Entwickler — BEKO Engineering & Informatik GmbH & Co KG
+- Junior Personalentwickler im Vertrieb (m/w/d) — Helvetia Versicherungen AG
+- Junior-Projektleiter Elektrotechnik (m/w/d) — ETZI-Group GmbH
+- (Junior) Projektleiter/in Elektrotechnik für Straßen- und Sportstättenbeleuchtung — eww Gruppe
+- Junior Projektmanager:in (m/w/d) — ÖAMTC Wien, Niederösterreich, Burgenland
+- (Junior) Technical SAP Consultant (all genders) — msg
+- Lehre Informationstechnologe Systemtechnik — Starlim Spritzguss Gmbh
+- Lehre Informationstechnologie & Systemtechnik — Elektroanlagen G. Klampfer GmbH
+- Lehre IT-Systemtechniker — HAUSER GmbH Österreich
+- Lehrling IT-Systemtechnik — CANCOM a+d IT Solutions GmbH
+- Linux System Administrator — Computer Futures
+- Mitarbeiter im Innendienst im Bereich Silikontechnik (m/w/d) - Silnova — REHAU Industrial Solutions
+- Praktikant Digitalisierung & Softwareentwicklung E-Mobilität — BMW Motoren GmbH
+- Praktikant Software Engineering (w/m/x) — BMW Group
+- Technical Support Engineer (m/w/d)  1st Level (AMR/Robotics) — AGILOX Services GmbH
+- Technical Support Engineer (m/w/x) — EV Group
+
+---
+
+## Filter-Lauf 2026-09-12 09:13  Modus: regex  (77 sicher, 196 unsicher, 65 raus)
+
+
+### Aggregat (Kriterien-Verteilung)
+
+- it_rolle → –
+- erfahrung_ab_3j_erforderlich → –
+- lehre_coding → –
+- junior_signal → –
+
+### Raus (65)
+
+- Frontend Developer (Senior) (w/m/d) (unbefristete Einstellung) — Johannes Kepler Universität — Grund: Seniorität (Titel)
+- Junior HKLS-Projektleiter (m/w/d) — PKE Gebäudetechnik GmbH — Grund: Erfahrung ≥3J: 'langjährige'
+- Junior Java Developer (m/w/d) — Gepardec IT Services GmbH — Grund: Erfahrung ≥3J: 'einschlägige'
+- Product Owner Frontend Development (w/m/d) — Fabasoft — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Product Owner Webentwicklung (w/m/x) — epunkt GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Senior Frontend Developer (w/m/d) — Fabasoft — Grund: Seniorität (Titel)
+- Senior Full Stack Entwickler*in (m/w/x) mit C# / .Net / Angular Know-How — DS Automotion GmbH — Grund: Seniorität (Titel)
+- Senior Java Developer (d/w/m) — EBCONT — Grund: Seniorität (Titel)
+- Senior Java Entwickler & Project Lead (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Software-Developer*in — Österreichische Gesundheitskasse — Grund: Erfahrung ≥3J: 'einschlägige'
+- Web - Frontend Entwickler React (m/w/d) — Hirelight EB Consulting — Grund: Erfahrung ≥3J: '3 – 4 jahre'
+- 1st Level Service Desk Mitarbeiter*in — Österreichische Gesundheitskasse — Grund: Erfahrung ≥3J: 'einschlägige'
+- AI & Machine Learning Engineer (all genders) — msg — Grund: Erfahrung ≥3J: '3–5 jahre'
+- Backend Entwickler C#/.NET (w/m/div.) — Bosch Österreich — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Business Application Architect (m/w/d) — AGILOX Services GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Citrix IT-Engineer (m/w/d) — RAITEC GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Customer & Technical Service Specialist* — KTM AG — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Cybersecurity Engineer (w/m/d) — Stuhlberger IT GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Frontend Developer (Senior) (m/w/d) (unbefristete Einstellung) — Johannes Kepler Universität Linz JKU — Grund: Seniorität (Titel)
+- Fullstack-Entwickler (m/w/d) — Fronius Österreich — Grund: Erfahrung ≥3J: 'einschlägige'
+- IT-Manager (m/w/d) - 1st Level Support — Sikla GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Mitarbeiter:in — Raiffeisenlandesbank Oberösterreich — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Operations Spezialist — Barmherzige Brüder Linz — Grund: Erfahrung ≥3J: 'einschlägige'
+- IT Service Desk Specialist (w/m/d) — Michael Page International Austria GmbH — Grund: Erfahrung ≥3J: 'ab 50'
+- IT Service Desk Specialist (w/m/d) — TNT Personal — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Support Engineer (w/m/d) — talentbird GmbH — Grund: Erfahrung ≥3J: '3 jahre'
+- IT-Support Spezialist:in (m/f/d) – Hagenberg i. M./Wien / Vollzeit — ventopay gmbh — Grund: Erfahrung ≥3J: '20 jahren'
+- IT-Systemtechniker (m/w/d), GM — microCAT GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- IT Technik/System Engineer (m/w/d) — best4best consulting - Personalberatung & Talente Vermittlung — Grund: Erfahrung ≥3J: '5 jahre'
+- Java Backend Developer (m/w/d) —  — Grund: Erfahrung ≥3J: '3 jahre'
+- Junior Projektleiter:in mit Schwerpunkt Elektro- &amp; Gebäudetechnik (m/w/d) — ETECH Schmid u Pachler Elektrotechnik GmbH &amp; Co KG — Grund: Erfahrung ≥3J: '3-5 jahre'
+- Junior/Senior IT User Services Specialist — KPMG Austria — Grund: Seniorität (Titel)
+- (Junior/Senior) SPS-Programmierer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Lead AI Engineer (Java or .NET) (m/w/d) —  — Grund: Seniorität (Titel)
+- Marketing &amp; Communications Manager 80-100 % (m/w/d) —  — Grund: Erfahrung ≥3J: '5+ years'
+- Marketing &amp; Communications Manager 80-100 % (m/w/d) —  — Grund: Erfahrung ≥3J: '5+ years'
+- Mobile Engineer (d/f/m) — hello again — Grund: Erfahrung ≥3J: '4 years'
+- Praktikum Research Human Machine Interface im Einsatz (m/w/d) — Rosenbauer Group — Grund: Erfahrung ≥3J: 'einschlägige'
+- SAP Accounting Systembetreuer | SAP FI, SAP CO, Projektleitung | Inhouse, bis 90.000 € (mwd) — Vesterling AG — Grund: Erfahrung ≥3J: 'mehrjährige'
+- SAP FI Systembetreuer | SAP FI, SAP CO, Projektleitung | Inhouse, bis 90.000 € (mwd) — Vesterling AG — Grund: Erfahrung ≥3J: 'mehrjährige'
+- SAP PP / SAP WM Systembetreuer | Logistik, Projektleitung, Produktionsunternehmen | Inhouse (mwd) — Vesterling AG — Grund: Erfahrung ≥3J: 'mehrjährige'
+- SAP UI5 / Fiori Developer (m/w/d) – Logistik & S/4HANA — voestalpine — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Senior Frontend Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Senior Full Stack Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- (Senior) Full Stack Developer* — KTM AG — Grund: Seniorität (Titel)
+- Senior Full Stack Entwickler*in (m/w/x) mit C# / .Net / Angular Know-How — DS Automotion GmbH — Grund: Seniorität (Titel)
+- Senior Fullstack Developer (d/m/w) — EBCONT — Grund: Seniorität (Titel)
+- Senior Fullstack Entwickler:in - Java/Angular (m/w/d) — ÖBB-Konzern — Grund: Seniorität (Titel)
+- (Senior) IT Consultant (m/w/d) — VACE Group — Grund: Seniorität (Titel)
+- Senior IT Operations Engineer (w/m/d) - Site & Field Services — REPLOID — Grund: Seniorität (Titel)
+- (Senior) IT Service Agent (w/m/x) — IBM iX DACH — Grund: Seniorität (Titel)
+- Senior Java Developer Materialflusssystem (m/w/d) — Schachermayer GmbH — Grund: Seniorität (Titel)
+- Senior Java-Softwareentwickler (m/w/d) — CPB SOFTWARE (AUSTRIA) GMBH — Grund: Seniorität (Titel)
+- Senior MLOps (d/w/m) — EBCONT — Grund: Seniorität (Titel)
+- Senior Operations Specialist (m/w/d) — sigmavista it consulting gmbh — Grund: Seniorität (Titel)
+- Senior SAP MM Inhouse Consultant (m/w/d) – S/4HANA & Teamaufbau — ISG Personalmanagement GmbH — Grund: Seniorität (Titel)
+- (Senior) Software Developer (w/m/x) — epunkt GmbH — Grund: Seniorität (Titel)
+- Software Developer Lead & Product Track — TEC-IT — Grund: Seniorität (Titel)
+- Software Developer (m/w/d) — enjoy IT GmbH — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Software Entwickler C/C++ (m/w/d) — best4best consulting - Personalberatung & Talente Vermittlung — Grund: Erfahrung ≥3J: 'mehrjährige'
+- Software Entwickler/in - Backend/Cloud (m/w/d) —  — Grund: Erfahrung ≥3J: '3 jahre'
+- Software Entwickler/in - Backend/Cloud (m/w/d) —  — Grund: Erfahrung ≥3J: '3 jahre'
+- Software Entwickler .NET-Bereich (m/f/d) – Hagenberg i. M. / Vollzeit — ventopay gmbh — Grund: Erfahrung ≥3J: 'ab 3'
+- Technischer IT-Projektmanager — ventopay gmbh — Grund: Erfahrung ≥3J: 'ab 3'
+- Windows Systemadministrator (w/m/x) — epunkt GmbH — Grund: Erfahrung ≥3J: 'langjährige'
+
+### Unsicher (196)
+
+- 2nd Level IT-Techniker (m/w/d) — Education Group GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7878272
+- 2nd-Level-Support V460 — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/2nd-level-support-v460-at-sprecher-automation-4451404367
+- AI Product Engineer (w/m/d) — AGILOX — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-product-engineer-w-m-d-at-agilox-4462214428
+- AI Solutions Engineer (d/f/m) — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-solutions-engineer-d-f-m-at-hello-again-4450472591
+- AI Solutions Engineer — Schulmeister Management Consulting — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-solutions-engineer-at-schulmeister-management-consulting-4458707362
+- Applikationsbetreuer (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/applikationsbetreuer-w-m-x-at-beko-solutions-gmbh-4453533704
+- Development Engineer (m/f/d) Embedded Software — BRP-Rotax — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/development-engineer-m-f-d-embedded-software-at-brp-rotax-4391096590
+- Embedded Developer — Proactive Global — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-developer-at-proactive-global-4458091466
+- Embedded Software Developer (m/w/d) — Wabtec Corporation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-software-developer-m-w-d-at-wabtec-corporation-4465009485
+- EWM Key User (m/f/d) — Arvato — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ewm-key-user-m-f-d-at-arvato-4459542177
+- Front-end Developer @ lingohub GmbH — DEVjobs — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/front-end-developer-%40-lingohub-gmbh-at-devjobs-4459791199
+- Frontend Web Developer*in (m/w/d) — karriere.at GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7889682
+- FRONTEND WEB DEVELOPER (m/w/d) — eurofunk Kappacher GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/frontend-web-developer-m-w-d-at-eurofunk-kappacher-gmbh-4317421237
+- Full Stack Developer für interne Applikationen & AI (m/w/d) — ENGEL Japan 株式会社 — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-f%C3%BCr-interne-applikationen-ai-m-w-d-at-engel-japan-kk-4448188870
+- Full Stack Developer für interne Applikationen & AI (m/w/d) — ENGEL Österreich - Wir sind ENGEL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-f%C3%BCr-interne-applikationen-ai-m-w-d-at-engel-%C3%B6sterreich-wir-sind-engel-4442643305
+- Full Stack Developer (m/w/d) — Trenkwalder Personaldienste GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7890381
+- Full Stack Developer (m/w/d) — WIOSS Witron On Site Services GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/10025311
+- Full Stack Developer (m/w/d) — WITRON Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-developer-m-w-d-at-witron-group-4420147229
+- Full Stack / Web Developer (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-web-developer-m-w-x-at-ev-group-4295645097
+- Fullstack-Entwickler:in mit Java Backend und Vue/Nuxt Frontend — STRABAG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/fullstack-entwickler-in-mit-java-backend-und-vue-nuxt-frontend-at-strabag-4418142917
+- Fullstack Entwickler (Java/Angular) (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/fullstack-entwickler-java-angular-w-m-x-at-beko-solutions-gmbh-4453205342
+- Is flexible working important to you? — KEBA Industrial Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/is-flexible-working-important-to-you%3F-at-keba-industrial-automation-4448708741
+- IT Helpdesk & Field Service (m/w/x) — Scheuch USA — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-helpdesk-field-service-m-w-x-at-scheuch-usa-4440367401
+- IT Mitarbeiter — LORENZ SHOE GROUP — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-mitarbeiter-at-lorenz-shoe-group-4459689635
+- IT Service Desk Specialist (f/m/d) — LAT Nitrogen — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-service-desk-specialist-f-m-d-at-lat-nitrogen-4427540158
+- IT Support & Workplace Manager(in) — SONNHAUS GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/10024392
+- JAVA Developer (m/w/d) — IMA Engineering Services — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/java-developer-m-w-d-at-ima-engineering-services-4442605911
+- Java Schnittstellenentwickler*in — Vinzenz Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/java-schnittstellenentwickler-in-at-vinzenz-gruppe-4465660112
+- MES Software Engineer - Schwerpunkt ABAP OO Development (m/w/d) — voestalpine Additive Manufacturing North America — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mes-software-engineer-schwerpunkt-abap-oo-development-m-w-d-at-voestalpine-additive-manufacturing-north-america-4461364157
+- Mitarbeiter/in für technischen Support — VERSUSbet — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-in-f%C3%BCr-technischen-support-at-versusbet-4444101279
+- Mitarbeiter:in IT-Support - Life Cycle Cluster AT/CE — dm drogerie markt Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-in-it-support-life-cycle-cluster-at-ce-at-dm-drogerie-markt-%C3%B6sterreich-4460317793
+- React Native Developer (d/f/m) — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/react-native-developer-d-f-m-at-hello-again-4421105626
+- Software Developer Core Banking Systems (w/m/d) — Oberbank — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-core-banking-systems-w-m-d-at-oberbank-4461785381
+- SOFTWARE DEVELOPER*IN (M/W/D) — Ivm Consulting Co — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-in-m-w-d-at-ivm-consulting-co-4445935052
+- Software Developer*in (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-in-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455895256
+- Software Developer (m/w/d) — efinio IT & Engineering — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-w-d-at-efinio-it-engineering-4268563514
+- Software Engineer für APIs mit JAVA (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-f%C3%BCr-apis-mit-java-m-w-d-at-fronius-%C3%B6sterreich-4436087293
+- Software Engineer Java (m/w/d) — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-java-m-w-d-at-sprecher-automation-4440228951
+- Software Entwickler:in mit Security Fokus (m/w/*) — Primetals Technologies Austria GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7827695
+- Softwareentwickler Embedded Systems m/w/x — WINTERSTEIGER Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-embedded-systems-m-w-x-at-wintersteiger-inc-4423166351
+- Softwareentwickler im Automatisierungsbereich (m/w/d) — ENGEL Japan 株式会社 — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-im-automatisierungsbereich-m-w-d-at-engel-japan-kk-4448184927
+- Softwareentwickler*in (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-in-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455818799
+- Softwareentwickler*in – Schwerpunkt KI (m/w/d) — Hartlauer HandelsgesmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7854638
+- Softwareentwickler (w/m/d) - Frontend — Nürnberg Digital Festival NUEDIGITAL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-frontend-at-n%C3%BCrnberg-digital-festival-nuedigital-4419174064
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval France — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-france-4450688868
+- UI/UX Designer — solvistas GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/7f089a0ed9262a3c437b57eef83d7960
+- WebApp-Development (Linz, AT) — Develite GmbH & Co. KG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/webapp-development-linz-at-at-develite-gmbh-co-kg-4455251517
+- Workday Functional Service Owner (m/w/d) — XXXLdigital – Part of XXXL Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/workday-functional-service-owner-m-w-d-at-xxxldigital-%E2%80%93-part-of-xxxl-group-4443691825
+- AI Engineer (f/m/d) — Interdisciplinary Transformation University (IT:U) — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-engineer-f-m-d-at-interdisciplinary-transformation-university-it-u-4441961604
+- AI & ML Intern – Full Stack Developer (m/f/d) — Trench Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ai-ml-intern-%E2%80%93-full-stack-developer-m-f-d-at-trench-group-4453098505
+- Allrounder für Wordpress, WooCommerce mit Programmier- u. Grafikkenntnissen — LINZKREATIV.AT — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/allrounder-f%C3%BCr-wordpress-woocommerce-mit-programmier-u-grafikkenntnissen-at-linzkreativ-at-4451036989
+- Application Management & GPS Telematics  (m/w/d) — GPS.at (Softwaro GmbH) — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/application-management-gps-telematics-m-w-d-at-software-management-gmbh-gps-at-4455838809
+- Applikationsentwickler für C++ / Linux (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/applikationsentwickler-f%C3%BCr-c%2B%2B-linux-m-w-d-at-fronius-%C3%B6sterreich-4452990617
+- Associate Digital Manufacturing & Low-Code Applications (f/m/d) - part time 27 hrs / week — PALFINGER — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/associate-digital-manufacturing-low-code-applications-f-m-d-part-time-27-hrs-week-at-palfinger-4455603508
+- Automatisierungstechniker Software (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/automatisierungstechniker-software-m-w-x-at-ev-group-4417208130
+- Backend Developer (m/w/d) - in Linz - Kotlin / Spring — Optimind — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/backend-developer-m-w-d-in-linz-kotlin-spring-at-optimind-4441524418
+- Berufsintegrierter Master – Entwicklung der Bedienoberfläche für ein Motorrad Dashboard (m/w/d) — Steinbeis Center of Management and Technology - SCMT GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/berufsintegrierter-master-%E2%80%93-entwicklung-der-bedienoberfl%C3%A4che-f%C3%BCr-ein-motorrad-dashboard-m-w-d-at-steinbeis-center-of-management-and-technology-scmt-gmbh-4354860619
+- BI-Developer / Data Engineer (m/w/d) — GARTNER - "THE WORLD OF TRANSPORT" — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/bi-developer-data-engineer-m-w-d-at-gartner-the-world-of-transport-4444761846
+- Business Software Developer (C#) — din - Sicherheitstechnik Italia GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/business-software-developer-c%23-at-din-sicherheitstechnik-italia-gmbh-4443427374
+- C#/.Net Softwareentwickler (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/c%23-net-softwareentwickler-m-w-x-at-ev-group-4417208131
+- Citrix Engineer (m/w/d) — Trenkwalder Personaldienste GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7884099
+- Client Service Desk — Computer Futures — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/client-service-desk-at-computer-futures-4450263374
+- Consultant (D365 & Azure Integration) (all genders welcome) — COSMO CONSULT — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/consultant-d365-azure-integration-all-genders-welcome-at-cosmo-consult-4445557553
+- Consultant SIEM, SOC & MDR (w/m/d) — EY — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/consultant-siem-soc-mdr-w-m-d-at-ey-4435211223
+- Customer Support Engineer (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/customer-support-engineer-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455833787
+- Data Analytics Engineer* — KTM AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-analytics-engineer-at-ktm-ag-4440005927
+- Data Center Technician - Austria - Linz - On-site — Reboot Monkey — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-center-technician-austria-linz-on-site-at-reboot-monkey-4382614771
+- Data Center Technician - Austria - Perg - On-site — Reboot Monkey — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-center-technician-austria-perg-on-site-at-reboot-monkey-4382606972
+- Data Centre Technicians - Austria — EOS IT Solutions — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-centre-technicians-austria-at-eos-it-solutions-4422000315
+- Data Centre Technicians - Expression of Interest — EOS IT Solutions — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-centre-technicians-expression-of-interest-at-eos-it-solutions-4422000315
+- Data Engineer (m/w/d) — XXXLdigital – Part of XXXL Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-engineer-m-w-d-at-xxxldigital-%E2%80%93-part-of-xxxl-group-4435677917
+- Data Engineer — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-engineer-at-acp-gruppe-4385247257
+- Data Scientist — IONO Robotics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/data-scientist-at-iono-robotics-4442581059
+- DevOps Engineer (w/m/d) — seele — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/devops-engineer-w-m-d-at-seele-4437272337
+- Embedded Developer @ WINTERSTEIGER AG — DEVjobs — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-developer-%40-wintersteiger-ag-at-devjobs-4448203465
+- Embedded Software-Developer Linux (m/d/w) — ABATEC — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-software-developer-linux-m-d-w-at-abatec-4458065838
+- Embedded Software Developer — Frauscher Sensor Technology India — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/embedded-software-developer-at-frauscher-sensor-technology-india-4414219958
+- ERP Software Developer (C#) — din - Sicherheitstechnik Italia GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/erp-software-developer-c%23-at-din-sicherheitstechnik-italia-gmbh-4455623461
+- EUC Engineer — Swiss IT Solutions CH GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/euc-engineer-at-swiss-it-solutions-ch-gmbh-4449247475
+- Full-Stack-Entwickler .NET & Kotlin (m/w/d) — Atlas Blech Center GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-entwickler-net-kotlin-m-w-d-at-atlas-blech-center-gmbh-4452206954
+- Full Stack Software Developer (w/m/d) — 3 Banken IT GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/full-stack-software-developer-w-m-d-at-3-banken-it-gmbh-4449447102
+- Fullstack Developer - Angular (m/w/d) — Gepardec IT Services GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/fullstack-developer-angular-m-w-d-at-gepardec-it-services-gmbh-4453068591
+- Fullstack-Web-Entwickler:in (C#/Angular) - ab 30h/Woche (m/w/d) — ÖBB-Konzern — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7894731
+- Graphic &amp; Web Designer (m/w/d) — offisy gmbh — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893337
+- Graphic & Web Designer (m/w/d) — Offisy GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/10027829
+- Information Technology Support Engineer — Swiss IT Solutions CH GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/information-technology-support-engineer-at-swiss-it-solutions-ch-gmbh-4459670877
+- Internship AI – Computer Vision & Multimodal AI — KEBA AG — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/9e988afadcc4ef24aff792ef07e05d1a
+- Internship - Automotive Radar R&D (f/m/div) — Infineon Technologies — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/internship-automotive-radar-r-d-f-m-div-at-infineon-technologies-4450683903
+- IoT Backend Entwickler (m/w/d) — ENGEL Österreich - Wir sind ENGEL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/iot-backend-entwickler-m-w-d-at-engel-%C3%B6sterreich-wir-sind-engel-4455680470
+- IT-Administrator (m/w/d) — Linde Material Handling Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-administrator-m-w-d-at-linde-material-handling-austria-4450227772
+- IT-Administrator (m/w/d) — Linde Material Handling — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-administrator-m-w-d-at-linde-material-handling-4448404426
+- IT-Administrator / Projektmitarbeiter (m/w/d) — NCE Computer GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-administrator-projektmitarbeiter-m-w-d-at-nce-computer-gmbh-4437932569
+- IT Application Manager (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-application-manager-w-m-x-at-beko-solutions-gmbh-4419072498
+- IT Application Manager — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-application-manager-at-sprecher-automation-4423938691
+- IT- Applikation Developer (m/w/d) — Oesterreichische Kontrollbank Aktiengesellschaft — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7898301
+- IT & Facilities Coordinator m/f/d — BOA® — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-facilities-coordinator-m-f-d-at-boa%C2%AE-4429214045
+- IT Infrastructure Engineer (w/m/d) - Schwerpunkt Client Management — Felbermayr Group — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7864825
+- IT Infrastructure Engineer — Felbermayr-Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-infrastructure-engineer-at-felbermayr-4457464465
+- IT-Infrastruktur-Techniker 2nd Level (m/w/d) — Hödlmayr International — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-infrastruktur-techniker-2nd-level-m-w-d-at-h%C3%B6dlmayr-international-ag-4425971723
+- IT Onsite Client Support 1st & 2nd  Level — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-onsite-client-support-1st-2nd-level-at-acp-gruppe-4430529669
+- IT Operations Engineer (w/m/d) — REPLOID — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-operations-engineer-w-m-d-at-reploid-4416255354
+- IT Operations Engineer — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-operations-engineer-at-acp-gruppe-4433695836
+- IT Service Agent (w/m/x) — IBM iX DACH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-service-agent-w-m-x-at-ibm-ix-dach-4437790401
+- IT Servicedesk Engineer (m/w/d) — sigmavista it consulting gmbh — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-servicedesk-engineer-m-w-d-at-sigmavista-it-consulting-gmbh-4449203488
+- IT Support Engineer (w/m/d) — KERN engineering careers GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7852112
+- IT Support Manager — DL Remote — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-manager-at-dl-remote-4457982715
+- IT Support Mitarbeiter 1st/2nd Level (m/w/d) — Atikon EDV &amp; Marketing GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893095
+- IT Support Mitarbeiter 1st/2nd Level (m/w/d) — Atikon EDV & Marketing GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7850672
+- IT Support Specialist - Application & Software (M/F/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-specialist-application-software-m-f-d-at-tgw-logistics-4413350285
+- IT Support Specialist (f/m/d) — Siemens Energy — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-specialist-f-m-d-at-siemens-energy-4440217097
+- IT Support Spezialist:in - Application & Software (M/W/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-spezialist-in-application-software-m-w-d-at-tgw-logistics-4410188556
+- IT Support Spezialist (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-spezialist-w-m-x-at-beko-solutions-gmbh-4436535334
+- IT-Support-Techniker — HCLTech — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-support-techniker-at-hcltech-4445920367
+- IT-Systemadministrator MSP Dienste (m/w/d) — NCE Computer GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-systemadministrator-msp-dienste-m-w-d-at-nce-computer-gmbh-4437930598
+- IT-Systemadministrator (w/m/d) — seele — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-systemadministrator-w-m-d-at-seele-4423644452
+- IT-Techniker für telefonischen Kundensupport — DIALOG telekom Gmbh & Co KG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-techniker-f%C3%BCr-telefonischen-kundensupport-at-dialog-telekom-gmbh-co-kg-4429406945
+- IT-Techniker:in - Produktions-IT/OT — Greiner — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-techniker-in-produktions-it-ot-at-greiner-4448268995
+- IT-Techniker, m/w/d — Peneder Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/it-techniker-m-w-d-at-peneder-gruppe-4428490053
+- IT-Techniker (m/w/x) — epunkt GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7782719
+- JOBS - Servicetechniker für audiovisuelle Systeme (m/w/d) — conex media gmbh — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/jobs-servicetechniker-f%C3%BCr-audiovisuelle-systeme-m-w-d-at-conex-media-gmbh-4442925085
+- Key Account & Business Development Manager im Software Umfeld (w/m/x) — epunkt GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7827260
+- Kundendienstmitarbeiter:in — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/kundendienstmitarbeiter-in-at-hello-again-4443282713
+- LINUX SYSTEMINGENIEUR*IN (M/W/D) — Ivm Consulting Co — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/linux-systemingenieur-in-m-w-d-at-ivm-consulting-co-4449481296
+- Linux Systemingenieur*in (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/linux-systemingenieur-in-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455838800
+- MES Software Engineer - Schwerpunkt ABAP OO Development (m/w/d) — voestalpine — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mes-software-engineer-schwerpunkt-abap-oo-development-m-w-d-at-voestalpine-4451528065
+- Microsoft Power Platform Developer (m/f/d) – Tieto Tech Consulting — Tieto — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/microsoft-power-platform-developer-m-f-d-%E2%80%93-tieto-tech-consulting-at-tieto-4450693732
+- Mitarbeiter IT Customer Support – First Level (m/w/d) — Fronius Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-it-customer-support-%E2%80%93-first-level-m-w-d-at-fronius-%C3%B6sterreich-4426481825
+- Mitarbeiter IT Support (m/w/d) — Richter Pharma AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-it-support-m-w-d-at-richter-pharma-ag-4456730011
+- Mitarbeiter IT-Support (w/m/d) — KERN engineering careers — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-it-support-w-m-d-at-kern-engineering-careers-4446194642
+- Mitarbeiter&shy; im technischen Kunden&shy;innen&shy;dienst* — HARGASSNER France — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-shy-im-technischen-kunden-shy-innen-shy-dienst-at-hargassner-france-4447225894
+- Mitarbeiter Team Windows (m/w/d) — Richter Pharma AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/mitarbeiter-team-windows-m-w-d-at-richter-pharma-ag-4419190680
+- .NET Developer — Noir — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/net-developer-at-noir-4447293462
+- Network Engineer (w/m/d) — Bechtle — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/network-engineer-w-m-d-at-bechtle-4431528221
+- Network & Security Engineer (m/w/d) Fortinet — Trenkwalder Personaldienste GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7884098
+- Operations Manager:in Basisnetze - Netzwerk & Automatisierung (m/w/d) — ÖBB-Konzern — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7882544
+- OT Technician (all genders) — Greiner — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ot-technician-all-genders-at-greiner-4448850456
+- OT-Techniker:in — Greiner — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/ot-techniker-in-at-greiner-4448268995
+- PLC Software Engineer (Beckhoff TwinCAT) (m/w/d) — WHC Heads Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/plc-software-engineer-beckhoff-twincat-m-w-d-at-whc-heads-austria-4454601314
+- Process & AI Consultant — ACP Gruppe — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/process-ai-consultant-at-acp-gruppe-4448992839
+- Product Owner Field Service (m/w/d) — S&amp;T AG — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7894987
+- Product Support Engineer (m/w/x) — EV Group — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/product-support-engineer-m-w-x-at-ev-group-4417210106
+- R&D Engineer – Firmware & Linear Drive Control (f/m/d) — ABB — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/r-d-engineer-%E2%80%93-firmware-linear-drive-control-f-m-d-at-abb-4455786216
+- SAP ABAP Entwickler (m/w/d) — INFORMATICS — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sap-abap-entwickler-m-w-d-at-informatics-consulting-development-gmbh-4448908173
+- SAP Fiori Entwickler (m/w/d) — INFORMATICS — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sap-fiori-entwickler-m-w-d-at-informatics-consulting-development-gmbh-4448900928
+- Service Competence Center (SCC) Techniker Innendienst für CAD/CAM (w/m/d) — TRUMPF Maschinen Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/service-competence-center-scc-techniker-innendienst-f%C3%BCr-cad-cam-w-m-d-at-trumpf-maschinen-austria-4431275882
+- Serviceengineer Halbleiterfertigung – Schwerpunkt Lithographie (m/w/d) — Vishay Intertechnology, Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/serviceengineer-halbleiterfertigung-%E2%80%93-schwerpunkt-lithographie-m-w-d-at-vishay-intertechnology-inc-4407847687
+- Software Consultant/ IT Consultant (m/w/d) — myneva — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-consultant-it-consultant-m-w-d-at-myneva-4427482543
+- Software Developer C#/.NET (m/w/d) | Business Applications — efinio IT & Engineering — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-c%23-net-m-w-d-business-applications-at-efinio-it-engineering-4439853120
+- Software Developer Core Banking Systems (w/m/d) — 3 Banken IT GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-core-banking-systems-w-m-d-at-3-banken-it-gmbh-4459574892
+- Software Developer Core Banking Systems (w/m/d) — Oberbank CZ — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-core-banking-systems-w-m-d-at-oberbank-cz-4461763629
+- Software Developer (M/F/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-developer-m-f-d-at-tgw-logistics-4424889537
+- Software Engineer (Backend / Full Stack) — Vertice — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-backend-full-stack-at-vertice-4435450784
+- Software Engineer C++ & Automatisierung (m/w/d) — FERCHAU — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-c%2B%2B-automatisierung-m-w-d-at-ferchau-4441975474
+- Software Engineer – Content Services (w/m/d) — Fabasoft — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-%E2%80%93-content-services-w-m-d-at-fabasoft-4440458725
+- Software Engineer Embedded — Sprecher Automation — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-embedded-at-sprecher-automation-4443164959
+- Software Engineer - Fabasphere Use-Cases — Fabasoft — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-fabasphere-use-cases-at-fabasoft-4458197618
+- Software Engineer (m/f/d) — GE HealthCare — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-m-f-d-at-ge-healthcare-4423011705
+- Software Engineer (m/w/d) Vollzeit Linz — system7 rail — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-m-w-d-vollzeit-linz-at-system7-rail-4437698490
+- Software Engineer Sensor & Automation Solutions (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-sensor-automation-solutions-w-m-x-at-beko-solutions-gmbh-4446429529
+- Software Engineer — IONO Robotics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/software-engineer-at-iono-robotics-4442575340
+- Software Entwickler C# und .Net (m/w/d) — aqotec GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7889595
+- Software Entwickler:in Digital Twin (m/w/d)* — TGW Logistics GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7859198
+- Software Entwickler:in (m/w/d) — Hainzl Industriesysteme GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7785683
+- Software-Entwickler:in (m/w/d)* — TGW Logistics GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7842383
+- Software Entwickler (m/w/d) — KNP Financial Services GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7899173
+- Software Entwickler (m/w/d) — World-Direct eBusiness solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7888205
+- Software Entwickler mit Inbetriebnahmeanteil (m/w/d) — VESCON Systemtechnik GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7878831
+- Software Tester & Automation Engineer C# (m/w/x) — DS Automotion GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.karriere.at/jobs/7710560
+- Softwareengineering SPS m/w/x — WINTERSTEIGER Inc. — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareengineering-sps-m-w-x-at-wintersteiger-inc-4412637870
+- Softwareentwickler C# für Testsysteme (w/m/x) — BEKO Solutions GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-c%23-f%C3%BCr-testsysteme-w-m-x-at-beko-solutions-gmbh-4428714443
+- Softwareentwickler C# / .NET | Microsoft - Technologien, MS SQL, Oracle | Inhouse (mwd) — Vesterling AG — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-c%23-net-microsoft-technologien-ms-sql-oracle-inhouse-mwd-at-vesterling-ag-4295964275
+- Softwareentwickler Embedded (m/w/d) — Inteff GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-embedded-m-w-d-at-inteff-gmbh-4448966255
+- Softwareentwickler Embedded Systems @ WINTERSTEIGER AG — DEVjobs — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-embedded-systems-%40-wintersteiger-ag-at-devjobs-4454760573
+- Softwareentwickler im Automatisierungsbereich (m/w/d) — ENGEL Österreich - Wir sind ENGEL — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-im-automatisierungsbereich-m-w-d-at-engel-%C3%B6sterreich-wir-sind-engel-4442935043
+- Softwareentwickler (w/m/d) Robotik/Vision — TRUMPF Maschinen Austria — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/softwareentwickler-w-m-d-robotik-vision-at-trumpf-maschinen-austria-4390144343
+- Specialist IT Infrastructure - Cloud and Datacenter (all genders) — TroGroup — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/specialist-it-infrastructure-cloud-and-datacenter-all-genders-at-trogroup-4428232825
+- SPS-Programmierer (m/w/d) – Digitalisierung & Systemintegration — AGRU Kunststofftechnik GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/sps-programmierer-m-w-d-%E2%80%93-digitalisierung-systemintegration-at-agru-kunststofftechnik-gmbh-4439427156
+- Student (m/w/d) für eine Studien- oder Abschlussarbeit im Bereich Elektronik, Softwareentwicklung, Mechatronik, Maschinenbau, Mobilhydraulik, Konstruktion — Wacker Neuson Linz GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7847742
+- Studentenjob IT / Datenmanagement — Industrie Informatik GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/4b7b0d1c5113226898ac7716fe9d34b6
+- Support Consultant/Developer (Microsoft Dynamics 365 F&SCM) — Belmont Lavan — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/support-consultant-developer-microsoft-dynamics-365-f-scm-at-belmont-lavan-4429799623
+- Support Engineer (m/w/d) — x-tention — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/support-engineer-m-w-d-at-x-tention-4465638531
+- Support Engineer TopSolid CAM (m/w/d) — MAIT for business — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/support-engineer-topsolid-cam-m-w-d-at-mait-for-business-4447363656
+- Support Engineer (w/m/d) — ABB — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/support-engineer-w-m-d-at-abb-4430551937
+- System Developer (M/W/D)* — TGW Logistics — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/system-developer-m-w-d-at-tgw-logistics-4446260081
+- System Engineer Endpoint-Management (m/w/d) — GEMA Austria GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7888206
+- Technical Service Specialist (m/w/d) — IVM Technical Consultants — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technical-service-specialist-m-w-d-at-ivm-technical-consultants-vienna-the-technical-experts-4455834860
+- Technical Support Manager (d/w/m) — hello again — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technical-support-manager-d-w-m-at-hello-again-4443786200
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval Österreich — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-%C3%B6sterreich-4432676092
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval România — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-rom%C3%A2nia-4432698817
+- Technischer Support Innendienst (m/w/x) - Remote Service & Heiztechnik — Hoval United Kingdom — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/technischer-support-innendienst-m-w-x-remote-service-heiztechnik-at-hoval-united-kingdom-4450089501
+- Test Automation Engineer C# (m/w/x) — DS Automotion GmbH — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/test-automation-engineer-c%23-m-w-x-at-ds-automotion-gmbh-4464193552
+- Web Developer für Shopify und WordPress (m/w/d) — Make Branding — kein Junior-Signal (Regex)
+  - URL: https://at.linkedin.com/jobs/view/web-developer-f%C3%BCr-shopify-und-wordpress-m-w-d-at-make-branding-4449449198
+- Werkstudent Data & AI — TGW Logistics Group — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/f5d64512445a2f5761defc1d4b9232b7
+- Werkstudent für interne KI-Tool Entwicklung und Automatisierung — Promot Automation GmbH — kein Junior-Signal (Regex)
+  - URL: https://www.devjobs.at/job/0cd7c0196b1b9d7adde88b973b4d3b1b
+- Workday Functional Service Owner (m/w/d) —  — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893220
+- Workday Functional Service Owner (m/w/d) — banner — kein Junior-Signal (Regex)
+  - URL: https://www.jobs.at/i/7893220
+
+### Sicher (77)
+
+- IT Cloud Division Lehrling — TOMORIS GmbH
+- IT Mitarbeiter (m/w/d) — Trenkwalder Personaldienste GmbH
+- IT Support Mitarbeiter:in — Sprecher Automation
+- IT-Support — Bio Austria
+- IT-SYSTEM-ADMINISTRATOR:IN — HENNLICH Österreich
+- IT System Administrator — KheepU GmbH
+- Junior Applikationsentwickler für intelligente Robotik — Kern & Partner Personalmanagement GmbH - Personalberatung
+- Junior Automation Software Engineer (m/w/d) — Miba Group
+- Junior Azure Cloud &amp; Application Developer (m/w/d) — Kurt Seidl Software Handelsgesellschaft m.b.H.
+- Junior Data Analyst — TD Trusted Decisions GmbH
+- Junior Full-Stack-Entwickler — Coiss GmbH
+- Junior Hardware Entwickler (w/m/d) — Dynell GmbH
+- Junior Inhouse Consultant (m/w/d) – SAP Commerce — Wacker Neuson
+- Junior IT Administrator — CADS GmbH
+- Junior IT Consultant — Hapeko
+- Junior Java/Jakarta EE Developer — Gepardec IT Services GmbH
+- Junior Javascript & Typescript Backend Engineer — Dynatrace GmbH
+- Junior Javascript & Typescript Engineer — Dynatrace GmbH
+- Junior Projektmanager:in / Projektassistent (m/w/d) — Schauerhuber Abfallwirtschaft GmbH
+- (Junior) Software Developer (m/w/d) — Richter Pharma AG
+- (Junior) Software Developer (w/m/x) — epunkt GmbH
+- Junior Softwareentwickler Für Intelligente Robotik (w/m/d) — KERN engineering careers GmbH
+- (Junior) Softwareentwickler Java (w/m/x) — epunkt GmbH
+- Lehre Applikationsentwickler - Coding — Starlim Spritzguss Gmbh
+- Lehre IT-Systemtechniker — EREMA Group
+- Lehrling Informationstechnologie - Schwerpunkt Systemtechnik — x-tention Informationstechnologie GmbH
+- Lehrling Informationstechnologie-Systemtechnik — Oberösterreichische Gesundheitsholding GmbH 
+- Lehrstelle Applikationsentwicklung Coding — KEBA AG
+- Mitarbeiter:in IT-Support — dm drogerie markt Österreich
+- Mitarbeiter:in Ticketmanagement (w/m/d) — AGILOX Services GmbH
+- MITARBEITER IT & KÜNSTLICHE INTELLIGENZ — Dronetech Austria
+- Mitarbeiter IT-Support / IT-Service (m/w/d) — NCE Computer GmbH
+- Onsite IT-Support 2nd Level (m/w/d) - Eggelsberg — Hemmersbach
+- Praktikant Digitalisierung & Softwareentwicklung im Bereich E-Mobilität (w/m/x) — BMW Group
+- Praktikant Mediendesign — BMW Motoren GmbH
+- Praktikant — Ahoi Kapptn!
+- Praktikum im Bereich IT-Projektmanagement und Softwareentwicklung (m/w/d) — Mercedes-Benz G GmbH
+- Praktikum Junior App Manager — hello again GmbH
+- Software Engineer - Early Career — Dynatrace GmbH
+- Software-Entwickler (m/w/d) — 
+- Software-Entwickler (m/w/d) — 
+- Software-Entwickler (m/w/d) — banner
+- System- & Netzwerkadministrator (m/w/d) — GARTNER - "THE WORLD OF TRANSPORT"
+- Web-Developer (m/w/d) — RegionalMedien Oberösterreich
+- Atlassian Application Specialist (m/w/d) — KERN engineering careers
+- Expert:in für den technischen Support (m/w/d) — ETECH Schmid u. Pachler Elektrotechnik GmbH & CoKG
+- IT Application Specialist Shopfloor & Produktion (m/w/d) — Hammerer Aluminium Industries
+- IT Client-Administrator (m/w/d) — WFL Millturn Technologies GmbH & Co. KG
+- IT Enterprise Systems Lehrling — TOMORIS GmbH
+- IT Field Service Lehrling — TOMORIS GmbH
+- IT-Risk / IT-Governance Junior Manager — Partner Bank
+- IT Service Desk Engi­neer (m/w/d) — BWT Group
+- ITSM Process & Atlassian Specialist — Hödlmayr International
+- Junior Business IT Consultant - Integration Engineer  m / w / d — OBERNDORFER Betonfertigteile
+- Junior Citrix Operations Manager:in (m/w/d) — ÖBB-Konzern
+- Junior Data Analyst Controlling — Richter Pharma AG
+- Junior Digitalisierungsexperte für erneuerbare Energien (m/w/d) — Ingenieurbüro mitPlan GmbH
+- Junior-Elektrotechniker (m/w/d) — ISS Facility Services GmbH
+- Junior Entwicklungsingenieur/ Produktentwickler (m/w/d) — Alpen-Maykestag GmbH
+- Junior IT ProjektmanagerIn (m/w/d) — banner
+- Junior IT Systems Engineer — REDER TRANSPORTE KG
+- Junior Java Entwickler — BEKO Engineering & Informatik GmbH & Co KG
+- Junior Personalentwickler im Vertrieb (m/w/d) — Helvetia Versicherungen AG
+- Junior-Projektleiter Elektrotechnik (m/w/d) — ETZI-Group GmbH
+- (Junior) Projektleiter/in Elektrotechnik für Straßen- und Sportstättenbeleuchtung — eww Gruppe
+- Junior Projektmanager:in (m/w/d) — ÖAMTC Wien, Niederösterreich, Burgenland
+- (Junior) Technical SAP Consultant (all genders) — msg
+- Lehre Informationstechnologe Systemtechnik — Starlim Spritzguss Gmbh
+- Lehre Informationstechnologie & Systemtechnik — Elektroanlagen G. Klampfer GmbH
+- Lehre IT-Systemtechniker — HAUSER GmbH Österreich
+- Lehrling IT-Systemtechnik — CANCOM a+d IT Solutions GmbH
+- Linux System Administrator — Computer Futures
+- Mitarbeiter im Innendienst im Bereich Silikontechnik (m/w/d) - Silnova — REHAU Industrial Solutions
+- Praktikant Digitalisierung & Softwareentwicklung E-Mobilität — BMW Motoren GmbH
+- Praktikant Software Engineering (w/m/x) — BMW Group
+- Technical Support Engineer (m/w/d)  1st Level (AMR/Robotics) — AGILOX Services GmbH
+- Technical Support Engineer (m/w/x) — EV Group
+
+---
