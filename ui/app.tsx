@@ -31,7 +31,7 @@ import { FOLDER_IDS, inFolder, canGenerateAnschreiben, type FolderId } from '../
 import { HISTORY_START } from '../lib/calendar.ts';
 import { FOLLOW_UP_DAYS, dueFollowUps, daysSinceLastContact } from '../lib/followup.ts';
 import { CSS } from './styles.ts';
-import { type LoadGridSection, LoadGridPanel, useGridStream } from './components/grid.tsx';
+import { type LoadGridSection, LoadGridPanel } from './components/grid.tsx';
 import { type CalendarEvent, CalendarView, CAL_TYPES, CAL_COLOR } from './components/calendar.tsx';
 import { UMKREIS_GRUPPEN, istLandesbegriff, ChipListe, PortalBlock, RohAnsicht, useSettingsConfig } from './components/settings.tsx';
 import { useAttachment } from './hooks/attachment.ts';
@@ -40,6 +40,7 @@ import { useDuplicates } from './hooks/duplicates.ts';
 import { useRunStatusPoll } from './hooks/run-status-poll.ts';
 import { useScrapeRun } from './hooks/scrape-run.ts';
 import { useFilterRun } from './hooks/filter-run.ts';
+import { useAnschreibenRun } from './hooks/anschreiben-run.ts';
 
 // /api/jobs joint das Anschreiben serverseitig dazu (siehe scripts/ui-server.ts) —
 // es lebt in data/anschreiben/{slug}.md, nicht im Job-JSON. Deshalb ist `brief` hier
@@ -238,18 +239,9 @@ export default function JobbotUI() {
   // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
   const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben' | 'calendar' | 'nachfass' | 'suche'>('jobs');
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  // Entspricht scripts/run-anschreiben.ts --data (matched/offstack) — "brutal" ist als
-  // Kästchen trotzdem wählbar (Symmetrie mit den Fit-Chips oben in der Liste), landet aber
-  // serverseitig immer bei "skipped" (generateAnschreiben() lehnt fit "brutal" grundsätzlich
-  // ab, siehe lib/anschreiben.ts). Default spiegelt den CLI-Default ohne --data: alle
-  // getriagten Jobs außer brutal.
-  const [anschreibenFits, setAnschreibenFits] = useState<Set<Fit>>(new Set(['matched', 'offstack']));
-  const [anschreibenLimit, setAnschreibenLimit] = useState('');
   const [replyOnly, setReplyOnly] = useState(false);
   const [repliesFetching, setRepliesFetching] = useState(false);
   const [gmailSyncing, setGmailSyncing] = useState(false);
-  const [anschreibenSections, setAnschreibenSections] = useState<LoadGridSection[]>([]);
-  const [anschreibenStarting, setAnschreibenStarting] = useState(false);
   // Auswahl für die "Anschreiben erstellen"-Aktion — nur im "jobs"-Ordner relevant
   // (matched/uncertain landen laut STATUS_MAP nirgendwo sonst), deshalb bei
   // Ordnerwechsel zurückgesetzt statt über Ordner hinweg mitzuschleppen.
@@ -264,10 +256,6 @@ export default function JobbotUI() {
   // löscht die Markierung, das ist unkritisch, weil die betroffenen Jobs im Ordner
   // ohnehin weiter sichtbar bleiben. Aus geht ausschließlich per Klick auf den Ordner.
   const [highlightFolders, setHighlightFolders] = useState<Set<FolderId>>(new Set());
-  // Verhindert Toast/Refetch-Spam: der Server hält 'done' so lange, bis der
-  // nächste Lauf startet — ohne diesen Merker würde jeder Poll-Tick (alle 1.5s)
-  // erneut feiern, solange niemand einen neuen Lauf anstößt.
-  const lastSeenAnschreibenRunId = useRef<string | null>(null);
   const ta = useRef<HTMLTextAreaElement>(null);
   // Für den Tschobbo-Hook im Scrape-SSE-Effect unten (der nur einmal läuft,
   // `view` also sonst als Closure einfrieren würde).
@@ -308,44 +296,11 @@ export default function JobbotUI() {
     filterMode, setFilterMode, filterScope, setFilterScope,
     filterStarting, filterSections, setFilterSections, runFilterNow,
   } = useFilterRun(filterStatus, pollRunsNow, say, refetchJobs);
-
-  // Übergangs-Effekt: die Toast-/Refetch-/highlightFolders-Reaktion auf ein Lauf-Ende
-  // lebte bisher IM Poll-Tick selbst (siehe useRunStatusPoll, jetzt reine Datenquelle).
-  // Scrape und Filter sind bereits gewandert; Anschreiben folgt als nächster Schritt
-  // — bis dahin unverändertes Verhalten hier.
-
-  useEffect(() => {
-    if (!anschreibenStatus) return;
-    const a = anschreibenStatus;
-    if ((a.status === 'done' || a.status === 'error' || a.status === 'stopped') && a.runId && a.runId !== lastSeenAnschreibenRunId.current) {
-      lastSeenAnschreibenRunId.current = a.runId;
-      refetchJobs();
-      say(
-        a.status === 'error' ? `Anschreiben fehlgeschlagen: ${a.error}`
-        : a.status === 'stopped' ? `Anschreiben abgebrochen: ${a.result?.generated ?? 0} generiert, ${a.result?.emailsFound ?? 0} E-Mails gefunden`
-        : `Anschreiben: ${a.result?.generated ?? 0} generiert, ${a.result?.skipped ?? 0} übersprungen, ${a.result?.emailsFound ?? 0} E-Mails gefunden`,
-        a.status === 'error' ? 'err' : 'ok'
-      );
-      // Nur den Entwürfe-Ordner markieren, der wirklich einen neuen Job bekommen
-      // hat — mailGenerated/nomailGenerated sind die Aufschlüsselung von `generated`
-      // nach Mail-Status am Ende des Laufs (siehe lib/anschreiben-runner.ts).
-      if (a.status !== 'error') {
-        setHighlightFolders(prev => {
-          const next = new Set(prev);
-          if ((a.result?.mailGenerated ?? 0) > 0) next.add('mail/entwurf');
-          if ((a.result?.nomailGenerated ?? 0) > 0) next.add('nomail/entwurf');
-          return next;
-        });
-      }
-    }
-  }, [anschreibenStatus, refetchJobs, say]);
-
-  // SSE statt Polling fürs Anschreiben-Lade-Grid — ein Event pro fertigem (oder
-  // fehlgeschlagenem) Anschreiben, angehängt an anschreibenSections (siehe
-  // useGridStream in ui/components/grid.tsx). Eine einzige, dauerhaft offene
-  // Verbindung (wie das Poll-Intervall oben), damit das Grid auch beim
-  // Ansichtswechsel weiterwächst.
-  useGridStream('/api/anschreiben/stream', setAnschreibenSections);
+  const {
+    anschreibenFits, setAnschreibenFits, anschreibenLimit, setAnschreibenLimit,
+    anschreibenStarting, anschreibenSections, setAnschreibenSections,
+    runAnschreibenNow, stopAnschreibenNow,
+  } = useAnschreibenRun(anschreibenStatus, pollRunsNow, say, refetchJobs, setHighlightFolders, () => setSelectedJobIds(new Set()));
 
   // Tschobbo-Hook Teil 2 (ui/tschobbo.js): Die geworfenen Klumpen hängen an
   // <body>, nicht im React-Baum — ohne dieses Event blieben sie beim Wechsel auf
@@ -416,35 +371,6 @@ export default function JobbotUI() {
   useEffect(() => {
     if (view === 'calendar') fetch('/api/calendar').then(r => r.json()).then(setCalendarEvents);
   }, [view]);
-
-  // Ein Aufruf für beides: die Mehrfachauswahl in der Liste UND den einzelnen
-  // "Neu generieren"-Button im Detail (der bisher ein reiner Toast-Stub war,
-  // ohne irgendetwas anzustoßen) — beide wollen dieselbe Aktion für eine Menge
-  // von Job-IDs, nur unterschiedlich groß.
-  async function runAnschreibenNow(jobIds: string[]) {
-    if (jobIds.length === 0) return;
-    setAnschreibenStarting(true);
-    setAnschreibenSections([]);
-    try {
-      const res = await fetch('/api/anschreiben', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobIds }),
-      });
-      if (res.status === 409) say('Anschreiben-Lauf läuft bereits', 'err');
-      else setSelectedJobIds(new Set());
-      pollRunsNow();
-    } finally {
-      setAnschreibenStarting(false);
-    }
-  }
-
-  async function stopAnschreibenNow() {
-    const res = await fetch('/api/anschreiben/stop', { method: 'POST' });
-    if (res.status === 409) say('Kein Anschreiben-Lauf aktiv', 'err');
-    // Erfolgsfall zeigt sich am Poll-Tick (status wechselt auf "stopped", eigener Toast
-    // dort) — kein zweiter Toast hier, der nur den Lauf-Abschluss vorwegnehmen würde.
-  }
 
   // generateAnschreiben() (lib/anschreiben.ts) generiert nur für status "triaged" mit
   // fit !== "brutal" — ein bereits generierter Job (status "generated" o.ä.) muss also
