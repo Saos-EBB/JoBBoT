@@ -41,6 +41,7 @@ import { type LoadGridSection, LoadGridPanel, useGridStream } from './components
 import { type CalendarEvent, CalendarView, CAL_TYPES, CAL_COLOR } from './components/calendar.tsx';
 import { type SourcesCfg, type LocationCfg, UMKREIS_GRUPPEN, istLandesbegriff, ChipListe, PortalBlock, RohAnsicht } from './components/settings.tsx';
 import { useAttachment } from './hooks/attachment.ts';
+import { useCcAddress } from './hooks/cc.ts';
 
 // /api/jobs joint das Anschreiben serverseitig dazu (siehe scripts/ui-server.ts) —
 // es lebt in data/anschreiben/{slug}.md, nicht im Job-JSON. Deshalb ist `brief` hier
@@ -268,8 +269,6 @@ export default function JobbotUI() {
   // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
   const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben' | 'calendar' | 'nachfass' | 'suche'>('jobs');
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [cc, setCc] = useState<string | null | undefined>(undefined);
-  const [ccInput, setCcInput] = useState('');
   const [scrapeSources, setScrapeSources] = useState<string[]>([]);
   const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
   const [filterMode, setFilterMode] = useState<FilterMode>('regex');
@@ -351,6 +350,7 @@ export default function JobbotUI() {
   useEffect(() => { refetchJobs(); }, [refetchJobs]);
 
   const { attachment, uploadAttachment, removeAttachment } = useAttachment(view === 'attachment', say);
+  const { cc, ccInput, setCcInput, saveCcNow, removeCc } = useCcAddress(view === 'cc', say);
 
   useEffect(() => {
     fetch('/api/scrape/sources').then(r => r.json()).then((names: string[]) => {
@@ -648,31 +648,6 @@ export default function JobbotUI() {
     if (!res.ok) { say('Zurücksetzen fehlgeschlagen', 'err'); return; }
     patch(job.id, { status });
     runAnschreibenNow([job.id]);
-  }
-
-  useEffect(() => {
-    if (view !== 'cc') return;
-    fetch('/api/cc')
-      .then(r => r.json())
-      .then((d: { email: string | null }) => { setCc(d.email); setCcInput(d.email ?? ''); });
-  }, [view]);
-
-  async function saveCcNow(email: string) {
-    const res = await fetch('/api/cc', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-    const body = await res.json().catch(() => null);
-    if (res.ok) { setCc(body.email); say('CC gespeichert'); }
-    else say(body?.error ?? 'Speichern fehlgeschlagen', 'err');
-  }
-
-  async function removeCc() {
-    await fetch('/api/cc', { method: 'DELETE' });
-    setCc(null);
-    setCcInput('');
-    say('CC entfernt');
   }
 
   const counts = useMemo(() => {
