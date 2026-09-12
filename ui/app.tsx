@@ -27,7 +27,7 @@ import {
   Archive,
 } from 'lucide-react';
 import type { Job, Fit } from '../scrapers/interface.ts';
-import { FOLDER_IDS, inFolder, canGenerateAnschreiben, type FolderId } from '../lib/folders.ts';
+import { FOLDER_IDS, inFolder, type FolderId } from '../lib/folders.ts';
 import { FOLLOW_UP_DAYS, dueFollowUps, daysSinceLastContact } from '../lib/followup.ts';
 import { CSS } from './styles.ts';
 import { type LoadGridSection, LoadGridPanel } from './components/grid.tsx';
@@ -37,6 +37,10 @@ import { useAttachment } from './hooks/attachment.ts';
 import { useCcAddress } from './hooks/cc.ts';
 import { useDuplicates } from './hooks/duplicates.ts';
 import { useRunStatusPoll } from './hooks/run-status-poll.ts';
+import { useToasts } from './hooks/toasts.ts';
+import { useSelection } from './hooks/selection.ts';
+import { useFolderView } from './hooks/folder-view.ts';
+import { useJobEdits } from './hooks/job-edits.ts';
 import { useScrapeRun } from './hooks/scrape-run.ts';
 import { useFilterRun } from './hooks/filter-run.ts';
 import { useAnschreibenRun } from './hooks/anschreiben-run.ts';
@@ -46,7 +50,7 @@ import { useMailSync } from './hooks/mail-sync.ts';
 // es lebt in data/anschreiben/{slug}.md, nicht im Job-JSON. Deshalb ist `brief` hier
 // und nicht auf dem Job-Typ selbst: ein Feld, das nur diese Antwort hat, kein Feld,
 // das je zurückgeschrieben wird (Speichern einer Bearbeitung ist ein eigener Endpunkt).
-type JobWithBrief = Job & { brief: string | null };
+export type JobWithBrief = Job & { brief: string | null };
 
 /* ------------------------------------------------------------------ *
  * Design tokens
@@ -178,30 +182,6 @@ const EMPTY_COPY: Record<FolderId, string> = {
   'log/fehler': 'Keine Fehler.',
 };
 
-// Der zuletzt gewählte Ordner, damit er einen Reload überlebt. Vorher war der
-// Startwert hart 'mail/entwurf': nach F5 landete man dort, auch wenn man vorher in
-// 'nomail/entwurf' stand — und weil BEIDE Ordner in der Seitenleiste "Entwürfe"
-// heißen (siehe GROUPS), sah der leere Nachbarordner aus, als wären die Entwürfe
-// verschwunden. Der Ordner ist eine Ortsangabe des Nutzers, kein Zustand eines Laufs;
-// deshalb hier localStorage, anders als bei highlightFolders (bewusst nur im Speicher).
-const FOLDER_KEY = 'jobbot.folder';
-const FOLDER_DEFAULT: FolderId = 'mail/entwurf';
-
-// Beide Zugriffe können werfen (privates Fenster, blockierte Site-Daten) — und ein
-// gespeicherter Wert kann aus einer Fassung mit anderen FOLDER_IDS stammen. Beides
-// fällt still auf den Standard zurück: eine vergessene Ortsangabe ist kein Fehler.
-function ladeOrdner(): FolderId {
-  try {
-    const gespeichert = localStorage.getItem(FOLDER_KEY);
-    if (gespeichert && (FOLDER_IDS as readonly string[]).includes(gespeichert)) return gespeichert as FolderId;
-  } catch { /* kein localStorage — Standard */ }
-  return FOLDER_DEFAULT;
-}
-
-function merkeOrdner(id: FolderId): void {
-  try { localStorage.setItem(FOLDER_KEY, id); } catch { /* nicht merkbar — dann eben nicht */ }
-}
-
 function firstLine(t: string | null): string {
   if (!t) return '—';
   const l = t.split('\n').filter(x => x.trim() && !/^Sehr geehrte/.test(x));
@@ -223,14 +203,8 @@ function decodeEntities(text: string): string {
 
 export default function JobbotUI() {
   const [jobs, setJobs] = useState<JobWithBrief[]>([]);
-  // Lazy Initializer (Funktion statt Aufruf): localStorage wird einmal beim Mount
-  // gelesen, nicht bei jedem Render.
-  const [folder, setFolder] = useState<FolderId>(ladeOrdner);
-  const [fit, setFit] = useState<Fit | 'alle' | 'unbewertet'>('alle');
-  const [q, setQ] = useState('');
   const [sel, setSel] = useState<string | null>(null);
   const [tab, setTab] = useState<'brief' | 'inserat'>('brief');
-  const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'err' } | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const burgerRef = useRef<HTMLButtonElement>(null);
@@ -239,10 +213,6 @@ export default function JobbotUI() {
   // — eigene, simple UI-Modi, die Liste+Detail durch eine Vollbild-Ansicht ersetzen.
   const [view, setView] = useState<'jobs' | 'attachment' | 'cc' | 'scrape' | 'filter' | 'duplicates' | 'anschreiben' | 'calendar' | 'nachfass' | 'suche'>('jobs');
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  // Auswahl für die "Anschreiben erstellen"-Aktion — nur im "jobs"-Ordner relevant
-  // (matched/uncertain landen laut STATUS_MAP nirgendwo sonst), deshalb bei
-  // Ordnerwechsel zurückgesetzt statt über Ordner hinweg mitzuschleppen.
-  const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
 
   // Sidebar-Ordner mit frisch generierten Anschreiben, die noch nicht angesehen wurden —
   // nur im Speicher (kein localStorage, bewusst so einfach wie möglich): ein Reload
@@ -255,10 +225,7 @@ export default function JobbotUI() {
   const viewRef = useRef(view);
   viewRef.current = view;
 
-  const say = useCallback((m: string, kind: 'ok' | 'err' = 'ok') => {
-    setToast({ msg: m, kind });
-    setTimeout(() => setToast(null), 1900);
-  }, []);
+  const { toast, say } = useToasts();
 
   const refetchJobs = useCallback(() => {
     fetch('/api/jobs')
@@ -326,6 +293,12 @@ export default function JobbotUI() {
     fetchReplies, syncGmail, runFollowUps, createDraft, sendDirect,
   } = useMailSync(say, refetchJobs, setCalendarEvents, patch, setDetailOpen);
 
+  const {
+    folder, setFolder, fit, setFit, q, setQ,
+    counts, inCurrentFolder, fitCounts, list, selectable,
+  } = useFolderView(jobs, replyOnly, Object.keys(FIT) as Fit[]);
+  const { selectedJobIds, setSelectedJobIds, toggleSelect, briefbar } = useSelection(jobs, folder);
+
   // Wie Duplikate: nur beim Betreten laden, kein Polling — der Kalender liest einen
   // Snapshot, keinen laufenden Prozess.
   useEffect(() => {
@@ -351,66 +324,12 @@ export default function JobbotUI() {
     runAnschreibenNow([job.id]);
   }
 
-  const counts = useMemo(() => {
-    const c: Partial<Record<FolderId, number>> = {};
-    for (const id of FOLDER_IDS) c[id] = jobs.filter(j => inFolder(j, id)).length;
-    return c;
-  }, [jobs]);
-
-  const inCurrentFolder = useMemo(() => jobs.filter(j => inFolder(j, folder)), [jobs, folder]);
-
-  const fitCounts = useMemo(() => {
-    const c: Record<string, number> = { alle: inCurrentFolder.length };
-    for (const k of Object.keys(FIT)) c[k] = inCurrentFolder.filter(j => j.fit === k).length;
-    c.unbewertet = inCurrentFolder.filter(j => j.fit === null).length;
-    return c;
-  }, [inCurrentFolder]);
-
-  const list = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    return inCurrentFolder
-      .filter(j => (fit === 'alle' ? true : fit === 'unbewertet' ? j.fit === null : j.fit === fit))
-      .filter(j => !s || (j.company + ' ' + j.title + ' ' + (j.location ?? '')).toLowerCase().includes(s))
-      .filter(j => !(folder === 'log/gesendet' && replyOnly) || j.replyReceivedAt != null)
-      .sort((a, b) => daysAgo(a.scrapedAt) - daysAgo(b.scrapedAt));
-  }, [inCurrentFolder, fit, q, folder, replyOnly]);
-
-  // Auswählbar ist alles ausser Gesendetem — das ist überall sonst in der UI
-  // schreibgeschützt (siehe Detail-Leiste), und eine Mehrfachaktion darf dieselbe
-  // Regel nicht hintenrum aushebeln.
-  const selectable = useMemo(() => list.filter(j => j.status !== 'gesendet'), [list]);
-  // Anschreiben ist die eine Mehrfachaktion mit einer engeren Bedingung als
-  // "ausgewählt": der Lauf verarbeitet nur getriagte, nicht-brutale Jobs
-  // (canGenerateAnschreiben). Statt sie unauswählbar zu machen — sie sind ja für
-  // Löschen/Verschieben sehr wohl gemeint — steht die Zahl am Knopf.
-  const briefbar = useMemo(
-    () => [...selectedJobIds].filter(id => { const j = jobs.find(x => x.id === id); return j != null && canGenerateAnschreiben(j); }),
-    [selectedJobIds, jobs],
-  );
-
   const job = jobs.find(j => j.id === sel) ?? null;
   const shown = list.some(j => j.id === sel) ? job : null;
 
   useEffect(() => {
     if (!list.some(j => j.id === sel)) setSel(list[0]?.id ?? null);
   }, [list, sel]);
-
-  // Auswahl nur im "jobs"-Ordner sinnvoll (siehe selectedJobIds oben) — beim
-  // Verlassen zurücksetzen, sonst überlebt eine Auswahl unsichtbar den Wechsel.
-  useEffect(() => { setSelectedJobIds(new Set()); }, [folder]);
-
-  // Jeden Ordnerwechsel merken — egal wodurch ausgelöst (Klick, Schublade, oder der
-  // Startordner-Effekt weiter unten). Ein Effect statt eines Aufrufs in jedem
-  // Klick-Handler: sonst gäbe es Wege, den Ordner zu wechseln, ohne ihn zu merken.
-  useEffect(() => { merkeOrdner(folder); }, [folder]);
-
-  function toggleSelect(id: string) {
-    setSelectedJobIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }
 
   useEffect(() => setTab(shown?.status === 'fehler' ? 'inserat' : 'brief'), [sel, shown?.status]);
 
@@ -484,36 +403,7 @@ export default function JobbotUI() {
   // nicht zwischen Server und UI auseinanderdriftet.
   const faellig = useMemo(() => dueFollowUps(jobs), [jobs]);
 
-
-  // Speichert erst beim Verlassen der Textarea (onBlur), nicht bei jedem Tastendruck —
-  // blur feuert im Browser garantiert vor dem onClick eines anderen Listeneintrags
-  // (mousedown blurred zuerst), also landet der letzte Stand immer beim richtigen
-  // Job, auch bei schnellem Wechsel. Kein Debounce-Timer nötig, keine Race Condition.
-  function saveBrief(id: string, text: string) {
-    fetch(`/api/jobs/${id}/brief`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
-    })
-      .then(r => { if (!r.ok) throw new Error(); say('Anschreiben gespeichert'); })
-      .catch(() => say('Speichern fehlgeschlagen', 'err'));
-  }
-
-  // Die einzige Stelle, an der eine Empfängeradresse von Hand gesetzt wird. Vorher
-  // konnte das nur die servergerenderte /job/:id/email-Form, die niemand mehr erreichte
-  // (das UI verlinkt sie nicht) — nötig ist es trotzdem, weil findEmail() nicht immer
-  // trifft und eine falsche Adresse sonst nicht zu korrigieren wäre.
-  // Speichern beim Verlassen des Feldes, wie beim Anschreiben.
-  function saveEmail(id: string, value: string) {
-    const email = value.trim() || null;
-    fetch(`/api/jobs/${id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    })
-      .then(r => { if (!r.ok) throw new Error(); patch(id, { email }); say(email ? 'Adresse gespeichert' : 'Adresse entfernt'); })
-      .catch(() => say('Speichern fehlgeschlagen', 'err'));
-  }
+  const { saveBrief, saveEmail } = useJobEdits(say, patch);
 
   // Gmail-Tastatur: j/k wandern, e gibt frei, # löscht.
   useEffect(() => {
