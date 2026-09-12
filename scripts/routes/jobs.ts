@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { readFile, writeFile } from 'node:fs/promises';
 import { findAnschreiben, anschreibenZiel } from '../../lib/anschreiben-datei.ts';
 import { versende } from '../../lib/versand.ts';
+import { respondJson, readJsonBody } from './http.ts';
 import type { Ctx } from './context.ts';
 import type { Job } from '../../scrapers/interface.ts';
 
@@ -24,8 +25,7 @@ export async function handleJobsRoutes(req: IncomingMessage, res: ServerResponse
     // Lesen; SPEICHERN einer Bearbeitung ist ein eigener Schreibpfad (anderer Endpunkt,
     // eigener Schritt), weil das Anschreiben nicht Teil des Job-Records ist.
     const withBriefs = await Promise.all(jobs.map(async job => ({ ...job, brief: await readCoverLetter(job) })));
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(withBriefs));
+    respondJson(res, 200, withBriefs);
     return true;
   }
 
@@ -33,16 +33,13 @@ export async function handleJobsRoutes(req: IncomingMessage, res: ServerResponse
   if (req.method === 'POST' && jobPatchMatch) {
     const job = await ctx.storage.get(jobPatchMatch[1]);
     if (!job) { res.writeHead(404).end('Job nicht gefunden'); return true; }
-    let body = '';
-    for await (const chunk of req) body += chunk;
     // status/fit (Aktionen entlang der Statusmaschine) und email (von Hand korrigierte
     // Empfängeradresse, siehe ui/app.tsx saveEmail) — keine serverseitige Allowlist,
     // weil dieser Server nur lokal auf localhost läuft und der Client ohnehin nie
     // andere Felder schickt.
-    const patch = JSON.parse(body) as Partial<Pick<Job, 'status' | 'fit' | 'email'>>;
+    const patch = await readJsonBody<Partial<Pick<Job, 'status' | 'fit' | 'email'>>>(req);
     const updated = await ctx.storage.update(job.id, patch);
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(updated));
+    respondJson(res, 200, updated);
     return true;
   }
 
@@ -54,22 +51,18 @@ export async function handleJobsRoutes(req: IncomingMessage, res: ServerResponse
   if (req.method === 'POST' && followUpMatch) {
     const job = await ctx.storage.get(followUpMatch[1]);
     if (!job) { res.writeHead(404).end('Job nicht gefunden'); return true; }
-    let body = '';
-    for await (const chunk of req) body += chunk;
     let via: 'draft' | 'sent' = 'draft';
     try {
-      via = (JSON.parse(body) as { via?: 'draft' | 'sent' }).via === 'sent' ? 'sent' : 'draft';
+      via = (await readJsonBody<{ via?: 'draft' | 'sent' }>(req)).via === 'sent' ? 'sent' : 'draft';
     } catch {
       // kein Body — bleibt beim sichereren Entwurf
     }
     try {
       const updated = await versende({ job, art: 'nachfass', weg: via === 'sent' ? 'senden' : 'entwurf', storage: ctx.storage, profile: ctx.profile });
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify(updated));
+      respondJson(res, 200, updated);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ error: `Nachfass fehlgeschlagen: ${message}` }));
+      respondJson(res, 500, { error: `Nachfass fehlgeschlagen: ${message}` });
     }
     return true;
   }
@@ -80,12 +73,10 @@ export async function handleJobsRoutes(req: IncomingMessage, res: ServerResponse
     if (!job) { res.writeHead(404).end('Job nicht gefunden'); return true; }
     try {
       const updated = await versende({ job, art: 'bewerbung', weg: 'entwurf', storage: ctx.storage, profile: ctx.profile });
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify(updated));
+      respondJson(res, 200, updated);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ error: `Entwurf fehlgeschlagen: ${message}` }));
+      respondJson(res, 500, { error: `Entwurf fehlgeschlagen: ${message}` });
     }
     return true;
   }
@@ -96,12 +87,10 @@ export async function handleJobsRoutes(req: IncomingMessage, res: ServerResponse
     if (!job) { res.writeHead(404).end('Job nicht gefunden'); return true; }
     try {
       const updated = await versende({ job, art: 'bewerbung', weg: 'senden', storage: ctx.storage, profile: ctx.profile });
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify(updated));
+      respondJson(res, 200, updated);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ error: `Versand fehlgeschlagen: ${message}` }));
+      respondJson(res, 500, { error: `Versand fehlgeschlagen: ${message}` });
     }
     return true;
   }
@@ -110,16 +99,13 @@ export async function handleJobsRoutes(req: IncomingMessage, res: ServerResponse
   if (req.method === 'POST' && briefMatch) {
     const job = await ctx.storage.get(briefMatch[1]);
     if (!job) { res.writeHead(404).end('Job nicht gefunden'); return true; }
-    let body = '';
-    for await (const chunk of req) body += chunk;
-    const { text } = JSON.parse(body) as { text: string };
+    const { text } = await readJsonBody<{ text: string }>(req);
     // Gegenstück zum Join in GET /api/jobs: brief lebt in data/anschreiben/{slug}.md,
     // nicht im Job-JSON, also schreibt eine Bearbeitung dorthin statt über
     // storage.update() — ein Status-Wechsel und eine Anschreiben-Bearbeitung sind zwei
     // unabhängige Schreibpfade, die zufällig denselben Job betreffen.
     await writeFile(await anschreibenZiel(job), text, 'utf8');
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ ok: true }));
+    respondJson(res, 200, { ok: true });
     return true;
   }
 
