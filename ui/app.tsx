@@ -37,7 +37,7 @@ import { FOLLOW_UP_DAYS, dueFollowUps, daysSinceLastContact } from '../lib/follo
 import { checkQuery, describeProblem } from '../lib/query-schema.ts';
 import type { QueryField } from '../scrapers/interface.ts';
 import { CSS } from './styles.ts';
-import { type GridUnitEvent, type LoadGridSection, LoadGridPanel, appendGridRow } from './components/grid.tsx';
+import { type LoadGridSection, LoadGridPanel, useGridStream } from './components/grid.tsx';
 import { type CalendarEvent, CalendarView, CAL_TYPES, CAL_COLOR } from './components/calendar.tsx';
 import { type SourcesCfg, type LocationCfg, UMKREIS_GRUPPEN, istLandesbegriff, ChipListe, PortalBlock, RohAnsicht } from './components/settings.tsx';
 
@@ -442,32 +442,20 @@ export default function JobbotUI() {
 
   // SSE statt Polling fürs Anschreiben-Lade-Grid — ein Event pro fertigem (oder
   // fehlgeschlagenem) Anschreiben, angehängt an anschreibenSections (siehe
-  // appendGridRow). Eine einzige, dauerhaft offene Verbindung (wie das Poll-Intervall
-  // oben), damit das Grid auch beim Ansichtswechsel weiterwächst.
-  useEffect(() => {
-    const es = new EventSource('/api/anschreiben/stream');
-    es.onmessage = (e) => {
-      const event = JSON.parse(e.data) as GridUnitEvent;
-      setAnschreibenSections(prev => appendGridRow(prev, event));
-    };
-    return () => es.close();
-  }, []);
+  // useGridStream in ui/components/grid.tsx). Eine einzige, dauerhaft offene
+  // Verbindung (wie das Poll-Intervall oben), damit das Grid auch beim
+  // Ansichtswechsel weiterwächst.
+  useGridStream('/api/anschreiben/stream', setAnschreibenSections);
 
   // Wie oben, fürs Scrape-Lade-Grid — ein Event pro fertiger Seite/Batch je Quelle
-  // (siehe scripts/ui-server.ts onUnitDone).
-  useEffect(() => {
-    const es = new EventSource('/api/scrape/stream');
-    es.onmessage = (e) => {
-      const event = JSON.parse(e.data) as GridUnitEvent;
-      setScrapeSections(prev => appendGridRow(prev, event));
-      // Tschobbo-Hook (ui/tschobbo.js): nur wenn das Scrape-Grid gerade sichtbar
-      // ist, sonst gäbe es keine echten Quadrat-Positionen zum Anfassen. Einzige
-      // Stelle, die das Event feuert — Filter/Anschreiben bekämen später denselben
-      // Einzeiler in ihren Effects, ohne Tschobbo selbst anzufassen.
-      if (viewRef.current === 'scrape') window.dispatchEvent(new CustomEvent('tschobbo:unit', { detail: event }));
-    };
-    return () => es.close();
-  }, []);
+  // (siehe scripts/ui-server.ts onUnitDone). onEvent ist der Tschobbo-Hook
+  // (ui/tschobbo.js): nur wenn das Scrape-Grid gerade sichtbar ist, sonst gäbe es
+  // keine echten Quadrat-Positionen zum Anfassen. Einzige Stelle, die das Event
+  // feuert — Filter/Anschreiben bekämen später denselben Einzeiler, ohne Tschobbo
+  // selbst anzufassen.
+  useGridStream('/api/scrape/stream', setScrapeSections, event => {
+    if (viewRef.current === 'scrape') window.dispatchEvent(new CustomEvent('tschobbo:unit', { detail: event }));
+  });
 
   // Tschobbo-Hook Teil 2 (ui/tschobbo.js): Die geworfenen Klumpen hängen an
   // <body>, nicht im React-Baum — ohne dieses Event blieben sie beim Wechsel auf
@@ -488,14 +476,7 @@ export default function JobbotUI() {
 
   // Wie oben, fürs Filter-Lade-Grid — ein Event pro fertigem 10er-Batch je
   // Ergebnis-Kategorie (Match/Offstack/Brutal, siehe scripts/ui-server.ts).
-  useEffect(() => {
-    const es = new EventSource('/api/filter/stream');
-    es.onmessage = (e) => {
-      const event = JSON.parse(e.data) as GridUnitEvent;
-      setFilterSections(prev => appendGridRow(prev, event));
-    };
-    return () => es.close();
-  }, []);
+  useGridStream('/api/filter/stream', setFilterSections);
 
   async function runScrapeNow() {
     setScrapeStarting(true);
