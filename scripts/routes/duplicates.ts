@@ -4,23 +4,21 @@ import { join } from 'node:path';
 import { config } from '../../config.ts';
 import { findAnschreiben, anschreibenName } from '../../lib/anschreiben-datei.ts';
 import { findDuplicates, planMerge } from '../../lib/duplicates.ts';
+import { respondJson, readJsonBody } from './http.ts';
 import type { Ctx } from './context.ts';
 
 export async function handleDuplicatesRoutes(req: IncomingMessage, res: ServerResponse, url: URL, ctx: Ctx): Promise<boolean> {
   if (req.method === 'GET' && url.pathname === '/api/duplicates') {
     const jobs = await ctx.storage.list();
     const groups = findDuplicates(jobs);
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(groups));
+    respondJson(res, 200, groups);
     return true;
   }
 
   if (req.method === 'POST' && url.pathname === '/api/duplicates/merge') {
-    let body = '';
-    for await (const chunk of req) body += chunk;
     let keys: string[] | 'all' = [];
     try {
-      const parsed = JSON.parse(body) as { keys?: string[]; all?: boolean };
+      const parsed = await readJsonBody<{ keys?: string[]; all?: boolean }>(req);
       keys = parsed.all ? 'all' : (parsed.keys ?? []);
     } catch {
       // leer bleiben — behandelt wie "keine Auswahl"
@@ -55,8 +53,7 @@ export async function handleDuplicatesRoutes(req: IncomingMessage, res: ServerRe
       await ctx.storage.save({ ...plan.keep, scrapedAt: plan.scrapedAt, updatedAt: new Date().toISOString() });
     }
 
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ merged: targets.length }));
+    respondJson(res, 200, { merged: targets.length });
     return true;
   }
 
