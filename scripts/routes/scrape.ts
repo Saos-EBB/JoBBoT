@@ -4,6 +4,7 @@ import { loadSources } from '../../lib/sources.ts';
 import { adapterRegistry, buildScrapeSetup } from '../../lib/scrape-setup.ts';
 import { runScrape } from '../../lib/scrape-runner.ts';
 import { createSseChannel, type GridUnitEvent } from './sse-channel.ts';
+import { respondJson, readJsonBody } from './http.ts';
 import type { Ctx } from './context.ts';
 
 // ---------- Scrape-Run-State (in-memory, Prozesslebensdauer) ----------
@@ -37,14 +38,12 @@ export async function handleScrapeRoutes(req: IncomingMessage, res: ServerRespon
     // eines undefined. Jetzt sind beide Wege gleich: Code sagt, was es gibt.
     const sources = loadSources();
     const names = Object.keys(adapterRegistry).filter(name => sources[name]?.enabled);
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(names));
+    respondJson(res, 200, names);
     return true;
   }
 
   if (req.method === 'GET' && url.pathname === '/api/scrape/status') {
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(scrapeRun));
+    respondJson(res, 200, scrapeRun);
     return true;
   }
 
@@ -65,21 +64,17 @@ export async function handleScrapeRoutes(req: IncomingMessage, res: ServerRespon
     // beide einen Lauf starten (TOCTOU). Antwort geht sofort raus; der Rest läuft
     // im Hintergrund weiter (Fire-and-Poll, siehe /api/scrape/status).
     if (scrapeRun.status === 'running') {
-      res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ started: false, reason: 'already-running' }));
+      respondJson(res, 409, { started: false, reason: 'already-running' });
       return true;
     }
     const runId = randomUUID();
     scrapeRun = { status: 'running', runId, sources: {} };
     scrapeRowCounters = {};
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ started: true, runId }));
+    respondJson(res, 200, { started: true, runId });
 
-    let body = '';
-    for await (const chunk of req) body += chunk;
     let requested: string[] = [];
     try {
-      requested = (JSON.parse(body) as { sources?: string[] }).sources ?? [];
+      requested = (await readJsonBody<{ sources?: string[] }>(req)).sources ?? [];
     } catch {
       // leer bleiben — behandelt wie "keine Quelle ausgewählt"
     }
