@@ -1,24 +1,21 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { randomUUID } from 'node:crypto';
 import { loadSources } from '../../lib/sources.ts';
 import { adapterRegistry, buildScrapeSetup } from '../../lib/scrape-setup.ts';
 import { runScrape } from '../../lib/scrape-runner.ts';
 import { createSseChannel, attachSseClient, type GridUnitEvent } from './sse-channel.ts';
 import { respondJson, readJsonBody } from './http.ts';
+import { createRunState } from './run-state.ts';
 import type { Ctx } from './context.ts';
 
 // ---------- Scrape-Run-State (in-memory, Prozesslebensdauer) ----------
 // Kein Persistieren auf Disk: Einzelnutzer-Lokaltool, ein Server-Neustart mitten
 // im Lauf verliert den Fortschritt (akzeptiert) — der Client erkennt das daran,
 // dass der Status auf 'idle' statt 'done'/'error' zurückfällt (siehe Client-Poll).
-interface ScrapeRunState {
-  status: 'idle' | 'running' | 'done' | 'error';
-  runId: string | null;
-  sources: Record<string, { current: number; total: number }>;
-  result?: { newTotal: number; skipTotal: number; offlineTotal: number; backTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; offlineCount: number; backCount: number; error?: string }[] };
-  error?: string;
-}
-let scrapeRun: ScrapeRunState = { status: 'idle', runId: null, sources: {} };
+type ScrapeResult = { newTotal: number; skipTotal: number; offlineTotal: number; backTotal: number; perSource: { name: string; ok: boolean; newCount: number; skipCount: number; offlineCount: number; backCount: number; error?: string }[] };
+const scrapeRun = createRunState<ScrapeResult>();
+// Fortschritt pro Quelle — eigene Variable statt Teil von RunSnapshot, weil ihre Form
+// (eine Map, kein einzelnes {i,total}) pro Route unterschiedlich ist (siehe run-state.ts).
+let scrapeSources: Record<string, { current: number; total: number }> = {};
 const scrapeSse = createSseChannel<GridUnitEvent>();
 // Zeilen-Zähler pro Quelle, nur für eindeutige Grid-Row-Keys — bei jedem neuen
 // Scrape-Lauf zurückgesetzt (siehe POST /api/scrape).
@@ -27,7 +24,7 @@ let scrapeRowCounters: Record<string, number> = {};
 // Von routes/config.ts gelesen: ein laufender Scrape soll sich melden können, ohne
 // dass die Config-Route den kompletten Scrape-Run-State kennen muss.
 export function isScrapeRunning(): boolean {
-  return scrapeRun.status === 'running';
+  return scrapeRun.isRunning();
 }
 
 export async function handleScrapeRoutes(req: IncomingMessage, res: ServerResponse, url: URL, ctx: Ctx): Promise<boolean> {
@@ -43,7 +40,7 @@ export async function handleScrapeRoutes(req: IncomingMessage, res: ServerRespon
   }
 
   if (req.method === 'GET' && url.pathname === '/api/scrape/status') {
-    respondJson(res, 200, scrapeRun);
+    respondJson(res, 200, { ...scrapeRun.get(), sources: scrapeSources });
     return true;
   }
 
@@ -57,12 +54,12 @@ export async function handleScrapeRoutes(req: IncomingMessage, res: ServerRespon
     // könnten zwei fast gleichzeitige POSTs beide noch den alten Status sehen und
     // beide einen Lauf starten (TOCTOU). Antwort geht sofort raus; der Rest läuft
     // im Hintergrund weiter (Fire-and-Poll, siehe /api/scrape/status).
-    if (scrapeRun.status === 'running') {
+    const runId = scrapeRun.start();
+    if (!runId) {
       respondJson(res, 409, { started: false, reason: 'already-running' });
       return true;
     }
-    const runId = randomUUID();
-    scrapeRun = { status: 'running', runId, sources: {} };
+    scrapeSources = {};
     scrapeRowCounters = {};
     respondJson(res, 200, { started: true, runId });
 
@@ -78,7 +75,7 @@ export async function handleScrapeRoutes(req: IncomingMessage, res: ServerRespon
     const names = requested.filter(name => enabled.has(name));
 
     if (names.length === 0) {
-      scrapeRun = { status: 'done', runId, sources: {}, result: { newTotal: 0, skipTotal: 0, offlineTotal: 0, backTotal: 0, perSource: [] } };
+      scrapeRun.succeed({ newTotal: 0, skipTotal: 0, offlineTotal: 0, backTotal: 0, perSource: [] });
       return true;
     }
 
@@ -91,7 +88,7 @@ export async function handleScrapeRoutes(req: IncomingMessage, res: ServerRespon
         keep,
         storage: ctx.storage,
         onProgress: (name, current, total) => {
-          scrapeRun.sources[name] = { current, total };
+          scrapeSources[name] = { current, total };
         },
         onUnitDone: (name, items) => {
           const n = (scrapeRowCounters[name] = (scrapeRowCounters[name] ?? 0) + 1);
@@ -116,9 +113,9 @@ export async function handleScrapeRoutes(req: IncomingMessage, res: ServerRespon
         if (o.ok) { newTotal += o.newCount; skipTotal += o.skipCount; offlineTotal += o.offlineCount; backTotal += o.backCount; }
         return { name: o.name, ok: o.ok, newCount: o.newCount, skipCount: o.skipCount, offlineCount: o.offlineCount, backCount: o.backCount, error: o.ok ? undefined : String(o.error) };
       });
-      scrapeRun = { status: 'done', runId, sources: scrapeRun.sources, result: { newTotal, skipTotal, offlineTotal, backTotal, perSource } };
+      scrapeRun.succeed({ newTotal, skipTotal, offlineTotal, backTotal, perSource });
     } catch (err) {
-      scrapeRun = { status: 'error', runId, sources: scrapeRun.sources, error: err instanceof Error ? err.message : String(err) };
+      scrapeRun.fail(err);
     }
     return true;
   }
