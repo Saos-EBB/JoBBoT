@@ -1,20 +1,15 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { randomUUID } from 'node:crypto';
 import { loadSettings, type FilterMode } from '../../lib/settings.ts';
 import { runFilter } from '../../lib/filter-runner.ts';
 import { createBatcher } from '../../lib/grid-batch.ts';
 import { createSseChannel, attachSseClient, type GridSquare, type GridUnitEvent } from './sse-channel.ts';
 import { respondJson, readJsonBody } from './http.ts';
+import { createRunState } from './run-state.ts';
 import type { Ctx } from './context.ts';
 
-interface FilterRunState {
-  status: 'idle' | 'running' | 'done' | 'error';
-  runId: string | null;
-  current?: { i: number; total: number; title: string };
-  result?: { matched: number; offstack: number; brutal: number };
-  error?: string;
-}
-let filterRun: FilterRunState = { status: 'idle', runId: null };
+type FilterResult = { matched: number; offstack: number; brutal: number };
+const filterRun = createRunState<FilterResult>();
+let filterCurrent: { i: number; total: number; title: string } | undefined;
 const filterSse = createSseChannel<GridUnitEvent>();
 let filterRowCounters = { matched: 0, offstack: 0, brutal: 0 };
 
@@ -25,7 +20,7 @@ export async function handleFilterRoutes(req: IncomingMessage, res: ServerRespon
   }
 
   if (req.method === 'GET' && url.pathname === '/api/filter/status') {
-    respondJson(res, 200, filterRun);
+    respondJson(res, 200, { ...filterRun.get(), current: filterCurrent });
     return true;
   }
 
@@ -35,12 +30,12 @@ export async function handleFilterRoutes(req: IncomingMessage, res: ServerRespon
   }
 
   if (req.method === 'POST' && url.pathname === '/api/filter') {
-    if (filterRun.status === 'running') {
+    const runId = filterRun.start();
+    if (!runId) {
       respondJson(res, 409, { started: false, reason: 'already-running' });
       return true;
     }
-    const runId = randomUUID();
-    filterRun = { status: 'running', runId };
+    filterCurrent = undefined;
     respondJson(res, 200, { started: true, runId });
 
     let mode: FilterMode | undefined;
@@ -72,7 +67,7 @@ export async function handleFilterRoutes(req: IncomingMessage, res: ServerRespon
         scope,
         mode,
         onProgress: (i, total, job) => {
-          filterRun.current = { i, total, title: job.title };
+          filterCurrent = { i, total, title: job.title };
         },
         onDecision: d => {
           const ergebnis = d.status === 'matched' ? 'Match' : d.status === 'uncertain' ? 'Offstack' : 'Brutal';
@@ -90,9 +85,9 @@ export async function handleFilterRoutes(req: IncomingMessage, res: ServerRespon
       filterBatchers.matched.flush();
       filterBatchers.uncertain.flush();
       filterBatchers.filtered_out.flush();
-      filterRun = { status: 'done', runId, result: { matched, offstack, brutal } };
+      filterRun.succeed({ matched, offstack, brutal });
     } catch (err) {
-      filterRun = { status: 'error', runId, error: err instanceof Error ? err.message : String(err) };
+      filterRun.fail(err);
     }
     return true;
   }
