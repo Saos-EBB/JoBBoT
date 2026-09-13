@@ -1,6 +1,6 @@
 import { fetchPage, sleep } from '../lib/fetch-page.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
-import { createBatcher } from '../lib/grid-batch.ts';
+import { runDetailPhase } from '../lib/scrape-detail.ts';
 import type { ScrapedJob, ScrapeOptions, ScraperAdapter } from './interface.ts';
 import { searchSlug } from '../lib/slugify.ts';
 import { usableQueries } from '../lib/query-schema.ts';
@@ -95,22 +95,12 @@ export const karriereAtAdapter: ScraperAdapter = {
       }
     }
     const candidates = finalizeResults('karriere.at', found, keep);
-    const total = candidates.length;
-    const results: ScrapedJob[] = [];
-    const batcher = createBatcher(GRID_BATCH_SIZE, onUnitDone);
-    for (let i = 0; i < total; i++) {
-      const job = candidates[i];
-      onProgress?.(i + 1, total);
-      let found = job;
-      try {
-        found = parseDetailPage(await fetchDetailPage(job.url), job);
-      } catch (err) {
-        console.warn(`[karriere.at] detail fehlgeschlagen: ${job.url}`, err);
-      }
-      results.push(found);
-      batcher.push(found);
-    }
-    batcher.flush();
-    return results;
+    return runDetailPhase(candidates, {
+      source: 'karriere.at',
+      fetchDetail: async job => parseDetailPage(await fetchDetailPage(job.url), job),
+      onProgress,
+      onUnitDone,
+      batchSize: GRID_BATCH_SIZE,
+    });
   },
 };
