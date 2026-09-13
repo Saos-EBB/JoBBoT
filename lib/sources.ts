@@ -1,6 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { config } from '../config.ts';
+import { loadJsonConfig } from './load-json-config.ts';
 
 // Re-Export statt zweiter Definition: derselbe Typ stand bis hierher auch in
 // scrapers/interface.ts, und zwei Wahrheiten über dieselbe Form driften auseinander.
@@ -10,6 +9,5 @@ interface SourceConfig { enabled: boolean; queries: SourceQuery[] }
 export type SourcesConfig = Record<string, SourceConfig>;
 
 export function loadSources(configDir: string = config.configDir): SourcesConfig {
-  const path = join(configDir, 'sources.json');
-  return JSON.parse(readFileSync(path, 'utf8')) as SourcesConfig;
+  return loadJsonConfig<SourcesConfig>(configDir, 'sources.json');
 }
