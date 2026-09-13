@@ -114,14 +114,10 @@ export const gmailTransport: MailTransport = {
   name: 'gmail',
 
   async entwurf(email) {
-    const { user, pass } = requireGmailCredentials();
-    const client = new ImapFlow({ host: 'imap.gmail.com', port: 993, secure: true, auth: { user, pass }, logger: false });
-    await client.connect();
-    try {
+    const { user } = requireGmailCredentials();
+    await withImapClient(async client => {
       await client.append('[Gmail]/Drafts', await buildRawMessage(user, email), ['\\Draft']);
-    } finally {
-      await client.logout();
-    }
+    });
   },
 
   async sende(email) {
