@@ -3,6 +3,7 @@ import { searchSlug } from '../lib/slugify.ts';
 import { usableQueries } from '../lib/query-schema.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
 import { createBatcher } from '../lib/grid-batch.ts';
+import { finalizeResults } from '../lib/finalize-results.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 
 const BASE = 'https://www.jobs.at';
@@ -139,50 +140,45 @@ export const jobsAtAdapter: ScraperAdapter = {
     onProgress?: (current: number, total: number) => void,
     onUnitDone?: (items: ScrapedJob[]) => void,
   ) {
-    const byUrl = new Map<string, ScrapedJob>();
-
+    // Zweiphasig wie karriere-at.ts: erst alle Suchseiten einsammeln, dann einmal
+    // dedup/gate/log (finalizeResults — dedup VOR Gate, vorher war's hier vertauscht),
+    // erst danach Detail-Fetches. Der URL-Dedup übernimmt zugleich, was vorher `byUrl`
+    // während des Detail-Fetches leistete: eine bereits gesehene URL taucht in den
+    // `candidates` gar nicht zweimal auf.
+    const found: Partial<ScrapedJob>[] = [];
     const usable = usableQueries(jobsAtAdapter, queries);
     for (let qi = 0; qi < usable.length; qi++) {
       const keyword = usable[qi].keyword;
-
       try {
         onProgress?.(qi + 1, usable.length);
-        const cards = parseSearchPage(await fetchSearchPage(keyword));
-
-        // STEP 2b: Ort ist in der Karte vorhanden → Gate hier, vor dem Detail-Fetch (wie devjobs.at)
-        const candidates = keep
-          ? cards.filter(c => keep({ ...c, description: c.description ?? '' } as ScrapedJob))
-          : cards;
-        console.log(`jobs.at '${keyword}': ${cards.length} Karten, ${candidates.length} nach Gate`);
-
-        const batcher = createBatcher(GRID_BATCH_SIZE, onUnitDone);
-        for (let di = 0; di < candidates.length; di++) {
-          const card = candidates[di];
-          if (!card.url || byUrl.has(card.url)) continue;
-          onProgress?.(di + 1, candidates.length);
-          let job: ScrapedJob;
-          try {
-            job = parseDetailPage(await fetchDetailPage(card.url), card);
-          } catch (err) {
-            console.warn(`[jobs.at] detail fehlgeschlagen: ${card.url}`, err);
-            job = {
-              source: 'jobs.at',
-              url: card.url,
-              title: card.title ?? '',
-              company: card.company ?? '',
-              location: card.location,
-              description: '',
-            };
-          }
-          byUrl.set(card.url, job);
-          batcher.push(job);
-        }
-        batcher.flush();
+        found.push(...parseSearchPage(await fetchSearchPage(keyword)));
       } catch (err) {
         console.warn(`[jobs.at] search fehlgeschlagen: ${keyword}`, err);
       }
     }
 
-    return [...byUrl.values()];
+    const candidates = finalizeResults(
+      'jobs.at',
+      found.map(c => ({ ...c, description: c.description ?? '' }) as ScrapedJob),
+      keep,
+    );
+
+    const total = candidates.length;
+    const results: ScrapedJob[] = [];
+    const batcher = createBatcher(GRID_BATCH_SIZE, onUnitDone);
+    for (let i = 0; i < total; i++) {
+      const card = candidates[i];
+      onProgress?.(i + 1, total);
+      let job = card;
+      try {
+        job = parseDetailPage(await fetchDetailPage(card.url), card);
+      } catch (err) {
+        console.warn(`[jobs.at] detail fehlgeschlagen: ${card.url}`, err);
+      }
+      results.push(job);
+      batcher.push(job);
+    }
+    batcher.flush();
+    return results;
   },
 };
