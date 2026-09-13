@@ -1,5 +1,6 @@
 import { chromium, type Page } from 'playwright';
 import { normalizeDescription } from '../lib/normalize-description.ts';
+import { runDetailPhase } from '../lib/scrape-detail.ts';
 import type { ScrapedJob, ScrapeOptions, ScraperAdapter } from './interface.ts';
 import { usableQueries } from '../lib/query-schema.ts';
 import { finalizeResults } from '../lib/finalize-results.ts';
@@ -168,19 +169,15 @@ export const devJobsAtAdapter: ScraperAdapter = {
       }
     }
     const candidates = finalizeResults('devjobs.at', baseJobs, keep);
-    const total = candidates.length;
-    const results: ScrapedJob[] = [];
-    for (let i = 0; i < total; i++) {
-      const job = candidates[i];
-      await delay(2000);
-      onProgress?.(i + 1, total);
-      try {
-        results.push(parseDetailResult(await fetchRemixContext(job.url), job));
-      } catch (err) {
-        console.warn(`[devjobs.at] detail fehlgeschlagen: ${job.url}`, err);
-        results.push(job);
-      }
-    }
-    return results;
+    // Kein batchSize/onUnitDone: devjobs meldet schon in der Suchphase pro Seite. Die
+    // 2s-Pause zwischen Detail-Abrufen lebt im fetchDetail selbst.
+    return runDetailPhase(candidates, {
+      source: 'devjobs.at',
+      fetchDetail: async job => {
+        await delay(2000);
+        return parseDetailResult(await fetchRemixContext(job.url), job);
+      },
+      onProgress,
+    });
   },
 };
