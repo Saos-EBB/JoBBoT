@@ -4,7 +4,7 @@ import { createBatcher } from '../lib/grid-batch.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 import { searchSlug } from '../lib/slugify.ts';
 import { usableQueries } from '../lib/query-schema.ts';
-import { logLocationGate } from '../lib/scrape-log.ts';
+import { finalizeResults } from '../lib/finalize-results.ts';
 
 const GRID_BATCH_SIZE = 10;
 
@@ -87,23 +87,19 @@ export const karriereAtAdapter: ScraperAdapter = {
     onProgress?: (current: number, total: number) => void,
     onUnitDone?: (items: ScrapedJob[]) => void,
   ) {
-    const byUrl = new Map<string, ScrapedJob>();
+    const found: ScrapedJob[] = [];
     const usable = usableQueries(karriereAtAdapter, queries);
     for (let qi = 0; qi < usable.length; qi++) {
       const keyword = usable[qi].keyword;
       try {
         onProgress?.(qi + 1, usable.length);
         const searchHtml = await fetchSearchPage(keyword);
-        for (const job of parseSearchPage(searchHtml)) {
-          if (!byUrl.has(job.url)) byUrl.set(job.url, job);
-        }
+        found.push(...parseSearchPage(searchHtml));
       } catch (err) {
         console.warn(`[karriere.at] search fehlgeschlagen: ${keyword}`, err);
       }
     }
-    const allJobs = [...byUrl.values()];
-    const candidates = keep ? allJobs.filter(keep) : allJobs;
-    logLocationGate('karriere.at', allJobs.length, candidates.length);
+    const candidates = finalizeResults('karriere.at', found, keep);
     const total = candidates.length;
     const results: ScrapedJob[] = [];
     const batcher = createBatcher(GRID_BATCH_SIZE, onUnitDone);
