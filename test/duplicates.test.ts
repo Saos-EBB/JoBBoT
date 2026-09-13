@@ -1,7 +1,22 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { findDuplicates, planMerge } from '../lib/duplicates.ts';
+import { findDuplicates, planMerge, mergeGroups, type MergeBriefOps } from '../lib/duplicates.ts';
+import type { Storage } from '../storage/json-store.ts';
+import type { Job } from '../scrapers/interface.ts';
 import { toJob } from '../lib/normalize.ts';
+
+// Fake-Storage, der nur die zwei von mergeGroups benutzten Aufrufe mitschreibt.
+function fakeStorage() {
+  const deleted: Job[] = [];
+  const saved: Job[] = [];
+  const storage = {
+    save: async (j: Job) => { saved.push(j); },
+    deleteJob: async (j: Job) => { deleted.push(j); },
+  } as unknown as Storage;
+  return { deleted, saved, storage };
+}
+
+const noBrief: MergeBriefOps = { find: async () => null, carry: async () => {} };
 
 const job = (overrides: Partial<{ title: string; company: string; scrapedAt: string; id: string }> = {}) => ({
   ...toJob({
@@ -100,4 +115,57 @@ test('jobs without a company are never grouped, even with identical titles', () 
   const a = job({ title: 'Software-Entwickler (m/w/d)', company: '' });
   const b = job({ title: 'Software-Entwickler (m/w/d)', company: '   ' });
   assert.deepEqual(findDuplicates([a, b]), []);
+});
+
+// ── mergeGroups (Ausführung, vorher inline & ungetestet im Route-Handler) ──────
+
+test('mergeGroups: löscht beide Zwillinge, speichert behaltenen unter ältestem scrapedAt', async () => {
+  const a = job({ scrapedAt: '2026-07-01T00:00:00.000Z', id: 'aaaaaaaaaaaaaaaa' });
+  const b = job({ scrapedAt: '2026-07-05T00:00:00.000Z', id: 'bbbbbbbbbbbbbbbb' });
+  const groups = findDuplicates([a, b]);
+  const fake = fakeStorage();
+
+  const merged = await mergeGroups(groups, fake.storage, noBrief, () => new Date('2026-08-01T00:00:00.000Z'));
+
+  assert.equal(merged, 1);
+  assert.ok(fake.deleted.includes(a), 'älterer Zwilling gelöscht');
+  assert.ok(fake.deleted.includes(b), 'behaltener Job vor Neuspeichern exakt gelöscht');
+  assert.equal(fake.saved.length, 1);
+  assert.equal(fake.saved[0].id, b.id, 'neuester bleibt');
+  assert.equal(fake.saved[0].scrapedAt, a.scrapedAt, 'ältestes scrapedAt übernommen');
+  assert.equal(fake.saved[0].updatedAt, '2026-08-01T00:00:00.000Z');
+});
+
+test('mergeGroups: trägt den Brief des jüngsten entfernten Zwillings mit, wenn der behaltene keinen hat', async () => {
+  const a = job({ scrapedAt: '2026-07-01T00:00:00.000Z', id: 'aaaaaaaaaaaaaaaa' });
+  const b = job({ scrapedAt: '2026-07-03T00:00:00.000Z', id: 'bbbbbbbbbbbbbbbb' });
+  const c = job({ scrapedAt: '2026-07-05T00:00:00.000Z', id: 'cccccccccccccccc' }); // neuester = keep
+  const groups = findDuplicates([a, b, c]);
+  const fake = fakeStorage();
+  const carried: { from: string; to: Job }[] = [];
+  const briefByJob = new Map<Job, string>([[a, '/x/a.md'], [b, '/x/b.md']]);
+
+  await mergeGroups(groups, fake.storage, {
+    find: async (jb) => briefByJob.get(jb) ?? null, // c hat keinen
+    carry: async (from, to) => { carried.push({ from, to }); },
+  });
+
+  assert.equal(carried.length, 1);
+  assert.equal(carried[0].from, '/x/b.md', 'jüngster entfernter Zwilling mit Brief gewinnt');
+  assert.equal(carried[0].to, c);
+});
+
+test('mergeGroups: behaltener Job hat schon einen Brief → kein carry', async () => {
+  const a = job({ scrapedAt: '2026-07-01T00:00:00.000Z', id: 'aaaaaaaaaaaaaaaa' });
+  const b = job({ scrapedAt: '2026-07-05T00:00:00.000Z', id: 'bbbbbbbbbbbbbbbb' });
+  const groups = findDuplicates([a, b]);
+  const fake = fakeStorage();
+  let carries = 0;
+
+  await mergeGroups(groups, fake.storage, {
+    find: async () => '/x/exists.md',
+    carry: async () => { carries++; },
+  });
+
+  assert.equal(carries, 0);
 });

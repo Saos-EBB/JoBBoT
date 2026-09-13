@@ -1,4 +1,5 @@
 import type { Job } from '../scrapers/interface.ts';
+import type { Storage } from '../storage/json-store.ts';
 import { jobId } from './hash.ts';
 
 export interface DuplicateGroup {
@@ -53,4 +54,42 @@ export function planMerge(group: DuplicateGroup): MergePlan {
     scrapedAt: oldest.scrapedAt,
     remove: group.jobs.filter(j => j !== newest),
   };
+}
+
+// Das Anschreiben lebt nicht im Job-JSON, sondern als eigene .md-Datei — find/carry
+// sind deshalb injiziert (die Datei-/Slug-Details bleiben beim Aufrufer), damit der
+// Merge-Ablauf mit einem Fake-Storage testbar ist statt inline im Route-Handler zu
+// stecken, wo ihn kein Test erreicht.
+export interface MergeBriefOps {
+  find: (job: Job) => Promise<string | null>;
+  carry: (from: string, to: Job) => Promise<void>;
+}
+
+// Führt die Merge-Pläne aus (planMerge pro Gruppe): Zwillinge löschen, und falls der
+// behaltene Job noch keinen Brief hat, den des JÜNGSTEN entfernten Zwillings mit Brief
+// übernehmen (plan.remove ist nach scrapedAt aufsteigend, deshalb rückwärts). Danach
+// den behaltenen Job exakt löschen und unter dem übernommenen scrapedAt neu speichern —
+// nicht per update(), das den Dateinamen aus dem gepatchten scrapedAt neu ableitete und
+// die alte Datei als Leiche liegenließe.
+export async function mergeGroups(
+  groups: DuplicateGroup[],
+  storage: Storage,
+  brief: MergeBriefOps,
+  now: () => Date = () => new Date(),
+): Promise<number> {
+  for (const group of groups) {
+    const plan = planMerge(group);
+    if (!await brief.find(plan.keep)) {
+      for (const alt of [...plan.remove].reverse()) {
+        const found = await brief.find(alt);
+        if (!found) continue;
+        await brief.carry(found, plan.keep);
+        break;
+      }
+    }
+    for (const job of plan.remove) await storage.deleteJob(job);
+    await storage.deleteJob(plan.keep);
+    await storage.save({ ...plan.keep, scrapedAt: plan.scrapedAt, updatedAt: now().toISOString() });
+  }
+  return groups.length;
 }
