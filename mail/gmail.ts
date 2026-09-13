@@ -166,14 +166,10 @@ async function sentMailboxPath(client: ImapFlow): Promise<string> {
   return boxes.find(b => b.specialUse === '\\Sent')?.path ?? '[Gmail]/Sent Mail';
 }
 
-// Derselbe ImapFlow-Zugang wie gmailTransport.entwurf()/fetchInboxReplies(), hier lesend auf den
-// Gesendet-Ordner. readOnly:true ist Absicht und keine Optimierung: der Sync darf nichts
-// senden, löschen, verschieben oder auch nur als gelesen markieren.
+// readOnly:true ist Absicht und keine Optimierung: der Sync darf nichts senden,
+// löschen, verschieben oder auch nur als gelesen markieren.
 export async function fetchSentMails(since: Date): Promise<SentMail[]> {
-  const { user, pass } = requireGmailCredentials();
-  const client = new ImapFlow({ host: 'imap.gmail.com', port: 993, secure: true, auth: { user, pass }, logger: false });
-  await client.connect();
-  try {
+  return withImapClient(async client => {
     await client.mailboxOpen(await sentMailboxPath(client), { readOnly: true });
     const mails: SentMail[] = [];
     // labels:true liefert die Gmail-Labels mit (X-GM-EXT-1). Server ohne die Erweiterung
@@ -190,9 +186,7 @@ export async function fetchSentMails(since: Date): Promise<SentMail[]> {
       });
     }
     return mails;
-  } finally {
-    await client.logout();
-  }
+  });
 }
 
 // Derselbe ImapFlow-Zugang wie gmailTransport.entwurf() (gleicher Host/Auth) — nur eine
