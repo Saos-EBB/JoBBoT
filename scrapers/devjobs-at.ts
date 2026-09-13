@@ -2,7 +2,7 @@ import { chromium, type Page } from 'playwright';
 import { normalizeDescription } from '../lib/normalize-description.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 import { usableQueries } from '../lib/query-schema.ts';
-import { logLocationGate } from '../lib/scrape-log.ts';
+import { finalizeResults } from '../lib/finalize-results.ts';
 
 const BASE = 'https://www.devjobs.at';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
@@ -172,8 +172,7 @@ export const devJobsAtAdapter: ScraperAdapter = {
         }
       }
     }
-    const candidates = keep ? baseJobs.filter(keep) : baseJobs;
-    logLocationGate('devjobs.at', baseJobs.length, candidates.length);
+    const candidates = finalizeResults('devjobs.at', baseJobs, keep);
     const total = candidates.length;
     const results: ScrapedJob[] = [];
     for (let i = 0; i < total; i++) {
