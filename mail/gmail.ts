@@ -28,6 +28,20 @@ function requireGmailCredentials(): { user: string; pass: string } {
   return { user: gmailUser, pass: gmailAppPassword };
 }
 
+// Ein IMAP-Zugang für alle drei Stellen, die einen brauchen (entwurf, fetchSentMails,
+// fetchInboxReplies) — vorher baute jede ihn sich einzeln zusammen. connect()/logout()
+// sitzen jetzt genau einmal, logout() garantiert per finally auch wenn fn() wirft.
+async function withImapClient<T>(fn: (client: ImapFlow) => Promise<T>): Promise<T> {
+  const { user, pass } = requireGmailCredentials();
+  const client = new ImapFlow({ host: 'imap.gmail.com', port: 993, secure: true, auth: { user, pass }, logger: false });
+  await client.connect();
+  try {
+    return await fn(client);
+  } finally {
+    await client.logout();
+  }
+}
+
 export async function composeEmail(job: Job, profile: ProfileData): Promise<ComposedEmail> {
   if (!job.email) throw new Error(`Job ${job.id} hat keine E-Mail-Adresse`);
 
