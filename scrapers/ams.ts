@@ -2,7 +2,7 @@ import { chromium, type Page } from 'playwright';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 import { usableQueries } from '../lib/query-schema.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
-import { logLocationGate } from '../lib/scrape-log.ts';
+import { finalizeResults } from '../lib/finalize-results.ts';
 
 const BASE = 'https://jobs.ams.at/public/emps';
 const MAX_PAGES = 10;
@@ -83,7 +83,7 @@ export const amsAdapter: ScraperAdapter = {
     onProgress?: (current: number, total: number) => void,
     onUnitDone?: (items: ScrapedJob[]) => void,
   ) {
-    const byUrl = new Map<string, ScrapedJob>();
+    const found: ScrapedJob[] = [];
     const browser = await chromium.launch({ headless: true });
     try {
       const page = await browser.newPage();
@@ -104,14 +104,14 @@ export const amsAdapter: ScraperAdapter = {
           onProgress?.(1, 1);
           const first = await fetchSearchPage(page, keyword, 1, locationParam);
           const page1Jobs = (first.results ?? []).map(parseAmsResult);
-          for (const job of page1Jobs) if (!byUrl.has(job.url)) byUrl.set(job.url, job);
+          found.push(...page1Jobs);
           onUnitDone?.(page1Jobs);
           const totalPages = Math.min(first.totalPages ?? 1, MAX_PAGES);
           for (let p = 2; p <= totalPages; p++) {
             onProgress?.(p, totalPages);
             const res = await fetchSearchPage(page, keyword, p, locationParam);
             const pageJobs = (res.results ?? []).map(parseAmsResult);
-            for (const job of pageJobs) if (!byUrl.has(job.url)) byUrl.set(job.url, job);
+            found.push(...pageJobs);
             onUnitDone?.(pageJobs);
           }
         } catch (err) {
@@ -122,9 +122,6 @@ export const amsAdapter: ScraperAdapter = {
       await browser.close();
     }
 
-    const allJobs = [...byUrl.values()];
-    const candidates = keep ? allJobs.filter(keep) : allJobs;
-    logLocationGate('ams', allJobs.length, candidates.length);
-    return candidates;
+    return finalizeResults('ams', found, keep);
   },
 };
