@@ -1,5 +1,6 @@
 import { fetchPage, sleep } from '../lib/fetch-page.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
+import { runDetailPhase } from '../lib/scrape-detail.ts';
 import type { ScrapedJob, ScrapeOptions, ScraperAdapter } from './interface.ts';
 import { usableQueries } from '../lib/query-schema.ts';
 import { finalizeResults } from '../lib/finalize-results.ts';
@@ -85,18 +86,11 @@ export const linkedinAdapter: ScraperAdapter = {
       }
     }
     const candidates = finalizeResults('linkedin', found, keep);
-    const total = candidates.length;
-    const results: ScrapedJob[] = [];
-    for (let i = 0; i < total; i++) {
-      const job = candidates[i];
-      onProgress?.(i + 1, total);
-      try {
-        results.push(parseDetailPage(await fetchDetailPage(job.url), job));
-      } catch (err) {
-        console.warn(`[linkedin] detail fehlgeschlagen: ${job.url}`, err);
-        results.push(job);
-      }
-    }
-    return results;
+    // Kein batchSize/onUnitDone: linkedin meldet schon in der Suchphase pro Seite.
+    return runDetailPhase(candidates, {
+      source: 'linkedin',
+      fetchDetail: async job => parseDetailPage(await fetchDetailPage(job.url), job),
+      onProgress,
+    });
   },
 };
