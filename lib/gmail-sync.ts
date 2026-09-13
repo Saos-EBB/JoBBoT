@@ -3,6 +3,7 @@ import { matchReplies, matchSent } from './mail-match.ts';
 import { HISTORY_START } from './calendar.ts';
 import { saveMailEvents, toMailEvents, type MailEvent } from './mail-events.ts';
 import type { Storage } from '../storage/json-store.ts';
+import type { Job } from '../scrapers/interface.ts';
 
 // Rückwirkender Sync: liest Gesendet-Ordner und INBOX und trägt nach, was in den
 // Job-JSONs fehlt. Manuell ausgelöst wie die anderen Mail-Features (kein Daemon).
@@ -78,4 +79,46 @@ export async function runGmailSync(storage: Storage, deps: GmailSyncDeps = defau
     replyGefuellt,
     seit: HISTORY_START,
   };
+}
+
+// Fenster für den schnellen Antwort-Abruf (POST /api/mail/replies/fetch): ab der
+// frühesten abgeschickten Bewerbung. sentAt ist das echte Sendedatum, updatedAt nur
+// der Notnagel für Altbestand — dieselbe Rangfolge wie in matchReplies. Bewusst NICHT
+// HISTORY_START wie runGmailSync: der Reply-Abruf ist der leichte Schnellcheck, der
+// Full-Sync scannt den ganzen Kalenderzeitraum. Kein gesendeter Job → null (nichts zu
+// scannen), der Aufrufer meldet dann 0/0.
+export function replyScanSince(jobs: Job[]): Date | null {
+  const gesendet = jobs
+    .filter(j => j.status === 'gesendet' && j.email)
+    .map(j => new Date(j.sentAt ?? j.updatedAt).getTime());
+  return gesendet.length ? new Date(Math.min(...gesendet)) : null;
+}
+
+export interface ReplyFetchDeps {
+  fetchInboxReplies: (since: Date) => Promise<InboxReply[]>;
+}
+const defaultReplyDeps: ReplyFetchDeps = { fetchInboxReplies };
+
+export interface ReplyFetchResult {
+  checked: number;
+  matched: number;
+}
+
+// Der schnelle Antwort-Abruf, vorher inline & ungetestet im Route-Handler. Füllt jetzt
+// nur Lücken (if replyReceivedAt continue) — dieselbe Zusage wie runGmailSync, die der
+// Route bisher fehlte: sie überschrieb ein vorhandenes replyReceivedAt. matched zählt
+// entsprechend nur die tatsächlich neu gesetzten Antworten.
+export async function fetchAndFillReplies(storage: Storage, deps: ReplyFetchDeps = defaultReplyDeps): Promise<ReplyFetchResult> {
+  const jobs = await storage.list();
+  const since = replyScanSince(jobs);
+  if (!since) return { checked: 0, matched: 0 };
+
+  const replies = await deps.fetchInboxReplies(since);
+  let matched = 0;
+  for (const { job, reply } of matchReplies(replies, jobs)) {
+    if (job.replyReceivedAt) continue; // Lücken füllen, nicht überschreiben
+    await storage.update(job.id, { replyReceivedAt: reply.date.toISOString() });
+    matched++;
+  }
+  return { checked: replies.length, matched };
 }

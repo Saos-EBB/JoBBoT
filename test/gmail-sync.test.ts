@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { tmpDir, rmTmp } from './helpers.ts';
 import { JsonStore } from '../storage/json-store.ts';
 import { toJob } from '../lib/normalize.ts';
-import { runGmailSync, type GmailSyncDeps } from '../lib/gmail-sync.ts';
+import { runGmailSync, replyScanSince, fetchAndFillReplies, type GmailSyncDeps } from '../lib/gmail-sync.ts';
 import type { Job } from '../scrapers/interface.ts';
 import type { SentMail, InboxReply } from '../mail/gmail.ts';
 import type { MailEvent } from '../lib/mail-events.ts';
@@ -177,4 +177,60 @@ test('leeres Postfach: keine Kandidaten, kein Fehler, alle Zaehler bei 0', async
     sentGescannt: 0, markiert: 0, sentGefuellt: 0, ohneJob: 0,
     replyGescannt: 0, replyGefuellt: 0, seit: '2026-07-01',
   });
+});
+
+// ── replyScanSince + fetchAndFillReplies (Reply-Abruf, vorher inline im Handler) ──
+
+test('replyScanSince: früheste gesendete Bewerbung, sentAt vor updatedAt', () => {
+  const a = offenerJob({ status: 'gesendet', sentAt: '2026-07-05T00:00:00.000Z' });
+  const b = offenerJob({ status: 'gesendet', sentAt: '2026-07-02T00:00:00.000Z' });
+  const since = replyScanSince([a, b]);
+  assert.equal(since?.toISOString(), '2026-07-02T00:00:00.000Z');
+});
+
+test('replyScanSince: kein gesendeter Job → null', () => {
+  const neu = offenerJob({ status: 'new', sentAt: null });
+  assert.equal(replyScanSince([neu]), null);
+});
+
+test('fetchAndFillReplies: ohne gesendete Jobs → 0/0, kein Fetch', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = new JsonStore(dir);
+  await storage.save(offenerJob({ status: 'new', sentAt: null }));
+
+  let fetched = false;
+  const result = await fetchAndFillReplies(storage, { fetchInboxReplies: async () => { fetched = true; return []; } });
+
+  assert.deepEqual(result, { checked: 0, matched: 0 });
+  assert.equal(fetched, false);
+});
+
+test('fetchAndFillReplies: setzt replyReceivedAt für Lücke', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = new JsonStore(dir);
+  const job = offenerJob({ status: 'gesendet', sentAt: '2026-07-01T00:00:00.000Z', replyReceivedAt: null });
+  await storage.save(job);
+
+  const reply: InboxReply = { from: 'office@acme.at', subject: 'Re: Bewerbung als Junior Developer bei Acme', date: new Date('2026-07-10') };
+  const result = await fetchAndFillReplies(storage, { fetchInboxReplies: async () => [reply] });
+
+  assert.deepEqual(result, { checked: 1, matched: 1 });
+  assert.equal((await storage.get(job.id))?.replyReceivedAt, reply.date.toISOString());
+});
+
+test('fetchAndFillReplies: überschreibt vorhandenes replyReceivedAt NICHT (der Fix)', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = new JsonStore(dir);
+  const echt = '2026-07-02T00:00:00.000Z';
+  const job = offenerJob({ status: 'gesendet', sentAt: '2026-07-01T00:00:00.000Z', replyReceivedAt: echt });
+  await storage.save(job);
+
+  const reply: InboxReply = { from: 'office@acme.at', subject: 'Re: Bewerbung als Junior Developer bei Acme', date: new Date('2026-07-10') };
+  const result = await fetchAndFillReplies(storage, { fetchInboxReplies: async () => [reply] });
+
+  assert.equal(result.matched, 0, 'nichts neu gesetzt');
+  assert.equal((await storage.get(job.id))?.replyReceivedAt, echt, 'echter Wert unangetastet');
 });
