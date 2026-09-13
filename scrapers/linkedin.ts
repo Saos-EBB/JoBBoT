@@ -2,7 +2,7 @@ import { fetchPage, sleep } from '../lib/fetch-page.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
 import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
 import { usableQueries } from '../lib/query-schema.ts';
-import { logLocationGate } from '../lib/scrape-log.ts';
+import { finalizeResults } from '../lib/finalize-results.ts';
 
 const SEARCH_BASE = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search';
 const PAGES = [0, 25, 50];
@@ -71,7 +71,7 @@ export const linkedinAdapter: ScraperAdapter = {
     onProgress?: (current: number, total: number) => void,
     onUnitDone?: (items: ScrapedJob[]) => void,
   ) {
-    const byUrl = new Map<string, ScrapedJob>();
+    const found: ScrapedJob[] = [];
     for (const query of usableQueries(linkedinAdapter, queries)) {
       const keyword = query.keyword;
       const location = query.location ?? 'Österreich';
@@ -81,9 +81,7 @@ export const linkedinAdapter: ScraperAdapter = {
           onProgress?.(pi + 1, PAGES.length);
           const html = await fetchSearchPage(keyword, location, start);
           const pageJobs = parseSearchResults(html);
-          for (const job of pageJobs) {
-            if (!byUrl.has(job.url)) byUrl.set(job.url, job);
-          }
+          found.push(...pageJobs);
           onUnitDone?.(pageJobs);
         } catch (err) {
           console.warn(`[linkedin] search fehlgeschlagen: ${keyword}@${start}`, err);
@@ -91,9 +89,7 @@ export const linkedinAdapter: ScraperAdapter = {
         await sleep(1000);
       }
     }
-    const allJobs = [...byUrl.values()];
-    const candidates = keep ? allJobs.filter(keep) : allJobs;
-    logLocationGate('linkedin', allJobs.length, candidates.length);
+    const candidates = finalizeResults('linkedin', found, keep);
     const total = candidates.length;
     const results: ScrapedJob[] = [];
     for (let i = 0; i < total; i++) {
