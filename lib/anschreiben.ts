@@ -6,7 +6,7 @@ import type { Storage } from '../storage/json-store.ts';
 import type { ProfileData } from './profile.ts';
 import { anschreibenZiel } from './anschreiben-datei.ts';
 import { canGenerateAnschreiben } from './folders.ts';
-import { readNdjsonContent } from './ollama.ts';
+import { chat, readNdjsonContent } from './ollama.ts';
 import { config } from '../config.ts';
 
 export const SYSTEM = `Du bist ein erfahrener Karriereberater. Du schreibst präzise, authentische Bewerbungsanschreiben auf Deutsch.
@@ -185,28 +185,19 @@ export async function generateAnschreiben(
       // stream: true, damit Ollama sofort HTTP-Header schickt statt erst nach voller
       // Generierung — sonst reißt undicis headersTimeout bei langsamen/großen Modellen
       // (z.B. Reasoning-Modelle mit verstecktem "thinking"-Anteil vor dem Content).
-      const res = await fetch(`${ollama}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // Timeout- und Stop-Button-Abbruch sind zwei unabhängige Gründe, denselben
-        // Fetch abzubrechen — AbortSignal.any() statt eines zusätzlichen Listeners,
-        // der den controller manuell abort()en müsste.
+      // Timeout- und Stop-Button-Abbruch sind zwei unabhängige Gründe, denselben Call
+      // abzubrechen — AbortSignal.any() bündelt sie zu einem Signal für chat().
+      raw = await chat({
+        host: ollama,
+        model,
+        messages: [
+          { role: 'system', content: SYSTEM },
+          { role: 'user', content: buildAnschreibenPrompt(job, profile) },
+        ],
+        stream: true,
+        options: { num_thread: numThread },
         signal: signal ? AbortSignal.any([controller.signal, signal]) : controller.signal,
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: 'system', content: SYSTEM },
-            { role: 'user', content: buildAnschreibenPrompt(job, profile) },
-          ],
-          stream: true,
-          options: { num_thread: numThread },
-        }),
       });
-      if (!res.ok) {
-        console.warn(`[anschreiben] ollama ${res.status} für job ${job.id}`);
-        return null;
-      }
-      raw = await readNdjsonContent(res);
     } catch (err) {
       lastError = err instanceof Error && err.name === 'AbortError'
         ? (signal?.aborted ? 'Abgebrochen' : `Timeout nach ${timeoutMs / 1000}s (${numThread} Threads)`)
