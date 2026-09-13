@@ -6,6 +6,7 @@ import type { Storage } from '../storage/json-store.ts';
 import type { ProfileData } from './profile.ts';
 import { anschreibenZiel } from './anschreiben-datei.ts';
 import { canGenerateAnschreiben } from './folders.ts';
+import { readNdjsonContent } from './ollama.ts';
 import { config } from '../config.ts';
 
 export const SYSTEM = `Du bist ein erfahrener Karriereberater. Du schreibst präzise, authentische Bewerbungsanschreiben auf Deutsch.
@@ -127,35 +128,10 @@ export async function saveAnschreiben(job: Job, text: string, dir = config.ansch
   return path;
 }
 
-// Ollama streamt bei stream:true NDJSON (ein JSON-Objekt pro Zeile). Konkateniert
-// die message.content-Fragmente zum vollständigen Text.
-export async function readNdjsonContent(res: Response): Promise<string> {
-  const reader = res.body!.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let content = '';
-
-  const consumeLine = (line: string) => {
-    const trimmed = line.trim();
-    if (!trimmed) return;
-    const chunk = JSON.parse(trimmed) as { message?: { content?: string } };
-    content += chunk?.message?.content ?? '';
-  };
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    let idx: number;
-    while ((idx = buffer.indexOf('\n')) >= 0) {
-      consumeLine(buffer.slice(0, idx));
-      buffer = buffer.slice(idx + 1);
-    }
-  }
-  if (buffer.trim()) consumeLine(buffer);
-
-  return content;
-}
+// readNdjsonContent wohnt jetzt beim Ollama-Client (lib/ollama.ts). Re-Export, damit
+// bestehende Aufrufer (scripts/one-off/anschreiben-model-bench.ts) es weiter von hier
+// importieren können, bis sie selbst auf chat() umgestellt sind.
+export { readNdjsonContent };
 
 const MAX_REGENERATIONS = 2;
 
