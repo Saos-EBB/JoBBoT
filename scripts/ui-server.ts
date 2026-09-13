@@ -33,6 +33,8 @@ const TSCHOBBO_ASSETS = new Map<string, { path: string; type: string }>([
   ['/tschobbo-sheet.png', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo-sheet.png'), type: 'image/png' }],
   ['/tschobbo-blobs.png', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo-blobs.png'), type: 'image/png' }],
   ['/tschobbo.js', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo.js'), type: 'text/javascript; charset=utf-8' }],
+  ['/tschobbo-session.js', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo-session.js'), type: 'text/javascript; charset=utf-8' }],
+  ['/tschobbo-blobs.js', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo-blobs.js'), type: 'text/javascript; charset=utf-8' }],
 ]);
 
 // Ressourcen-Routenmodule (scripts/routes/*.ts), der Reihe nach probiert — jedes meldet
