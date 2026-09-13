@@ -1,30 +1,17 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { readFile, writeFile } from 'node:fs/promises';
-import { findAnschreiben, anschreibenZiel } from '../../lib/anschreiben-datei.ts';
 import { versende } from '../../lib/versand.ts';
 import { respondJson, readJsonBody } from './http.ts';
 import type { Ctx } from './context.ts';
 import type { Job } from '../../scrapers/interface.ts';
 
-async function readCoverLetter(job: { id: string }): Promise<string | null> {
-  const path = await findAnschreiben(job);
-  if (!path) return null;
-  try {
-    return await readFile(path, 'utf8');
-  } catch {
-    return null;
-  }
-}
-
 export async function handleJobsRoutes(req: IncomingMessage, res: ServerResponse, url: URL, ctx: Ctx): Promise<boolean> {
   if (req.method === 'GET' && url.pathname === '/api/jobs') {
     const jobs = await ctx.storage.list();
-    // brief lebt in data/anschreiben/{slug}.md, nicht im Job-JSON (siehe readCoverLetter
-    // oben) — hier server-seitig gejoint, damit die Liste im Client die Anschreiben-
-    // Vorschau zeigen kann, ohne 282 Einzel-Requests zu feuern. Der Join ist reines
-    // Lesen; SPEICHERN einer Bearbeitung ist ein eigener Schreibpfad (anderer Endpunkt,
-    // eigener Schritt), weil das Anschreiben nicht Teil des Job-Records ist.
-    const withBriefs = await Promise.all(jobs.map(async job => ({ ...job, brief: await readCoverLetter(job) })));
+    // brief lebt in data/anschreiben/{slug}.md, nicht im Job-JSON (siehe ADR-0001) —
+    // hier server-seitig über storage.getBrief gejoint, damit die Liste im Client die
+    // Anschreiben-Vorschau zeigen kann, ohne 282 Einzel-Requests zu feuern. Der Join ist
+    // reines Lesen; SPEICHERN einer Bearbeitung ist ein eigener Schreibpfad.
+    const withBriefs = await Promise.all(jobs.map(async job => ({ ...job, brief: await ctx.storage.getBrief(job) })));
     respondJson(res, 200, withBriefs);
     return true;
   }
@@ -101,10 +88,10 @@ export async function handleJobsRoutes(req: IncomingMessage, res: ServerResponse
     if (!job) { res.writeHead(404).end('Job nicht gefunden'); return true; }
     const { text } = await readJsonBody<{ text: string }>(req);
     // Gegenstück zum Join in GET /api/jobs: brief lebt in data/anschreiben/{slug}.md,
-    // nicht im Job-JSON, also schreibt eine Bearbeitung dorthin statt über
+    // nicht im Job-JSON, also schreibt eine Bearbeitung über storage.saveBrief statt
     // storage.update() — ein Status-Wechsel und eine Anschreiben-Bearbeitung sind zwei
     // unabhängige Schreibpfade, die zufällig denselben Job betreffen.
-    await writeFile(await anschreibenZiel(job), text, 'utf8');
+    await ctx.storage.saveBrief(job, text);
     respondJson(res, 200, { ok: true });
     return true;
   }
