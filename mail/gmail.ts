@@ -189,13 +189,8 @@ export async function fetchSentMails(since: Date): Promise<SentMail[]> {
   });
 }
 
-// Derselbe ImapFlow-Zugang wie gmailTransport.entwurf() (gleicher Host/Auth) — nur eine
-// Verbindungslogik, hier für Lesen statt Schreiben verwendet.
 export async function fetchInboxReplies(since: Date): Promise<InboxReply[]> {
-  const { user, pass } = requireGmailCredentials();
-  const client = new ImapFlow({ host: 'imap.gmail.com', port: 993, secure: true, auth: { user, pass }, logger: false });
-  await client.connect();
-  try {
+  return withImapClient(async client => {
     await client.mailboxOpen('INBOX', { readOnly: true });
     const replies: InboxReply[] = [];
     for await (const msg of client.fetch({ since }, { envelope: true })) {
@@ -204,8 +199,6 @@ export async function fetchInboxReplies(since: Date): Promise<InboxReply[]> {
       replies.push({ from, subject: msg.envelope?.subject ?? '', date: msg.envelope?.date ?? new Date() });
     }
     return replies;
-  } finally {
-    await client.logout();
-  }
+  });
 }
 
