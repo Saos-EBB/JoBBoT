@@ -1,6 +1,6 @@
 import { fetchPage, sleep } from '../lib/fetch-page.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
-import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
+import type { ScrapedJob, ScrapeOptions, ScraperAdapter } from './interface.ts';
 import { usableQueries } from '../lib/query-schema.ts';
 import { finalizeResults } from '../lib/finalize-results.ts';
 
@@ -65,12 +65,7 @@ export const linkedinAdapter: ScraperAdapter = {
     { key: 'keyword', label: 'Suchbegriff', required: true, format: 'text', placeholder: 'junior software developer' },
     { key: 'location', label: 'Suchgebiet', required: false, format: 'text', placeholder: 'Oberösterreich, Österreich' },
   ],
-  async scrape(
-    queries: SourceQuery[],
-    keep?: (job: ScrapedJob) => boolean,
-    onProgress?: (current: number, total: number) => void,
-    onUnitDone?: (items: ScrapedJob[]) => void,
-  ) {
+  async scrape({ queries, keep, onProgress, onUnitDone }: ScrapeOptions) {
     const found: ScrapedJob[] = [];
     for (const query of usableQueries(linkedinAdapter, queries)) {
       const keyword = query.keyword;

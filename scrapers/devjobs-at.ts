@@ -1,6 +1,6 @@
 import { chromium, type Page } from 'playwright';
 import { normalizeDescription } from '../lib/normalize-description.ts';
-import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
+import type { ScrapedJob, ScrapeOptions, ScraperAdapter } from './interface.ts';
 import { usableQueries } from '../lib/query-schema.ts';
 import { finalizeResults } from '../lib/finalize-results.ts';
 
@@ -140,12 +140,7 @@ export const devJobsAtAdapter: ScraperAdapter = {
   querySchema: [
     { key: 'params', label: 'Filter (Query-String)', required: true, format: 'raw', placeholder: 'jobLevel=junior-job-level' },
   ],
-  async scrape(
-    queries: SourceQuery[],
-    keep?: (job: ScrapedJob) => boolean,
-    onProgress?: (current: number, total: number) => void,
-    onUnitDone?: (items: ScrapedJob[]) => void,
-  ) {
+  async scrape({ queries, keep, onProgress, onUnitDone }: ScrapeOptions) {
     const baseJobs: ScrapedJob[] = [];
     for (const query of usableQueries(devJobsAtAdapter, queries)) {
       const qstring = query.params;

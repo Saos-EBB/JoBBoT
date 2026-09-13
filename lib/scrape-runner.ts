@@ -120,12 +120,12 @@ export async function runScrape(options: RunScrapeOptions): Promise<SourceOutcom
     const isBrowser = adapter.kind === 'browser';
     await scheduler.acquire(isBrowser);
     try {
-      return await adapter.scrape(
-        queriesFor(name),
+      return await adapter.scrape({
+        queries: queriesFor(name),
         keep,
-        (current, total) => onProgress?.(name, current, total),
-        items => onUnitDone?.(name, items),
-      );
+        onProgress: (current, total) => onProgress?.(name, current, total),
+        onUnitDone: items => onUnitDone?.(name, items),
+      });
     } finally {
       scheduler.release(isBrowser);
     }

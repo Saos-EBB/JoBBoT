@@ -4,7 +4,7 @@ import { usableQueries } from '../lib/query-schema.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
 import { createBatcher } from '../lib/grid-batch.ts';
 import { finalizeResults } from '../lib/finalize-results.ts';
-import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
+import type { ScrapedJob, ScrapeOptions, ScraperAdapter } from './interface.ts';
 
 const BASE = 'https://www.jobs.at';
 const UA = 'Mozilla/5.0 (compatible; JobBot/0.1; +local)';
@@ -134,12 +134,7 @@ export const jobsAtAdapter: ScraperAdapter = {
   querySchema: [
     { key: 'keyword', label: 'Suchbegriff', required: true, format: 'slug', placeholder: 'java-entwickler' },
   ],
-  async scrape(
-    queries: SourceQuery[],
-    keep?: (job: ScrapedJob) => boolean,
-    onProgress?: (current: number, total: number) => void,
-    onUnitDone?: (items: ScrapedJob[]) => void,
-  ) {
+  async scrape({ queries, keep, onProgress, onUnitDone }: ScrapeOptions) {
     // Zweiphasig wie karriere-at.ts: erst alle Suchseiten einsammeln, dann einmal
     // dedup/gate/log (finalizeResults — dedup VOR Gate, vorher war's hier vertauscht),
     // erst danach Detail-Fetches. Der URL-Dedup übernimmt zugleich, was vorher `byUrl`

@@ -82,6 +82,19 @@ export interface QueryField {
   placeholder?: string;
 }
 
+export interface ScrapeOptions {
+  queries: SourceQuery[];
+  keep?: (job: ScrapedJob) => boolean;
+  onProgress?: (current: number, total: number) => void;
+  // Fürs Lade-Grid im UI (siehe ui/app.tsx LoadGrid): eine abgeschlossene Zeile
+  // fertig gefundener Stellen. Bei Quellen mit echter Suchergebnis-Pagination
+  // (devjobs.at, ams, linkedin) ist das eine Seite; bei den übrigen (karriere.at,
+  // jobs.at, ohne echte Pagination) ein fester Batch aus dem Detail-Abruf
+  // (siehe lib/grid-batch.ts). Titel/Firma/Ort sind zu diesem Zeitpunkt schon
+  // bekannt (aus dem Such-Parse), unabhängig vom späteren Detail-Fetch.
+  onUnitDone?: (items: ScrapedJob[]) => void;
+}
+
 export interface ScraperAdapter {
   name: string;
   kind: 'fetch' | 'browser';
@@ -89,16 +102,5 @@ export interface ScraperAdapter {
   // Adapter ohne Schema gar nicht erst compiliert — die Einstellungsseite baut ihr
   // Formular daraus, und lib/query-schema.ts prüft die Datei dagegen.
   querySchema: QueryField[];
-  scrape(
-    queries: SourceQuery[],
-    keep?: (job: ScrapedJob) => boolean,
-    onProgress?: (current: number, total: number) => void,
-    // Fürs Lade-Grid im UI (siehe ui/app.tsx LoadGrid): eine abgeschlossene Zeile
-    // fertig gefundener Stellen. Bei Quellen mit echter Suchergebnis-Pagination
-    // (devjobs.at, ams, linkedin) ist das eine Seite; bei den übrigen (karriere.at,
-    // jobs.at, ohne echte Pagination) ein fester Batch aus dem Detail-Abruf
-    // (siehe lib/grid-batch.ts). Titel/Firma/Ort sind zu diesem Zeitpunkt schon
-    // bekannt (aus dem Such-Parse), unabhängig vom späteren Detail-Fetch.
-    onUnitDone?: (items: ScrapedJob[]) => void,
-  ): Promise<ScrapedJob[]>;
+  scrape(options: ScrapeOptions): Promise<ScrapedJob[]>;
 }

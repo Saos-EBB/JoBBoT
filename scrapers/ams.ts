@@ -1,5 +1,5 @@
 import { chromium, type Page } from 'playwright';
-import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
+import type { ScrapedJob, ScrapeOptions, ScraperAdapter } from './interface.ts';
 import { usableQueries } from '../lib/query-schema.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
 import { finalizeResults } from '../lib/finalize-results.ts';
@@ -77,12 +77,7 @@ export const amsAdapter: ScraperAdapter = {
     // dieselben zwei Bedeutungen, die Ticket "Ort bedeutet zweierlei" getrennt hat.
     { key: 'vicinity', label: 'Radius (km)', required: false, format: 'number', placeholder: '40' },
   ],
-  async scrape(
-    queries: SourceQuery[],
-    keep?: (job: ScrapedJob) => boolean,
-    onProgress?: (current: number, total: number) => void,
-    onUnitDone?: (items: ScrapedJob[]) => void,
-  ) {
+  async scrape({ queries, keep, onProgress, onUnitDone }: ScrapeOptions) {
     const found: ScrapedJob[] = [];
     const browser = await chromium.launch({ headless: true });
     try {

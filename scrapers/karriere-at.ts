@@ -1,7 +1,7 @@
 import { fetchPage, sleep } from '../lib/fetch-page.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
 import { createBatcher } from '../lib/grid-batch.ts';
-import type { ScrapedJob, ScraperAdapter, SourceQuery } from './interface.ts';
+import type { ScrapedJob, ScrapeOptions, ScraperAdapter } from './interface.ts';
 import { searchSlug } from '../lib/slugify.ts';
 import { usableQueries } from '../lib/query-schema.ts';
 import { finalizeResults } from '../lib/finalize-results.ts';
@@ -81,12 +81,7 @@ export const karriereAtAdapter: ScraperAdapter = {
   querySchema: [
     { key: 'keyword', label: 'Suchbegriff', required: true, format: 'slug', placeholder: 'junior-entwickler' },
   ],
-  async scrape(
-    queries: SourceQuery[],
-    keep?: (job: ScrapedJob) => boolean,
-    onProgress?: (current: number, total: number) => void,
-    onUnitDone?: (items: ScrapedJob[]) => void,
-  ) {
+  async scrape({ queries, keep, onProgress, onUnitDone }: ScrapeOptions) {
     const found: ScrapedJob[] = [];
     const usable = usableQueries(karriereAtAdapter, queries);
     for (let qi = 0; qi < usable.length; qi++) {

@@ -91,7 +91,7 @@ test('keep-Filter wird an jeden Adapter durchgereicht', async (t) => {
       name: 'a',
       kind: 'fetch',
       querySchema: [],
-      async scrape(_queries, keepFn) {
+      async scrape({ keep: keepFn }) {
         receivedKeep = keepFn;
         return [];
       },
@@ -114,7 +114,7 @@ test('onProgress wird pro Quelle mit ihrem Namen aufgerufen', async (t) => {
       name: 'a',
       kind: 'fetch',
       querySchema: [],
-      async scrape(_queries, _keep, onProgress) {
+      async scrape({ onProgress }) {
         onProgress?.(1, 2);
         onProgress?.(2, 2);
         return [];
