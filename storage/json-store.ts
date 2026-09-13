@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 import { jobBasename } from '../lib/slugify.ts';
+import { findAnschreiben, anschreibenZiel } from '../lib/anschreiben-datei.ts';
 import { config } from '../config.ts';
 
 export interface Storage {
@@ -17,6 +18,12 @@ export interface Storage {
   // nötig, sobald zwei Dateien dieselbe id tragen (echter Re-Scrape derselben
   // Stelle), siehe lib/duplicates.ts planMerge().
   deleteJob(job: Job): Promise<void>;
+  // Das Anschreiben lebt als eigene .md-Datei neben dem Job-JSON (siehe ADR-0001).
+  // getBrief/saveBrief sind die einzige sanktionierte Anbindung — Aufrufer sollen die
+  // Slug-/id-Suffix-Konvention nicht mehr selbst nachbauen und am Store vorbei ins
+  // Dateisystem greifen. null = (noch) kein Brief.
+  getBrief(job: { id: string }): Promise<string | null>;
+  saveBrief(job: { title: string; company: string; id: string }, text: string): Promise<void>;
 }
 
 // Sortierte Unterordner für die drei Filter-Ergebnisse — nur für getriagte Jobs
@@ -24,7 +31,9 @@ export interface Storage {
 // Alle anderen Status (new, generated, freigegeben, postausgang, gesendet,
 // geloescht, fehler) bleiben im Basisordner.
 export class JsonStore implements Storage {
-  constructor(private dir: string = config.dataDir) {}
+  // Briefe liegen in einem ANDEREN Ordner als die Job-JSONs (data/anschreiben vs.
+  // data/jobs) — eigener Konstruktor-Parameter, damit Tests beide in ihr tmpDir legen.
+  constructor(private dir: string = config.dataDir, private anschreibenDir: string = config.anschreibenDir) {}
 
   private getFilename(job: Job): string {
     return `${jobBasename(job)}.json`;
@@ -134,5 +143,24 @@ export class JsonStore implements Storage {
   async deleteJob(job: Job): Promise<void> {
     const path = join(this.dirFor(job), this.getFilename(job));
     try { await unlink(path); } catch { /* already gone */ }
+  }
+
+  // Lookup über das id-Präfix (nie über den Datum-tragenden Dateinamen) — die eine Regel
+  // aus ADR-0001, hier delegiert an lib/anschreiben-datei.ts.
+  async getBrief(job: { id: string }): Promise<string | null> {
+    const path = await findAnschreiben(job, this.anschreibenDir);
+    if (!path) return null;
+    try {
+      return await readFile(path, 'utf8');
+    } catch {
+      return null;
+    }
+  }
+
+  // anschreibenZiel() räumt dabei eine Datei weg, die denselben Job unter einem alten
+  // (Datum-tragenden) Namen meint — sonst läge nach dem Schreiben ein zweiter Brief herum.
+  async saveBrief(job: { title: string; company: string; id: string }, text: string): Promise<void> {
+    await mkdir(this.anschreibenDir, { recursive: true });
+    await writeFile(await anschreibenZiel(job, this.anschreibenDir), text, 'utf8');
   }
 }

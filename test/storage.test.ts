@@ -354,3 +354,45 @@ test('list() findet Jobs aus Basisordner + allen drei Unterordnern zusammen', as
   assert.equal((await store.list({ status: 'triaged' })).length, 3);
   assert.equal((await store.list({ status: 'new' })).length, 1);
 });
+
+// ── Anschreiben (getBrief/saveBrief), siehe ADR-0001 ─────────────────────────
+
+test('saveBrief → getBrief liest denselben Text zurück', async (t) => {
+  const dir = await tmpDir();
+  const briefDir = await tmpDir();
+  t.after(() => { rmTmp(dir); rmTmp(briefDir); });
+  const store = new JsonStore(dir, briefDir);
+  const job = toJob(fakeScraped());
+
+  assert.equal(await store.getBrief(job), null, 'noch kein Brief');
+  await store.saveBrief(job, 'Mein Anschreiben-Text.');
+  assert.equal(await store.getBrief(job), 'Mein Anschreiben-Text.');
+});
+
+test('getBrief: findet den Brief über das id-Präfix, nicht über den Dateinamen', async (t) => {
+  const dir = await tmpDir();
+  const briefDir = await tmpDir();
+  t.after(() => { rmTmp(dir); rmTmp(briefDir); });
+  const store = new JsonStore(dir, briefDir);
+  const job = toJob(fakeScraped());
+
+  // Eine Datei mit ABWEICHENDEM lesbarem Teil, aber passendem id-Suffix (das alte
+  // Datums-Schema) — muss trotzdem gefunden werden.
+  await writeFile(join(briefDir, `ganz-anderer-name_${job.id.slice(0, 8)}.md`), 'Alt-Brief', 'utf8');
+  assert.equal(await store.getBrief(job), 'Alt-Brief');
+});
+
+test('saveBrief: überschreibt den Brief unter neuem Namen und lässt keinen Zweitbrief zurück', async (t) => {
+  const dir = await tmpDir();
+  const briefDir = await tmpDir();
+  t.after(() => { rmTmp(dir); rmTmp(briefDir); });
+  const store = new JsonStore(dir, briefDir);
+  const job = toJob(fakeScraped());
+
+  await writeFile(join(briefDir, `alt_${job.id.slice(0, 8)}.md`), 'Alt', 'utf8');
+  await store.saveBrief(job, 'Neu');
+
+  const briefe = (await readdir(briefDir)).filter(f => f.endsWith('.md'));
+  assert.equal(briefe.length, 1, 'nur ein Brief pro Job');
+  assert.equal(await store.getBrief(job), 'Neu');
+});
