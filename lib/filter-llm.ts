@@ -1,4 +1,5 @@
 import { config } from '../config.ts';
+import { chat } from './ollama.ts';
 import { buildStageInput } from './job-text.ts';
 import { loadSettings } from './settings.ts';
 import type { Decision, FilterStrategy } from './filter-types.ts';
@@ -54,24 +55,19 @@ export function parseJudgment(raw: string): FilterJudgment | null {
 
 async function attempt(jobInput: string, isLehre: boolean, ollama: string): Promise<FilterJudgment | null> {
   try {
-    const res = await fetch(`${ollama}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: loadSettings().filterModel,
-        messages: [
-          { role: 'system', content: SYSTEM },
-          { role: 'user', content: (isLehre ? 'Dies ist eine Lehrstelle.\n' : '') + jobInput },
-        ],
-        format: 'json',
-        options: { temperature: 0 },
-        stream: false,
-      }),
+    const content = await chat({
+      host: ollama,
+      model: loadSettings().filterModel,
+      messages: [
+        { role: 'system', content: SYSTEM },
+        { role: 'user', content: (isLehre ? 'Dies ist eine Lehrstelle.\n' : '') + jobInput },
+      ],
+      format: 'json',
+      options: { temperature: 0 },
     });
-    if (!res.ok) return null;
-    const data = await res.json() as { message?: { content?: string } };
-    return parseJudgment(data?.message?.content ?? '');
+    return parseJudgment(content);
   } catch {
+    // Netzwerk-/HTTP-Fehler zählt wie ein Parse-Fehler: null, nie ein hartes Urteil.
     return null;
   }
 }
