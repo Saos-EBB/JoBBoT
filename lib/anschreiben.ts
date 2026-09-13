@@ -6,7 +6,7 @@ import type { Storage } from '../storage/json-store.ts';
 import type { ProfileData } from './profile.ts';
 import { anschreibenZiel } from './anschreiben-datei.ts';
 import { canGenerateAnschreiben } from './folders.ts';
-import { chat, readNdjsonContent } from './ollama.ts';
+import { chat } from './ollama.ts';
 import { config } from '../config.ts';
 
 export const SYSTEM = `Du bist ein erfahrener Karriereberater. Du schreibst präzise, authentische Bewerbungsanschreiben auf Deutsch.
@@ -127,11 +127,6 @@ export async function saveAnschreiben(job: Job, text: string, dir = config.ansch
   await writeFile(path, text, 'utf8');
   return path;
 }
-
-// readNdjsonContent wohnt jetzt beim Ollama-Client (lib/ollama.ts). Re-Export, damit
-// bestehende Aufrufer (scripts/one-off/anschreiben-model-bench.ts) es weiter von hier
-// importieren können, bis sie selbst auf chat() umgestellt sind.
-export { readNdjsonContent };
 
 const MAX_REGENERATIONS = 2;
 

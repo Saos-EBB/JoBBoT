@@ -2,7 +2,8 @@ import { readFile, mkdir, writeFile, appendFile } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
-import { buildAnschreibenPrompt, parseAnschreibenResponse, SYSTEM, readNdjsonContent } from '../../lib/anschreiben.ts';
+import { buildAnschreibenPrompt, parseAnschreibenResponse, SYSTEM } from '../../lib/anschreiben.ts';
+import { chat } from '../../lib/ollama.ts';
 import { loadProfile, type ProfileData } from '../../lib/profile.ts';
 import { config } from '../../config.ts';
 import type { Job } from '../../scrapers/interface.ts';
@@ -27,24 +28,18 @@ const sanitize = (tag: string) => tag.replace(/[/:.]/g, '_');
 const ts = () => new Date().toISOString().slice(0, 19).replace('T', ' ');
 
 async function generateOnce(job: Job, profile: ProfileData, model: string): Promise<string> {
-  const res = await fetch(`${config.ollamaHost}/api/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: SYSTEM },
-        { role: 'user', content: buildAnschreibenPrompt(job, profile) },
-      ],
-      stream: true,
-      // think:false greift nur bei qwen3-Modellen; bei gemma/mistral wirkungslos
-      // (kein Fehler, kein Retry) — bewusst identisch für alle Modelle gesetzt.
-      think: false,
-      options: { num_ctx: 4096, temperature: 0.3 },
-    }),
+  const raw = await chat({
+    model,
+    messages: [
+      { role: 'system', content: SYSTEM },
+      { role: 'user', content: buildAnschreibenPrompt(job, profile) },
+    ],
+    stream: true,
+    // think:false greift nur bei qwen3-Modellen; bei gemma/mistral wirkungslos
+    // (kein Fehler, kein Retry) — bewusst identisch für alle Modelle gesetzt.
+    think: false,
+    options: { num_ctx: 4096, temperature: 0.3 },
   });
-  if (!res.ok) throw new Error(`ollama HTTP ${res.status}`);
-  const raw = await readNdjsonContent(res);
   const result = parseAnschreibenResponse(raw);
   if (!result) throw new Error('Parse-Fehler (leer/Platzhalter/Floskel)');
   return result;
