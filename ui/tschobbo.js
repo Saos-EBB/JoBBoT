@@ -3,10 +3,22 @@
  * der Scrape-Teil reagiert auf 'tschobbo:unit' (siehe ui/app.tsx, Hook im
  * /api/scrape/stream-Effect — nur dort wird das Event gefeuert, das ist die
  * ganze "v1 reagiert nur auf Scrape"-Beschränkung, siehe docs/architecture.md).
- * Dazu zwei Ansichts-Events aus ui/app.tsx: 'tschobbo:view' ({active}) blendet
- * die Klumpen mit der Scrape-Ansicht ein/aus, 'tschobbo:replay' wirft den
- * fertigen Stand beim Zurückkommen neu auf.
+ * Dazu drei weitere Events aus ui/app.tsx bzw. ui/hooks/scrape-run.ts:
+ * 'tschobbo:view' ({active}) blendet die Klumpen mit der Scrape-Ansicht ein/
+ * aus, 'tschobbo:replay' wirft den fertigen Stand beim Zurückkommen neu auf,
+ * 'tschobbo:scrape-done' meldet das echte scrapeStatus=done/error (statt nur
+ * aus 5s Event-Stille zu raten, wann ein Lauf vorbei ist).
+ *
+ * Session-Zustand (Generation-Zähler statt loser 'mode'-Variable) sitzt in
+ * tschobbo-session.js, Klumpen-Flug/-Fall/-Haufen in tschobbo-blobs.js — beide
+ * DOM-frei bzw. ohne Scrape-Wissen, damit ein bereits losgelassener Klumpen
+ * oder eine verspätet auflösende Timeout-Kette erkennen kann, dass die Session,
+ * für die sie gestartet wurde, nicht mehr die aktuelle ist (siehe review.html,
+ * Durchlauf 3).
  */
+
+import { createScrapeSession } from './tschobbo-session.js';
+import { createBlobField, BLOB_FRAME, FLY_MS } from './tschobbo-blobs.js';
 
 const FRAME = 96;
 const DISPLAY = 72;
@@ -16,13 +28,6 @@ const SHEET_H = 384 * SCALE;
 
 const ROWS = { front: 0, side: 1, quarter: 2, throw: 3 };
 const FRAME_COUNTS = { front: 6, side: 6, quarter: 6, throw: 4 };
-
-// Klumpen-Sheet (tschobbo-blobs.png): eigenes, kleineres Raster, nativ ohne
-// Skalierung (Anzeigegroesse = Asset-Groesse, siehe Auftrag).
-const BLOB_FRAME = 32;
-const BLOB_SHEET_W = 128, BLOB_SHEET_H = 96;
-const BLOB_ROWS = { fly: 0, stick: 1, glob: 2 };
-const BLOB_FRAME_COUNTS = { fly: 4, stick: 1, glob: 4 };
 
 const IDLE_FRAME_MS = 1000 / 8;
 const DRIFT_WAIT_MIN = 6000, DRIFT_WAIT_MAX = 14000;
@@ -38,12 +43,6 @@ const SCRAPE_SILENCE_MS = 5000;
 
 const THROW_FRAME_MS = 1000 / 12; // Auftrag: "Throw-Ticker: 12 fps"
 const THROW_STAGGER_MS = 120; // Auftrag: Wurf-Frequenz bei mehreren Jobs
-const FLY_MS = 450; // nicht im Auftrag beziffert — zuegiger Wurf, an Drift/Park angelehnt
-const FLY_SPINS = 2; // wie oft der Klumpen waehrend des Flugs durch seine 4 Frames rotiert, nicht beziffert
-const ARC = 80; // Auftrag: "Wurfhöhe (ARC): ~80 px"
-const FALL_G = 0.6; // Auftrag: "kleines g", nicht beziffert
-const GLOB_CAP = 40; // Auftrag: "ab ~40 sichtbaren globs im Haufen keine neuen DOM-Knoten mehr"
-const PILE_BASE_H = 40, PILE_MAX_H = 120; // nicht im Auftrag beziffert — Anfangs-/Deckelhöhe des Haufens
 
 const STORAGE_KEY = 'tschobbo.enabled';
 
@@ -51,7 +50,7 @@ const STORAGE_KEY = 'tschobbo.enabled';
 // LoadGrids Layout/Pop-Timing anzufassen — Quadrate bleiben im Fluss (Tschobbo
 // braucht ihre Positionen als Wurfziele), nur Sichtbarkeit + Interaktion aus.
 // visibility statt opacity: geklebte Klumpen sind echte DOM-Kinder des Quadrats
-// (siehe stick() weiter unten) — opacity:0 würde die ganze Kind-Subbaum-Ebene
+// (siehe stick() in tschobbo-blobs.js) — opacity:0 würde die ganze Kind-Subbaum-Ebene
 // mitdimmen und ließe sich von einem Kind nicht zurücksetzen, visibility:hidden
 // schon (per visibility:visible am Klumpen). loadgrid-pop animiert nur opacity,
 // nicht visibility — kein !important nötig, nichts konkurriert hier.
@@ -97,16 +96,6 @@ function parkSpot(gridTop) {
 
 function setFrame(body, view, frame) {
   body.style.backgroundPosition = `-${frame * DISPLAY}px -${ROWS[view] * DISPLAY}px`;
-}
-
-function setBlobFrame(el, row, frame) {
-  el.style.backgroundPosition = `-${frame * BLOB_FRAME}px -${BLOB_ROWS[row] * BLOB_FRAME}px`;
-}
-
-function makeBlobEl() {
-  const el = document.createElement('div');
-  el.style.cssText = `position:fixed; width:${BLOB_FRAME}px; height:${BLOB_FRAME}px; background-image:url(/tschobbo-blobs.png); background-repeat:no-repeat; background-size:${BLOB_SHEET_W}px ${BLOB_SHEET_H}px; pointer-events:none; z-index:39;`;
-  return el;
 }
 
 // Der Schalter haengt in der Seitenleiste, nicht mehr fix unten rechts am Fenster.
@@ -190,14 +179,13 @@ export function initTschobbo() {
   let destroyed = false;
   let enabledState = true;
   let posX = 0, posY = 0;
-  let stuckBlobs = [];
-  let pileCount = 0;
+  const session = createScrapeSession();
+  const field = createBlobField({ layer, pile, session });
 
-  // 'idle' | 'scrape' — 'scrape' deckt sowohl die Anfahrt an den Grid-Rand als
-  // auch die eigentlichen Schübe ab. `busy` ist die Burst-Sperre: laeuft eine
-  // Anfahrt oder ein Schub, wird ein eintreffendes Event ignoriert (keine
-  // Queue, kein Nachholen — siehe docs/architecture.md).
-  let mode = 'idle';
+  // `busy` ist die Burst-Sperre: laeuft eine Anfahrt oder ein Schub, wird ein
+  // eintreffendes Event ignoriert (keine Queue, kein Nachholen — siehe
+  // docs/architecture.md). session.active ersetzt die frühere lose 'mode'-
+  // Variable (siehe tschobbo-session.js).
   let busy = false;
   let silenceTimer = null;
   let throwQueue = [];
@@ -205,6 +193,10 @@ export function initTschobbo() {
   // Würfe, aber ohne Stille-Timer — hier ist die Queue selbst das Ende-Signal,
   // sonst würde ein langer Nachbau nach 5s mittendrin abgebrochen.
   let replaying = false;
+  // Gesetzt vom echten scrapeStatus=done/error ('tschobbo:scrape-done', siehe
+  // onScrapeDone) statt nur aus 5s Event-Stille geraten — der Stille-Timer
+  // bleibt als Fallback, ist aber nicht mehr der einzige Signalgeber.
+  let runConfirmedDone = false;
 
   function clearTimers() {
     timers.forEach(clearTimeout);
@@ -262,12 +254,17 @@ export function initTschobbo() {
   // naechsten.
   function parkForScrape() {
     busy = true;
+    // Erfasst beim Start der Anfahrt, welche Session das war — ein Klumpen-
+    // fremder, aber strukturell gleicher Fall wie in tschobbo-blobs.js: löst
+    // sich der Timeout erst auf, nachdem eine neue Session begonnen hat, soll
+    // er `busy` nicht mehr freigeben (siehe Modulkommentar oben).
+    const gen = session.generation;
     const finishPark = () => {
       requestAnimationFrame(() => {
         const gridRect = document.querySelector('.loadgrid')?.getBoundingClientRect();
         const spot = parkSpot(gridRect ? gridRect.top : posY);
         place(spot.x, spot.y, PARK_TRAVEL_MS);
-        timers.push(setTimeout(() => { busy = false; }, PARK_TRAVEL_MS));
+        timers.push(setTimeout(() => { if (session.isCurrent(gen)) busy = false; }, PARK_TRAVEL_MS));
       });
     };
     if (atFront) {
@@ -281,113 +278,6 @@ export function initTschobbo() {
       startFrameLoop('side');
       finishPark();
     }
-  }
-
-  // Ein Klumpen fliegt auf einer Parabel (Formel, keine Physik-Engine) von der
-  // Wurfhand zum Ziel und rotiert dabei durch seine 4 fly-Frames. Am Ziel
-  // entscheidet das Location-Gate-Ergebnis (an der Zielquadrat-Klasse abgelesen):
-  // klebt (matched) oder fällt (Auftrag-Regel 1, real erkennbar).
-  function spawnFly(origin, target, matched, targetEl) {
-    const el = makeBlobEl();
-    layer.appendChild(el);
-    const t0 = performance.now();
-    function step(now) {
-      const t = Math.min(1, (now - t0) / FLY_MS);
-      const x = origin.x + (target.x - origin.x) * t;
-      const y = origin.y + (target.y - origin.y) * t - ARC * Math.sin(Math.PI * t);
-      el.style.left = `${x}px`;
-      el.style.top = `${y}px`;
-      const frame = Math.floor(t * BLOB_FRAME_COUNTS.fly * FLY_SPINS) % BLOB_FRAME_COUNTS.fly;
-      setBlobFrame(el, 'fly', frame);
-      if (t < 1) requestAnimationFrame(step);
-      else if (matched) {
-        stick(el, targetEl);
-      } else {
-        fall(el, target.x, target.y);
-      }
-    }
-    requestAnimationFrame(step);
-  }
-
-  // Klebt als echtes DOM-Kind des Quadrats (nicht mehr fixed an der Landeposition)
-  // — .dt__body scrollt (overflow-y:auto), ein eigenständig positionierter Klumpen
-  // würde beim Scrollen vom Quadrat abdriften/verdeckt wirken. Als Kind wandert er
-  // zwangsläufig mit, .loadgrid__sq braucht dafür position:relative als Anker.
-  function stick(el, targetEl) {
-    setBlobFrame(el, 'stick', 0);
-    el.style.position = 'absolute';
-    el.style.left = '0';
-    el.style.top = '0';
-    el.style.visibility = 'visible'; // Quadrat ist visibility:hidden (Ghost), Klumpen holt sich das explizit zurück
-    targetEl.appendChild(el);
-    stuckBlobs.push(el);
-  }
-
-  // Formel-basiertes Fallen (Auftrag: "y += vy; vy += g", kein Stapeln, keine
-  // Kollision) bis zum Haufen-Rand, dann verschwindet der Einzel-Klumpen und
-  // wird zu einem glob im Footer.
-  function fall(el, x, startY) {
-    let y = startY, vy = 0;
-    function step() {
-      vy += FALL_G;
-      y += vy;
-      const pileTop = pile.getBoundingClientRect().top;
-      if (y < pileTop) {
-        el.style.top = `${y}px`;
-        requestAnimationFrame(step);
-      } else {
-        el.remove();
-        addGlob(x);
-      }
-    }
-    requestAnimationFrame(step);
-  }
-
-  // Deckel (Auftrag: "ab ~40 sichtbaren globs keine neuen DOM-Knoten mehr") —
-  // Füllstand wächst danach nur noch über die Haufenhöhe, nicht über neue Knoten.
-  function addGlob(x) {
-    pileCount++;
-    if (pileCount <= GLOB_CAP) {
-      const glob = makeBlobEl();
-      glob.style.position = 'absolute';
-      const variant = Math.floor(rand(0, BLOB_FRAME_COUNTS.glob));
-      setBlobFrame(glob, 'glob', variant);
-      const pileRect = pile.getBoundingClientRect();
-      const relX = Math.min(pileRect.width - BLOB_FRAME, Math.max(0, x - pileRect.left + rand(-10, 10)));
-      glob.style.left = `${relX}px`;
-      glob.style.bottom = `${rand(0, 6)}px`;
-      pile.appendChild(glob);
-    } else {
-      const extra = pileCount - GLOB_CAP;
-      pile.style.height = `${Math.min(PILE_MAX_H, PILE_BASE_H + extra * 1.5)}px`;
-    }
-  }
-
-  // Haufen an .dt__body verankern (genau eine Instanz sichtbar, siehe Auftrag-
-  // Regel 3) — Aufruf bei jedem Scrape-Start, damit Größe/Position stimmen,
-  // falls sich das Layout seit dem letzten Lauf geändert hat.
-  function positionPile() {
-    const bodyRect = document.querySelector('.dt__body')?.getBoundingClientRect();
-    if (!bodyRect) return;
-    pile.style.left = `${bodyRect.left}px`;
-    pile.style.width = `${bodyRect.width}px`;
-    pile.style.top = `${bodyRect.bottom - PILE_BASE_H}px`;
-    pile.style.height = `${PILE_BASE_H}px`;
-    pile.style.display = 'block';
-  }
-
-  // "Der Haufen bleibt sichtbar bis zum nächsten Scrape-Start (dann leeren)" —
-  // Auftrag. Geklebte Klumpen einer alten, längst ersetzten scrapeSections-
-  // Zeile ebenso, sonst hängen sie über dem neuen (leeren) Grid in der Luft.
-  function clearPile() {
-    pile.replaceChildren();
-    pileCount = 0;
-    pile.style.height = `${PILE_BASE_H}px`;
-  }
-
-  function clearStuck() {
-    stuckBlobs.forEach(el => el.remove());
-    stuckBlobs = [];
   }
 
   // Wurf-Animation: Frame 0 ausholen, 1 hochziehen, 2 = Release, 3 nachschwingen
@@ -417,7 +307,7 @@ export function initTschobbo() {
       setFrame(body, 'throw', i);
     }, THROW_FRAME_MS);
 
-    timers.push(setTimeout(() => spawnFly(origin, target, matched, targetEl), 2 * THROW_FRAME_MS));
+    timers.push(setTimeout(() => field.throwBlob(origin, target, matched, targetEl), 2 * THROW_FRAME_MS));
   }
 
   // Burst-Regel (anders als v1): kein Ignorieren mehr — jeder Job aus jedem
@@ -431,9 +321,10 @@ export function initTschobbo() {
 
   function drainThrowQueue() {
     if (throwQueue.length === 0) {
-      // Nachbau: der letzte Wurf muss noch fliegen und landen, bevor Tschobbo
-      // sich abwendet — deshalb FLY_MS Nachlauf statt sofortigem endScrape.
-      if (replaying) timers.push(setTimeout(endScrape, FLY_MS));
+      // Nachbau bzw. echtes scrapeStatus=done: der letzte Wurf muss noch
+      // fliegen und landen, bevor Tschobbo sich abwendet — deshalb FLY_MS
+      // Nachlauf statt sofortigem endScrape.
+      if (replaying || runConfirmedDone) timers.push(setTimeout(endScrape, FLY_MS));
       return;
     }
     if (busy) { timers.push(setTimeout(drainThrowQueue, THROW_STAGGER_MS)); return; }
@@ -443,10 +334,16 @@ export function initTschobbo() {
   }
 
   // Zurück zu 'front' über dieselbe Zwischenstufe wie beim Scrape-Start
-  // (TURN_STEP_MIN/MAX), dann zurück in den Idle-Zyklus.
-  function returnToIdle() {
+  // (TURN_STEP_MIN/MAX), dann zurück in den Idle-Zyklus. `gen` ist die Session-
+  // Generation zum Zeitpunkt, als dieser Rücksprung ausgelöst wurde (siehe
+  // endScrape/onViewChange) — hat inzwischen eine neue Session begonnen
+  // (session.begin()), bricht der Rücksprung ab, statt busy/den frisch
+  // begonnenen Wurf-Zyklus zu kappen (review.html, Durchlauf 3).
+  function returnToIdle(gen) {
+    if (!session.isCurrent(gen)) return;
     startFrameLoop('quarter');
     timers.push(setTimeout(() => {
+      if (!session.isCurrent(gen)) return;
       busy = false;
       startIdle();
     }, rand(TURN_STEP_MIN, TURN_STEP_MAX)));
@@ -454,9 +351,11 @@ export function initTschobbo() {
 
   // Seele-Beat 3: Freuden-Hüpfer bei Scrape-Ende, danach zurück in den Idle-Zyklus.
   function endScrape() {
-    if (mode !== 'scrape') return;
-    mode = 'idle';
+    if (!session.active) return;
+    const gen = session.generation;
+    session.finish();
     replaying = false;
+    runConfirmedDone = false;
     busy = true;
     const hop = () => new Promise(resolve => {
       const anim = root.animate(
@@ -465,7 +364,18 @@ export function initTschobbo() {
       );
       anim.onfinish = resolve;
     });
-    hop().then(hop).then(returnToIdle);
+    hop().then(hop).then(() => returnToIdle(gen));
+  }
+
+  // Signal aus ui/hooks/scrape-run.ts: der echte Scrape-Lauf ist fertig
+  // (scrapeStatus.status === 'done'/'error'), unabhängig von Event-Stille.
+  // Ersetzt den 5s-Stille-Timer als primären Auslöser (der bleibt als
+  // Fallback bestehen) — löst das in review.html Durchlauf 3 beschriebene
+  // Verfrüht-Feiern bei einer echten Pause >5s zwischen zwei Quellen.
+  function onScrapeDone() {
+    if (!enabledState || !session.active) return;
+    runConfirmedDone = true;
+    if (throwQueue.length === 0 && !busy) endScrape();
   }
 
   function resetSilenceTimer() {
@@ -483,18 +393,19 @@ export function initTschobbo() {
   function onGridUnit(e) {
     if (!enabledState) return;
     const rowKey = e.detail.row;
-    const firstEvent = mode === 'idle';
+    const firstEvent = !session.active;
     if (firstEvent) {
       clearTimers();
-      mode = 'scrape';
+      session.begin();
       throwQueue = [];
+      runConfirmedDone = false;
       resetSilenceTimer();
       parkForScrape();
     } else {
       resetSilenceTimer();
     }
     requestAnimationFrame(() => {
-      if (firstEvent) { layer.style.display = 'block'; positionPile(); clearPile(); clearStuck(); }
+      if (firstEvent) { layer.style.display = 'block'; field.positionPile(); field.clearPile(); field.clearStuck(); }
       const row = document.querySelector(`.loadgrid__row[data-row="${rowKey}"]`);
       if (!row) return;
       queueThrows(Array.from(row.querySelectorAll('.loadgrid__sq')));
@@ -508,15 +419,15 @@ export function initTschobbo() {
   // ist derselbe Endzustand (geklebt bei matched, Haufen bei excluded), nur mit
   // wiederholter Animation.
   function onReplay() {
-    if (!enabledState || mode === 'scrape') return;
+    if (!enabledState || session.active) return;
     clearTimers();
-    mode = 'scrape';
+    session.begin();
     replaying = true;
     throwQueue = [];
     parkForScrape();
     requestAnimationFrame(() => {
       layer.style.display = 'block';
-      positionPile(); clearPile(); clearStuck();
+      field.positionPile(); field.clearPile(); field.clearStuck();
       const squares = Array.from(document.querySelectorAll('.loadgrid__sq'));
       if (squares.length === 0) { replaying = false; endScrape(); return; }
       queueThrows(squares);
@@ -526,25 +437,30 @@ export function initTschobbo() {
   // Ansichtswechsel (ui/app.tsx): Klumpen gehören zur Scrape-Ansicht. Beim
   // Verlassen alles wegräumen — die Klumpen-Ebene hängt an <body> und würde
   // sonst über Jobs/Kalender/… liegenbleiben; ein laufender Nachbau würde
-  // ausserdem auf inzwischen entfernte Quadrate werfen.
+  // ausserdem auf inzwischen entfernte Quadrate werfen. session.abort() (statt
+  // finish()) bumpt die Generation, damit ein zu diesem Zeitpunkt noch
+  // fliegender/fallender Klumpen (tschobbo-blobs.js) nicht mehr auf das gerade
+  // versteckte/entfernte DOM zugreift.
   function onViewChange(e) {
     if (e.detail?.active) return;
     layer.style.display = 'none';
     throwQueue = [];
     replaying = false;
-    clearPile();
-    clearStuck();
-    if (mode === 'scrape') {
-      mode = 'idle';
+    field.clearPile();
+    field.clearStuck();
+    if (session.active) {
+      session.abort();
+      const gen = session.generation;
       clearTimers();
       busy = true;
-      returnToIdle();
+      returnToIdle(gen);
     }
   }
 
   window.addEventListener('tschobbo:unit', onGridUnit);
   window.addEventListener('tschobbo:replay', onReplay);
   window.addEventListener('tschobbo:view', onViewChange);
+  window.addEventListener('tschobbo:scrape-done', onScrapeDone);
 
   function setToggleLabel(on) {
     toggle.textContent = on ? 'Tschobbo: an' : 'Tschobbo: aus';
@@ -555,7 +471,6 @@ export function initTschobbo() {
     enabledState = true;
     setToggleLabel(true);
     root.style.display = '';
-    mode = 'idle';
     busy = false;
     const spot = spawnSpot();
     setFrame(body, 'front', 0);
@@ -572,12 +487,12 @@ export function initTschobbo() {
     enabledState = false;
     setToggleLabel(false);
     clearTimers();
-    mode = 'idle';
+    session.abort();
     busy = false;
     replaying = false;
     throwQueue = [];
-    clearPile();
-    clearStuck();
+    field.clearPile();
+    field.clearStuck();
     layer.style.display = 'none';
     root.style.display = 'none';
   }
@@ -593,10 +508,12 @@ export function initTschobbo() {
     destroy() {
       if (destroyed) return;
       destroyed = true;
+      session.abort();
       clearTimers();
       window.removeEventListener('tschobbo:unit', onGridUnit);
       window.removeEventListener('tschobbo:replay', onReplay);
       window.removeEventListener('tschobbo:view', onViewChange);
+      window.removeEventListener('tschobbo:scrape-done', onScrapeDone);
       root.remove();
       toggle.remove();
       style.remove();
