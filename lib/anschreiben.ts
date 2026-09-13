@@ -7,6 +7,7 @@ import type { ProfileData } from './profile.ts';
 import { anschreibenZiel } from './anschreiben-datei.ts';
 import { canGenerateAnschreiben } from './folders.ts';
 import { chat } from './ollama.ts';
+import { loadSettings } from './settings.ts';
 import { config } from '../config.ts';
 
 export const SYSTEM = `Du bist ein erfahrener Karriereberater. Du schreibst präzise, authentische Bewerbungsanschreiben auf Deutsch.
@@ -167,6 +168,7 @@ export async function generateAnschreiben(
     return null;
   }
 
+  const { inference } = loadSettings();
   let result: string | null = null;
   let lastError = '';
 
@@ -190,7 +192,10 @@ export async function generateAnschreiben(
           { role: 'user', content: buildAnschreibenPrompt(job, profile) },
         ],
         stream: true,
-        options: { num_thread: numThread },
+        think: inference.think,
+        // num_thread bleibt aus RETRY_CONFIG (Perf pro Versuch); num_ctx/temperature
+        // kommen aus der zentralen Inferenz-Config.
+        options: { num_thread: numThread, num_ctx: inference.numCtx, temperature: inference.writerTemperature },
         signal: signal ? AbortSignal.any([controller.signal, signal]) : controller.signal,
       });
     } catch (err) {

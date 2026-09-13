@@ -12,3 +12,11 @@ test('loadSettings: filterModel ist gesetzt (aus Config oder Default)', () => {
   assert.equal(typeof settings.filterModel, 'string');
   assert.ok(settings.filterModel.length > 0);
 });
+
+test('loadSettings: inference-Block ist vollständig (Defaults füllen Lücken)', () => {
+  const { inference } = loadSettings();
+  assert.equal(typeof inference.think, 'boolean');
+  assert.equal(typeof inference.numCtx, 'number');
+  assert.equal(typeof inference.filterTemperature, 'number');
+  assert.equal(typeof inference.writerTemperature, 'number');
+});

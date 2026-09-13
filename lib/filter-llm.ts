@@ -55,15 +55,17 @@ export function parseJudgment(raw: string): FilterJudgment | null {
 
 async function attempt(jobInput: string, isLehre: boolean, ollama: string): Promise<FilterJudgment | null> {
   try {
+    const settings = loadSettings();
     const content = await chat({
       host: ollama,
-      model: loadSettings().filterModel,
+      model: settings.filterModel,
       messages: [
         { role: 'system', content: SYSTEM },
         { role: 'user', content: (isLehre ? 'Dies ist eine Lehrstelle.\n' : '') + jobInput },
       ],
       format: 'json',
-      options: { temperature: 0 },
+      think: settings.inference.think,
+      options: { temperature: settings.inference.filterTemperature, num_ctx: settings.inference.numCtx },
     });
     return parseJudgment(content);
   } catch {
