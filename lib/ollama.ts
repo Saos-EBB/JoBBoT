@@ -1,15 +1,28 @@
 import { config } from '../config.ts';
+import { loadSettings } from './settings.ts';
 
-export async function checkOllama(host = config.ollamaHost): Promise<{ ok: boolean; found: string[]; missing: string[] }> {
+// Die eine Stelle, die sagt, WELCHE Modelle der Lauf tatsächlich benutzt.
+// Der Filter läuft gegen loadSettings().filterModel (config/settings.json), NICHT
+// gegen config.modelFilter (env JOBBOT_MODEL_FILTER) — die beiden konnten
+// auseinanderlaufen, sodass checkOllama grün meldete, während der Filter ein ganz
+// anderes Modell zog. checkOllama prüft jetzt dasselbe Modell, das der Filter zieht.
+export function resolveModels(configDir?: string): { filter: string; writer: string } {
+  return { filter: loadSettings(configDir).filterModel, writer: config.modelWriter };
+}
+
+export async function checkOllama(
+  host = config.ollamaHost,
+  models: { filter: string; writer: string } = resolveModels(),
+): Promise<{ ok: boolean; found: string[]; missing: string[] }> {
+  const needed = [models.filter, models.writer];
   try {
     const res = await fetch(`${host}/api/tags`);
     const data = await res.json() as { models: { name: string }[] };
     const names: string[] = data.models.map(m => m.name);
-    const needed = [config.modelFilter, config.modelWriter];
     const missing = needed.filter(n => !names.some(found => found.startsWith(n)));
     return { ok: missing.length === 0, found: names, missing };
   } catch {
-    return { ok: false, found: [], missing: [config.modelFilter, config.modelWriter] };
+    return { ok: false, found: [], missing: needed };
   }
 }
 

@@ -1,9 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import type { AddressInfo } from 'node:net';
-import { checkOllama } from '../lib/ollama.ts';
-import { mockOllama } from './helpers.ts';
+import { checkOllama, resolveModels } from '../lib/ollama.ts';
+import { config } from '../config.ts';
+import { mockOllama, tmpDir, rmTmp } from './helpers.ts';
 
 const FILTER = 'qwen3.5:9b';
 const WRITER = 'mistral-small3.2:latest';
@@ -60,6 +63,24 @@ test('server returns broken JSON → ok:false, no throw', async (t) => {
   const { port } = server.address() as AddressInfo;
   const result = await checkOllama(`http://127.0.0.1:${port}`);
   assert.equal(result.ok, false);
+});
+
+test('resolveModels: Filter-Modell kommt aus settings.json, nicht aus env', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  await writeFile(join(dir, 'settings.json'), JSON.stringify({ filterMode: 'llm', filterModel: 'llama3:70b' }));
+  const { filter, writer } = resolveModels(dir);
+  assert.equal(filter, 'llama3:70b');
+  assert.equal(writer, config.modelWriter);
+});
+
+test('checkOllama: prüft das laufende Filter-Modell (grün nur, wenn DAS vorhanden ist)', async (t) => {
+  // Writer vorhanden, das in settings gesetzte Filter-Modell fehlt → NICHT grün.
+  const mock = await mockOllama([config.modelWriter]);
+  t.after(mock.close);
+  const result = await checkOllama(mock.url, { filter: 'llama3:70b', writer: config.modelWriter });
+  assert.equal(result.ok, false);
+  assert.ok(result.missing.includes('llama3:70b'));
 });
 
 test('server not reachable → ok:false, no throw', async (t) => {
