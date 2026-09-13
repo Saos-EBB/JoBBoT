@@ -77,9 +77,11 @@ test('SSE-Event: kein tschobbo:unit, wenn eine andere Ansicht aktiv ist', async 
   assert.equal(w.dispatched.length, 0);
 });
 
-test('status "done": Toast nennt neu/dedup, offline/zurückgeholt nur wenn > 0', async (t) => {
+test('status "done": Toast nennt neu/dedup, offline/zurückgeholt nur wenn > 0, feuert tschobbo:scrape-done', async (t) => {
   t.after(withFakeEventSource());
   t.after(withFetch((async () => ({ json: async () => [] } as Response)) as typeof fetch));
+  const w = withWindow();
+  t.after(w.restore);
 
   const said: Array<[string, string | undefined]> = [];
   let refetched = false;
@@ -92,12 +94,14 @@ test('status "done": Toast nennt neu/dedup, offline/zurückgeholt nur wenn > 0',
   rerender({ status: { status: 'done', runId: 'r1', sources: {}, result: { newTotal: 4, skipTotal: 2, offlineTotal: 0, backTotal: 0, perSource: [] } } });
   assert.deepEqual(said, [['Scrape: 4 neu, 2 dedup', 'ok']]);
   assert.equal(refetched, true);
+  assert.deepEqual(w.dispatched.map(e => e.type), ['tschobbo:scrape-done']);
   unmount();
 });
 
 test('status "done": offline/zurückgeholt werden angehängt, wenn > 0', async (t) => {
   t.after(withFakeEventSource());
   t.after(withFetch((async () => ({ json: async () => [] } as Response)) as typeof fetch));
+  t.after(withWindow().restore);
 
   const said: Array<[string, string | undefined]> = [];
   const { rerender, unmount } = renderHook(
@@ -111,9 +115,11 @@ test('status "done": offline/zurückgeholt werden angehängt, wenn > 0', async (
   unmount();
 });
 
-test('status "error": err-Toast mit Fehlermeldung', async (t) => {
+test('status "error": err-Toast mit Fehlermeldung, feuert trotzdem tschobbo:scrape-done', async (t) => {
   t.after(withFakeEventSource());
   t.after(withFetch((async () => ({ json: async () => [] } as Response)) as typeof fetch));
+  const w = withWindow();
+  t.after(w.restore);
 
   const said: Array<[string, string | undefined]> = [];
   const { rerender, unmount } = renderHook(
@@ -124,6 +130,7 @@ test('status "error": err-Toast mit Fehlermeldung', async (t) => {
 
   rerender({ status: { status: 'error', runId: 'r3', sources: {}, error: 'karriere.at 500' } });
   assert.deepEqual(said, [['Scrape fehlgeschlagen: karriere.at 500', 'err']]);
+  assert.deepEqual(w.dispatched.map(e => e.type), ['tschobbo:scrape-done']);
   unmount();
 });
 

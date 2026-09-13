@@ -39,6 +39,11 @@ export function useScrapeRun(
     if (!status) return;
     if ((status.status === 'done' || status.status === 'error') && status.runId && status.runId !== lastSeenRunId.current) {
       lastSeenRunId.current = status.runId;
+      // Tschobbo (ui/tschobbo.js) hört sonst nur auf 5s Event-Stille, um ein
+      // Sessionende zu erkennen — bei einer echten Lücke >5s zwischen zwei
+      // Quellen (maxConcurrent in lib/scrape-runner.ts) feierte das zu früh
+      // (review.html, Durchlauf 3). Der Einmal-pro-Lauf-Schutz oben reicht.
+      window.dispatchEvent(new CustomEvent('tschobbo:scrape-done'));
       refetchJobs();
       say(
         status.status === 'error' ? `Scrape fehlgeschlagen: ${status.error}`
