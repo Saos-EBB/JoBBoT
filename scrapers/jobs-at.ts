@@ -2,7 +2,7 @@ import { sleep } from '../lib/fetch-page.ts';
 import { searchSlug } from '../lib/slugify.ts';
 import { usableQueries } from '../lib/query-schema.ts';
 import { normalizeDescription } from '../lib/normalize-description.ts';
-import { createBatcher } from '../lib/grid-batch.ts';
+import { runDetailPhase } from '../lib/scrape-detail.ts';
 import { finalizeResults } from '../lib/finalize-results.ts';
 import type { ScrapedJob, ScrapeOptions, ScraperAdapter } from './interface.ts';
 
@@ -158,22 +158,12 @@ export const jobsAtAdapter: ScraperAdapter = {
       keep,
     );
 
-    const total = candidates.length;
-    const results: ScrapedJob[] = [];
-    const batcher = createBatcher(GRID_BATCH_SIZE, onUnitDone);
-    for (let i = 0; i < total; i++) {
-      const card = candidates[i];
-      onProgress?.(i + 1, total);
-      let job = card;
-      try {
-        job = parseDetailPage(await fetchDetailPage(card.url), card);
-      } catch (err) {
-        console.warn(`[jobs.at] detail fehlgeschlagen: ${card.url}`, err);
-      }
-      results.push(job);
-      batcher.push(job);
-    }
-    batcher.flush();
-    return results;
+    return runDetailPhase(candidates, {
+      source: 'jobs.at',
+      fetchDetail: async card => parseDetailPage(await fetchDetailPage(card.url), card),
+      onProgress,
+      onUnitDone,
+      batchSize: GRID_BATCH_SIZE,
+    });
   },
 };
