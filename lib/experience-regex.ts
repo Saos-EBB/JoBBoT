@@ -1,6 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { config } from '../config.ts';
+import { loadJsonConfig } from './load-json-config.ts';
 
 export interface ExperienceRules {
   minYears: number;
@@ -18,8 +17,7 @@ export interface ExpResult {
 }
 
 export function loadExperienceRules(configDir: string = config.configDir): ExperienceRules {
-  const path = join(configDir, 'experience-rules.json');
-  return JSON.parse(readFileSync(path, 'utf8')) as ExperienceRules;
+  return loadJsonConfig<ExperienceRules>(configDir, 'experience-rules.json');
 }
 
 function hasAny(text: string, terms: string[]): boolean {
