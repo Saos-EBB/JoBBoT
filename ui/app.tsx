@@ -41,6 +41,7 @@ import { useToasts } from './hooks/toasts.ts';
 import { useSelection } from './hooks/selection.ts';
 import { useFolderView } from './hooks/folder-view.ts';
 import { useJobEdits } from './hooks/job-edits.ts';
+import { useJobMutations } from './hooks/job-mutations.ts';
 import { useScrapeRun } from './hooks/scrape-run.ts';
 import { useFilterRun } from './hooks/filter-run.ts';
 import { useAnschreibenRun } from './hooks/anschreiben-run.ts';
@@ -305,24 +306,12 @@ export default function JobbotUI() {
     if (view === 'calendar') fetch('/api/calendar').then(r => r.json()).then(setCalendarEvents);
   }, [view]);
 
-  // generateAnschreiben() (lib/anschreiben.ts) generiert nur für status "triaged" mit
-  // fit !== "brutal" — ein bereits generierter Job (status "generated" o.ä.) muss also
-  // erst dorthin zurück, bevor der Lauf ihn wieder aufgreift.
-  async function regenerate(job: JobWithBrief) {
-    if (job.fit == null || job.fit === 'brutal') {
-      say('Neu generieren nicht möglich — kein Filter-Urteil bekannt', 'err');
-      return;
-    }
-    const status: Job['status'] = 'triaged';
-    const res = await fetch(`/api/jobs/${job.id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    if (!res.ok) { say('Zurücksetzen fehlgeschlagen', 'err'); return; }
-    patch(job.id, { status });
-    runAnschreibenNow([job.id]);
-  }
+  // Server-schreibende Status-/Fit-Aktionen (move/saveFit/regenerate/runBulk) — der
+  // eigene Hook gibt ihnen dieselbe Locality und Testbarkeit wie den übrigen Aktionen.
+  const { move, saveFit, regenerate, runBulk } = useJobMutations({
+    jobs, selectedJobIds, say, patch, setJobs, setSelectedJobIds, setDetailOpen,
+    runAnschreiben: runAnschreibenNow,
+  });
 
   const job = jobs.find(j => j.id === sel) ?? null;
   const shown = list.some(j => j.id === sel) ? job : null;
@@ -340,64 +329,6 @@ export default function JobbotUI() {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
   }, [sel, tab, shown?.brief]);
-
-  // patch() bleibt der reine Lokal-State-Setter — für optimistisches Tippen in der
-  // Textarea (jeder Tastendruck) und als letzter Schritt NACH einem erfolgreichen
-  async function move(id: string, status: Job['status'], msg: string) {
-    const res = await fetch(`/api/jobs/${id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    if (!res.ok) { say('Speichern fehlgeschlagen', 'err'); return; }
-    patch(id, { status });
-    say(msg);
-    setDetailOpen(false);
-  }
-
-  async function saveFit(id: string, fit: Fit) {
-    const res = await fetch(`/api/jobs/${id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fit }),
-    });
-    if (res.ok) patch(id, { fit });
-    else say('Speichern fehlgeschlagen', 'err');
-  }
-
-  // Mehrfachaktion = dieselbe Route wie die Einzelaktion (POST /api/jobs/:id), n-mal.
-  // Kein Sammel-Endpunkt: jeder Job ist eine eigene JSON-Datei (storage/json-store.ts),
-  // serverseitig wäre das exakt dieselbe Schleife — nur an einer Stelle mehr, die den
-  // Teilerfolg-Fall (k von n gespeichert) nochmal eigens beschreiben müsste.
-  //
-  // Pessimistisch wie move(): der lokale State wird erst nach der Antwort angefasst,
-  // und nur für die Jobs, die wirklich durchkamen.
-  async function runBulk(patchFor: (job: JobWithBrief) => Partial<Pick<Job, 'status' | 'fit'>>, verb: string) {
-    const targets = [...selectedJobIds]
-      .map(id => jobs.find(j => j.id === id))
-      .filter((j): j is JobWithBrief => j != null);
-    if (targets.length === 0) return;
-
-    const done = (
-      await Promise.all(
-        targets.map(async j => {
-          const p = patchFor(j);
-          const res = await fetch(`/api/jobs/${j.id}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(p),
-          });
-          return res.ok ? { id: j.id, p } : null;
-        }),
-      )
-    ).filter((r): r is { id: string; p: Partial<Pick<Job, 'status' | 'fit'>> } => r != null);
-
-    setJobs(js => js.map(j => { const hit = done.find(d => d.id === j.id); return hit ? { ...j, ...hit.p } : j; }));
-    setSelectedJobIds(new Set());
-    const failed = targets.length - done.length;
-    if (failed) say(`${done.length} ${verb}, ${failed} fehlgeschlagen`, 'err');
-    else say(`${done.length} ${verb}`);
-  }
 
   // Fällige Nachfassen. Die Regel lebt in lib/followup.ts, damit sie testbar ist und
   // nicht zwischen Server und UI auseinanderdriftet.
