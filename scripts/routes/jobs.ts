@@ -16,6 +16,16 @@ export async function handleJobsRoutes(req: IncomingMessage, res: ServerResponse
     return true;
   }
 
+  // Einzelner Job inkl. Brief — damit das UI einen frisch generierten Anschreiben-Job
+  // sofort nachladen kann, statt am Batch-Ende die ganze Liste neu zu holen.
+  const jobGetMatch = url.pathname.match(/^\/api\/jobs\/([a-f0-9]+)$/);
+  if (req.method === 'GET' && jobGetMatch) {
+    const job = await ctx.storage.get(jobGetMatch[1]);
+    if (!job) { res.writeHead(404).end('Job nicht gefunden'); return true; }
+    respondJson(res, 200, { ...job, brief: await ctx.storage.getBrief(job) });
+    return true;
+  }
+
   const jobPatchMatch = url.pathname.match(/^\/api\/jobs\/([a-f0-9]+)$/);
   if (req.method === 'POST' && jobPatchMatch) {
     const job = await ctx.storage.get(jobPatchMatch[1]);
