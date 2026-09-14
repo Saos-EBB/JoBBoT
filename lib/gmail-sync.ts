@@ -1,5 +1,5 @@
 import { fetchInboxReplies, fetchSentMails, istBewerbung, type SentMail, type InboxReply } from '../mail/gmail.ts';
-import { matchReplies, matchSent } from './mail-match.ts';
+import { matchReplies, matchSent, classifyReplies } from './mail-match.ts';
 import { HISTORY_START } from './calendar.ts';
 import { saveMailEvents, toMailEvents, type MailEvent } from './mail-events.ts';
 import type { Storage } from '../storage/json-store.ts';
@@ -88,8 +88,10 @@ export async function runGmailSync(storage: Storage, deps: GmailSyncDeps = defau
 // Full-Sync scannt den ganzen Kalenderzeitraum. Kein gesendeter Job → null (nichts zu
 // scannen), der Aufrufer meldet dann 0/0.
 export function replyScanSince(jobs: Job[]): Date | null {
+  // "gesendet ODER sentAt" wie matchReplies/isFollowUpCandidate — ein Job mit sentAt aus
+  // dem Sync (Status noch nicht "gesendet") gehört genauso ins Scan-Fenster.
   const gesendet = jobs
-    .filter(j => j.status === 'gesendet' && j.email)
+    .filter(j => (j.status === 'gesendet' || j.sentAt) && j.email)
     .map(j => new Date(j.sentAt ?? j.updatedAt).getTime());
   return gesendet.length ? new Date(Math.min(...gesendet)) : null;
 }
@@ -99,26 +101,46 @@ export interface ReplyFetchDeps {
 }
 const defaultReplyDeps: ReplyFetchDeps = { fetchInboxReplies };
 
+// Eine mehrdeutige Antwort für die manuelle Zuordnung im UI: die Mail plus die offenen
+// gesendeten Jobs derselben Firma, aus denen der Nutzer wählt.
+export interface AmbiguousReplyView {
+  reply: { from: string; subject: string; date: string };
+  candidates: { id: string; title: string; company: string }[];
+}
+
 export interface ReplyFetchResult {
   checked: number;
   matched: number;
+  ambiguous: AmbiguousReplyView[];
 }
 
-// Der schnelle Antwort-Abruf, vorher inline & ungetestet im Route-Handler. Füllt jetzt
-// nur Lücken (if replyReceivedAt continue) — dieselbe Zusage wie runGmailSync, die der
-// Route bisher fehlte: sie überschrieb ein vorhandenes replyReceivedAt. matched zählt
-// entsprechend nur die tatsächlich neu gesetzten Antworten.
+// Der schnelle Antwort-Abruf. Füllt nur Lücken (if replyReceivedAt continue) — dieselbe
+// Zusage wie runGmailSync. matched zählt nur die tatsächlich neu gesetzten Antworten;
+// ambiguous sind die, die zwar zu einer Firma passen, aber nicht eindeutig einem Job —
+// die legt der Nutzer im UI manuell auf einen Job (siehe /api/mail/replies/assign).
 export async function fetchAndFillReplies(storage: Storage, deps: ReplyFetchDeps = defaultReplyDeps): Promise<ReplyFetchResult> {
   const jobs = await storage.list();
   const since = replyScanSince(jobs);
-  if (!since) return { checked: 0, matched: 0 };
+  if (!since) return { checked: 0, matched: 0, ambiguous: [] };
 
   const replies = await deps.fetchInboxReplies(since);
-  let matched = 0;
-  for (const { job, reply } of matchReplies(replies, jobs)) {
+  const { matched, ambiguous } = classifyReplies(replies, jobs);
+
+  let filled = 0;
+  for (const { job, reply } of matched) {
     if (job.replyReceivedAt) continue; // Lücken füllen, nicht überschreiben
     await storage.update(job.id, { replyReceivedAt: reply.date.toISOString() });
-    matched++;
+    filled++;
   }
-  return { checked: replies.length, matched };
+
+  const byId = new Map(jobs.map(j => [j.id, j]));
+  const ambiguousView: AmbiguousReplyView[] = ambiguous.map(a => ({
+    reply: { from: a.reply.from, subject: a.reply.subject, date: a.reply.date.toISOString() },
+    candidates: a.candidateJobIds
+      .map(id => byId.get(id))
+      .filter((j): j is Job => j != null)
+      .map(j => ({ id: j.id, title: j.title, company: j.company })),
+  }));
+
+  return { checked: replies.length, matched: filled, ambiguous: ambiguousView };
 }
