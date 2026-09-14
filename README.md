@@ -222,7 +222,16 @@ Scrape/Filter/Anschreiben laufen nach demselben Muster:
 3. Läuft bereits ein Lauf desselben Typs, antwortet ein zweiter `POST` mit
    `409` statt einen zweiten Lauf zu starten.
 4. Nach Abschluss zeigt die UI einen Toast mit der Kurzbilanz (z. B. „14
-   neu, 6 dedup") und lädt die Job-Liste automatisch neu.
+   neu, 6 dedup") und lädt die Job-Liste automatisch neu. Ist der Tab gerade
+   im Hintergrund, kommt zusätzlich eine **Desktop-Benachrichtigung**
+   („JoBBoT — Scrape fertig") — die Erlaubnis wird beim ersten Lauf-Start
+   abgefragt (`ui/notify.ts`), im Vordergrund bleibt es beim Toast, damit es
+   nicht doppelt meldet.
+
+Beim **Anschreiben**-Lauf taucht jeder fertige Brief sofort in seinem Ordner
+auf, nicht erst am Batch-Ende: das SSE-Grid meldet jedes fertige Item, die UI
+lädt genau diesen Job einzeln nach (`GET /api/jobs/:id`). Weil eine Generierung
+Minuten dauert, wäre „alles erst am Schluss" eine lange Stille.
 
 Der Server hält den Lauf-Status nur im Prozessspeicher (kein
 Neustart-Recovery) — für ein lokales Einzelnutzer-Tool ausreichend.
@@ -315,6 +324,12 @@ rekonstruiert genau diesen Betreff, um eingehende Antworten einem Job zuzuordnen
 Ein eigener Nachfass-Betreff ließe eine Antwort darauf am Betreff-Abgleich
 vorbeilaufen. Der Text ist neu und kurz, nicht das Anschreiben ein zweites Mal.
 
+Oben in der Ansicht stößt **Antworten abrufen** den Inbox-Abgleich an (siehe
+„Antworten abrufen" weiter unten). Antworten, die zu einer Firma passen, aber
+nicht eindeutig zu **einem** Job, erscheinen direkt darunter unter **„Antworten
+manuell zuordnen"** — so hört eine Bewerbung auf nachzufassen, sobald du die
+Antwort dem richtigen Job zuweist.
+
 ### Kalender
 
 Der Sidebar-Tab „Kalender" zeigt, wann Bewerbungen rausgingen (`sentAt`), wann
@@ -332,11 +347,23 @@ auseinanderliegende Monate keine Nachbarschaft vortäuschen; sie starten
 eingeklappt. Jeder Monatskopf ist ein Umschalter, die Summe daneben
 („2 gesendet · 1 Antwort") verrät auch im eingeklappten Zustand, ob sich das
 Aufklappen lohnt.
-Antworten werden nicht automatisch erkannt: ein „Antworten abrufen"-Button im
-„Gesendet"-Ordner (Verlauf) durchsucht die Gmail-Inbox per
-`POST /api/mail/replies/fetch` (E-Mail+Betreff-Abgleich, keine Message-ID) und
-setzt `replyReceivedAt` auf Treffer — Jobs mit Antwort tragen danach ein
-Badge „Antwort erhalten", mit Filter „Nur mit Antwort" im Verlauf.
+Antworten werden nicht automatisch erkannt: ein „Antworten abrufen"-Button (im
+„Gesendet"-Ordner des Verlaufs **und** in der Nachfassen-Ansicht) durchsucht die
+Gmail-Inbox per `POST /api/mail/replies/fetch` (E-Mail-/Betreff-Abgleich, keine
+Message-ID) und setzt `replyReceivedAt` auf sichere Treffer — Jobs mit Antwort
+tragen danach ein Badge „Antwort erhalten", mit Filter „Nur mit Antwort" im
+Verlauf.
+
+Der Betreff-Abgleich (`lib/mail-match.ts`, `classifyReplies`) ist bewusst
+robust: ein exakt rekonstruierter Betreff (`Bewerbung als … bei …`) ordnet zu,
+**egal von welcher Absender-Domain** — Firmen antworten oft von einer Tochter-,
+ATS- oder Weiterleitungs-Domain (echt gesehen: beworben an `starlim-sterner.com`,
+Antwort von `sterner-tools.com`). `Re:/AW:/WG:/Fwd:`, Tags wie `[extern]` und
+Leerraum werden vorher weggeschält. Passt eine Antwort zwar zu einer Firma, aber
+nicht eindeutig zu **einem** Job (mehrere offene Bewerbungen, generischer Betreff
+„Ihre Bewerbung"), wird sie nicht geraten, sondern in der Nachfassen-Ansicht
+unter **„Antworten manuell zuordnen"** angeboten — pro Antwort ein Knopf je
+Kandidat-Job, Klick setzt `replyReceivedAt` (`POST /api/mail/replies/assign`).
 
 ### Gmail-Sync (rückwirkend)
 
@@ -386,10 +413,11 @@ Drei Eigenschaften, auf die man sich verlassen kann:
   Datumsfelder.
 
 Die Zuordnung ist Heuristik, keine exakte Zuordnung: die Message-ID wurde beim
-ursprünglichen Senden nie gespeichert. Gematcht wird über die exakte
-Empfängeradresse, der rekonstruierte Betreff (`Bewerbung als … bei …`) dient
-nur als Tiebreaker, wenn mehrere Jobs dieselbe Firmenadresse teilen. Bleibt es
-mehrdeutig, wird nichts gesetzt — ungematchte Jobs bleiben schlicht undatiert.
+ursprünglichen Senden nie gespeichert. Gematcht wird über den rekonstruierten
+Betreff (`Bewerbung als … bei …`) und die Empfängeradresse. Bleibt es mehrdeutig,
+setzt der automatische Sync nichts; beim „Antworten abrufen"-Abgleich werden
+solche Fälle stattdessen zur **manuellen Zuordnung** angeboten (siehe oben), statt
+geraten zu werden.
 
 ## Tests
 
