@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGridStream, type LoadGridSection } from '../components/grid.tsx';
+import { notify, ensureNotifyPermission } from '../notify.ts';
 import type { ScrapeStatus } from './run-status-poll.ts';
 
 // status/wake kommen aus useRunStatusPoll (gemeinsamer Poll-Tick für alle drei Läufe).
@@ -45,19 +46,19 @@ export function useScrapeRun(
       // (review.html, Durchlauf 3). Der Einmal-pro-Lauf-Schutz oben reicht.
       window.dispatchEvent(new CustomEvent('tschobbo:scrape-done'));
       refetchJobs();
-      say(
-        status.status === 'error' ? `Scrape fehlgeschlagen: ${status.error}`
+      const msg = status.status === 'error' ? `Scrape fehlgeschlagen: ${status.error}`
         // Der Offline-Teil steht nur da, wenn wirklich etwas archiviert wurde —
         // ein "0 offline" in jedem Toast wäre eine Meldung ohne Nachricht.
         : `Scrape: ${status.result?.newTotal ?? 0} neu, ${status.result?.skipTotal ?? 0} dedup`
           + ((status.result?.offlineTotal ?? 0) > 0 ? `, ${status.result?.offlineTotal} offline archiviert` : '')
-          + ((status.result?.backTotal ?? 0) > 0 ? `, ${status.result?.backTotal} zurückgeholt` : ''),
-        status.status === 'error' ? 'err' : 'ok'
-      );
+          + ((status.result?.backTotal ?? 0) > 0 ? `, ${status.result?.backTotal} zurückgeholt` : '');
+      say(msg, status.status === 'error' ? 'err' : 'ok');
+      notify('JoBBoT — Scrape fertig', msg);
     }
   }, [status, refetchJobs, say]);
 
   async function runScrapeNow() {
+    ensureNotifyPermission();
     setScrapeStarting(true);
     setScrapeSections([]);
     try {
