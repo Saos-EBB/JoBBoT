@@ -19,6 +19,7 @@ function withFakeEventSource(): () => void {
 function setup(status: AnschreibenRunStatus | null) {
   const said: Array<[string, string | undefined]> = [];
   let refetched = false;
+  const refreshed: string[] = [];
   let highlighted = new Set<FolderId>();
   let started = false;
   const { result, rerender, unmount } = renderHook(
@@ -27,12 +28,13 @@ function setup(status: AnschreibenRunStatus | null) {
       () => {},
       (m, k) => said.push([m, k]),
       () => { refetched = true; },
+      (id) => { refreshed.push(id); },
       (fn) => { highlighted = fn(highlighted); },
       () => { started = true; },
     ),
     { status },
   );
-  return { result, rerender, unmount, said, refetchedRef: () => refetched, highlightedRef: () => highlighted, startedRef: () => started };
+  return { result, rerender, unmount, said, refetchedRef: () => refetched, refreshedRef: () => refreshed, highlightedRef: () => highlighted, startedRef: () => started };
 }
 
 test('Grundzustand: anschreibenFits startet mit matched+offstack, kein brutal', (t) => {
@@ -50,6 +52,20 @@ test('SSE-Events landen in anschreibenSections', async (t) => {
   act(() => { FakeEventSource.latest().emit({ index: 0, ok: true }); });
 
   assert.equal(result.current.anschreibenSections.length, 1);
+  unmount();
+});
+
+test('fertiges Item im SSE-Stream lädt genau diesen Job einzeln nach (nicht error-Items)', async (t) => {
+  t.after(withFakeEventSource());
+  const { refreshedRef, unmount } = setup(null);
+  await act(async () => { await flushAsync(); });
+
+  act(() => FakeEventSource.latest().emit({
+    section: 'run1', sectionLabel: 'Anschreiben', row: 'job1',
+    items: [{ id: 'job1', tooltip: 'x', state: 'done' }, { id: 'job2', tooltip: 'y', state: 'error' }],
+  }));
+
+  assert.deepEqual(refreshedRef(), ['job1']);
   unmount();
 });
 

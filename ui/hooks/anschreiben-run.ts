@@ -15,6 +15,7 @@ export function useAnschreibenRun(
   wake: () => void,
   say: (msg: string, kind?: 'ok' | 'err') => void,
   refetchJobs: () => void,
+  refreshJob: (id: string) => void,
   setHighlightFolders: (fn: (prev: Set<FolderId>) => Set<FolderId>) => void,
   onStarted: () => void,
 ) {
@@ -32,8 +33,13 @@ export function useAnschreibenRun(
   const lastSeenRunId = useRef<string | null>(null);
 
   // SSE statt Polling fürs Lade-Grid — ein Event pro fertigem (oder fehlgeschlagenem)
-  // Anschreiben, angehängt an anschreibenSections.
-  useGridStream('/api/anschreiben/stream', setAnschreibenSections);
+  // Anschreiben, angehängt an anschreibenSections. onEvent lädt zusätzlich jeden fertigen
+  // Job einzeln nach, damit sein Brief sofort im Ordner steht statt erst am Batch-Ende.
+  useGridStream('/api/anschreiben/stream', setAnschreibenSections, event => {
+    for (const item of event.items ?? []) {
+      if (item.state === 'done') refreshJob(item.id);
+    }
+  });
 
   useEffect(() => {
     if (!status) return;

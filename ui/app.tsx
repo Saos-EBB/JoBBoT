@@ -234,6 +234,18 @@ export default function JobbotUI() {
       .then((data: JobWithBrief[]) => setJobs(data));
   }, []);
 
+  // Einen einzelnen Job (inkl. Brief) nachladen und in die Liste patchen — für das
+  // Anschreiben-Grid: jeder fertige Brief soll sofort im Ordner auftauchen, nicht erst
+  // wenn der ganze Batch durch ist.
+  const refreshJob = useCallback(async (id: string) => {
+    try {
+      const res = await fetch(`/api/jobs/${id}`);
+      if (!res.ok) return;
+      const fresh = await res.json() as JobWithBrief;
+      setJobs(js => js.map(j => (j.id === id ? fresh : j)));
+    } catch { /* Netzwerk kurz weg — der Batch-Ende-Refetch holt es ohnehin nach */ }
+  }, []);
+
   useEffect(() => { refetchJobs(); }, [refetchJobs]);
 
   // Server-Schreiben unten. Es gibt bewusst keinen Weg, patch() direkt aus einem
@@ -269,7 +281,7 @@ export default function JobbotUI() {
     anschreibenFits, setAnschreibenFits, anschreibenLimit, setAnschreibenLimit,
     anschreibenStarting, anschreibenSections, setAnschreibenSections,
     runAnschreibenNow, stopAnschreibenNow,
-  } = useAnschreibenRun(anschreibenStatus, pollRunsNow, say, refetchJobs, setHighlightFolders, () => setSelectedJobIds(new Set()));
+  } = useAnschreibenRun(anschreibenStatus, pollRunsNow, say, refetchJobs, refreshJob, setHighlightFolders, () => setSelectedJobIds(new Set()));
 
   // Tschobbo-Hook Teil 2 (ui/tschobbo.js): Die geworfenen Klumpen hängen an
   // <body>, nicht im React-Baum — ohne dieses Event blieben sie beim Wechsel auf
