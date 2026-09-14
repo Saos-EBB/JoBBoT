@@ -3,7 +3,7 @@ import type { Job } from '../../scrapers/interface.ts';
 import type { CalendarEvent } from '../components/calendar.tsx';
 import { HISTORY_START } from '../../lib/calendar.ts';
 import type { RepliesFetchResponse } from '../../scripts/routes/gmail.ts';
-import type { GmailSyncResult } from '../../lib/gmail-sync.ts';
+import type { GmailSyncResult, AmbiguousReplyView } from '../../lib/gmail-sync.ts';
 import type { ErrorResponse } from '../../scripts/routes/http.ts';
 
 // patch/setDetailOpen sind Kern-State aus app.tsx (die lokale jobs-Liste bzw. die
@@ -19,6 +19,9 @@ export function useMailSync(
   const [replyOnly, setReplyOnly] = useState(false);
   const [repliesFetching, setRepliesFetching] = useState(false);
   const [gmailSyncing, setGmailSyncing] = useState(false);
+  // Antworten, die zu einer Firma passen, aber nicht eindeutig einem Job — der Nutzer
+  // ordnet sie manuell zu (siehe classifyReplies ambiguous). Kommt aus fetchReplies().
+  const [ambiguousReplies, setAmbiguousReplies] = useState<AmbiguousReplyView[]>([]);
   // Eigene Auswahl statt selectedJobIds: die hängt am Ordner und wird bei jedem
   // Ordnerwechsel geleert — der Nachfass-Tab ist kein Ordner.
   const [followUpSelection, setFollowUpSelection] = useState<Set<string>>(new Set());
@@ -31,13 +34,38 @@ export function useMailSync(
       const data = await res.json() as RepliesFetchResponse | ErrorResponse;
       if (!res.ok) { say(`Antworten-Abruf fehlgeschlagen: ${(data as ErrorResponse).error}`, 'err'); return; }
       const ok = data as RepliesFetchResponse;
-      say(`Antworten-Abruf: ${ok.matched} von ${ok.checked} Mails zugeordnet`, 'ok');
+      const ambiguous = ok.ambiguous ?? [];
+      setAmbiguousReplies(ambiguous);
+      say(
+        `Antworten-Abruf: ${ok.matched} von ${ok.checked} zugeordnet`
+        + (ambiguous.length ? `, ${ambiguous.length} zum manuellen Zuordnen` : ''),
+        'ok',
+      );
       if (ok.matched > 0) refetchJobs();
     } catch (err) {
       say(`Antworten-Abruf fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`, 'err');
     } finally {
       setRepliesFetching(false);
     }
+  }
+
+  // Legt eine mehrdeutige Antwort auf EINEN gewählten Job (setzt dessen replyReceivedAt
+  // serverseitig). Danach fällt der Eintrag aus der Liste und die Jobs werden neu geladen,
+  // damit der zugeordnete Job nicht mehr als "nachfassen" auftaucht.
+  async function assignReply(item: AmbiguousReplyView, jobId: string) {
+    const res = await fetch('/api/mail/replies/assign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jobId, date: item.reply.date }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null) as ErrorResponse | null;
+      say(body?.error ?? 'Zuordnen fehlgeschlagen', 'err');
+      return;
+    }
+    setAmbiguousReplies(prev => prev.filter(a => a !== item));
+    refetchJobs();
+    say('Antwort zugeordnet');
   }
 
   // Trägt sentAt/replyReceivedAt nach, die im Job-JSON fehlen — read-only gegenüber
@@ -137,6 +165,7 @@ export function useMailSync(
   return {
     replyOnly, setReplyOnly, repliesFetching, gmailSyncing,
     followUpSelection, setFollowUpSelection, followUpBusy,
+    ambiguousReplies, assignReply,
     fetchReplies, syncGmail, runFollowUps, createDraft, sendDirect,
   };
 }

@@ -291,6 +291,7 @@ export default function JobbotUI() {
   const {
     replyOnly, setReplyOnly, repliesFetching, gmailSyncing,
     followUpSelection, setFollowUpSelection, followUpBusy,
+    ambiguousReplies, assignReply,
     fetchReplies, syncGmail, runFollowUps, createDraft, sendDirect,
   } = useMailSync(say, refetchJobs, setCalendarEvents, patch, setDetailOpen);
 
@@ -1028,8 +1029,39 @@ export default function JobbotUI() {
               Bewerbungen ohne Rückmeldung seit mindestens {FOLLOW_UP_DAYS} Tagen. Die Uhr läuft ab dem letzten
               Kontakt, ein Nachfass setzt sie zurück — es bleibt fällig, bis eine Antwort da ist.
             </div>
+            <div style={{ marginTop: 8 }}>
+              <button className="btn btn--ghost" disabled={repliesFetching} onClick={fetchReplies}>
+                <Mail /> {repliesFetching ? 'Prüft…' : 'Antworten abrufen'}
+              </button>
+            </div>
           </header>
           <div className="dt__body">
+            {ambiguousReplies.length > 0 && (
+              <div style={{ marginBottom: 18, padding: 12, border: '1px solid var(--line)', borderRadius: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Antworten manuell zuordnen ({ambiguousReplies.length})</div>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>
+                  Diese Mails passen zu einer Firma, aber nicht eindeutig zu einer Bewerbung. Wähle die passende Stelle.
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {ambiguousReplies.map((item, i) => (
+                    <div key={`${item.reply.from}-${item.reply.date}`} style={{ borderTop: i ? '1px solid var(--line)' : 'none', paddingTop: i ? 10 : 0 }}>
+                      <div style={{ fontSize: 12 }}>
+                        <span className="tag">{item.reply.from}</span>{' '}
+                        <span style={{ color: 'var(--muted)' }}>{new Date(item.reply.date).toLocaleDateString('de-AT')}</span>
+                      </div>
+                      <div style={{ fontSize: 13, margin: '3px 0 7px' }}>„{item.reply.subject}"</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {item.candidates.map(c => (
+                          <button key={c.id} className="btn btn--ghost" style={{ fontSize: 12 }} onClick={() => assignReply(item, c.id)}>
+                            {c.company} — {c.title}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {faellig.length === 0 ? (
               <div className="empty">
                 <div className="empty__h">Nichts offen</div>
