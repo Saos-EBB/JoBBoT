@@ -24,9 +24,20 @@ function reconstructedSubject(job: Job): string {
   return `bewerbung als ${job.title} bei ${job.company}`.toLowerCase();
 }
 
-// Antworten hängen "Re:"/"AW:" (deutsche Mail-Clients) vor den Originalbetreff.
+// Antworten hängen "Re:"/"AW:"/"WG:"/"Fwd:" (deutsche wie englische Clients) vor den
+// Originalbetreff, oft mehrfach; Firmen-Gateways schieben zusätzlich Tags wie "[extern]"
+// oder "[EXTERN]-" davor. Alle diese Präfixe/Tags wiederholt von vorne wegschälen und
+// den Innen-Whitespace zusammenziehen — sonst rekonstruiert ein sonst exakter Betreff
+// nicht (echt beobachtet: "AW: [extern]- Bewerbung als … " von einem ooeg.at-Absender).
 function normalizeReplySubject(subject: string): string {
-  return subject.replace(/^\s*(re|aw|antwort)\s*:\s*/i, '').trim().toLowerCase();
+  let s = subject.trim();
+  let prev: string;
+  do {
+    prev = s;
+    s = s.replace(/^\s*(re|aw|antwort|wg|fwd|fw)\s*:\s*/i, '');
+    s = s.replace(/^\s*\[[^\]]*\]\s*-?\s*/, '');
+  } while (s !== prev);
+  return s.replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
 // Rückwirkende Zuordnung gesendeter Mails: die Message-ID wurde beim ursprünglichen

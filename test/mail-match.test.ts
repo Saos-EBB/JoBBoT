@@ -39,6 +39,17 @@ test('ignores jobs that are not status "gesendet"', () => {
   assert.equal(matches.length, 0);
 });
 
+test('normalisiert [extern]-Tag, doppelte Präfixe und Trailing-Space im Betreff', () => {
+  const job = gesendetJob({ title: 'Lehrling Informationstechnologie-Systemtechnik', company: 'OÖ Gesundheitsholding GmbH', email: 'karriere@ooeg.at' });
+  const r = reply({
+    from: 'karriere@ooeg.at',
+    subject: 'AW: [extern]- Bewerbung als Lehrling Informationstechnologie-Systemtechnik bei OÖ Gesundheitsholding GmbH ',
+  });
+  const matches = matchReplies([r], [job]);
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].job.id, job.id);
+});
+
 test('shared-inbox domain with two jobs: subject disambiguates', () => {
   const a = gesendetJob({ title: 'Junior Developer', company: 'Acme' });
   const b = gesendetJob({ title: 'Senior Developer', company: 'Acme' });
