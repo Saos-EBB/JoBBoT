@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { matchReplies, matchSent } from '../lib/mail-match.ts';
+import { matchReplies, matchSent, classifyReplies } from '../lib/mail-match.ts';
 import { toJob } from '../lib/normalize.ts';
 import type { Job } from '../scrapers/interface.ts';
 import type { InboxReply, SentMail } from '../mail/gmail.ts';
@@ -65,10 +65,51 @@ test('shared-inbox domain, ambiguous subject: skipped rather than guessed', () =
   assert.equal(matches.length, 0);
 });
 
-test('no match when sender domain differs from job.email', () => {
+test('anderer Absender-Domain, aber exakter Betreff → zugeordnet (Betreff schlägt Domain)', () => {
+  // Echt beobachtet: beworben an starlim-sterner.com, Antwort von sterner-tools.com;
+  // beworben an develite-it-solutions.com, Antwort von develite.at. Der Voll-Betreff
+  // ist eindeutiger als die Domain.
   const job = gesendetJob({ email: 'office@acme.at' });
-  const matches = matchReplies([reply({ from: 'office@other.at' })], [job]);
+  const matches = matchReplies([reply({ from: 'recruiting@ganz-anders.com' })], [job]);
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].job.id, job.id);
+});
+
+test('anderer Absender-Domain UND kein Betreff-Treffer → nicht zugeordnet', () => {
+  const job = gesendetJob({ email: 'office@acme.at' });
+  const matches = matchReplies([reply({ from: 'office@other.at', subject: 'Ihre Unterlagen sind eingegangen' })], [job]);
   assert.equal(matches.length, 0);
+});
+
+test('Betreff-Treffer bei ZWEI gleichnamigen Jobs bleibt mehrdeutig (kein Raten über Domain hinweg)', () => {
+  const a = gesendetJob({ title: 'Junior Developer', company: 'Acme', email: 'office@acme.at' });
+  const b = gesendetJob({ title: 'Junior Developer', company: 'Acme', email: 'jobs@acme-anders.com' });
+  // Reply von dritter Domain mit dem gemeinsamen Betreff → zwei Betreff-Treffer → nicht raten.
+  const matches = matchReplies([reply({ from: 'x@dritte.com' })], [a, b]);
+  assert.equal(matches.length, 0);
+});
+
+test('classifyReplies: mehrdeutige Antwort (Domain passt, kein eindeutiger Betreff) → ambiguous', () => {
+  const a = gesendetJob({ title: 'Junior Developer', company: 'Acme' });
+  const b = gesendetJob({ title: 'Senior Developer', company: 'Acme' });
+  const { matched, ambiguous } = classifyReplies([reply({ subject: 'Ihre Bewerbung' })], [a, b]);
+  assert.equal(matched.length, 0);
+  assert.equal(ambiguous.length, 1);
+  assert.deepEqual(new Set(ambiguous[0].candidateJobIds), new Set([a.id, b.id]));
+});
+
+test('classifyReplies: eindeutig zugeordnete Antwort ist NICHT ambiguous', () => {
+  const { matched, ambiguous } = classifyReplies([reply()], [gesendetJob()]);
+  assert.equal(matched.length, 1);
+  assert.equal(ambiguous.length, 0);
+});
+
+test('classifyReplies: schon beantwortete Kandidaten fallen aus der Ambiguous-Liste', () => {
+  const a = { ...gesendetJob({ title: 'Junior Developer', company: 'Acme' }), replyReceivedAt: '2026-07-03T00:00:00.000Z' };
+  const b = gesendetJob({ title: 'Senior Developer', company: 'Acme' });
+  const { ambiguous } = classifyReplies([reply({ subject: 'Ihre Bewerbung' })], [a, b]);
+  assert.equal(ambiguous.length, 1);
+  assert.deepEqual(ambiguous[0].candidateJobIds, [b.id]);
 });
 
 // --- Sent-Ordner-Scan (rückwirkendes sentAt) ---

@@ -89,26 +89,65 @@ export function parseBewerbungsBetreff(subject: string): { title: string; compan
   return m ? { title: m[1].trim(), company: m[2].trim() } : null;
 }
 
-// Primär: Absenderdomain gegen job.email. Sekundär: Betreff-Abgleich, nötig weil eine
-// Firma dieselbe (geteilte) Inbox-Adresse für mehrere Stellen nutzen kann — ohne
-// eindeutigen Betreff-Treffer wird eine mehrdeutige Domain lieber übersprungen als
-// geraten zugeordnet.
-export function matchReplies(replies: InboxReply[], jobs: Job[]): ReplyMatch[] {
+// Eine Antwort, die zu einer gesendeten Bewerbung gehört (Domain passt), aber nicht
+// eindeutig EINEM Job zugeordnet werden kann — mehrere offene Jobs derselben Firma, und
+// der Betreff ("Ihre Bewerbung") sagt nicht welcher. candidateJobIds sind die offenen
+// Kandidaten; die Zuordnung trifft der Mensch (siehe /api/mail/replies/assign).
+export interface AmbiguousReply {
+  reply: InboxReply;
+  candidateJobIds: string[];
+}
+
+export interface ReplyClassification {
+  matched: ReplyMatch[];
+  ambiguous: AmbiguousReply[];
+}
+
+// Ordnet eingehende Antworten den gesendeten Bewerbungen zu und trennt dabei die sicher
+// zuordenbaren von den mehrdeutigen. Reihenfolge der Signale:
+//  1. Betreff schlägt Domain: rekonstruiert der Voll-Betreff EINDEUTIG einen gesendeten
+//     Job, wird er zugeordnet — egal von welcher Absender-Domain. Firmen antworten oft
+//     von einer anderen Domain als der beworbenen (Tochter/ATS/Weiterleitung); ein
+//     exakter Betreff-Treffer ist stärker als Domain-Gleichheit (echt beobachtet:
+//     starlim-sterner.com → sterner-tools.com, develite-it-solutions.com → develite.at).
+//  2. Domain + eindeutiger Betreff, oder Domain mit nur einem offenen Job → zugeordnet.
+//  3. Domain passt, aber mehrere offene Jobs und kein eindeutiger Betreff → mehrdeutig,
+//     zur manuellen Zuordnung angeboten statt geraten.
+export function classifyReplies(replies: InboxReply[], jobs: Job[]): ReplyClassification {
   // "Wurde gesendet" heißt Status gesendet ODER ein sentAt aus dem rückwirkenden Sync —
   // der ändert per Auftrag keinen Status, seine Funde fielen sonst hier still durch.
   const gesendet = jobs.filter((j): j is Job & { email: string } => (j.status === 'gesendet' || !!j.sentAt) && !!j.email);
-  const matches: ReplyMatch[] = [];
+  const matched: ReplyMatch[] = [];
+  const ambiguous: AmbiguousReply[] = [];
 
   for (const reply of replies) {
-    const replyDomain = domain(reply.from);
     // sentAt ist das echte Sendedatum; updatedAt nur der Notnagel für Altbestand ohne sentAt.
-    const candidates = gesendet.filter(j => domain(j.email) === replyDomain && new Date(j.sentAt ?? j.updatedAt) <= reply.date);
-    if (candidates.length === 0) continue;
+    const sentBefore = (j: Job) => new Date(j.sentAt ?? j.updatedAt) <= reply.date;
+    const subjectMatches = (j: Job) => normalizeReplySubject(reply.subject) === reconstructedSubject(j);
 
-    const bySubject = candidates.filter(j => normalizeReplySubject(reply.subject) === reconstructedSubject(j));
-    const best = bySubject.length === 1 ? bySubject[0] : candidates.length === 1 ? candidates[0] : undefined;
-    if (best) matches.push({ job: best, reply });
+    // 1) Betreff schlägt Domain — nur bei GENAU einem Treffer (sonst mehrdeutig).
+    const bySubjectAll = gesendet.filter(j => sentBefore(j) && subjectMatches(j));
+    if (bySubjectAll.length === 1) { matched.push({ job: bySubjectAll[0], reply }); continue; }
+
+    // 2) Domain-basiert.
+    const replyDomain = domain(reply.from);
+    const candidates = gesendet.filter(j => domain(j.email) === replyDomain && sentBefore(j));
+    if (candidates.length === 0) continue; // keine Domain-Verbindung → nicht anfassen, nicht anbieten
+
+    const bySubject = candidates.filter(subjectMatches);
+    if (bySubject.length === 1) { matched.push({ job: bySubject[0], reply }); continue; }
+    if (candidates.length === 1) { matched.push({ job: candidates[0], reply }); continue; }
+
+    // 3) Domain passt, mehrdeutig → offene Kandidaten zur manuellen Zuordnung anbieten.
+    const offen = candidates.filter(j => !j.replyReceivedAt);
+    if (offen.length > 0) ambiguous.push({ reply, candidateJobIds: offen.map(j => j.id) });
   }
 
-  return matches;
+  return { matched, ambiguous };
+}
+
+// Rückwärtskompatible Hülle: die sicheren Zuordnungen (runGmailSync/fetchAndFillReplies
+// füllen daraus replyReceivedAt).
+export function matchReplies(replies: InboxReply[], jobs: Job[]): ReplyMatch[] {
+  return classifyReplies(replies, jobs).matched;
 }
