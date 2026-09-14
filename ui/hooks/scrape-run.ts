@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGridStream, type LoadGridSection } from '../components/grid.tsx';
-import { notify, ensureNotifyPermission } from '../notify.ts';
 import type { ScrapeStatus } from './run-status-poll.ts';
 
 // status/wake kommen aus useRunStatusPoll (gemeinsamer Poll-Tick für alle drei Läufe).
@@ -53,12 +52,10 @@ export function useScrapeRun(
           + ((status.result?.offlineTotal ?? 0) > 0 ? `, ${status.result?.offlineTotal} offline archiviert` : '')
           + ((status.result?.backTotal ?? 0) > 0 ? `, ${status.result?.backTotal} zurückgeholt` : '');
       say(msg, status.status === 'error' ? 'err' : 'ok');
-      notify('JoBBoT — Scrape fertig', msg);
     }
   }, [status, refetchJobs, say]);
 
   async function runScrapeNow() {
-    ensureNotifyPermission();
     setScrapeStarting(true);
     setScrapeSections([]);
     try {

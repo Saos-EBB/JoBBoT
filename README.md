@@ -222,11 +222,12 @@ Scrape/Filter/Anschreiben laufen nach demselben Muster:
 3. Läuft bereits ein Lauf desselben Typs, antwortet ein zweiter `POST` mit
    `409` statt einen zweiten Lauf zu starten.
 4. Nach Abschluss zeigt die UI einen Toast mit der Kurzbilanz (z. B. „14
-   neu, 6 dedup") und lädt die Job-Liste automatisch neu. Ist der Tab gerade
-   im Hintergrund, kommt zusätzlich eine **Desktop-Benachrichtigung**
-   („JoBBoT — Scrape fertig") — die Erlaubnis wird beim ersten Lauf-Start
-   abgefragt (`ui/notify.ts`), im Vordergrund bleibt es beim Toast, damit es
-   nicht doppelt meldet.
+   neu, 6 dedup") und lädt die Job-Liste automatisch neu. Zusätzlich feuert der
+   **Server** eine **Desktop-Benachrichtigung** („JoBBoT — Scrape fertig") über
+   `notify-send` (`lib/desktop-notify.ts`) — die erscheint aufs Betriebssystem,
+   **egal ob der Browser-Tab im Vordergrund, im Hintergrund oder ganz geschlossen
+   ist**, weil der Lauf ohnehin im Server-Prozess weiterläuft. Best-effort: auf
+   Nicht-Linux oder ohne installiertes `notify-send` passiert einfach nichts.
 
 Beim **Anschreiben**-Lauf taucht jeder fertige Brief sofort in seinem Ordner
 auf, nicht erst am Batch-Ende: das SSE-Grid meldet jedes fertige Item, die UI

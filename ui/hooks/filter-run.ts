@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGridStream, type LoadGridSection } from '../components/grid.tsx';
-import { notify, ensureNotifyPermission } from '../notify.ts';
 import type { FilterRunStatus } from './run-status-poll.ts';
 import type { FilterMode } from '../../lib/settings.ts';
 import type { SettingsResponse } from '../../scripts/routes/filter.ts';
@@ -37,12 +36,10 @@ export function useFilterRun(
         ? `Filter fehlgeschlagen: ${status.error}`
         : `Filter: ${status.result?.matched ?? 0} Match, ${status.result?.offstack ?? 0} Offstack, ${status.result?.brutal ?? 0} Brutal`;
       say(msg, status.status === 'error' ? 'err' : 'ok');
-      notify('JoBBoT — Filter fertig', msg);
     }
   }, [status, refetchJobs, say]);
 
   async function runFilterNow() {
-    ensureNotifyPermission();
     setFilterStarting(true);
     setFilterSections([]);
     try {

@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { canGenerateAnschreiben } from '../../lib/folders.ts';
 import { runAnschreiben } from '../../lib/anschreiben-runner.ts';
+import { desktopNotify } from '../../lib/desktop-notify.ts';
 import { createSseChannel, attachSseClient, type GridUnitEvent } from './sse-channel.ts';
 import { respondJson, readJsonBody } from './http.ts';
 import { createRunState } from './run-state.ts';
@@ -69,6 +70,12 @@ export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerR
           status: abort.signal.aborted ? 'stopped' as const : 'done' as const,
         };
       });
+      const snap = anschreibenRun.get();
+      desktopNotify('JoBBoT — Anschreiben fertig', snap.status === 'error'
+        ? `Fehlgeschlagen: ${snap.error ?? ''}`
+        : snap.status === 'stopped'
+          ? `Abgebrochen: ${snap.result?.generated ?? 0} generiert`
+          : `${snap.result?.generated ?? 0} generiert, ${snap.result?.skipped ?? 0} übersprungen`);
     } finally {
       anschreibenAbort = null;
     }

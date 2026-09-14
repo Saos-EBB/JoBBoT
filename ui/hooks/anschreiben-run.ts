@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGridStream, type LoadGridSection } from '../components/grid.tsx';
-import { notify, ensureNotifyPermission } from '../notify.ts';
 import type { AnschreibenRunStatus } from './run-status-poll.ts';
 import type { Fit } from '../../scrapers/interface.ts';
 import type { FolderId } from '../../lib/folders.ts';
@@ -51,7 +50,6 @@ export function useAnschreibenRun(
         : status.status === 'stopped' ? `Anschreiben abgebrochen: ${status.result?.generated ?? 0} generiert, ${status.result?.emailsFound ?? 0} E-Mails gefunden`
         : `Anschreiben: ${status.result?.generated ?? 0} generiert, ${status.result?.skipped ?? 0} übersprungen, ${status.result?.emailsFound ?? 0} E-Mails gefunden`;
       say(msg, status.status === 'error' ? 'err' : 'ok');
-      notify('JoBBoT — Anschreiben fertig', msg);
       // Nur den Entwürfe-Ordner markieren, der wirklich einen neuen Job bekommen
       // hat — mailGenerated/nomailGenerated sind die Aufschlüsselung von `generated`
       // nach Mail-Status am Ende des Laufs (siehe lib/anschreiben-runner.ts).
@@ -71,7 +69,6 @@ export function useAnschreibenRun(
   // von Job-IDs, nur unterschiedlich groß.
   async function runAnschreibenNow(jobIds: string[]) {
     if (jobIds.length === 0) return;
-    ensureNotifyPermission();
     setAnschreibenStarting(true);
     setAnschreibenSections([]);
     try {
