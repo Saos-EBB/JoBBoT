@@ -150,3 +150,16 @@ test('der gelaufene Modus steht im Ergebnis, damit Zusammenfassung und Bericht i
   const outcome = await runFilter({ storage, mode: 'llm', filter: fakeFilter, writeReport: () => {} });
   assert.equal(outcome.mode, 'llm');
 });
+
+test('llm-Modus mit echtem Filter und totem Ollama: Lauf scheitert, statt still alles als offstack zu sortieren', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = await storageMit(dir, [sample('Meins')]);
+
+  // Remote-Host (TEST-NET), damit garantiert kein Autostart ausgelöst wird.
+  await assert.rejects(
+    runFilter({ storage, mode: 'llm', ollama: 'http://192.0.2.1:11434', writeReport: () => {} }),
+    /Ollama unter .* nicht erreichbar/,
+  );
+  assert.equal((await storage.get(sample('Meins').id))?.status, 'new');
+});

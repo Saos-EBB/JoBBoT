@@ -4,6 +4,7 @@ import { filterJob } from './filter.ts';
 import type { TriagedDecision } from './filter.ts';
 import { writeFilterReport } from './filter-report.ts';
 import { loadSettings } from './settings.ts';
+import { ensureOllama } from './ollama.ts';
 import type { FilterMode } from './settings.ts';
 
 // Das Geschwister zu lib/scrape-runner.ts und lib/anschreiben-runner.ts: die eine
@@ -59,6 +60,11 @@ export async function runFilter(options: RunFilterOptions): Promise<FilterOutcom
   // Hälfte anders als die erste.
   const mode = options.mode ?? loadSettings().filterMode;
   const filter = options.filter ?? (job => filterJob(job, storage, ollama, mode));
+
+  // Nur im LLM-Modus und nur mit dem echten Filter (Tests injizieren `filter`). Ohne das
+  // wertet filter-llm einen nicht erreichbaren Server als "kein Urteil" und der Lauf
+  // sortiert still alles als offstack ein, statt zu scheitern.
+  if (mode === 'llm' && !options.filter) await ensureOllama(ollama);
 
   const jobs = await storage.list(scope === 'all' ? undefined : { status: 'new' });
 
