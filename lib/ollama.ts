@@ -1,3 +1,4 @@
+import { spawn, spawnSync } from 'node:child_process';
 import { config } from '../config.ts';
 import { loadSettings } from './settings.ts';
 
@@ -24,6 +25,45 @@ export async function checkOllama(
   } catch {
     return { ok: false, found: [], missing: needed };
   }
+}
+
+async function isUp(host: string): Promise<boolean> {
+  try {
+    return (await fetch(`${host}/api/tags`, { signal: AbortSignal.timeout(1500) })).ok;
+  } catch {
+    return false;
+  }
+}
+
+// Bevorzugt den systemd-User-Dienst (überlebt den Bot, wird von systemd überwacht),
+// fällt auf einen losgelösten `ollama serve` zurück, wenn es den Dienst nicht gibt.
+function startLocalOllama(): void {
+  const r = spawnSync('systemctl', ['--user', 'start', 'ollama'], { timeout: 10_000 });
+  if (r.status === 0) return;
+  // 'error'-Handler nötig: fehlt das Binary, wird sonst ein unbehandeltes Event zum Absturz.
+  spawn('ollama', ['serve'], { detached: true, stdio: 'ignore' }).on('error', () => {}).unref();
+}
+
+// Stellt vor einem LLM-Lauf sicher, dass Ollama antwortet — startet es bei Bedarf selbst
+// (nur für lokale Hosts) und wartet, bis es erreichbar ist. Wirft mit klarer Meldung statt
+// später mit einem kryptischen "fetch failed". Der gestartete Server bleibt absichtlich
+// laufen (er entlädt das Modell selbst nach keep_alive, Default 5 min).
+export async function ensureOllama(
+  host = config.ollamaHost,
+  { start = startLocalOllama, timeoutMs = 30_000 }: { start?: () => void; timeoutMs?: number } = {},
+): Promise<void> {
+  if (await isUp(host)) return;
+  const { hostname } = new URL(host);
+  if (!['localhost', '127.0.0.1', '::1', '[::1]'].includes(hostname)) {
+    throw new Error(`Ollama unter ${host} nicht erreichbar (Remote-Host, kein Autostart)`);
+  }
+  start();
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    await new Promise(r => setTimeout(r, 500));
+    if (await isUp(host)) return;
+  }
+  throw new Error(`Ollama nicht erreichbar: ${host} — Start versucht, keine Antwort nach ${Math.round(timeoutMs / 1000)}s (systemctl --user status ollama)`);
 }
 
 // Ollama streamt bei stream:true NDJSON (ein JSON-Objekt pro Zeile). Konkateniert

@@ -5,6 +5,7 @@ import { logTimestamp } from '../lib/log-timestamp.ts';
 import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import { loadProfile } from '../lib/profile.ts';
 import { createProgress } from '../lib/progress.ts';
+import { ensureOllama } from '../lib/ollama.ts';
 import { config } from '../config.ts';
 
 const profile = loadProfile();
@@ -41,6 +42,7 @@ if (jobs.length === 0) {
   process.exit(0);
 }
 
+await ensureOllama();
 console.log(`Modell: ${model}`);
 const prog = createProgress(`Anschreiben — 0/${jobs.length}...`);
 

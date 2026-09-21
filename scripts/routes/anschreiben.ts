@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { canGenerateAnschreiben } from '../../lib/folders.ts';
 import { runAnschreiben } from '../../lib/anschreiben-runner.ts';
+import { ensureOllama } from '../../lib/ollama.ts';
 import { desktopNotify } from '../../lib/desktop-notify.ts';
 import { createSseChannel, attachSseClient, type GridUnitEvent } from './sse-channel.ts';
 import { respondJson, readJsonBody } from './http.ts';
@@ -55,6 +56,7 @@ export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerR
           return { result: { generated: 0, skipped: preSkipped, emailsFound: 0, mailGenerated: 0, nomailGenerated: 0 } };
         }
 
+        await ensureOllama();
         const { generated, skipped, emailsFound, mailGenerated, nomailGenerated } = await runAnschreiben({
           jobs,
           storage: ctx.storage,

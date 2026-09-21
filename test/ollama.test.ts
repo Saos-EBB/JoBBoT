@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { AddressInfo } from 'node:net';
-import { checkOllama, resolveModels } from '../lib/ollama.ts';
+import { checkOllama, ensureOllama, resolveModels } from '../lib/ollama.ts';
 import { config } from '../config.ts';
 import { mockOllama, tmpDir, rmTmp } from './helpers.ts';
 
@@ -92,4 +92,48 @@ test('server not reachable → ok:false, no throw', async (t) => {
 
   const result = await checkOllama(`http://127.0.0.1:${port}`);
   assert.equal(result.ok, false);
+});
+
+test('ensureOllama: läuft schon → start wird nicht aufgerufen', async (t) => {
+  const mock = await mockOllama([WRITER]);
+  t.after(mock.close);
+  let started = false;
+  await ensureOllama(mock.url, { start: () => { started = true; } });
+  assert.equal(started, false);
+});
+
+test('ensureOllama: down → ruft start auf und wartet, bis der Server antwortet', async (t) => {
+  // Freien Port reservieren, wieder freigeben (down), start() bindet den Mock dort.
+  const probe = await mockOllama([]);
+  const url = probe.url;
+  probe.close();
+  await new Promise(r => setTimeout(r, 50));
+  let late: { close: () => void } | undefined;
+  t.after(() => late?.close());
+  await ensureOllama(url, {
+    start: () => {
+      const port = Number(new URL(url).port);
+      const server = createServer((_, res) => { res.writeHead(200); res.end('{"models":[]}'); });
+      server.listen(port, '127.0.0.1');
+      late = { close: () => server.close() };
+    },
+    timeoutMs: 5000,
+  });
+  assert.ok(late);
+});
+
+test('ensureOllama: start bringt nichts hoch → wirft mit klarer Meldung', async () => {
+  await assert.rejects(
+    ensureOllama('http://127.0.0.1:1', { start: () => {}, timeoutMs: 700 }),
+    /Ollama nicht erreichbar/,
+  );
+});
+
+test('ensureOllama: Remote-Host → kein Autostart, wirft', async () => {
+  let started = false;
+  await assert.rejects(
+    ensureOllama('http://192.0.2.1:11434', { start: () => { started = true; }, timeoutMs: 500 }),
+    /Remote-Host/,
+  );
+  assert.equal(started, false);
 });
