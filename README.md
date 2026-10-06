@@ -541,3 +541,17 @@ Das ist das bestehende Duplikat-Thema — `npm run duplicates` zeigt es an.
 | `GMAIL_USER` | — (siehe [Gmail-Anbindung](#gmail-anbindung)) |
 | `GMAIL_APP_PASSWORD` | — (siehe [Gmail-Anbindung](#gmail-anbindung)) |
 | `UI_PORT` | `3000` (überschreibbar per `npm run ui -- --port=<n>`, das gewinnt vor `UI_PORT`) |
+
+## Logs
+
+`data/mail-log.md` (versendete/entworfene Bewerbungen) und `data/filter-log.md`
+(Filter-Läufe) enthalten echte Firmen und Kontaktadressen und sind deshalb
+gitignored. Das Format zeigen [`data/mail-log.example.md`](data/mail-log.example.md)
+und [`data/filter-log.example.md`](data/filter-log.example.md). Die echten Dateien
+legt der Bot beim ersten Lauf selbst an.
+
+## Lizenz
+
+All rights reserved, siehe [`LICENSE`](LICENSE). Der Code ist öffentlich zum
+Lesen (z. B. für Recruiter:innen), nicht zur Weiterverwendung. Abhängigkeiten
+stehen unter ihren eigenen Lizenzen.

@@ -29,3 +29,8 @@ config/*.json.bak
 # Standalone-Testseite für ui/tschobbo.js: lädt das Maskottchen-Modul ohne den
 # React-Bau und überbrückt dafür prefers-reduced-motion. Werkzeug, kein Projektinhalt.
 ui/tschobbo-test.html
+
+# Echte Logs (Bewerbungen, Firmen, Kontaktadressen) bleiben lokal.
+# Format-Beispiele: data/*.example.md
+data/mail-log.md
+data/filter-log.md

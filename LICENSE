@@ -1,0 +1,13 @@
+Copyright (c) 2026 Kevin Schaberl. All rights reserved.
+
+This repository is public so that recruiters, reviewers and anyone
+interested can read the source code of JoBBoT and run it locally to
+evaluate my work.
+
+No other rights are granted. You may not copy, modify, redistribute,
+host, sell or otherwise use the code or texts, in whole or in part,
+without my written permission.
+
+Third-party dependencies stay under their own licenses (see each package
+in node_modules). Job ads stored under test/fixtures/ belong to the
+respective employers and job portals and are kept only as test data.
