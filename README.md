@@ -14,6 +14,24 @@ Anschreiben tippt und die Bewerbung in den Ordner einsortiert — die Pipeline
 soll sich weniger nach totem Skript-Output anfühlen und mehr danach, dass da
 jemand für dich arbeitet.
 
+## Was es kann
+
+- **Scrapen** von fünf österreichischen Portalen (karriere.at, devjobs.at,
+  LinkedIn, AMS, jobs.at), gefiltert auf deinen Umkreis.
+- **Filtern** per Regex (offline, ohne Modell) oder per **JEV**, einem kleinen
+  lokalen Klassifizierer (Bespoke Nimble 9B): passt die Stelle zu deinen
+  Wunschbereichen, verlangt sie mehr Erfahrung als du hast?
+- **Anschreiben** schreibt ein lokales LLM (Gemma 4 26B über llama.cpp) aus
+  Inserat und deinem Profil, du liest und bearbeitest es in der UI.
+- **Gmail-Entwurf** per Knopf; abgeschickt wird von dir, in Gmail.
+- **Nachverfolgen:** Gmail-Sync erkennt gesendete Bewerbungen und ordnet
+  Antworten zu, JEV sortiert sie (Absage, Zusage, Datenschutz zustimmen, über
+  Portal bewerben, Eingangsbestätigung). Dazu Nachfassen, ein Kalender und ein
+  druckfertiger Bewerbungsnachweis fürs AMS.
+
+Alles läuft auf deinem Rechner. Kein Konto, keine Cloud, kein automatischer
+Versand.
+
 ## Setup
 
 ```bash
@@ -163,7 +181,7 @@ Das läuft über ein Gmail App-Passwort, nicht
 4. `npm run ui` — lädt `.env` automatisch (`--env-file-if-exists`, braucht
    Node ≥21.7).
 
-Fehlt `.env`, läuft die UI trotzdem — nur Entwurf/Senden schlagen mit einer
+Fehlt `.env`, läuft die UI trotzdem — nur Gmail-Aktionen schlagen mit einer
 klaren Fehlermeldung fehl statt die Seite zu blockieren.
 
 ## UI & Server
@@ -176,7 +194,7 @@ klaren Fehlermeldung fehl statt die Seite zu blockieren.
   jeder Änderung an `ui/app.tsx` muss neu gebaut werden — kein Hot-Reload.
 - **JSON-API**, die das SPA per `fetch` anspricht: `/api/jobs`,
   `/api/jobs/:id` (Status/Fit ändern), `/api/jobs/:id/brief` (Anschreiben
-  bearbeiten), `/api/jobs/:id/draft` bzw. `/api/jobs/:id/send` (Gmail),
+  bearbeiten), `/api/jobs/:id/draft` (Gmail-Entwurf),
   `/api/attachment` (Lebenslauf-Upload), `/api/duplicates` (Duplikat-Report,
   GET, synchron), `/api/duplicates/merge` (Duplikat-Gruppe zusammenführen),
   `/api/calendar` (Kalender-Ereignisse, GET, synchron), `/api/mail/replies/fetch`
@@ -193,13 +211,14 @@ Die Oberfläche hat drei Breitenbänder:
 - **unter 1024px** wird die Seitenleiste zu einer Schublade (Burger in einer
   Kopfzeile, Overlay, Esc). Der Startordner ist dort der erste nicht-leere,
   sonst der Scraper — sonst landet man auf einem leeren Ordner ohne Weg heraus.
-
-Der zuletzt gewählte Ordner wird in `localStorage` gemerkt und überlebt einen
-Reload. Vorher startete jedes F5 hart auf „Mit Mail → Entwürfe"; wer in „Ohne
-Mail → Entwürfe" stand, landete danach im gleichnamigen, aber leeren
-Nachbarordner — es sah aus, als wären die Entwürfe verschwunden.
 - **1024–2000px**: drei Spalten, stetig über `clamp()` statt in Stufen.
 - **ab 2000px** stehen Anschreiben und Inserat nebeneinander statt in Tabs.
+
+Die Pipeline-Gruppe sitzt unten in der Seitenleiste fest, nur die Ordnerliste
+darüber scrollt. Der zuletzt gewählte Ordner wird in `localStorage` gemerkt und
+überlebt einen Reload. Vorher startete jedes F5 hart auf „Mit Mail → Entwürfe";
+wer in „Ohne Mail → Entwürfe" stand, landete danach im gleichnamigen, aber
+leeren Nachbarordner — es sah aus, als wären die Entwürfe verschwunden.
 
 ### Scrape/Filter aus der UI
 
@@ -374,8 +393,8 @@ Kandidat-Job, Klick setzt `replyReceivedAt` (`POST /api/mail/replies/assign`).
 Der Button „Gmail-Sync" oben rechts im Kalender-Tab trägt Daten nach, die im
 Job-JSON fehlen (`POST /api/gmail-sync`): der
 Gesendet-Ordner liefert `sentAt`, die Inbox `replyReceivedAt`. Gedacht für
-Bewerbungen, die vor der Einführung dieser Felder rausgingen oder händisch
-am Bot vorbei — laufende Versände schreiben ihr `sentAt` ohnehin selbst.
+Bewerbungen, die du in Gmail abschickst — auch die vom Bot angelegten
+Entwürfe — und solche, die händisch am Bot vorbei rausgingen.
 
 Gescannt wird ab `HISTORY_START` (`lib/calendar.ts`, aktuell `2026-07-01`) —
 derselbe Startpunkt, ab dem der Kalender anzeigt.
@@ -447,7 +466,7 @@ druckfertige Seite (A4 quer) mit Name, Zeitraum, Anzahl Bewerbungen, davon
 mit Antwort/Absage, und einer Tabelle **Nr. · Datum · Unternehmen · Stelle ·
 Ort · Bewerbungsweg (E-Mail an …) · Quelle (verlinkt) · Antwort (Art +
 Datum)**. Drin ist jeder Job mit `sentAt` oder Status `gesendet` (auch später
-gelöschte) plus die job-losen, in Gmail gelabelten Bewerbungsmails;
+gelöschte) plus die job-losen Bewerbungsmails aus dem Gmail-Sync;
 undatierter Altbestand steht am Ende. Oben lässt sich ein Zeitraum
 (`?von=&bis=`) wählen; „Drucken / als PDF sichern" nutzt den Browser-Druck,
 Formular und Knöpfe erscheinen nicht im Ausdruck (`lib/nachweis.ts`).
@@ -533,12 +552,13 @@ new/triaged ⇄ offline   (Offline-Archiv, siehe unten — beide Richtungen auto
 Urteil steckt in einem eigenen `fit`-Feld (`matched`/`offstack`/`brutal`,
 weiterhin manuell in der UI überschreibbar), nicht mehr im Status selbst.
 `anschreiben` setzt `generated`. `freigegeben` wird manuell in der UI gesetzt
-— erst danach schaltet die UI Entwurf/Versand frei. `postausgang` (Gmail-
-Entwurf erstellt, Versand noch nicht bestätigt) und `gesendet` setzt die UI
-selbst, nur bei tatsächlich erfolgreichem Gmail-Aufruf (kein Statuswechsel bei
-Fehlern, die landen stattdessen auf `fehler`). `geloescht` ist von den meisten
-Stellen aus erreichbar (Papierkorb, kein Datei-Löschen). Es gibt weiterhin
-keinen Auto-Send ohne den expliziten „Gesendet bestätigen"-Klick.
+— erst danach schaltet die UI den Gmail-Entwurf frei. `postausgang` (Gmail-
+Entwurf erstellt) setzt die UI nur bei tatsächlich erfolgreichem Gmail-Aufruf
+(kein Statuswechsel bei Fehlern, die landen stattdessen auf `fehler`).
+`gesendet` setzt der Gmail-Sync, sobald der Entwurf in deinem Gesendet-Ordner
+auftaucht, oder du per „Als beworben markieren" (Bewerbung übers Portal).
+`geloescht` ist von den meisten Stellen aus erreichbar (Papierkorb, kein
+Datei-Löschen). Der Bot verschickt keine Bewerbung selbst.
 
 **Die Pipeline läuft nur vorwärts.** Ein Re-Triage (`--scope=all`) fällt das
 `fit`-Urteil neu, setzt den Status aber nur für Jobs, die noch in der Triage
