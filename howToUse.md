@@ -53,6 +53,26 @@ mkdir -p ~/.local/share/llama-models && cd ~/.local/share/llama-models
 curl -L -C - -O https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf/resolve/main/gemma-4-26B_q4_0-it.gguf
 ```
 
+For JEV — the classifier behind `filterMode: "nimble"` and the reply kinds of
+the Gmail sync (rejection, offer, …) — you also need Bespoke Nimble 9B (Q8_0,
+~9.5 GB, Apache-2.0). It's published in the Ollama registry; no Ollama install
+needed, `curl` fetches the GGUF directly. The digest is read from the manifest,
+so the command keeps working when the model gets updated:
+
+```bash
+cd ~/.local/share/llama-models
+D=$(curl -sL -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
+  https://registry.ollama.ai/v2/library/nimble/manifests/latest \
+  | grep -o '"mediaType":"application/vnd.ollama.image.model","digest":"[^"]*' | cut -d'"' -f8)
+curl -L -C - -o Bespoke-Nimble-9B-Q8_0.gguf https://registry.ollama.ai/v2/library/nimble/blobs/$D
+echo "${D#sha256:}  Bespoke-Nimble-9B-Q8_0.gguf" | sha256sum -c
+```
+
+The file name must stay `Bespoke-Nimble-9B-Q8_0.gguf` — the presets
+`nimble-9b` (CPU) and `nimble-9b-vulkan` (iGPU, default) in
+`config/llama-models.ini` point to it. Without Nimble, keep `filterMode` on
+`"regex"`; the Gmail sync still runs, replies just stay without a kind.
+
 You don't start the server yourself: JoBBoT runs `scripts/llama-server.sh` the
 first time it needs the model (log: `data/llama-server.log`). Model names are
 the preset names in `config/llama-models.ini` — the default `gemma4-26b-cpu`
