@@ -17,7 +17,7 @@ const sample = (title: string) => toJob({
 });
 
 // Urteil nach Titel-Präfix, damit ein Test die drei Fächer gezielt besetzen kann,
-// ohne Ollama oder die Regel-Dateien zu berühren.
+// ohne LLM oder die Regel-Dateien zu berühren.
 const fakeFilter = (job: Job): Promise<TriagedDecision> => Promise.resolve({
   job,
   status: job.title.startsWith('M') ? 'matched' : job.title.startsWith('B') ? 'filtered_out' : 'uncertain',
@@ -120,11 +120,11 @@ test('der Bericht wird vom Runner geschrieben, nicht vom Aufrufer', async (t) =>
 
   const berichte: { anzahl: number; mode: string }[] = [];
   await runFilter({
-    storage, mode: 'llm', filter: fakeFilter,
+    storage, mode: 'nimble', filter: fakeFilter,
     writeReport: (decisions, mode) => berichte.push({ anzahl: decisions.length, mode }),
   });
 
-  assert.deepEqual(berichte, [{ anzahl: 1, mode: 'llm' }]);
+  assert.deepEqual(berichte, [{ anzahl: 1, mode: 'nimble' }]);
 });
 
 test('leerer Lauf schreibt keinen Bericht — sonst steht ein Kopf ohne Inhalt im Log', async (t) => {
@@ -147,6 +147,19 @@ test('der gelaufene Modus steht im Ergebnis, damit Zusammenfassung und Bericht i
   t.after(() => rmTmp(dir));
   const storage = await storageMit(dir, [sample('Meins')]);
 
-  const outcome = await runFilter({ storage, mode: 'llm', filter: fakeFilter, writeReport: () => {} });
-  assert.equal(outcome.mode, 'llm');
+  const outcome = await runFilter({ storage, mode: 'nimble', filter: fakeFilter, writeReport: () => {} });
+  assert.equal(outcome.mode, 'nimble');
+});
+
+test('llm-Modus mit echtem Filter und totem llama-server: Lauf scheitert, statt still alles als offstack zu sortieren', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = await storageMit(dir, [sample('Meins')]);
+
+  // Remote-Host (TEST-NET), damit garantiert kein Autostart ausgelöst wird.
+  await assert.rejects(
+    runFilter({ storage, mode: 'nimble', host: 'http://192.0.2.1:8089', writeReport: () => {} }),
+    /llama-server unter .* nicht erreichbar/,
+  );
+  assert.equal((await storage.get(sample('Meins').id))?.status, 'new');
 });

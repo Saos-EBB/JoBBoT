@@ -4,15 +4,16 @@ import type { FilterScope } from '../lib/filter-runner.ts';
 import { createProgress } from '../lib/progress.ts';
 import type { Progress } from '../lib/progress.ts';
 import type { TriagedDecision } from '../lib/filter.ts';
-import { loadSettings } from '../lib/settings.ts';
+import { FILTER_MODES, isFilterMode, loadSettings } from '../lib/settings.ts';
+import { getProvider } from '../lib/llm/index.ts';
 import type { FilterMode } from '../lib/settings.ts';
 
 function parseModeOverride(argv: string[]): FilterMode | undefined {
   const arg = argv.find(a => a.startsWith('--source='));
   if (!arg) return undefined;
   const value = arg.slice('--source='.length);
-  if (value !== 'llm' && value !== 'regex') {
-    throw new Error(`Ungültiger --source Wert: "${value}". Gültige Werte: llm, regex`);
+  if (!isFilterMode(value)) {
+    throw new Error(`Ungültiger --source Wert: "${value}". Gültige Werte: ${FILTER_MODES.join(', ')}`);
   }
   return value;
 }
@@ -88,6 +89,6 @@ if (outcome.decisions.length === 0) {
 console.log(`\nFilter: ${outcome.matched} sicher, ${outcome.offstack} unsicher, ${outcome.brutal} raus`);
 
 if (llmCalls > 0) {
-  const model = loadSettings().filterModel;
+  const model = getProvider().resolveModels().filter;
   console.log(`Ø ${model}: ${(llmMs / llmCalls).toFixed(0)}ms/Job, Gesamt ${(llmMs / 1000).toFixed(1)}s für ${llmCalls} Jobs`);
 }

@@ -1,16 +1,23 @@
-import { checkOllama } from './lib/ollama.ts';
+import { getProvider } from './lib/llm/index.ts';
 import { JsonStore } from './storage/json-store.ts';
 import { config } from './config.ts';
 
 console.log('=== JobBot Health ===\n');
 
-// Ollama
-const ollama = await checkOllama();
-console.log(`Ollama:  ${ollama.ok ? '✓' : '✗'}`);
-if (!ollama.ok) {
-  for (const m of ollama.missing) console.log(`  ✗ Fehlt: ${m} — ollama pull ${m}`);
+// LLM-Backend (JOBBOT_LLM_PROVIDER, Default llamacpp)
+const llm = getProvider();
+const models = llm.resolveModels();
+// Erst hochfahren (wie jeder echte Lauf): nach einem Neustart läuft llama-server nicht,
+// und check() kann "Server weg" nicht von "Modell fehlt" unterscheiden.
+const down = await llm.ensureReady().then(() => null, (err: Error) => err.message);
+const llmCheck = down ? { ok: false, found: [], missing: [] } : await llm.check(undefined, models);
+console.log(`LLM (${llm.name}):  ${llmCheck.ok ? '✓' : '✗'}`);
+if (down) {
+  console.log(`  ✗ ${down}`);
+} else if (!llmCheck.ok) {
+  for (const m of llmCheck.missing) console.log(`  ✗ Fehlt: ${m} — ${llm.missingHint(m)}`);
 } else {
-  console.log(`  ✓ ${config.modelFilter}, ${config.modelWriter}`);
+  console.log(`  ✓ ${models.filter}, ${models.writer}`);
 }
 
 // Storage self-check
@@ -18,4 +25,4 @@ const store = new JsonStore();
 const jobs = await store.list();
 console.log(`\nStorage: ✓ (${jobs.length} Jobs in ${config.dataDir})`);
 
-console.log('\n' + (ollama.ok ? '✓ Bereit.' : '✗ Ollama-Modelle fehlen — siehe oben.'));
+console.log('\n' + (llmCheck.ok ? '✓ Bereit.' : down ? `✗ ${llm.name} nicht erreichbar — siehe oben.` : `✗ ${llm.name}-Modelle fehlen — siehe oben.`));

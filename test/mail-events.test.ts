@@ -17,9 +17,24 @@ test('istBewerbung: erkennt beide Labels, Groß-/Kleinschreibung egal', () => {
   assert.equal(istBewerbung(mail({ labels: ['\\Sent', 'Beworben'] })), true);
 });
 
-test('istBewerbung: ohne passendes Label falsch', () => {
-  assert.equal(istBewerbung(mail({ labels: [] })), false);
-  assert.equal(istBewerbung(mail({ labels: ['\\Sent', 'Rechnungen'] })), false);
+test('istBewerbung: Unterlabel "Bewerbungen/Beworben" zählt', () => {
+  assert.equal(istBewerbung(mail({ subject: 'Unterlagen', labels: ['Bewerbungen/Beworben'] })), true);
+});
+
+test('istBewerbung: ohne Label zählt "Bewerbung" im Betreff', () => {
+  assert.equal(istBewerbung(mail({ labels: [] })), true);
+  assert.equal(istBewerbung(mail({ subject: 'Initiativbewerbung Kevin Schaberl', labels: [] })), true);
+});
+
+test('istBewerbung: Antwort/Weiterleitung auf eine Bewerbung zählt nicht neu', () => {
+  for (const subject of ['Re: Bewerbung als Dev bei Acme', 'AW: Bewerbung als Dev', 'Fwd: Bewerbung als Dev', 'WG: Bewerbung']) {
+    assert.equal(istBewerbung(mail({ subject, labels: [] })), false, subject);
+  }
+});
+
+test('istBewerbung: private Mail ohne Label und ohne "Bewerbung" im Betreff falsch', () => {
+  assert.equal(istBewerbung(mail({ subject: 'Krankmeldung', labels: [] })), false);
+  assert.equal(istBewerbung(mail({ subject: 'Rechnung', labels: ['\\Sent', 'Rechnungen'] })), false);
 });
 
 test('parseBewerbungsBetreff: holt Titel und Firma zurück', () => {

@@ -5,8 +5,8 @@
 *[Deutsch](README.md)*
 
 Local job scraper with an LLM cover-letter generator. Runs fully offline/
-local (Ollama), no cloud dependency. Pipeline: **Scrape → Filter → Cover
-letter → Review** (review/sending are currently manual).
+local (llama.cpp), no cloud dependency. Pipeline: **Scrape → Filter → Cover
+letter → Review → Gmail draft**. Sending is always up to you, from Gmail.
 
 This is **TschoBBo**, JoBBoT's mascot. The extra arms are the point: he's the
 one grabbing listings, filtering them, typing the cover letter, and filing
@@ -18,7 +18,7 @@ dead script output and more like something is actually working for you.
 ```bash
 npm install
 npx playwright install chromium   # only needed for AMS/DevJobs.at (browser scrapers)
-ollama pull mistral-small3.2:latest   # filter and cover-letter model
+# llama.cpp (llama-server) + model: see howToUse.md, section 3
 cp config/profile.example.json config/profile.json   # fill in your own data
 ```
 
@@ -33,7 +33,7 @@ projects and links that flow into every generated cover letter.
 | `sources.json` | Which portals are active (karriere.at, devjobs.at, LinkedIn, AMS, jobs.at) + search queries per portal — **also editable from the UI**, see [Settings page "Search"](#settings-page-search) |
 | `location.json` | Whitelist of cities/regions (Upper Austria) + remote keywords — **also editable from the UI** |
 | `experience-rules.json` | Keyword/phrase lists for the regex filter (years of experience, junior signals, exclusion/negation words) |
-| `settings.json` | `filterMode` (`regex` or `llm`) and fallback `filterModel` |
+| `settings.json` | `filterMode` (`regex` or `nimble`), `nimble.supportJobs`/`nimble.wantedJobs` |
 
 ### Tuning the config files
 
@@ -53,40 +53,39 @@ after a change.
   experience, junior signals, exclusion words) when `data/filter-log.md`
   shows the regex filter misclassifying (too strict → rejected, too loose →
   uncertain).
-- **`settings.json`**: set `filterMode` to `llm` to use the Ollama filter
-  instead of regex (needs Ollama running + `filterModel` set).
+- **`settings.json`**: set `filterMode` to `nimble` to use the JEV filter
+  instead of regex (local Bespoke Nimble 9B model, preset from
+  `JOBBOT_LLAMACPP_NIMBLE_MODEL`). Wanted roles live in `nimble.supportJobs`
+  (never rejected for experience) and `nimble.wantedJobs`.
 
 ## Model selection
 
-Several local Ollama models were benchmarked for cover-letter generation
-(full raw data: `data/anschreiben/test/`), so others can skip re-running
-the comparison:
+Runs on **llama.cpp** (`llama-server` in router mode, presets in
+`config/llama-models.ini`). Compared with the same prompt on the same three
+test jobs:
 
 | Model | Result |
 |---|---|
-| `qwen2.5:7b` | Quality unsatisfactory — dropped |
-| `qwen3.5:9b` | Fastest (~115s/job), but hallucinated skills not in the profile in several test jobs |
-| `qwen3:30b` | Too big for this CPU-only setup — every test job timed out (>10min) |
-| `gemma3:12b` | Decent quality, but the only model that needed repeated retries; RAM usage grew continuously with no plateau over a test run (~15→23GB) — a real OOM risk on longer batches |
-| `mistral-small3.2:latest` | Best quality (most honest about missing skills, no invented parallels), most stable RAM usage, no retries — **current choice** for both filter and cover letters |
+| `gemma4-26b-cpu` (Gemma 4 26B MoE, QAT Q4_0, CPU) | steady ~9.5 tok/s, 3 letters in ~170 s, no retries, honest about missing skills — **current choice** for cover letters |
+| `gemma4-26b` (same model on the Vega iGPU via Vulkan) | not faster overall, drops to 4 tok/s, takes ~14 GB RAM as GTT |
+| `mistral-small3.2` (24B dense, Q4_K_M) | ~2 tok/s, 3 letters in 610–770 s, more stock phrases, grammar errors, one invented claim |
 
-The temperature and duration numbers in the "Performance" section below
-refer to `mistral-small3.2`, the model actually used in production.
+Everything used to run on Ollama; there `qwen2.5:7b`, `qwen3.5:9b`
+(hallucinated skills), `qwen3:30b` (timeouts) and `gemma3:12b` (RAM grew with no
+plateau) lost against `mistral-small3.2`.
 
 ## Performance
 
-Tested on a Lenovo T14 (AMD Ryzen 7 PRO 5850U), 6 CPU cores, no GPU support
-under Ollama. CPU temperature under
-load: peak ~81°C, ~70°C on average. One cover letter takes ~3-4 min,
-depending on how well the job matches the profile (see the `clean`/
-`offstack`/`brutal` test fixtures in `scripts/one-off/anschreiben-model-bench.ts` —
-clean = good fit, offstack = tech stack diverges, brutal = big mismatch,
-needs more text honestly naming the gaps).
+Tested on a Lenovo T14 (AMD Ryzen 7 PRO 5850U, 8 cores, 30 GB RAM) with
+`gemma4-26b-cpu`: one cover letter takes ~45–80 s with a cold model, ~20–30 s
+once the model is loaded — depending on how well the job matches the profile
+(a good fit is faster than a big mismatch, which needs more text honestly
+naming the gaps).
 
 ## Commands
 
 ```bash
-npm run check   # Ollama reachable + models installed?
+npm run check   # llama-server reachable + presets present?
 npm run smoke    # end-to-end storage test (JsonStore lifecycle)
 npm run dev      # health summary + current job count in storage
 npm run typecheck
@@ -100,8 +99,8 @@ npm run scrape:karriere              # single source: karriere | devjobs | linke
 npm run scrape -- --source=karriere  # equivalent, directly via flag
 
 npm run filter                    # filter all 'new' jobs (mode from settings.json)
-npm run filter:regex              # force the regex strategy (offline, no Ollama needed)
-npm run filter -- --source=llm    # force the mode directly via flag (llm | regex)
+npm run filter:regex              # force the regex strategy (offline, no LLM needed)
+npm run filter -- --source=nimble # force the mode directly via flag (nimble | regex)
 npm run filter:all                # re-triage ALL jobs, not just 'new' (--scope=all)
 npm run filter -- --scope=all     # equivalent, directly via flag (new | all, default new)
 
@@ -112,7 +111,7 @@ npm run anschreiben                       # generate cover letters for all triag
 npm run anschreiben -- --data=save        # only data/jobs/matched/  (fit "matched")
 npm run anschreiben -- --data=unsave      # only data/jobs/offstack/ (fit "offstack")
 npm run anschreiben -- --limit=5          # only the first N jobs of the selection
-npm run anschreiben -- --source=<model>   # override the Ollama model for this run
+npm run anschreiben -- --source=<model>   # override the model (preset name) for this run
 
 npm run ui                  # job browser + Gmail integration, http://localhost:3000
 npm run ui -- --port=3001   # force a different port (otherwise UI_PORT env or 3000)
@@ -141,15 +140,11 @@ to `data/anschreiben/AnschreibenLog.md`.
 The filename deliberately carries **no date** — and lookup goes by the `id8`
 prefix anyway, see [Storage](#storage).
 
-`scripts/one-off/anschreiben-model-bench.ts` is not a pipeline step — it's a dev
-tool for comparing several Ollama models on the same test jobs.
-
 ### Gmail integration
 
 `npm run ui` shows an editable email preview (To/Subject/Body) for each job
-once its status is `reviewed`, with two actions: **Create draft** (lands as
-a real, editable draft in Gmail) or **Send directly** (with a confirmation
-dialog). Both go through a Gmail App Password, not OAuth:
+once its status is `reviewed`, with the action **Create draft** (lands as
+a real, editable draft in Gmail, you send it from there). It goes through a Gmail App Password, not OAuth:
 
 1. Turn on 2-Step Verification on your Google account (if not already on).
 2. Generate an App Password: `myaccount.google.com/apppasswords` (no longer
@@ -184,8 +179,9 @@ framework) that does two things at once:
   `replyReceivedAt`, read-only towards Gmail), `/api/jobs/:id/followup`
   (follow-up as draft or send), `/api/config/schema` (search fields per
   portal), `/api/config/sources` and `/api/config/location` (GET/PUT) plus
-  `/api/config/:name/restore`, and `/api/scrape/*` / `/api/filter/*`
-  (see below).
+  `/api/config/:name/restore`, `/api/scrape/*`, `/api/filter/*`,
+  `/api/anschreiben/*` (see below). Plus a standalone HTML page `/nachweis` (printable
+  application record, see below).
 
 The interface has three width bands:
 
@@ -209,7 +205,7 @@ The sidebar has its own "Pipeline" group with entries **Scrape**, **Filter**,
 letters follow the same pattern:
 
 1. `POST /api/scrape` (source selection) or `POST /api/filter` (`regex`/
-   `llm` mode + `new`/`all` scope, see above) starts the run **in the
+   `nimble` mode + `new`/`all` scope, see above) starts the run **in the
    background** inside the server process and responds immediately with a
    `runId` — no waiting on a long HTTP response.
 2. The SPA polls `GET /api/scrape/status` / `/api/filter/status` every
@@ -219,6 +215,11 @@ letters follow the same pattern:
    `409` instead of starting a second run.
 4. On completion the UI shows a toast with a one-line summary (e.g. "14
    new, 6 deduped") and automatically refetches the job list.
+
+During a **cover letter** run, a list under the grid shows the letter being
+written (with a live clock) and every finished/failed one with its duration
+and attempts (`x/3`); clicking opens the job. In the **filter** grid, hovering
+a dot shows a card with title, company, location and salary.
 
 The server keeps run state only in process memory (no restart recovery) —
 fine for a local single-user tool.
@@ -314,7 +315,8 @@ the subject match. The body is new and short, not the cover letter a second time
 The sidebar tab "Calendar" shows when applications went out (`sentAt`), when
 follow-ups were sent (`followUps`), and when replies came back
 (`replyReceivedAt`) — day = square, week = row, month = block, newest month
-first. Three colours, legend in the header; a day carrying several kinds is
+first. Four colours (sent, follow-up, reply, **rejection** in red — see
+Gmail sync), legend in the header; a day carrying several kinds is
 split accordingly. Every follow-up is its own entry, not just the last one —
 the calendar should show how often you chased. Clicking a day opens a popup with that day's
 entries and jumps from there to the job detail view.
@@ -330,8 +332,11 @@ Replies aren't detected
 automatically: a "Fetch replies" button in the "Sent" folder (history) scans
 the Gmail inbox via `POST /api/mail/replies/fetch` (email+subject matching,
 no message ID) and sets `replyReceivedAt` on hits — jobs with a reply then
-show a "Reply received" badge, with a "Only with reply" filter in the
-history.
+show a badge — **ABSAGE** (rejection, red), **ZUSAGE** (offer/invitation),
+**DATENSCHUTZ ZUSTIMMEN** (accept privacy policy), **ÜBER PORTAL BEWERBEN**
+(apply via portal), **EINGANG BESTÄTIGT** (acknowledgement) or
+**ANTWORT ERHALTEN** (reply) — with an "Only with reply"
+filter in the history.
 
 ### Gmail sync (backfill)
 
@@ -344,11 +349,13 @@ own `sentAt` anyway.
 Scanning starts at `HISTORY_START` (`lib/calendar.ts`, currently `2026-07-01`)
 — the same starting point the calendar displays from.
 
-**Which mails count:** only those labelled `Bewerbung` or `Beworben` in Gmail
-(`BEWERBUNGS_LABELS` in `mail/gmail.ts`). The label is the most reliable
-source: `job.email` is lost on a re-scrape and the subject changes when a
-listing is re-read — your marking stays. Without a label nothing happens, and
-private mail never ends up in the calendar.
+**Which mails count:** automatically every sent mail with "Bewerbung" in the
+subject (that's how the bot titles its mails), except replies and forwards
+(`Re:`/`AW:`/`WG:`/`Fwd:`), which belong to an existing application. Mails with
+the Gmail label `Bewerbung` or `Beworben` count too, also as a nested label like
+`Bewerbungen/Beworben` (`istBewerbung` in `mail/gmail.ts`). No manual labelling
+needed; private mail without "Bewerbung" in the subject never ends up in the
+calendar.
 
 **Matching to a job** runs on two equivalent keys: the reconstructed subject
 (`Bewerbung als … bei …`, recomputable from title+company at any time) and the
@@ -375,7 +382,39 @@ Three properties you can rely on:
 - **Fills gaps only.** An existing `sentAt`/`replyReceivedAt` is never
   overwritten, so a heuristic hit can't destroy a real value. Repeated runs
   are therefore harmless.
-- **Changes no status.** Only the two date fields are ever written.
+- **Changes no status — with one exception.** A job in the **outbox** (the
+  bot created the Gmail draft) whose mail shows up in the Sent folder was sent
+  by you from Gmail: it becomes `gesendet` and gets `sentAt`. For this,
+  unlabelled mails count too (bot drafts carry no label), but only ones sent
+  after the listing was scraped; matching is the same (subject or address,
+  ambiguous → nothing). All other jobs only get date fields.
+
+**Reply kind.** Gmail sync and "Fetch replies" also load the text of every
+matched reply (read-only, only those mails, plain text preferred, otherwise
+HTML stripped, quoted history cut off) and let JEV (`lib/reply-kind-jev.ts`,
+the same Nimble model as the filter) put it into `job.replyKind`: **absage**
+(rejection), **zusage** (offer/invitation), **datenschutz** (asks you to
+accept a privacy policy), **plattform** (asks you to apply via their portal),
+**eingang** (automatic acknowledgement) or **antwort** (none of these). One
+call per mail, verdicts are cached in `data/reply-kinds.json` (gitignored).
+If llama-server is down or the answer is unusable, the kind stays open,
+counts as "without kind" in the summary and is retried on the next sync. With
+several replies the most telling wins (rejection > offer > privacy/portal >
+reply > acknowledgement); the status stays `gesendet`. The old regex
+(`lib/reply-kind.ts`) is still in the code as `regexReplyClassifier`, the
+sync doesn't use it.
+
+### Application record (AMS)
+
+"Nachweis drucken" in the calendar header opens `/nachweis` in a new tab: a
+print-ready page (A4 landscape) with name, period, number of applications,
+how many got a reply/rejection, and a table **No. · Date · Company · Position ·
+Location · Channel (email to …) · Source (linked) · Reply (kind + date)**. It
+contains every job with `sentAt` or status `gesendet` (including later
+deleted ones) plus the job-less application mails labelled in Gmail; undated
+legacy entries come last. A period (`?von=&bis=`) can be picked at the top;
+"Drucken / als PDF sichern" uses the browser's print dialog, and the form is
+hidden in print (`lib/nachweis.ts`).
 
 The matching is a heuristic, not an exact mapping: the message ID was never
 stored when the mail was originally sent. Matching goes by the exact recipient
@@ -391,7 +430,7 @@ npm run test:watch # watch mode
 ```
 
 All tests run against temp directories and a local mock server — no real
-Ollama, no real `data/jobs/`.
+LLM server, no real `data/jobs/`.
 
 ## Storage
 
@@ -527,9 +566,10 @@ existing duplicate topic — `npm run duplicates` reports it.
 
 | Variable | Default |
 |---|---|
-| `OLLAMA_HOST` | `http://localhost:11434` |
-| `JOBBOT_MODEL_FILTER` | `mistral-small3.2:latest` |
-| `JOBBOT_MODEL_WRITER` | `mistral-small3.2:latest` |
+| `LLAMACPP_HOST` | `http://127.0.0.1:8089` |
+| `JOBBOT_LLAMACPP_MODEL` | `gemma4-26b-cpu` (cover letters) |
+| `JOBBOT_LLAMACPP_NIMBLE_MODEL` | `nimble-9b-vulkan` (JEV filter) |
+| `LLAMA_BIN` / `LLAMA_MODELS_DIR` | `~/.local/opt/llama.cpp/current/llama-server` / `~/.local/share/llama-models` |
 | `GMAIL_USER` | — (see [Gmail integration](#gmail-integration)) |
 | `GMAIL_APP_PASSWORD` | — (see [Gmail integration](#gmail-integration)) |
 | `UI_PORT` | `3000` (overridden by `npm run ui -- --port=<n>`, which wins over `UI_PORT`) |

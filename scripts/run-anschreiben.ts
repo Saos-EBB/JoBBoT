@@ -5,6 +5,7 @@ import { logTimestamp } from '../lib/log-timestamp.ts';
 import { runAnschreiben } from '../lib/anschreiben-runner.ts';
 import { loadProfile } from '../lib/profile.ts';
 import { createProgress } from '../lib/progress.ts';
+import { getProvider } from '../lib/llm/index.ts';
 import { config } from '../config.ts';
 
 const profile = loadProfile();
@@ -34,13 +35,14 @@ if (limitArg) {
 }
 
 const sourceArg = process.argv.find(a => a.startsWith('--source='));
-const model = sourceArg ? sourceArg.slice('--source='.length) : config.modelWriter;
+const model = sourceArg ? sourceArg.slice('--source='.length) : getProvider().resolveModels().writer;
 
 if (jobs.length === 0) {
   console.log('Keine gematchten Jobs zum Verarbeiten.');
   process.exit(0);
 }
 
+await getProvider().ensureReady();
 console.log(`Modell: ${model}`);
 const prog = createProgress(`Anschreiben — 0/${jobs.length}...`);
 

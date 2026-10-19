@@ -5,7 +5,9 @@ import { HISTORY_START, monthsDescending } from '../../lib/calendar.ts';
 // je gesetztem sentAt/replyReceivedAt, date als 'YYYY-MM-DD'. jobId ist null bei
 // gelabelten Bewerbungs-Mails, zu denen es keinen Job (mehr) gibt: die kommen aus
 // data/mail-events.json und haben nichts, wohin man springen könnte.
-export type CalendarEvent = { date: string; type: 'sent' | 'reply' | 'followup'; jobId: string | null; title: string; company: string };
+// 'absage': eine Antwort, die der Gmail-Sync als Absage erkannt hat (job.replyKind) —
+// eigener Typ statt 'reply', damit sie im Kalender rot statt grün erscheint.
+export type CalendarEvent = { date: string; type: 'sent' | 'reply' | 'absage' | 'followup'; jobId: string | null; title: string; company: string };
 
 export function formatDayLong(date: string): string {
   return new Date(date + 'T00:00:00').toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -18,20 +20,22 @@ export function summarizeDay(date: string, bucket: DayBucket | undefined): strin
   return `${formatDayShort(date)} · ${parts.join(' · ')}`;
 }
 
-export type DayBucket = { sent: CalendarEvent[]; followup: CalendarEvent[]; reply: CalendarEvent[] };
+export type DayBucket = { sent: CalendarEvent[]; followup: CalendarEvent[]; reply: CalendarEvent[]; absage: CalendarEvent[] };
 
 // Reihenfolge = Chronologie einer Bewerbung: raus, nachgehakt, Antwort. Sie bestimmt
 // auch, wie die Streifen im Tagesquadrat liegen und wie das Popup sortiert.
-export const CAL_TYPES = ['sent', 'followup', 'reply'] as const;
+export const CAL_TYPES = ['sent', 'followup', 'reply', 'absage'] as const;
 export const CAL_COLOR: Record<CalendarEvent['type'], string> = {
   sent: 'var(--fit-matched)',
   followup: 'var(--fit-offstack)',
   reply: 'var(--ok)',
+  absage: 'var(--err)',
 };
 export const CAL_LABEL: Record<CalendarEvent['type'], (n: number) => string> = {
   sent: n => `${n} gesendet`,
   followup: n => `${n}× nachgefasst`,
   reply: n => `${n} Antwort${n > 1 ? 'en' : ''}`,
+  absage: n => `${n} Absage${n > 1 ? 'n' : ''}`,
 };
 
 // Ein Tag kann jetzt drei Sorten tragen — statt für jede Kombination eine eigene
@@ -70,7 +74,7 @@ function CalendarMonth({ month, byDate, offen, onToggle, onHover, onOpenDay }: {
 
   // Monatssumme in der Überschrift: ein eingeklappter Monat soll trotzdem sagen, ob
   // sich das Aufklappen lohnt.
-  const summen: Record<CalendarEvent['type'], number> = { sent: 0, followup: 0, reply: 0 };
+  const summen: Record<CalendarEvent['type'], number> = { sent: 0, followup: 0, reply: 0, absage: 0 };
   for (let d = 1; d <= daysInMonth; d++) {
     const bucket = byDate.get(`${month}-${String(d).padStart(2, '0')}`);
     for (const t of CAL_TYPES) summen[t] += bucket?.[t].length ?? 0;
@@ -122,7 +126,7 @@ export function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; o
   const byDate = useMemo(() => {
     const m = new Map<string, DayBucket>();
     for (const ev of events) {
-      const bucket = m.get(ev.date) ?? { sent: [], followup: [], reply: [] };
+      const bucket = m.get(ev.date) ?? { sent: [], followup: [], reply: [], absage: [] };
       bucket[ev.type].push(ev);
       m.set(ev.date, bucket);
     }
@@ -219,6 +223,7 @@ export function CalendarView({ events, onOpenJob }: { events: CalendarEvent[]; o
                 >
                   <span className="cal__entry__dot" style={{ background: CAL_COLOR[ev.type] }} />
                   {ev.type === 'followup' && <span className="cal__entry__quelle">Nachfass</span>}
+                  {ev.type === 'absage' && <span className="cal__entry__quelle">Absage</span>}
                   <span className="cal__entry__firma">{ev.company}</span>
                   <span className="cal__entry__titel">{ev.title}</span>
                   {!ev.jobId && <span className="cal__entry__quelle">nur Mail</span>}

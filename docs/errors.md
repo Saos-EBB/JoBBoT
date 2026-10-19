@@ -1,3 +1,39 @@
+## 2026-10-19 — Gmail-Sync erkennt 0 von 358 gesendeten Bewerbungen
+
+**Symptom:** Nach dem Sync hatte kein Job `sentAt`, obwohl alle Bewerbungen in Gmail gelabelt sind.
+**Ursache:** `istBewerbung` verglich den Label-Namen exakt; Kevins Label ist verschachtelt (`Bewerbungen/Beworben`) und kam über IMAP mit vollem Pfad.
+**Fix:** Vergleich auf das letzte Pfadsegment, zusätzlich „Bewerbung" im Betreff ohne Antwort-/Weiterleitungs-Präfix.
+
+## 2026-10-19 — ~190 doppelte „ohne Job"-Mail-Events nach dem Sync
+
+**Symptom:** Nach dem Erkennungs-Fix landeten fast alle Bewerbungsmails zusätzlich als job-lose Events im Kalender/Nachweis.
+**Ursache:** Die Zuordnung (`matchSent`) betrachtet nur Jobs ohne `sentAt` — eine Mail zu einem schon datierten Job fand dort keinen Job und galt als „ohne Job".
+**Fix:** Vor dem Eintragen per `gehoertZuJob` (`lib/mail-match.ts`) gegen alle Jobs prüfen.
+
+## 2026-10-19 — Sync-Test startet das echte JEV und schreibt in data/reply-kinds.json
+
+**Symptom:** Nach `npm test` stand ein Eintrag der Testfirma „acme" im echten Antwort-Cache, Tests liefen spürbar länger.
+**Ursache:** `runGmailSync` nimmt standardmäßig den JEV-Klassifizierer mit dem echten Cache-Pfad; die Sync-Tests gaben keinen eigenen mit.
+**Fix:** Alle Sync-Tests injizieren `regexReplyClassifier`; der falsche Cache-Eintrag wurde überschrieben.
+
+## 2026-10-18 — JEV-Filter braucht ~90 s pro Job
+
+**Symptom:** Nimble 9B rechnete bei jedem Aufruf den kompletten Prompt neu, obwohl Schema und System-Prompt gleich blieben.
+**Ursache:** Nimble ist ein hybrides/rekurrentes Modell — llama-server kann den Präfix-Cache dort nur über Kontext-Checkpoints nutzen, und die entstehen nur kurz vor dem Prompt-Ende und erst ab einer Mindestschrittweite.
+**Fix:** Presets mit `checkpoint-min-step = 0`, `batch-size`/`ubatch-size = 32`; pro Lauf einmal den gemeinsamen Präfix allein schicken („Priming"), damit ein Checkpoint genau am Präfix-Ende liegt. Danach ~7 s/Job (Vulkan).
+
+## 2026-10-09 — Modell-Download bricht still ab, curl meldet Erfolg
+
+**Symptom:** Download von `gemma-4-26B_q4_0-it.gguf` (13,4 GB) endete nach 278 MB mit Exit-Code 0 und HTTP 200, die Datei war einfach zu kurz.
+**Ursache:** Ursache unklar — die Verbindung endete, ohne dass curl einen Fehler meldete. Die Leitung schafft insgesamt nur ~1–1,4 MB/s, eine zweite parallele Verbindung bringt nichts.
+**Fix:** Download-Schleife mit `curl -C -` (fortsetzen) und `--speed-limit/--speed-time`, bis die Dateigröße exakt der HF-API-Angabe entspricht, danach `sha256sum -c` gegen den LFS-Hash.
+
+## 2026-10-09 — llama.cpp lädt Ollamas mistral-small3.2-Datei nicht
+
+**Symptom:** `llama-server -m /usr/share/ollama/.ollama/models/blobs/sha256-41a5…` bricht ab: `done_getting_tensors: wrong number of tensors; expected 585, got 363`.
+**Ursache:** Ollamas Blob ist zwar GGUF (Magic stimmt), aber in Ollamas eigenem Layout für dieses Modell (Vision-Teil im selben File, andere Tensor-Aufteilung) — kein Standard-GGUF, das llama.cpp erwartet.
+**Fix:** Standard-GGUF neu laden (`unsloth/Mistral-Small-3.2-24B-Instruct-2506-GGUF`, Q4_K_M). Merke: Ollama-Blobs nicht als Abkürzung für llama.cpp einplanen, zumindest nicht bei multimodalen Modellen.
+
 ## 2026-08-06 — Klumpenwurf landet auf falschen Quadraten bei paralleler Multi-Source-Scrape
 
 **Symptom:** Kevin meldete: Wurf-Animation feuert laufend ("spammt Würfe"), aber es tauchen keine sichtbaren Klumpen auf. Kein Fehler in der Konsole, per Playwright-Einzeltest (siehe Eintrag zu `3473dfe` unten) war das Feature vorher verifiziert.

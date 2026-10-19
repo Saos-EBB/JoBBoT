@@ -8,7 +8,7 @@ import type { ProfileData } from '../lib/profile.ts';
 import type { Job } from '../scrapers/interface.ts';
 
 // Diese Tests pruefen NUR die Schleife in runAnschreiben (Zaehler, Abort, Lifecycle
-// des EmailFinders) — generateAnschreiben() selbst (Ollama, Retry/Parse) hat eigene
+// des EmailFinders) — generateAnschreiben() selbst (LLM, Retry/Parse) hat eigene
 // Tests in test/anschreiben.test.ts. Ein Fake statt eines echten Browsers bzw.
 // generateAnschreiben() macht diese Schleife zum ersten Mal ueberhaupt testbar.
 
@@ -186,4 +186,26 @@ test('onProgress/onItemDone werden pro Job aufgerufen', async (t) => {
 
   assert.deepEqual(progress, [0, 1]);
   assert.deepEqual(done, ['done', 'done']);
+});
+
+test('onItemDone: Versuche und Dauer pro Brief', async (t) => {
+  const dir = await tmpDir();
+  t.after(() => rmTmp(dir));
+  const storage = new JsonStore(dir);
+  const items: { attempts: number; durationMs: number; state: string }[] = [];
+
+  await runAnschreiben({
+    jobs: [job(), job()], storage, profile, emailFinder: fakeFinder(),
+    // 1. Job: 2 Versuche, dann fertig; 2. Job: 3 Versuche, dann gescheitert.
+    generate: async (j, _s, _p, o) => {
+      const n = items.length === 0 ? 2 : 3;
+      for (let v = 1; v <= n; v++) o.onAttempt?.(v);
+      await new Promise(r => setTimeout(r, 5));
+      return items.length === 0 ? '/tmp/does-not-matter.txt' : null;
+    },
+    onItemDone: item => items.push(item),
+  });
+
+  assert.deepEqual(items.map(i => [i.state, i.attempts]), [['done', 2], ['error', 3]]);
+  assert.ok(items.every(i => i.durationMs >= 5));
 });

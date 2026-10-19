@@ -10,7 +10,7 @@ import type { Ctx } from './context.ts';
 export async function handleCalendarRoutes(req: IncomingMessage, res: ServerResponse, url: URL, ctx: Ctx): Promise<boolean> {
   if (req.method === 'GET' && url.pathname === '/api/calendar') {
     const jobs = await ctx.storage.list();
-    const events: { date: string; type: 'sent' | 'reply' | 'followup'; jobId: string | null; title: string; company: string }[] = [];
+    const events: { date: string; type: 'sent' | 'reply' | 'absage' | 'followup'; jobId: string | null; title: string; company: string }[] = [];
     for (const job of jobs) {
       if (job.sentAt) events.push({ date: job.sentAt.slice(0, 10), type: 'sent', jobId: job.id, title: job.title, company: job.company });
       // Jeder Nachfass ein eigener Eintrag, nicht nur der letzte: der Kalender soll
@@ -18,7 +18,8 @@ export async function handleCalendarRoutes(req: IncomingMessage, res: ServerResp
       for (const fu of job.followUps ?? []) {
         events.push({ date: fu.at.slice(0, 10), type: 'followup', jobId: job.id, title: job.title, company: job.company });
       }
-      if (job.replyReceivedAt) events.push({ date: job.replyReceivedAt.slice(0, 10), type: 'reply', jobId: job.id, title: job.title, company: job.company });
+      // Vom Gmail-Sync als Absage erkannt (job.replyKind) → eigener, roter Typ.
+      if (job.replyReceivedAt) events.push({ date: job.replyReceivedAt.slice(0, 10), type: job.replyKind === 'absage' ? 'absage' : 'reply', jobId: job.id, title: job.title, company: job.company });
     }
     // Gelabelte Bewerbungs-Mails ohne Job im Bestand (siehe lib/mail-events.ts) — jobId
     // bleibt null, die UI zeigt sie als "nur Mail" ohne Sprung in die Detailansicht.

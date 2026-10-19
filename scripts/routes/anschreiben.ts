@@ -1,6 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { canGenerateAnschreiben } from '../../lib/folders.ts';
 import { runAnschreiben } from '../../lib/anschreiben-runner.ts';
+import { getProvider } from '../../lib/llm/index.ts';
+import { desktopNotify } from '../../lib/desktop-notify.ts';
 import { createSseChannel, attachSseClient, type GridUnitEvent } from './sse-channel.ts';
 import { respondJson, readJsonBody } from './http.ts';
 import { createRunState } from './run-state.ts';
@@ -10,9 +12,10 @@ import type { Ctx } from './context.ts';
 import type { Job } from '../../scrapers/interface.ts';
 
 export type AnschreibenResult = { generated: number; skipped: number; emailsFound: number; mailGenerated: number; nomailGenerated: number };
-export type AnschreibenStatusResponse = RunSnapshot<AnschreibenResult> & { current?: { i: number; total: number; title: string } };
+// startedAt: Beginn des aktuellen Briefs (ms) — für die mitlaufende Uhr in der UI.
+export type AnschreibenStatusResponse = RunSnapshot<AnschreibenResult> & { current?: { i: number; total: number; title: string; startedAt: number } };
 const anschreibenRun = createRunState<AnschreibenResult>();
-let anschreibenCurrent: { i: number; total: number; title: string } | undefined;
+let anschreibenCurrent: { i: number; total: number; title: string; startedAt: number } | undefined;
 // Nur für Anschreiben abbrechbar (Scrape/Filter sind schnell genug, dass ein Stop-Button
 // bisher niemand vermisst hat) — ein einzelner Lauf gleichzeitig, wie anschreibenRun selbst.
 let anschreibenAbort: AbortController | null = null;
@@ -54,13 +57,14 @@ export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerR
           return { result: { generated: 0, skipped: preSkipped, emailsFound: 0, mailGenerated: 0, nomailGenerated: 0 } };
         }
 
+        await getProvider().ensureReady();
         const { generated, skipped, emailsFound, mailGenerated, nomailGenerated } = await runAnschreiben({
           jobs,
           storage: ctx.storage,
           profile: ctx.profile,
           signal: abort.signal,
           onProgress: (i, total, title) => {
-            anschreibenCurrent = { i, total, title };
+            anschreibenCurrent = { i, total, title, startedAt: Date.now() };
           },
           onItemDone: item => anschreibenSse.broadcast({ section: runId, sectionLabel: 'Anschreiben', row: item.id, items: [item] }),
         });
@@ -69,6 +73,12 @@ export async function handleAnschreibenRoutes(req: IncomingMessage, res: ServerR
           status: abort.signal.aborted ? 'stopped' as const : 'done' as const,
         };
       });
+      const snap = anschreibenRun.get();
+      desktopNotify('JoBBoT — Anschreiben fertig', snap.status === 'error'
+        ? `Fehlgeschlagen: ${snap.error ?? ''}`
+        : snap.status === 'stopped'
+          ? `Abgebrochen: ${snap.result?.generated ?? 0} generiert`
+          : `${snap.result?.generated ?? 0} generiert, ${snap.result?.skipped ?? 0} übersprungen`);
     } finally {
       anschreibenAbort = null;
     }

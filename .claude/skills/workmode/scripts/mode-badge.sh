@@ -14,6 +14,8 @@ project_dir=$(field project_dir)
 model=$(field display_name)
 
 mode=$(cat "$project_dir/.claude/mode.state" 2>/dev/null)
+# workmode-Skill (synced) schreibt nur eine leere workmode.state
+[ -z "$mode" ] && [ -f "$project_dir/.claude/workmode.state" ] && mode=workmode
 
 badge=""
 [ -n "$mode" ] && badge="\033[1;32m● $(printf '%s' "$mode" | tr '[:lower:]' '[:upper:]')\033[0m │ "

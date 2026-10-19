@@ -1,10 +1,7 @@
 {
   "filterMode": "regex",
-  "filterModel": "mistral-small3.2:latest",
   "inference": {
     "think": false,
-    "numCtx": 4096,
-    "filterTemperature": 0,
     "writerTemperature": 0.3
   }
 }

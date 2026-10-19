@@ -2,20 +2,20 @@ import { appendFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { logTimestamp } from './log-timestamp.ts';
 import type { TriagedDecision } from './filter.ts';
-import type { FilterJudgment } from './filter-llm.ts';
+import type { FilterJudgment } from './filter-judgment.ts';
 import type { FilterMode } from './settings.ts';
 
 const KRITERIEN = ['it_rolle', 'erfahrung_ab_3j_erforderlich', 'lehre_coding', 'junior_signal'] as const;
 
 function unsureNote(d: TriagedDecision, mode: FilterMode): string {
-  if (!d.judgment) return mode === 'regex' ? 'kein Junior-Signal (Regex)' : 'kein JSON-Urteil (Parse-Fehler)';
+  if (!d.judgment) return mode === 'regex' ? 'kein Junior-Signal (Regex)' : 'kein Urteil (Antwort unbrauchbar)';
   const j = d.judgment;
   const unsure = KRITERIEN.filter(k => j[k] === 'unsicher');
   if (unsure.length > 0) return unsure.join(', ');
   return 'kein junior_signal';
 }
 
-// Aggregat pro Kriterium, damit sichtbar bleibt, wie oft das 7b-Modell "unsicher"
+// Aggregat pro Kriterium, damit sichtbar bleibt, wie oft das Modell "unsicher"
 // sagt — Kalibrierungssignal für die Prompt-Formulierung.
 function aggregate(decisions: TriagedDecision[]): string {
   return KRITERIEN.map(key => {

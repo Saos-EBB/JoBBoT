@@ -109,18 +109,16 @@ function setFrame(body, view, frame) {
 // nicht da — tschobbo.js laedt als eigenes Modul neben app.js —, wird kurz gewartet und
 // sonst auf die alte Ecke zurueckgefallen, damit der Schalter nie ganz verschwindet.
 function mountToggle(toggle, versuch = 0) {
-  const sb = document.querySelector('.sb');
-  if (sb) {
-    // sticky im scrollenden .sb: die Leiste ist laenger als der Schirm, ohne das lag der
-    // Schalter unterhalb der Falte und waere in der Schublade erst nach Scrollen zu finden.
-    toggle.style.position = 'sticky';
-    toggle.style.bottom = '10px';
-    toggle.style.margin = 'auto 12px 12px';
+  // Im angedockten unteren Teil der Leiste (.sb__dock): der bleibt ohnehin sichtbar, der
+  // Schalter steht dort als letzte Zeile statt als sticky Overlay ueber den Pipeline-
+  // Knoepfen (das verdeckte den obersten).
+  const dock = document.querySelector('.sb__dock');
+  if (dock) {
+    toggle.style.position = 'static';
+    toggle.style.margin = '6px 12px 10px';
     toggle.style.alignSelf = 'flex-start';
-    // Er schwebt ueber den Tastatur-Hinweisen, solange die Leiste nicht ganz unten steht —
-    // der Schatten macht daraus ein Overlay statt einer Kollision.
-    toggle.style.boxShadow = '0 2px 10px rgba(0,0,0,.45)';
-    sb.appendChild(toggle);
+    toggle.style.display = 'inline-block';
+    dock.appendChild(toggle);
     return;
   }
   if (versuch < 40) { setTimeout(() => mountToggle(toggle, versuch + 1), 50); return; }

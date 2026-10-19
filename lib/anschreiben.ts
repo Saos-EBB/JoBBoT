@@ -6,7 +6,7 @@ import type { Storage } from '../storage/json-store.ts';
 import type { ProfileData } from './profile.ts';
 import { anschreibenZiel } from './anschreiben-datei.ts';
 import { canGenerateAnschreiben } from './folders.ts';
-import { chat } from './ollama.ts';
+import { getProvider } from './llm/index.ts';
 import { loadSettings } from './settings.ts';
 import { config } from '../config.ts';
 
@@ -24,14 +24,27 @@ ABSOLUTE REGELN — niemals brechen:
 - Nur Skills/Erfahrungen nennen, die wörtlich im Bewerber-Profil stehen. Nichts erfinden.
 - Erfinde KEINE Technologie, Firma oder Produkt, das nicht wörtlich im Posting oder in profile.json
   steht. Nur Begriffe aus diesen zwei Quellen.
-- Fordert die Stelle einen Skill, der im Profil fehlt: die Lücke offen benennen — seit wann mit dem
-  verwandten Stack gearbeitet wird und die Lernbereitschaft dafür — NIE die Nähe als vorhandene
-  Kompetenz verkaufen oder den geforderten Skill selbst behaupten.
+- Fordert die Stelle einen Skill, der im Profil fehlt: die Lücke in EINEM nüchternen Satz benennen —
+  was fehlt und welche echte Erfahrung daneben liegt. Die genannte Erfahrung muss sachlich zum
+  fehlenden Skill passen (Docker-Container → Cloud-Betrieb ja, Docker → "Azure-Kenntnisse" nein).
+  NIE die Nähe als vorhandene Kompetenz verkaufen oder den geforderten Skill selbst behaupten.
+  Nicht nach dem Muster "Da ich bisher … freue ich mich darauf …", sondern so:
+  "Azure habe ich noch nicht eingesetzt; meine Services laufen bisher in Docker-Containern."
 - Kein Skill ohne Beleg: jede genannte Fähigkeit braucht ein konkretes Projekt/Kontext aus dem Profil,
   nie eine nackte Aufzählung.
 - Stehen mehrere Projekte im Profil: nicht zweimal dasselbe Projekt als Beleg nutzen. Jedes
   im Profil gelistete Projekt darf höchstens einmal vorkommen.
-- Keine vorgegebenen Satzanfänge — der Einstieg muss von Job zu Job variieren.`;
+- Keine vorgegebenen Satzanfänge — der Einstieg muss von Job zu Job variieren.
+Überstrapazierte Wörter — statt dessen:
+- "fundiert(e Kenntnisse)" → sagen, was konkret gebaut wurde ("habe mit NestJS ein Backend gebaut")
+- "reizt mich (sehr)" → benennen, was an der Stelle interessiert ("An … interessiert mich …")
+- "freue mich darauf/auf" → sagen, was der Bewerber tun will ("Ich möchte …")
+- "strukturierte Arbeitsweise", "Lernbereitschaft" → nicht behaupten, ein Projekt-Detail zeigt es
+- "ideale Möglichkeit/Grundlage" → weglassen
+- "die nächsten Schritte in meiner (fachlichen) Entwicklung" → die Aufgabe nennen und was der Bewerber daran tun will
+- "Als Quereinsteiger …" als Satzanfang → nie. Der Quereinstieg ist kein Makel zum Erklären, sondern
+  die Stärke aus dem Hintergrund (siehe "Hintergrund" im Profil): darauf aufbauen. Keine früheren
+  Berufe nennen oder erfinden, die nicht im Profil stehen.`;
 
 export function buildAnschreibenPrompt(job: Job, profile: ProfileData): string {
   const desc = job.description.slice(0, 1200);
@@ -65,8 +78,14 @@ Hintergrund: ${profile.quereinstieg.hintergrund}
 
 Struktur (3 Absätze, ≤180 Wörter gesamt):
 Absatz 1 (~50 Wörter) — Anker: konkrete Rolle + Firma + EIN spezifisches Element aus der
-  Stellenbeschreibung (Stack, Produkt oder Domäne). Dazu ein Satz, wer der Bewerber ist
-  (Quereinsteiger in die Softwareentwicklung). Kein "Hiermit bewerbe ich mich".
+  Stellenbeschreibung (Stack, Produkt oder Domäne). Dazu ein Satz, der auf dem Hintergrund
+  aufbaut und ihn mit dieser Stelle verbindet — nicht "Als Quereinsteiger …". Aus dem Hintergrund
+  GENAU EINEN Beleg (mit seiner Zahl) wählen, der zu dieser Stelle am besten passt, und den roten
+  Faden in eigenen Worten daraus ziehen — nicht alle Belege aufzählen, nicht als Fähigkeit behaupten
+  ("besitze die Fähigkeit …"), sondern das Erlebte erzählen. Kein "Hiermit bewerbe ich mich".
+  NICHT: "Ob beim Spachteln von 2.000 m² oder der Verwaltung von 500 Klienten – ich zerlege Aufgaben."
+  SO: "Auf der Baustelle habe ich an einem Tag 2.000 m² gespachtelt – nicht, weil die Fläche klein
+  war, sondern weil ich mein Handwerk kannte. Genau so sehe ich Softwareentwicklung."
 Absatz 2 (~70 Wörter) — Beleg: die 2 stärksten Überschneidungen zwischen Stellenanforderungen
   und Profil. Jeder genannte Skill braucht einen Beleg — ein konkretes Projekt aus dem Profil,
   keine nackte Aufzählung. Stehen oben mehrere Projekte im Profil: die 2 Belege aus 2
@@ -95,17 +114,23 @@ export function parseAnschreibenResponse(raw: string): string | null {
     return null;
   }
 
-  const absaetze = trimmed.split(/\n\s*\n/).filter(p => p.trim());
+  let absaetze = trimmed.split(/\n\s*\n/).filter(p => p.trim());
+  // gemma trennt die Absätze gelegentlich nur mit einem einfachen Zeilenumbruch statt
+  // einer Leerzeile — drei Zeilen sind dann trotzdem drei Absätze, kein Grund für
+  // einen ~30 s teuren Neuversuch. Ein einziger Block ohne Umbruch bleibt ein Fehler.
+  const zeilen = trimmed.split('\n').filter(z => z.trim());
+  if (absaetze.length !== 3 && zeilen.length === 3) absaetze = zeilen;
   if (absaetze.length !== 3) {
-    throw new Error(`Absatz-Anzahl ist ${absaetze.length}, erwartet 3`);
+    throw new Error(`Absatz-Anzahl ist ${absaetze.length}, erwartet 3 (${zeilen.length} Zeilen)`);
   }
+  const text = absaetze.map(p => p.trim()).join('\n\n');
 
-  const verbotswort = /\b(motiviert|begeistert|entzückt|leidenschaftlich)\b/i.exec(trimmed);
+  const verbotswort = /\b(motiviert|begeistert|entzückt|leidenschaftlich)\b/i.exec(text);
   if (verbotswort) {
     throw new Error(`Verbotswort gefunden: "${verbotswort[0]}"`);
   }
 
-  return trimmed;
+  return text;
 }
 
 export const ANSCHREIBEN_LOG_PATH = 'data/anschreiben/AnschreibenLog.md';
@@ -130,23 +155,24 @@ export async function saveAnschreiben(job: Job, text: string, dir = config.ansch
 }
 
 const MAX_REGENERATIONS = 2;
+// Für die Anzeige "Versuch x von y" in der UI.
+export const ANSCHREIBEN_MAX_VERSUCHE = MAX_REGENERATIONS + 1;
 
-// Ein Eintrag pro Versuch (Index = attempt), gekoppelt an MAX_REGENERATIONS+1 Versuche
-// insgesamt: die ersten beiden Versuche mit voller Thread-Zahl und knapperem Timeout,
-// der letzte Versuch mit weniger Threads (mehr Luft für den Rest vom System) und
-// entsprechend mehr Zeit, bevor endgültig übersprungen wird.
-const RETRY_CONFIG = [
-  { numThread: 6, timeoutMs: 600_000 },
-  { numThread: 6, timeoutMs: 600_000 },
-  { numThread: 4, timeoutMs: 1_000_000 },
-];
+// Ein Timeout pro Versuch (Index = attempt), gekoppelt an MAX_REGENERATIONS+1 Versuche
+// insgesamt: der letzte Versuch bekommt mehr Zeit, bevor endgültig übersprungen wird.
+// Threads stehen im llama.cpp-Preset, nicht hier.
+const TIMEOUTS_MS = [600_000, 600_000, 1_000_000];
 
 export interface GenerateAnschreibenOptions {
-  ollama?: string;
+  // Basis-URL des LLM-Backends; ungesetzt → Default des aktiven Providers.
+  host?: string;
   anschreibenDir?: string;
   model?: string;
   logPath?: string;
   signal?: AbortSignal;
+  // Meldet den Beginn jedes Versuchs (1-basiert) — der Runner zählt damit die
+  // Versuche pro Brief für die Lauf-Anzeige.
+  onAttempt?: (versuch: number) => void;
 }
 
 export async function generateAnschreiben(
@@ -156,11 +182,12 @@ export async function generateAnschreiben(
   options: GenerateAnschreibenOptions = {},
 ): Promise<string | null> {
   const {
-    ollama = config.ollamaHost,
+    host,
     anschreibenDir,
-    model = config.modelWriter,
+    model,
     logPath = ANSCHREIBEN_LOG_PATH,
     signal,
+    onAttempt,
   } = options;
 
   if (!canGenerateAnschreiben(job)) {
@@ -169,38 +196,39 @@ export async function generateAnschreiben(
   }
 
   const { inference } = loadSettings();
+  const llm = getProvider();
+  const writerModel = model ?? llm.resolveModels().writer;
   let result: string | null = null;
   let lastError = '';
 
   for (let attempt = 0; attempt <= MAX_REGENERATIONS; attempt++) {
     if (signal?.aborted) { lastError = 'Abgebrochen'; break; }
-    const { numThread, timeoutMs } = RETRY_CONFIG[attempt];
+    onAttempt?.(attempt + 1);
+    const timeoutMs = TIMEOUTS_MS[attempt];
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     let raw = '';
     try {
-      // stream: true, damit Ollama sofort HTTP-Header schickt statt erst nach voller
+      // stream: true, damit der Server sofort HTTP-Header schickt statt erst nach voller
       // Generierung — sonst reißt undicis headersTimeout bei langsamen/großen Modellen
       // (z.B. Reasoning-Modelle mit verstecktem "thinking"-Anteil vor dem Content).
       // Timeout- und Stop-Button-Abbruch sind zwei unabhängige Gründe, denselben Call
       // abzubrechen — AbortSignal.any() bündelt sie zu einem Signal für chat().
-      raw = await chat({
-        host: ollama,
-        model,
+      raw = await llm.chat({
+        host,
+        model: writerModel,
         messages: [
           { role: 'system', content: SYSTEM },
           { role: 'user', content: buildAnschreibenPrompt(job, profile) },
         ],
         stream: true,
         think: inference.think,
-        // num_thread bleibt aus RETRY_CONFIG (Perf pro Versuch); num_ctx/temperature
-        // kommen aus der zentralen Inferenz-Config.
-        options: { num_thread: numThread, num_ctx: inference.numCtx, temperature: inference.writerTemperature },
+        temperature: inference.writerTemperature,
         signal: signal ? AbortSignal.any([controller.signal, signal]) : controller.signal,
       });
     } catch (err) {
       lastError = err instanceof Error && err.name === 'AbortError'
-        ? (signal?.aborted ? 'Abgebrochen' : `Timeout nach ${timeoutMs / 1000}s (${numThread} Threads)`)
+        ? (signal?.aborted ? 'Abgebrochen' : `Timeout nach ${timeoutMs / 1000}s`)
         : err instanceof Error ? err.message : String(err);
       console.warn(`[anschreiben] Netzwerk-Fehler für job ${job.id} (Versuch ${attempt + 1}/${MAX_REGENERATIONS + 1}): ${lastError}`);
       continue;
@@ -234,6 +262,6 @@ export async function generateAnschreiben(
   // nur `status` auf den AKTUELLEN Diskstand statt diesen ganzen, potenziell
   // veralteten `job` zu überschreiben (gleiches Muster wie lib/filter.ts).
   await storage.update(job.id, { status: 'generated' });
-  logSuccess(job, model, path, logPath);
+  logSuccess(job, writerModel, path, logPath);
   return path;
 }

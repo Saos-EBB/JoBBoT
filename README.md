@@ -5,8 +5,8 @@
 *[English](README.en.md)*
 
 Lokaler Job-Scraper mit LLM-Anschreiben-Generator. Läuft komplett offline/lokal
-(Ollama), keine Cloud-Abhängigkeit. Pipeline: **Scrape → Filter → Anschreiben
-→ Review** (Review/Versand sind aktuell manuell).
+(llama.cpp), keine Cloud-Abhängigkeit. Pipeline: **Scrape → Filter → Anschreiben
+→ Review → Gmail-Entwurf**. Abgeschickt wird immer von dir, aus Gmail.
 
 Das ist **TschoBBo**, das Maskottchen von JoBBoT. Die vielen Arme sind Absicht:
 er ist es, der im Hintergrund gleichzeitig Inserate greift, sie filtert, das
@@ -19,7 +19,7 @@ jemand für dich arbeitet.
 ```bash
 npm install
 npx playwright install chromium   # nur für AMS/DevJobs.at (Browser-Scraper)
-ollama pull mistral-small3.2:latest   # Filter- und Anschreiben-Modell
+# llama.cpp (llama-server) + Modell: siehe howToUse.md, Abschnitt 3
 cp config/profile.example.json config/profile.json   # eigene Daten eintragen
 ```
 
@@ -34,7 +34,7 @@ Projekte und Links, die in jedes generierte Anschreiben einfließen.
 | `sources.json` | Welche Portale aktiv sind (karriere.at, devjobs.at, LinkedIn, AMS, jobs.at) + Suchqueries pro Portal — **auch über die UI editierbar**, siehe [Einstellungsseite „Suche"](#einstellungsseite-suche) |
 | `location.json` | Whitelist an Städten/Regionen (Oberösterreich) + Remote-Keywords — **auch über die UI editierbar** |
 | `experience-rules.json` | Keyword-/Phrasenlisten für den Regex-Filter (Erfahrungsjahre, Junior-Signale, Ausschluss-/Negationswörter) |
-| `settings.json` | `filterMode` (`regex` oder `llm`) und Fallback-`filterModel` |
+| `settings.json` | `filterMode` (`regex` oder `nimble`), `nimble.supportJobs`/`nimble.wantedJobs` |
 
 ### Config anpassen
 
@@ -55,40 +55,39 @@ einer Änderung nicht nötig.
   Signale, Ausschlusswörter) nachschärfen, wenn `data/filter-log.md` zeigt,
   dass der Regex-Filter falsch klassifiziert (zu streng → raus, zu lasch →
   unsicher).
-- **`settings.json`**: `filterMode` auf `llm` stellen, um statt Regex den
-  Ollama-Filter zu nutzen (braucht laufendes Ollama + `filterModel`).
+- **`settings.json`**: `filterMode` auf `nimble` stellen, um statt Regex den
+  JEV-Filter zu nutzen (lokales Modell Bespoke Nimble 9B, Preset aus
+  `JOBBOT_LLAMACPP_NIMBLE_MODEL`). Welche Stellen gewollt sind, steht in
+  `nimble.supportJobs` (nie wegen Erfahrung aussortiert) und `nimble.wantedJobs`.
 
 ## Modellwahl
 
-Mehrere lokale Ollama-Modelle wurden für die Anschreiben-Generierung
-durchgetestet (volle Rohdaten: `data/anschreiben/test/`), damit andere sich
-den Vergleich sparen können:
+Läuft auf **llama.cpp** (`llama-server` im Router-Modus, Presets in
+`config/llama-models.ini`). Verglichen mit demselben Prompt auf denselben drei
+Testjobs:
 
 | Modell | Ergebnis |
 |---|---|
-| `qwen2.5:7b` | Qualität nicht befriedigend — aussortiert |
-| `qwen3.5:9b` | Am schnellsten (~115s/Job), aber halluzinierte in mehreren Testjobs Skills, die nicht im Profil stehen |
-| `qwen3:30b` | Zu groß fürs CPU-only-Setup — jeder Testjob lief in Timeout (>10min) |
-| `gemma3:12b` | Ordentliche Qualität, aber als einziges Modell mehrfach Retries nötig; RAM-Verbrauch stieg über eine Testreihe kontinuierlich ohne Plateau (~15→23GB) — reales OOM-Risiko bei längeren Batches |
-| `mistral-small3.2:latest` | Beste Qualität (am ehrlichsten bei fehlenden Skills, keine erfundenen Parallelen), stabilster RAM-Verbrauch, keine Retries — **aktuelle Wahl** für Filter und Anschreiben |
+| `gemma4-26b-cpu` (Gemma 4 26B MoE, QAT Q4_0, CPU) | ~9,5 tok/s konstant, 3 Briefe in ~170 s, keine Retries, benennt fehlende Skills ehrlich — **aktuelle Wahl** fürs Anschreiben |
+| `gemma4-26b` (dasselbe auf der Vega-iGPU per Vulkan) | gesamt nicht schneller, Einbrüche auf 4 tok/s, belegt ~14 GB RAM als GTT |
+| `mistral-small3.2` (24B dense, Q4_K_M) | ~2 tok/s, 3 Briefe in 610–770 s, mehr Floskeln, Grammatikfehler, eine erfundene Behauptung |
 
-Die Temperatur- und Dauer-Werte im Abschnitt „Performance" unten beziehen
-sich auf `mistral-small3.2`, das produktiv eingesetzte Modell.
+Früher lief alles über Ollama; dort waren `qwen2.5:7b`, `qwen3.5:9b`
+(halluzinierte Skills), `qwen3:30b` (Timeouts) und `gemma3:12b` (RAM wuchs ohne
+Plateau) gegen `mistral-small3.2` durchgefallen.
 
 ## Performance
 
-Getestet auf einem Lenovo T14 (AMD Ryzen 7 PRO 5850U), 6 CPU-Kernen, kein
-GPU-Support unter Ollama. CPU-Temperatur
-unter Last: Peak ~81°C, im Schnitt ~70°C. Ein Anschreiben dauert ~3-4 Min,
-abhängig davon wie gut Job und Profil zusammenpassen (vgl. die Testfälle
-`clean`/`offstack`/`brutal` in `scripts/one-off/anschreiben-model-bench.ts` — clean
-= guter fachlicher Fit, offstack = Tech-Stack weicht ab, brutal = großer
-fachlicher Mismatch, mehr Text zu Lücken/Ehrlichkeit nötig).
+Getestet auf einem Lenovo T14 (AMD Ryzen 7 PRO 5850U, 8 Kerne, 30 GB RAM) mit
+`gemma4-26b-cpu`: ein Anschreiben dauert ~45–80 s mit kaltem Modell, ~20–30 s
+wenn das Modell schon geladen ist — abhängig davon, wie gut Job und Profil
+zusammenpassen (guter fachlicher Fit geht schneller als ein großer Mismatch,
+der mehr Text zu Lücken/Ehrlichkeit braucht).
 
 ## Commands
 
 ```bash
-npm run check   # Ollama erreichbar + Modelle installiert?
+npm run check   # llama-server erreichbar + Presets vorhanden?
 npm run smoke    # Storage end-to-end testen (JsonStore-Lifecycle)
 npm run dev      # Health-Summary + aktuelle Job-Anzahl in storage
 npm run typecheck
@@ -102,8 +101,8 @@ npm run scrape:karriere              # einzelne Quelle: karriere | devjobs | lin
 npm run scrape -- --source=karriere  # äquivalent, direkt per Flag
 
 npm run filter                    # alle 'new' Jobs filtern (Modus aus settings.json)
-npm run filter:regex              # Regex-Strategie erzwingen (offline, kein Ollama nötig)
-npm run filter -- --source=llm    # Modus direkt per Flag erzwingen (llm | regex)
+npm run filter:regex              # Regex-Strategie erzwingen (offline, kein LLM nötig)
+npm run filter -- --source=nimble # Modus direkt per Flag erzwingen (nimble | regex)
 npm run filter:all                # ALLE Jobs neu triagen, nicht nur 'new' (--scope=all)
 npm run filter -- --scope=all     # äquivalent, direkt per Flag (new | all, Default new)
 
@@ -114,7 +113,7 @@ npm run anschreiben                       # Anschreiben für alle triaged Jobs (
 npm run anschreiben -- --data=save        # nur data/jobs/matched/   (fit "matched")
 npm run anschreiben -- --data=unsave      # nur data/jobs/offstack/  (fit "offstack")
 npm run anschreiben -- --limit=5          # nur die ersten N Jobs der Auswahl
-npm run anschreiben -- --source=<modell>  # Ollama-Modell für diesen Lauf überschreiben
+npm run anschreiben -- --source=<modell>  # Modell (Preset-Name) für diesen Lauf überschreiben
 
 npm run ui                  # Job-Browser + Gmail-Anbindung, http://localhost:3000
 npm run ui -- --port=3001   # anderen Port erzwingen (sonst UI_PORT-Env oder 3000)
@@ -144,15 +143,12 @@ Anzahl, gefundene E-Mails) in `data/anschreiben/AnschreibenLog.md`.
 Der Dateiname trägt bewusst **kein Datum** — und gesucht wird ohnehin nur über
 das `id8`-Präfix, siehe [Storage](#storage).
 
-`scripts/one-off/anschreiben-model-bench.ts` ist kein Pipeline-Schritt, sondern ein
-Dev-Tool zum Vergleichen mehrerer Ollama-Modelle auf denselben Test-Jobs.
-
 ### Gmail-Anbindung
 
 `npm run ui` zeigt pro Job (sobald Status `freigegeben` ist) eine editierbare
-E-Mail-Vorschau (An/Betreff/Text) mit zwei Aktionen: **Entwurf erstellen**
-(landet als echter, editierbarer Entwurf in Gmail) oder **Direkt senden**
-(mit Bestätigungsdialog). Beide laufen über ein Gmail App-Passwort, nicht
+E-Mail-Vorschau (An/Betreff/Text) mit der Aktion **Entwurf erstellen**
+(landet als echter, editierbarer Entwurf in Gmail, abgeschickt wird von dort).
+Das läuft über ein Gmail App-Passwort, nicht
 über OAuth:
 
 1. 2-Step-Verification im Google-Konto aktivieren (falls noch nicht an).
@@ -189,7 +185,8 @@ klaren Fehlermeldung fehl statt die Seite zu blockieren.
   `/api/jobs/:id/followup` (Nachfass als Entwurf oder Versand),
   `/api/config/schema` (Suchfelder je Portal), `/api/config/sources` und
   `/api/config/location` (GET/PUT) samt `/api/config/:name/restore` sowie
-  `/api/scrape/*` und `/api/filter/*` (siehe unten).
+  `/api/scrape/*`, `/api/filter/*`, `/api/anschreiben/*` (siehe unten). Dazu eine eigene
+  HTML-Seite `/nachweis` (Bewerbungsnachweis zum Drucken, siehe unten).
 
 Die Oberfläche hat drei Breitenbänder:
 
@@ -212,7 +209,7 @@ Die Sidebar hat eine eigene „Pipeline"-Gruppe mit den Einträgen **Scrape**,
 Scrape/Filter/Anschreiben laufen nach demselben Muster:
 
 1. `POST /api/scrape` (Quellenauswahl) bzw. `POST /api/filter`
-   (`regex`-/`llm`-Modus + `new`-/`all`-Scope, siehe oben) startet den Lauf
+   (`regex`-/`nimble`-Modus + `new`-/`all`-Scope, siehe oben) startet den Lauf
    **im Hintergrund** im Server-Prozess und antwortet sofort mit einer
    `runId` — kein Warten auf eine lange HTTP-Response.
 2. Das SPA pollt `GET /api/scrape/status` bzw. `/api/filter/status` alle
@@ -222,7 +219,21 @@ Scrape/Filter/Anschreiben laufen nach demselben Muster:
 3. Läuft bereits ein Lauf desselben Typs, antwortet ein zweiter `POST` mit
    `409` statt einen zweiten Lauf zu starten.
 4. Nach Abschluss zeigt die UI einen Toast mit der Kurzbilanz (z. B. „14
-   neu, 6 dedup") und lädt die Job-Liste automatisch neu.
+   neu, 6 dedup") und lädt die Job-Liste automatisch neu. Zusätzlich feuert der
+   **Server** eine **Desktop-Benachrichtigung** („JoBBoT — Scrape fertig") über
+   `notify-send` (`lib/desktop-notify.ts`) — die erscheint aufs Betriebssystem,
+   **egal ob der Browser-Tab im Vordergrund, im Hintergrund oder ganz geschlossen
+   ist**, weil der Lauf ohnehin im Server-Prozess weiterläuft. Best-effort: auf
+   Nicht-Linux oder ohne installiertes `notify-send` passiert einfach nichts.
+
+Beim **Anschreiben**-Lauf taucht jeder fertige Brief sofort in seinem Ordner
+auf, nicht erst am Batch-Ende: das SSE-Grid meldet jedes fertige Item, die UI
+lädt genau diesen Job einzeln nach (`GET /api/jobs/:id`). Weil eine Generierung
+Minuten dauert, wäre „alles erst am Schluss" eine lange Stille. Unter dem Grid
+steht eine Liste: der Brief, der gerade entsteht (mit mitlaufender Uhr), und
+jeder fertige bzw. gescheiterte mit Dauer und Versuchen (`x/3`); Klick öffnet
+den Job. Im **Filter**-Grid zeigt ein Hover über einen Punkt eine Karte mit
+Stelle, Firma, Dienstort und Lohn.
 
 Der Server hält den Lauf-Status nur im Prozessspeicher (kein
 Neustart-Recovery) — für ein lokales Einzelnutzer-Tool ausreichend.
@@ -315,12 +326,19 @@ rekonstruiert genau diesen Betreff, um eingehende Antworten einem Job zuzuordnen
 Ein eigener Nachfass-Betreff ließe eine Antwort darauf am Betreff-Abgleich
 vorbeilaufen. Der Text ist neu und kurz, nicht das Anschreiben ein zweites Mal.
 
+Oben in der Ansicht stößt **Antworten abrufen** den Inbox-Abgleich an (siehe
+„Antworten abrufen" weiter unten). Antworten, die zu einer Firma passen, aber
+nicht eindeutig zu **einem** Job, erscheinen direkt darunter unter **„Antworten
+manuell zuordnen"** — so hört eine Bewerbung auf nachzufassen, sobald du die
+Antwort dem richtigen Job zuweist.
+
 ### Kalender
 
 Der Sidebar-Tab „Kalender" zeigt, wann Bewerbungen rausgingen (`sentAt`), wann
 nachgefasst wurde (`followUps`) und wann Antworten zurückkamen
 (`replyReceivedAt`) — Tag = Quadrat, Woche = Zeile, Monat = Block, neuester
-Monat zuerst. Drei Farben, Legende im Kopf; ein Tag mit mehreren Sorten wird
+Monat zuerst. Vier Farben (gesendet, nachgefasst, Antwort, **Absage** in Rot —
+siehe Gmail-Sync), Legende im Kopf; ein Tag mit mehreren Sorten wird
 entsprechend geteilt. Jeder Nachfass ist ein eigener Eintrag, nicht nur der
 letzte — der Kalender soll zeigen, wie oft nachgehakt wurde. Klick auf einen Tag öffnet ein Popup mit
 den Einträgen des Tages und springt von dort zur Job-Detailansicht.
@@ -332,11 +350,24 @@ auseinanderliegende Monate keine Nachbarschaft vortäuschen; sie starten
 eingeklappt. Jeder Monatskopf ist ein Umschalter, die Summe daneben
 („2 gesendet · 1 Antwort") verrät auch im eingeklappten Zustand, ob sich das
 Aufklappen lohnt.
-Antworten werden nicht automatisch erkannt: ein „Antworten abrufen"-Button im
-„Gesendet"-Ordner (Verlauf) durchsucht die Gmail-Inbox per
-`POST /api/mail/replies/fetch` (E-Mail+Betreff-Abgleich, keine Message-ID) und
-setzt `replyReceivedAt` auf Treffer — Jobs mit Antwort tragen danach ein
-Badge „Antwort erhalten", mit Filter „Nur mit Antwort" im Verlauf.
+Antworten kommen nicht von selbst: ein „Antworten abrufen"-Button (im
+„Gesendet"-Ordner des Verlaufs **und** in der Nachfassen-Ansicht) durchsucht die
+Gmail-Inbox per `POST /api/mail/replies/fetch` (E-Mail-/Betreff-Abgleich, keine
+Message-ID) und setzt `replyReceivedAt` auf sichere Treffer — Jobs mit Antwort
+tragen danach ein Badge — **ABSAGE** (rot), **ZUSAGE**, **DATENSCHUTZ ZUSTIMMEN**,
+**ÜBER PORTAL BEWERBEN**, **EINGANG BESTÄTIGT** oder **ANTWORT ERHALTEN** (siehe „Antwort-Art" unten) —, mit Filter „Nur mit
+Antwort" im Verlauf.
+
+Der Betreff-Abgleich (`lib/mail-match.ts`, `classifyReplies`) ist bewusst
+robust: ein exakt rekonstruierter Betreff (`Bewerbung als … bei …`) ordnet zu,
+**egal von welcher Absender-Domain** — Firmen antworten oft von einer Tochter-,
+ATS- oder Weiterleitungs-Domain (echt gesehen: beworben an `starlim-sterner.com`,
+Antwort von `sterner-tools.com`). `Re:/AW:/WG:/Fwd:`, Tags wie `[extern]` und
+Leerraum werden vorher weggeschält. Passt eine Antwort zwar zu einer Firma, aber
+nicht eindeutig zu **einem** Job (mehrere offene Bewerbungen, generischer Betreff
+„Ihre Bewerbung"), wird sie nicht geraten, sondern in der Nachfassen-Ansicht
+unter **„Antworten manuell zuordnen"** angeboten — pro Antwort ein Knopf je
+Kandidat-Job, Klick setzt `replyReceivedAt` (`POST /api/mail/replies/assign`).
 
 ### Gmail-Sync (rückwirkend)
 
@@ -349,11 +380,13 @@ am Bot vorbei — laufende Versände schreiben ihr `sentAt` ohnehin selbst.
 Gescannt wird ab `HISTORY_START` (`lib/calendar.ts`, aktuell `2026-07-01`) —
 derselbe Startpunkt, ab dem der Kalender anzeigt.
 
-**Welche Mails zählen:** nur die, die in Gmail mit dem Label `Bewerbung` oder
-`Beworben` markiert sind (`BEWERBUNGS_LABELS` in `mail/gmail.ts`). Das Label ist
-die verlässlichste Quelle: `job.email` geht bei einem Re-Scrape verloren und der
-Betreff ändert sich, wenn ein Inserat neu eingelesen wird — deine Markierung
-bleibt. Ohne Label passiert nichts, und private Mails landen nie im Kalender.
+**Welche Mails zählen:** automatisch jede gesendete Mail mit „Bewerbung“ im
+Betreff (so betitelt der Bot seine Mails), außer Antworten und Weiterleitungen
+(`Re:`/`AW:`/`WG:`/`Fwd:`), die zu einer bestehenden Bewerbung gehören. Zusätzlich
+zählt jede Mail mit dem Gmail-Label `Bewerbung` oder `Beworben`, auch als
+Unterlabel wie `Bewerbungen/Beworben` (`istBewerbung` in `mail/gmail.ts`). Von Hand
+markieren musst du nichts; private Mails ohne „Bewerbung“ im Betreff landen nie im
+Kalender.
 
 **Zuordnung zum Job** läuft über zwei gleichwertige Schlüssel: den
 rekonstruierten Betreff (`Bewerbung als … bei …`, aus Titel+Firma jederzeit
@@ -382,14 +415,49 @@ Drei Eigenschaften, auf die man sich verlassen kann:
 - **Füllt nur Lücken.** Ein vorhandenes `sentAt`/`replyReceivedAt` wird nie
   überschrieben, damit ein heuristischer Treffer keinen echten Wert zerstört.
   Mehrfache Läufe sind dadurch gefahrlos.
-- **Ändert keinen Status.** Geschrieben werden ausschließlich die zwei
-  Datumsfelder.
+- **Ändert keinen Status — mit einer Ausnahme.** Ein Job im **Postausgang**
+  (der Bot hat den Gmail-Entwurf angelegt), dessen Mail im Gesendet-Ordner
+  auftaucht, hast du in Gmail abgeschickt: er wird `gesendet` und bekommt
+  `sentAt`. Dafür zählen auch Mails ohne Label (Bot-Entwürfe tragen keins),
+  aber nur solche nach dem Einlesen des Inserats; die Zuordnung ist dieselbe
+  (Betreff oder Adresse, mehrdeutig → nichts). Alle anderen Jobs bekommen
+  nur Datumsfelder.
+
+**Antwort-Art.** Gmail-Sync und „Antworten abrufen" laden für jede
+zugeordnete Antwort zusätzlich den Mailtext (read-only, nur diese Mails, Text-
+Teil bevorzugt, sonst HTML ohne Tags, zitierter Verlauf abgeschnitten) und
+lassen JEV (`lib/reply-kind-jev.ts`, dasselbe Nimble-Modell wie der Filter)
+ihn in `job.replyKind` einordnen: **absage**, **zusage**, **datenschutz**
+(man soll einer Datenschutzerklärung zustimmen), **plattform** (man soll sich
+über das Bewerberportal bewerben), **eingang** (automatische
+Eingangsbestätigung) oder **antwort** (nichts davon). Ein Aufruf pro Mail, die
+Urteile landen im Cache `data/reply-kinds.json` (gitignored). Läuft
+llama-server nicht oder ist die Antwort unbrauchbar, bleibt die Art offen,
+zählt in der Meldung als „ohne Art" und wird beim nächsten Sync erneut
+versucht. Bei mehreren Antworten gewinnt die aussagekräftigste (Absage >
+Zusage > Datenschutz/Plattform > Antwort > Eingang); der Status bleibt
+`gesendet`. Die Meldung nach dem Lauf nennt neue Absagen. Der alte Regex
+(`lib/reply-kind.ts`) ist noch als `regexReplyClassifier` im Code, der Sync
+nutzt ihn nicht.
+
+### Bewerbungsnachweis (AMS)
+
+„Nachweis drucken" im Kalender-Kopf öffnet `/nachweis` im neuen Tab: eine
+druckfertige Seite (A4 quer) mit Name, Zeitraum, Anzahl Bewerbungen, davon
+mit Antwort/Absage, und einer Tabelle **Nr. · Datum · Unternehmen · Stelle ·
+Ort · Bewerbungsweg (E-Mail an …) · Quelle (verlinkt) · Antwort (Art +
+Datum)**. Drin ist jeder Job mit `sentAt` oder Status `gesendet` (auch später
+gelöschte) plus die job-losen, in Gmail gelabelten Bewerbungsmails;
+undatierter Altbestand steht am Ende. Oben lässt sich ein Zeitraum
+(`?von=&bis=`) wählen; „Drucken / als PDF sichern" nutzt den Browser-Druck,
+Formular und Knöpfe erscheinen nicht im Ausdruck (`lib/nachweis.ts`).
 
 Die Zuordnung ist Heuristik, keine exakte Zuordnung: die Message-ID wurde beim
-ursprünglichen Senden nie gespeichert. Gematcht wird über die exakte
-Empfängeradresse, der rekonstruierte Betreff (`Bewerbung als … bei …`) dient
-nur als Tiebreaker, wenn mehrere Jobs dieselbe Firmenadresse teilen. Bleibt es
-mehrdeutig, wird nichts gesetzt — ungematchte Jobs bleiben schlicht undatiert.
+ursprünglichen Senden nie gespeichert. Gematcht wird über den rekonstruierten
+Betreff (`Bewerbung als … bei …`) und die Empfängeradresse. Bleibt es mehrdeutig,
+setzt der automatische Sync nichts; beim „Antworten abrufen"-Abgleich werden
+solche Fälle stattdessen zur **manuellen Zuordnung** angeboten (siehe oben), statt
+geraten zu werden.
 
 ## Tests
 
@@ -399,7 +467,7 @@ npm run test:watch # watch mode
 ```
 
 Alle Tests laufen gegen Temp-Verzeichnisse und einen lokalen Mock-Server —
-kein echtes Ollama, kein echtes `data/jobs/`.
+kein echter LLM-Server, kein echtes `data/jobs/`.
 
 ## Storage
 
@@ -535,23 +603,10 @@ Das ist das bestehende Duplikat-Thema — `npm run duplicates` zeigt es an.
 
 | Variable | Default |
 |---|---|
-| `OLLAMA_HOST` | `http://localhost:11434` |
-| `JOBBOT_MODEL_FILTER` | `mistral-small3.2:latest` |
-| `JOBBOT_MODEL_WRITER` | `mistral-small3.2:latest` |
+| `LLAMACPP_HOST` | `http://127.0.0.1:8089` |
+| `JOBBOT_LLAMACPP_MODEL` | `gemma4-26b-cpu` (Anschreiben) |
+| `JOBBOT_LLAMACPP_NIMBLE_MODEL` | `nimble-9b-vulkan` (JEV-Filter) |
+| `LLAMA_BIN` / `LLAMA_MODELS_DIR` | `~/.local/opt/llama.cpp/current/llama-server` / `~/.local/share/llama-models` |
 | `GMAIL_USER` | — (siehe [Gmail-Anbindung](#gmail-anbindung)) |
 | `GMAIL_APP_PASSWORD` | — (siehe [Gmail-Anbindung](#gmail-anbindung)) |
 | `UI_PORT` | `3000` (überschreibbar per `npm run ui -- --port=<n>`, das gewinnt vor `UI_PORT`) |
-
-## Logs
-
-`data/mail-log.md` (versendete/entworfene Bewerbungen) und `data/filter-log.md`
-(Filter-Läufe) enthalten echte Firmen und Kontaktadressen und sind deshalb
-gitignored. Das Format zeigen [`data/mail-log.example.md`](data/mail-log.example.md)
-und [`data/filter-log.example.md`](data/filter-log.example.md). Die echten Dateien
-legt der Bot beim ersten Lauf selbst an.
-
-## Lizenz
-
-All rights reserved, siehe [`LICENSE`](LICENSE). Der Code ist öffentlich zum
-Lesen (z. B. für Recruiter:innen), nicht zur Weiterverwendung. Abhängigkeiten
-stehen unter ihren eigenen Lizenzen.

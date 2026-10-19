@@ -59,6 +59,16 @@ test('matched enthält den auslösenden Textausschnitt', () => {
   assert.ok(r.matched && r.matched.length > 0);
 });
 
+test('Aufzählung in einer Zeile: optionalMarker in einem anderen Punkt entschärft NICHT', () => {
+  const r = checkExperience('Das bringen Sie mit - mehrjährige Berufserfahrung im IT-Support - Java idealerweise', cfg);
+  assert.equal(r.disqualified, true);
+});
+
+test('Aufzählung in einer Zeile: optionalMarker im selben Punkt entschärft weiterhin', () => {
+  const r = checkExperience('Profil - HTL-Abschluss - mehrjährige Erfahrung von Vorteil - Teamgeist', cfg);
+  assert.equal(r.disqualified, false);
+});
+
 test('leerer Text → NICHT disqualified', () => {
   assert.equal(checkExperience('', cfg).disqualified, false);
 });

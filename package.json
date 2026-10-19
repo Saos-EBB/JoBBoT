@@ -6,7 +6,7 @@
     "node": ">=21.7"
   },
   "scripts": {
-    "check": "tsx scripts/check-ollama.ts",
+    "check": "tsx scripts/check-llm.ts",
     "smoke": "tsx scripts/smoke-storage.ts",
     "dev": "tsx run.ts",
     "typecheck": "tsc --noEmit",

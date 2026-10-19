@@ -75,7 +75,7 @@ test('Entwurf: Status wird "postausgang", sentAt bleibt leer', async (t) => {
   assert.equal(zugestellt.length, 1);
   assert.equal(zugestellt[0].weg, 'entwurf');
   assert.equal(zugestellt[0].email.to, 'jobs@test.at');
-  assert.match(zugestellt[0].email.text, /Der Brieftext\./);
+  assert.match(zugestellt[0].email.text, /\n\nder Brieftext\./);
   assert.equal((await storage.get(job.id))?.status, 'postausgang');
 });
 
@@ -109,7 +109,7 @@ test('Nachfass: Status bleibt unverändert, followUps wächst um genau einen Ein
   assert.equal(updated.sentAt, '2026-09-01T08:00:00.000Z');
   assert.deepEqual(updated.followUps, [{ at: jetzt.toISOString(), via: 'sent' }]);
   // Der Nachfass trägt den Brief NICHT noch einmal mit.
-  assert.doesNotMatch(zugestellt[0].email.text, /Der Brieftext\./);
+  assert.doesNotMatch(zugestellt[0].email.text, /Brieftext/i);
   assert.match(zugestellt[0].email.text, /nachfragen/);
 });
 
@@ -206,4 +206,46 @@ test('jede der vier Kombinationen schreibt ihre eigene Zeile ins Mail-Log', asyn
   for (const aktion of ['drafted', 'sent', 'followup-drafted', 'followup-sent']) {
     assert.match(log, new RegExp(`: ${aktion} — Junior Developer — Test GmbH`));
   }
+});
+
+// Regression: Doppelklick auf "Direkt senden" schickte 18 Mails an dieselbe Firma —
+// der Status kippt erst nach dem Zustellen, parallele Aufrufe sahen alle "freigegeben".
+test('Senden: parallele Aufrufe für denselben Job stellen nur EINE Mail zu', async (t) => {
+  const job = bewerbung();
+  const { storage } = await arbeitsplatz(t, job);
+  const zugestellt: ComposedEmail[] = [];
+  const langsam: MailTransport = {
+    name: 'langsam',
+    async entwurf() {},
+    async sende(email) { await new Promise(r => setTimeout(r, 30)); zugestellt.push(email); },
+  };
+
+  const ergebnisse = await Promise.allSettled(
+    Array.from({ length: 5 }, () => versende({ job, art: 'bewerbung', weg: 'senden', storage, profile, transport: langsam })),
+  );
+
+  assert.equal(zugestellt.length, 1);
+  assert.equal(ergebnisse.filter(r => r.status === 'fulfilled').length, 1);
+  assert.equal((await storage.get(job.id))?.status, 'gesendet');
+});
+
+test('Senden: bereits gesendete Bewerbung geht nicht ein zweites Mal raus', async (t) => {
+  const job = bewerbung({ status: 'gesendet', sentAt: '2026-09-01T08:00:00.000Z' });
+  const { storage } = await arbeitsplatz(t, job);
+  const { transport, zugestellt } = fakeTransport();
+
+  await assert.rejects(
+    versende({ job: { ...job, status: 'freigegeben' }, art: 'bewerbung', weg: 'senden', storage, profile, transport }),
+    /bereits gesendet/,
+  );
+  assert.equal(zugestellt.length, 0);
+});
+
+test('Senden: nach einem Fehlschlag ist die Sperre wieder frei', async (t) => {
+  const job = bewerbung();
+  const { storage } = await arbeitsplatz(t, job);
+  await assert.rejects(versende({ job, art: 'bewerbung', weg: 'senden', storage, profile, transport: werfenderTransport() }), /SMTP weg/);
+  const { transport, zugestellt } = fakeTransport();
+  await versende({ job, art: 'bewerbung', weg: 'senden', storage, profile, transport });
+  assert.equal(zugestellt.length, 1);
 });
