@@ -37,7 +37,7 @@ Versand.
 ```bash
 npm install
 npx playwright install chromium   # nur für AMS/DevJobs.at (Browser-Scraper)
-# llama.cpp (llama-server) + Modell: siehe howToUse.md, Abschnitt 3
+# llama.cpp (llama-server) + Modelle (Gemma, für JEV Nimble): siehe howToUse.md, Abschnitt 3
 cp config/profile.example.json config/profile.json   # eigene Daten eintragen
 ```
 

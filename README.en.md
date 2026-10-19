@@ -35,7 +35,7 @@ Everything runs on your machine. No account, no cloud, no automatic sending.
 ```bash
 npm install
 npx playwright install chromium   # only needed for AMS/DevJobs.at (browser scrapers)
-# llama.cpp (llama-server) + model: see howToUse.md, section 3
+# llama.cpp (llama-server) + models (Gemma, Nimble for JEV): see howToUse.md, section 3
 cp config/profile.example.json config/profile.json   # fill in your own data
 ```
 
