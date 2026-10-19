@@ -42,8 +42,8 @@ test('loadLocationConfig folgt dem uebergebenen configDir', async (t) => {
 
 test('loadSettings folgt dem uebergebenen configDir', async (t) => {
   const { configDir, schreibe } = await tempConfigDir(t);
-  await schreibe('settings.json', { filterMode: 'llm', filterModel: 'testmodell' });
-  assert.equal(loadSettings(configDir).filterModel, 'testmodell');
+  await schreibe('settings.json', { filterMode: 'nimble' });
+  assert.equal(loadSettings(configDir).filterMode, 'nimble');
 });
 
 // Die eine, die es schon immer richtig machte — mitgeprüft, damit die Reihe vollständig

@@ -25,4 +25,4 @@ Commits. Architektur-Entscheidungen liegen in `docs/adr/`.
 
 - **Adapter / Seam** — siehe `.claude/skills/codebase-design`. Portale hängen als
   `ScraperAdapter` an einem Seam; der Mail-Versand an `MailTransport`
-  (`mail/transport.ts`); der Ollama-Zugriff an `chat()` (`lib/ollama.ts`).
+  (`mail/transport.ts`); der LLM-Zugriff an `LlmProvider` (`lib/llm/`, Backend llama.cpp).

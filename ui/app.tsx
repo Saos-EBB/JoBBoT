@@ -31,6 +31,7 @@ import { FOLDER_IDS, inFolder, type FolderId } from '../lib/folders.ts';
 import { FOLLOW_UP_DAYS, dueFollowUps, daysSinceLastContact } from '../lib/followup.ts';
 import { CSS } from './styles.ts';
 import { type LoadGridSection, LoadGridPanel } from './components/grid.tsx';
+import { AnschreibenListe } from './components/anschreiben-liste.tsx';
 import { type CalendarEvent, CalendarView, CAL_TYPES, CAL_COLOR } from './components/calendar.tsx';
 import { UMKREIS_GRUPPEN, istLandesbegriff, ChipListe, PortalBlock, RohAnsicht, useSettingsConfig } from './components/settings.tsx';
 import { useAttachment } from './hooks/attachment.ts';
@@ -234,6 +235,18 @@ export default function JobbotUI() {
       .then((data: JobWithBrief[]) => setJobs(data));
   }, []);
 
+  // Einen einzelnen Job (inkl. Brief) nachladen und in die Liste patchen — für das
+  // Anschreiben-Grid: jeder fertige Brief soll sofort im Ordner auftauchen, nicht erst
+  // wenn der ganze Batch durch ist.
+  const refreshJob = useCallback(async (id: string) => {
+    try {
+      const res = await fetch(`/api/jobs/${id}`);
+      if (!res.ok) return;
+      const fresh = await res.json() as JobWithBrief;
+      setJobs(js => js.map(j => (j.id === id ? fresh : j)));
+    } catch { /* Netzwerk kurz weg — der Batch-Ende-Refetch holt es ohnehin nach */ }
+  }, []);
+
   useEffect(() => { refetchJobs(); }, [refetchJobs]);
 
   // Server-Schreiben unten. Es gibt bewusst keinen Weg, patch() direkt aus einem
@@ -269,7 +282,7 @@ export default function JobbotUI() {
     anschreibenFits, setAnschreibenFits, anschreibenLimit, setAnschreibenLimit,
     anschreibenStarting, anschreibenSections, setAnschreibenSections,
     runAnschreibenNow, stopAnschreibenNow,
-  } = useAnschreibenRun(anschreibenStatus, pollRunsNow, say, refetchJobs, setHighlightFolders, () => setSelectedJobIds(new Set()));
+  } = useAnschreibenRun(anschreibenStatus, pollRunsNow, say, refetchJobs, refreshJob, setHighlightFolders, () => setSelectedJobIds(new Set()));
 
   // Tschobbo-Hook Teil 2 (ui/tschobbo.js): Die geworfenen Klumpen hängen an
   // <body>, nicht im React-Baum — ohne dieses Event blieben sie beim Wechsel auf
@@ -291,7 +304,8 @@ export default function JobbotUI() {
   const {
     replyOnly, setReplyOnly, repliesFetching, gmailSyncing,
     followUpSelection, setFollowUpSelection, followUpBusy,
-    fetchReplies, syncGmail, runFollowUps, createDraft, sendDirect,
+    ambiguousReplies, assignReply,
+    fetchReplies, syncGmail, runFollowUps, createDraft, sendingIds,
   } = useMailSync(say, refetchJobs, setCalendarEvents, patch, setDetailOpen);
 
   const {
@@ -511,7 +525,10 @@ export default function JobbotUI() {
           </button>
         </div>
 
-        <div className="sb__rule" />
+        {/* Angedockt: Pipeline (mit den Start-Knöpfen) und Tastatur-Hinweise bleiben unten
+            sichtbar, nur die Ordnerliste darüber scrollt — sonst lag der Start-Knopf bei
+            normaler Fensterhöhe unterhalb der Falte. */}
+        <div className="sb__dock">
         <div className="sb__group">
           <div className="sb__head">Pipeline</div>
           <button className={'fld' + (view === 'scrape' ? ' fld--on' : '')} onClick={() => setView('scrape')}>
@@ -541,16 +558,16 @@ export default function JobbotUI() {
             <FileText />
             <span className="fld__label">Anschreiben</span>
           </button>
-          <button className={'fld' + (view === 'nachfass' ? ' fld--on' : '')} onClick={() => setView('nachfass')}>
-            <RotateCw />
-            <span className="fld__label">Nachfassen</span>
-            {faellig.length > 0 && <span className="fld__n">{faellig.length}</span>}
-          </button>
           {anschreibenStatus?.status === 'running' && (
             <div className="fld__bar">
               <span style={{ width: `${anschreibenPct}%` }} />
             </div>
           )}
+          <button className={'fld' + (view === 'nachfass' ? ' fld--on' : '')} onClick={() => setView('nachfass')}>
+            <RotateCw />
+            <span className="fld__label">Nachfassen</span>
+            {faellig.length > 0 && <span className="fld__n">{faellig.length}</span>}
+          </button>
         </div>
 
         <div className="sb__keys">
@@ -568,6 +585,7 @@ export default function JobbotUI() {
             <span>Löschen</span>
             <kbd>#</kbd>
           </div>
+        </div>
         </div>
       </nav>
 
@@ -635,7 +653,7 @@ export default function JobbotUI() {
                   {CAL_TYPES.map(t => (
                     <span key={t}>
                       <span className="cal__entry__dot" style={{ background: CAL_COLOR[t] }} />
-                      {{ sent: 'gesendet', followup: 'nachgefasst', reply: 'Antwort' }[t]}
+                      {{ sent: 'gesendet', followup: 'nachgefasst', reply: 'Antwort', absage: 'Absage' }[t]}
                     </span>
                   ))}
                 </div>
@@ -651,6 +669,17 @@ export default function JobbotUI() {
               >
                 <Mail /> {gmailSyncing ? 'Synct…' : 'Gmail-Sync'}
               </button>
+              {/* Eigene druckfertige Seite (scripts/routes/nachweis.ts) im neuen Tab. */}
+              <a
+                className="btn btn--ghost"
+                href="/nachweis"
+                target="_blank"
+                rel="noopener"
+                style={{ textDecoration: 'none' }}
+                title="Tabelle aller Bewerbungen (wann, wo, wie, Antwort) zum Drucken oder als PDF — Nachweis fürs AMS"
+              >
+                <FileText /> Nachweis drucken
+              </a>
             </div>
           </header>
           <div className="cal__body">
@@ -786,9 +815,9 @@ export default function JobbotUI() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div className="modetoggle">
-                  {(['regex', 'llm'] as const).map(m => (
+                  {(['regex', 'nimble'] as const).map(m => (
                     <button key={m} className={'modebtn' + (filterMode === m ? ' modebtn--on' : '')} onClick={() => setFilterMode(m)}>
-                      {m === 'regex' ? 'Regex' : 'LLM'}
+                      {m === 'regex' ? 'Regex' : 'JEV'}
                     </button>
                   ))}
                 </div>
@@ -1028,8 +1057,39 @@ export default function JobbotUI() {
               Bewerbungen ohne Rückmeldung seit mindestens {FOLLOW_UP_DAYS} Tagen. Die Uhr läuft ab dem letzten
               Kontakt, ein Nachfass setzt sie zurück — es bleibt fällig, bis eine Antwort da ist.
             </div>
+            <div style={{ marginTop: 8 }}>
+              <button className="btn btn--ghost" disabled={repliesFetching} onClick={fetchReplies}>
+                <Mail /> {repliesFetching ? 'Prüft…' : 'Antworten abrufen'}
+              </button>
+            </div>
           </header>
           <div className="dt__body">
+            {ambiguousReplies.length > 0 && (
+              <div style={{ marginBottom: 18, padding: 12, border: '1px solid var(--line)', borderRadius: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Antworten manuell zuordnen ({ambiguousReplies.length})</div>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>
+                  Diese Mails passen zu einer Firma, aber nicht eindeutig zu einer Bewerbung. Wähle die passende Stelle.
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {ambiguousReplies.map((item, i) => (
+                    <div key={`${item.reply.from}-${item.reply.date}`} style={{ borderTop: i ? '1px solid var(--line)' : 'none', paddingTop: i ? 10 : 0 }}>
+                      <div style={{ fontSize: 12 }}>
+                        <span className="tag">{item.reply.from}</span>{' '}
+                        <span style={{ color: 'var(--muted)' }}>{new Date(item.reply.date).toLocaleDateString('de-AT')}</span>
+                      </div>
+                      <div style={{ fontSize: 13, margin: '3px 0 7px' }}>„{item.reply.subject}"</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {item.candidates.map(c => (
+                          <button key={c.id} className="btn btn--ghost" style={{ fontSize: 12 }} onClick={() => assignReply(item, c.id)}>
+                            {c.company} — {c.title}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {faellig.length === 0 ? (
               <div className="empty">
                 <div className="empty__h">Nichts offen</div>
@@ -1110,11 +1170,26 @@ export default function JobbotUI() {
           </header>
           <div className="dt__body">
             {anschreibenStatus?.status === 'running' || anschreibenSections.length > 0 ? (
-              <LoadGridPanel
-                running={anschreibenStatus?.status === 'running'}
-                sections={anschreibenSections}
-                onClose={() => setAnschreibenSections([])}
-              />
+              <>
+                <LoadGridPanel
+                  running={anschreibenStatus?.status === 'running'}
+                  sections={anschreibenSections}
+                  onClose={() => setAnschreibenSections([])}
+                />
+                <AnschreibenListe
+                  items={anschreibenSections.flatMap(s => s.rows.flatMap(r => r.squares))}
+                  current={anschreibenStatus?.status === 'running' ? anschreibenStatus.current : undefined}
+                  onOpen={id => {
+                    const j = jobs.find(x => x.id === id);
+                    const ordner = j && FOLDER_IDS.find(f => inFolder(j, f));
+                    if (!ordner) return;
+                    setView('jobs');
+                    setFolder(ordner);
+                    setFit('alle');
+                    open(id);
+                  }}
+                />
+              </>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 420 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -1335,7 +1410,12 @@ export default function JobbotUI() {
                     <span className="tag">{j.source}</span>
                     {j.status === 'fehler' && <span className="tag tag--err">FEHLER</span>}
                     {j.status === 'new' && <span className="tag tag--roh">UNGEFILTERT</span>}
-                    {j.replyReceivedAt && <span className="tag tag--reply">ANTWORT ERHALTEN</span>}
+                    {j.replyKind === 'absage' ? <span className="tag tag--absage">ABSAGE</span>
+                      : j.replyKind === 'zusage' ? <span className="tag tag--zusage">ZUSAGE</span>
+                      : j.replyKind === 'datenschutz' ? <span className="tag tag--todo">DATENSCHUTZ ZUSTIMMEN</span>
+                      : j.replyKind === 'plattform' ? <span className="tag tag--todo">ÜBER PORTAL BEWERBEN</span>
+                      : j.replyKind === 'eingang' ? <span className="tag tag--eingang">EINGANG BESTÄTIGT</span>
+                      : j.replyReceivedAt && <span className="tag tag--reply">ANTWORT ERHALTEN</span>}
                   </span>
                 </button>
               </div>
@@ -1474,11 +1554,8 @@ export default function JobbotUI() {
               {shown.status === 'freigegeben' &&
                 (shown.email ? (
                   <>
-                    <button className="btn btn--primary" onClick={() => createDraft(shown.id, shown.email!)}>
+                    <button className="btn btn--primary" disabled={sendingIds.has(shown.id)} onClick={() => createDraft(shown.id, shown.email!)}>
                       <Send /> Entwurf erzeugen
-                    </button>
-                    <button className="btn" onClick={() => sendDirect(shown.id)}>
-                      <Send /> Direkt senden
                     </button>
                   </>
                 ) : (

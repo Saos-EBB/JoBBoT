@@ -1,3 +1,223 @@
+## 2026-10-19 — delete(public): Auto-Entwurf, lokale Module, Direkt senden und Benches für die öffentliche Version
+
+**Was:** Öffentlicher Stand für JoBBoT: Die roten Pipeline-Knöpfe (fullPipeLine10, mailPipeLineX) samt `lib/auto-entwurf.ts` und `scripts/routes/auto.ts`, die `local/`-Module, die Pipeline-Sperre (gab es nur wegen Auto), das Sende-Overlay und „Direkt senden" am Job sind raus — abgeschickt wird nur noch aus Gmail (Nachfass kann weiter senden). Bench-Skripte und -Ergebnisse bleiben privat. Die volle Fassung lebt in instantJobbot weiter.
+**Nicht gebaut:** kein Feature-Flag, das Auto im öffentlichen Code nur versteckt — der Code ist weg.
+
+## 2026-10-19 — docs(readme): Antwort-Art per JEV
+
+**Was:** Die README (de/en) beschrieb die Antwort-Art noch als Regex mit drei Arten. Jetzt: JEV, sechs Arten, Cache, „ohne Art"-Verhalten, neue Badges, Bench-Skript.
+**Nicht gebaut:** —
+
+## 2026-10-19 — fix(ui): color-scheme dark — keine weißen Standard-Scrollbalken
+
+**Was:** Neben der Job-Liste zeichnete der Browser einen weißen nativen Scrollbalken. `.jb` setzt jetzt `color-scheme: dark`, damit Scrollbalken, Checkboxen und Eingabefelder dunkel kommen. Kevins Meldung „Pipeline-Leiste unten fehlt" ließ sich headless bei seinen Bildschirmgrößen (3765×2118 @0,85, 2400×1350 @0,8) nicht nachstellen — Dock und Detail-Footer sitzen dort bündig unten; Verdacht: Browserfenster größer als der Bildschirm oder Pinch-Zoom.
+**Nicht gebaut:** kein eigenes Scrollbalken-Styling, kein Hochskalieren der UI auf sehr großen Viewports.
+
+## 2026-10-19 — fix(ui): Pipeline-Block unten in der Seitenleiste andocken
+
+**Was:** Kevin musste scrollen, um die Start-Knöpfe zu sehen. Pipeline-Gruppe und Tastenkürzel stecken jetzt in `.sb__dock` (sticky am unteren Rand der Seitenleiste), Tschobbos Schalter hängt mit drin; unter 820 px Höhe fallen die Tastenkürzel weg.
+**Nicht gebaut:** kein Umbau der übrigen Seitenleiste, kein Einklappen der Gruppen.
+
+## 2026-10-19 — fix(gmail-sync): Bewerbungen im Gesendet-Ordner automatisch erkennen
+
+**Was:** Kevin will gesendete Bewerbungen nicht von Hand labeln. `istBewerbung` (`mail/gmail.ts`) zählt eine Mail jetzt bei passendem Label — auch verschachtelt wie `Bewerbungen/Beworben`, verglichen wird das letzte Pfadsegment — oder bei „Bewerbung" im Betreff ohne Re/AW/WG/Fw-Präfix. Mails, die nur an die eigene Adresse gehen, zählen nicht. Mails zu Jobs, die schon `sentAt` haben, werden über `gehoertZuJob` (`lib/mail-match.ts`) nicht mehr als „ohne Job" doppelt eingetragen. Mit dem echten Postfach: 335 Bewerbungen erkannt, 207 Jobs mit `sentAt`, 7 job-lose Mail-Events (vorher ~190 Dubletten).
+**Nicht gebaut:** keine Sonderbehandlung für gelabelte Weiterleitungen, keine Erkennung über den Mailtext.
+
+## 2026-10-19 — feat(gmail-sync): Antwort-Art per JEV statt Regex
+
+**Was:** Kevin will in den Antworten Absage, Zusage, „Datenschutz zustimmen", „über Portal bewerben" und Eingangsbestätigung auseinanderhalten. `lib/reply-kind-jev.ts` fragt JEV pro Mail (zitierte Teile abgeschnitten) nach einem Buchstaben; Urteile werden in `data/reply-kinds.json` gecacht, kein Urteil (Server down, unbrauchbare Antwort) wird nicht gecacht und beim nächsten Sync erneut versucht (`ohneArt`). Rangfolge bei mehreren Antworten: eingang < antwort < datenschutz/plattform < zusage < absage. Der Regex bleibt als `regexReplyClassifier` im Code, der Sync nutzt ihn nicht mehr; Tests injizieren ihn. Alle bestehenden `replyKind` zurückgesetzt und per JEV neu bestimmt (Sicherung `data/backup-replykind-2026-10-19.json`): Absage 45, Plattform 28, Eingang 9, Zusage 1, Antwort 2. UI-Tags ZUSAGE, DATENSCHUTZ ZUSTIMMEN, ÜBER PORTAL BEWERBEN. Bench `scripts/one-off/reply-kind-bench.ts` auf 90 echten Mails (read-only): JEV klar vor dem Regex. Gemeinsamer Client für Filter und Antworten: `lib/nimble-client.ts`.
+**Nicht gebaut:** kein Umstellen der Art von Hand im UI, keine Statusänderung aus der Antwort-Art.
+
+## 2026-10-19 — feat(filter): JEV-Button, LLM-Filter (Gemma) entfernt
+
+**Was:** Das Filter-Panel hat jetzt Regex | JEV (`filterMode: nimble`), Default-Preset `nimble-9b-vulkan`. Der alte Gemma-JSON-Filter (`lib/filter-llm.ts`, Modus `llm`) ist weg; `FilterJudgment`/`mapJudgment` liegen in `lib/filter-judgment.ts`, `JOBBOT_LLAMACPP_FILTER_MODEL` und `filterTemperature` entfallen.
+**Nicht gebaut:** kein Migrationspfad für `filterMode: llm` außer dem Fallback auf den Default.
+
+## 2026-10-18/19 — feat(filter-nimble): JEV (Bespoke Nimble 9B) als Filter, getunt per Bench
+
+**Was:** Kevin wollte die lokalen JEV-Modelle als Filter testen (nur Nimble lag vor). `lib/filter-nimble.ts` fragt pro Kriterium genau ein Feld mit Ein-Buchstaben-Antwort; Frage `wanted_job` = Support / anderer Wunschbereich / keiner (Listen `nimble.supportJobs`/`wantedJobs` in `config/settings.json`, breit: Support, Technik, Coding, Lehre, Praktikum). Die Erfahrungsfrage bekommt nur Sätze mit Erfahrungswort UND Mengenangabe, sonst „nein" ohne Call; Junior-Signal per Stichwort, kein Lehre-Gate. Support wird nie wegen Erfahrung brutal, höchstens offstack. Bench `scripts/one-off/filter-model-bench.ts` mit `data/filter-bench/labels.json`: v1 67 % bei 22 s/Job → v5 92 % bei 6,9 s/Job (Vulkan), Precision brutal 95 %; Regex 83 %. Nebenbei Regex-Fix: Aufzählungspunkte gelten als eigene Sätze (`lib/experience-regex.ts`).
+**Nicht gebaut:** kein zweites JEV-Modell („kev" lag nicht vor), keine Titel-Stichwörter für Support (Fall „IT Application Manager" bleibt offen), kein paralleles Abfragen (np=2 brachte nichts).
+
+## 2026-10-11 — fix(ui): Sendesperre auch für „Direkt senden" am Job
+
+**Was:** Kevin sah die Sperre nicht — er hatte über den Knopf „Direkt senden" im Job-Detail verschickt, und die Sperre hing nur am Auto-Modus mit `weg: 'senden'`. Das Overlay erscheint jetzt auch, solange ein Einzelversand läuft (`sendingIds` aus `ui/hooks/mail-sync.ts`): „Bewerbung wird gesendet…" mit Firma und Adresse, ohne Stoppen (ein SMTP-Versand lässt sich nicht abbrechen); weg, sobald die Server-Antwort da ist. Im Browser geprüft mit abgefangener `/api/jobs/:id/send`-Route (nichts verschickt): Overlay während der Anfrage sichtbar, danach weg.
+**Nicht gebaut:** keine Sperre beim Nachfass-Senden.
+
+## 2026-10-11 — feat(auto): Bildschirmsperre beim Direktversand
+
+**Was:** Läuft ein Auto-Modus mit `weg: 'senden'` (Kevins fullSend10), legt die UI ein Vollbild-Overlay mit Laderad über alles (`.sendlock`, z-index über der App): Titel „Bewerbungen werden gesendet…", darunter die aktuelle Phase aus dem Status-Poll und ein Stoppen-Knopf — der bleibt bewusst erreichbar. Das Overlay verschwindet, sobald der Lauf nicht mehr läuft; die Bilanz kommt wie bisher als Toast. Im Browser mit simuliertem Status geprüft (Playwright, Status-Route abgefangen): Overlay sichtbar, Klick auf Sidebar-Knöpfe landet im Overlay, Stoppen ruft `/api/auto/stop`.
+**Nicht gebaut:** keine Sperre bei den Entwurf-Modi (fullPipeLine10/mailPipeLineX), keine Sperre anderer Browser-Tabs über den Server hinaus (jeder Tab pollt und sperrt selbst).
+
+## 2026-10-11 — feat(auto): lokale Zusatzmodi aus local/ (z. B. fullsend)
+
+**Was:** Kevin will einen „fullsend"-Modus, der nicht nur Entwürfe anlegt, sondern verschickt — aber als Modul, das nur bei ihm liegt. Im Repo landet nur die allgemeine Andockstelle: `scripts/routes/local-modules.ts` importiert beim Serverstart jede `.ts` aus `local/` (gitignored); `registerAutoModus()` in `scripts/routes/auto.ts` meldet einen zusätzlichen Auto-Modus an (`label`, `confirm`, `vorlauf`, `anzahl`, `weg: 'entwurf' | 'senden'`). Er läuft im selben RunState wie fullPipeLine10/mailPipeLineX — Pipeline-Sperre, Stopp-Knopf und Status-Poll gelten unverändert. `/api/auto/status` liefert `extraModi` und `weg`; die UI rendert pro Modus einen roten Knopf (Send-Icon, wenn er sendet), Toast/Desktop-Meldung sagen dann „gesendet" statt „Gmail-Entwürfe" und heben den Gesendet-Ordner hervor. Versand über `versende()` wie der Senden-Knopf am Job (Status `gesendet`, `sentAt`, MAIL_DRY_RUN greift). Kevins `local/fullsend.ts` (nicht im Repo): „fullSend10" = Scrape → Filter → 10 → senden. 3 Tests; Server-Start geprüft (Modul geladen, Knopf im Status) — ein echter Sendelauf nicht.
+**Nicht gebaut:** keine UI-Erweiterungen außer Auto-Knöpfen, kein Anzahl-Feld für Zusatzmodi (Anzahl steht im Modul).
+
+## 2026-10-11 — docs: README, README.en, CLAUDE.md und Architektur nachgezogen
+
+**Was:** Doku auf den Stand der letzten Features gebracht: Auto-Entwurf (fullPipeLine10/mailPipeLineX, Stopp, Pipeline-Sperre), Anschreiben-Liste mit Dauer/Versuchen, Filter-Vorschaukarte, Gmail-Sync (Postausgang → gesendet, Antwort-Art/Absagen), Kalender mit Absagen, Bewerbungsnachweis `/nachweis`, neue API-Routen. README auf Deutsch und Englisch gleich, CLAUDE.md kurz, `docs/architecture.md` um Gmail-Sync/Antwort-Art ergänzt.
+**Nicht gebaut:** —
+
+## 2026-10-10 — feat(kalender): Absagen rot im Kalender
+
+**Was:** Kevin sah nach dem Gmail-Sync keine Absagen im Kalender und hielt den Sync für kaputt — der hatte 17 Absagen gespeichert, der Kalender kannte aber nur "Antwort" (grün). `/api/calendar` meldet eine Antwort mit `replyKind: 'absage'` jetzt als eigenen Typ `absage`; Kalender färbt ihn rot (`--err`), Legende, Monatssumme ("2 Absagen") und Tages-Popup ("Absage") zeigen ihn. Mit echten Daten geprüft: 61 gesendet, 11 Antworten, 17 Absagen, 12 Nachfass.
+**Nicht gebaut:** Eingangsbestätigungen bleiben im Kalender normale Antworten.
+
+## 2026-10-10 — feat(nachweis): Bewerbungsnachweis zum Drucken (AMS)
+
+**Was:** Kevin braucht fürs AMS einen Nachweis, wann/wo/wie er sich beworben hat und mit welcher Antwort. Knopf "Nachweis drucken" in der Kalender-Ansicht neben Gmail-Sync öffnet `GET /nachweis` im neuen Tab: eigene, druckfertige HTML-Seite (A4 quer, `lib/nachweis.ts` + `scripts/routes/nachweis.ts`) mit Kopf (Name, Zeitraum, Anzahl, davon mit Antwort/Absagen, Stand) und Tabelle Nr./Datum/Unternehmen/Stelle/Ort/Bewerbungsweg/Quelle (verlinkt)/Antwort (Art + Datum). Quellen: jeder Job mit `sentAt` oder Status gesendet (auch später gelöschte) plus die job-losen, in Gmail gelabelten Bewerbungsmails aus dem Gmail-Sync; undatierter Altbestand am Ende. Zeitraum über von/bis-Felder oben (beim Drucken ausgeblendet), Drucken-Knopf = Browser-Druck bzw. "als PDF sichern". "&amp;" aus Portal-Titeln wird für den Ausdruck aufgelöst. 3 Tests. Mit den echten Daten im Browser und als PDF gerendert: 69 Bewerbungen, 28 mit Antwort (Absagen erscheinen erst nach dem nächsten Gmail-Sync).
+**Nicht gebaut:** kein AMS-Formular-Layout (das AMS hat kein einheitliches), keine Nachfass-Spalte, kein Export als CSV/Excel.
+
+## 2026-10-10 — feat(gmail-sync): Absagen in Antworten erkennen und markieren
+
+**Was:** Kevin will sehen, welche Antworten Absagen sind. Gmail-Sync und Antworten-Abruf laden jetzt den Text jeder zugeordneten Antwort nach (`fetchReplyTexts`, read-only, nur für zugeordnete UIDs, text/plain bevorzugt, sonst HTML grob zu Text) und klassifizieren per Regex (`lib/reply-kind.ts`): `absage`, `eingang` (automatische Eingangsbestätigung) oder `antwort`. Ergebnis in `job.replyKind`; bei mehreren Antworten gewinnt die aussagekräftigste (Absage > Antwort > Eingang), Jobs mit Absage werden nicht erneut gelesen. Liste zeigt ABSAGE (rot) / EINGANG BESTÄTIGT / ANTWORT ERHALTEN; Hinweise nennen neue Absagen. Status bleibt `gesendet`. Regex statt LLM: Absagen sind formelhaft, ein Fehlurteil ist nur eine falsche Markierung. Nur feste Wendungen — ein nacktes "leider" zählt nicht. Gegen Kevins echtes Postfach read-only geprüft (ohne Daten zu schreiben): 28 zugeordnete Antworten, alle Texte lesbar; die erste Regex-Fassung fand 9 Absagen und übersah 7 (Zeilenumbruch mitten in der Wendung, "leider nichts anbieten", "andere Bewerber*innen", "für diese Position absagen", "nicht zum Gespräch einladen") — nachgebessert auf 17 Absagen, 2 Eingang, 9 Antwort; Stichprobe der Auslöser ohne Fehlalarm. Die verpassten Formen stehen umformuliert in den Tests.
+**Nicht gebaut:** keine Klassifizierung bei manueller Zuordnung mehrdeutiger Antworten (`/api/mail/replies/assign`), kein eigener Absage-Ordner, kein Umstellen von Hand im UI.
+
+## 2026-10-10 — feat(gmail-sync): abgeschickte Postausgang-Entwürfe → Gesendet
+
+**Was:** Kevin schickt die Bot-Entwürfe in Gmail selbst ab; die Jobs blieben danach im Postausgang. Der Gmail-Sync gleicht jetzt Postausgang-Jobs gegen ALLE gesendeten Mails ab (die Bot-Entwürfe tragen kein Bewerbungs-Label) — gleiche Zuordnung wie sonst (exakter Betreff oder Empfängeradresse, mehrdeutig → nichts), nur Mails nach dem Einlesen des Inserats — und setzt bei Treffer `status: gesendet` + `sentAt`. Das ist die eine Ausnahme von "der Sync ändert keinen Status"; alle anderen Jobs bekommen wie bisher nur Datumsfelder. Hinweis nennt die Zahl. 3 neue Tests.
+**Nicht gebaut:** kein Abgleich für "freigegeben"/"generated" (die hat der Bot nie an Gmail gegeben); kein automatischer Sync im Hintergrund.
+
+## 2026-10-10 — feat(auto): fullPipeLine10 + mailPipeLineX
+
+**Was:** Kevin wollte den Auto-Knopf aufteilen. Der bisherige heißt jetzt **fullPipeLine10** (unverändert: Scrape → Filter → 10). Neu: **mailPipeLineX** mit Eingabefeld daneben — kein Scrape, kein Filter, nimmt aus den vorhandenen passenden Jobs (matched/offstack, triaged) die neuesten X mit Mailadresse, `x` = alle; ungültige Eingabe graut den Knopf aus. `runAutoEntwurf` bekommt dafür `vorlauf?` (Scrape+Filter, fehlt bei mailPipeLineX) und `anzahl`; die Such-Obergrenze wächst mit (3×X, mind. 30, bei „alle“ unbegrenzt — sonst würde „alle“ nach 30 Suchen still aufhören). Der Browser für die Adresssuche startet erst bei der ersten nötigen Suche. Beide Knöpfe teilen sich Lauf, Stopp und Sperre; Status meldet `modus`, Hinweise und Desktop-Meldung nennen den Knopf. 3 neue Tests (Modus ohne Vorlauf, „alle“ ohne Obergrenze, Eingabe-Parser). In einer Projektkopie (Mock-LLM, `MAIL_DRY_RUN`) im Browser geprüft: `abc` → grau, `x` → aktiv, `2` → zwei neueste Jobs, einer mit echter firmenabc.at-Suche, beide im Postausgang.
+**Nicht gebaut:** kein Merken der Eingabe über Neuladen hinaus; bei „alle“ keine Warnung vor sehr vielen Suchen/Briefen außer dem Bestätigungsdialog.
+
+## 2026-10-10 — feat(auto): Gmail-Entwurf direkt nach jedem fertigen Brief
+
+**Was:** Kevin: kein Grund, auf den ganzen Stapel zu warten. Bisher legte der Auto-Lauf die Gmail-Entwürfe erst an, als alle 10 Briefe fertig waren. Jetzt meldet der Brief-Lauf jeden fertigen Brief (`onItemDone`) und sein Entwurf entsteht sofort, während das LLM schon den nächsten schreibt. Die Entwürfe laufen untereinander nacheinander (eine Promise-Kette, keine zwei IMAP-Uploads gleichzeitig); am Ende wartet der Lauf, bis die Kette leer ist — auch wenn der Brief-Lauf wirft. Ein Job landet so schon nach seinem Brief im Postausgang. Neuer Test prüft die Reihenfolge Brief → Entwurf → Brief → Entwurf.
+**Nicht gebaut:** keine Anzeige der bisher angelegten Entwürfe während der Briefe (die Sidebar zeigt weiter den aktuellen Brief).
+
+## 2026-10-10 — feat(auto): Stopp-Knopf für Auto-Entwurf
+
+**Was:** Kevin wollte den beim Auto-Entwurf offen gelassenen Stopp. Unter dem roten Knopf erscheint während des Laufs "Stoppen"; `POST /api/auto/stop` bricht per `AbortController` ab, der Lauf endet mit Status `stopped` und dem Hinweis "Auto-Entwurf abgebrochen: …". `runAutoEntwurf` prüft das Signal nach Scrape und Filter, vor jeder Adresssuche und jedem Gmail-Entwurf und reicht es an `runAnschreiben` durch (bricht auch den laufenden Brief ab). Ein laufender Scrape wird nicht unterbrochen (der Scrape-Runner kennt kein Signal) — die Sidebar zeigt dann "Stoppt — nach dem Scrape…". Fertige Briefe bleiben gespeichert, nur ihre Entwürfe entfallen. 3 neue Tests (Stopp nach Scrape, während der Suche, während der Briefe). In einer Projektkopie mit künstlich verlangsamtem Scrape im Browser geprüft: Stopp → `stopped`; nebenbei Sperre bestätigt (Scrape-Knopf grau, `POST /api/scrape` → 409 `blocked by auto`).
+**Nicht gebaut:** kein Abbruch mitten im Scrape, kein "Entwürfe für schon fertige Briefe trotzdem anlegen" nach dem Stopp.
+
+## 2026-10-10 — feat(pipeline): Auto-Entwurf und Einzel-Läufe sperren sich gegenseitig
+
+**Was:** Kevin wollte die beim Auto-Entwurf offen gelassene Sperre. Während Auto läuft, starten Scrape, Filter und Anschreiben nicht (und umgekehrt) — sonst schreiben zwei Läufe dieselben Jobs und teilen sich den einen llama-server-Slot. `scripts/routes/pipeline-lock.ts` hält die angemeldeten RunStates; `beginRun()` prüft vor dem Start und antwortet 409 mit `reason: 'blocked'` und dem blockierenden Lauf. Einzel-Läufe untereinander bleiben wie bisher kombinierbar. UI: betroffene Start-Knöpfe sind ausgegraut, ein 409 zeigt "X gesperrt — Y läuft gerade". Ein Test in `test/runnable-route.test.ts`.
+**Nicht gebaut:** keine Sperre für Gmail-Sync, Nachfassen oder Einzel-Entwurf/-Versand im Job-Detail; keine Warteschlange (ein gesperrter Start wird abgelehnt, nicht nachgeholt).
+
+## 2026-10-10 — feat(ui): roter Auto-Entwurf-Knopf in der Sidebar
+
+**Was:** `POST /api/auto` (+ `/status`, `scripts/routes/auto.ts`) verdrahtet `lib/auto-entwurf.ts` mit den echten Schritten: Scrape aller aktiven Portale, Regex-Filter über alle, Adresssuche per Browser (`createBrowserEmailFinder`, jetzt exportiert und erst in der Suchphase gestartet), Anschreiben über `runAnschreiben`, Entwurf über `versende(…, weg: 'entwurf')`. Prüft Gmail-Zugangsdaten vor dem Start statt nach zehn Minuten Briefe-Schreiben. Sidebar: roter Knopf oben in "Pipeline" mit Bestätigungsdialog, darunter die aktuelle Phase; am Ende ein Hinweis mit der Bilanz, Postausgang wird markiert. In einer Projektkopie (alle Portale aus, `MAIL_DRY_RUN`) im Browser geprüft: Dialog → Lauf → "keine neuen Jobs". Der volle Lauf mit echtem Scrape, firmenabc.at und Gmail ist nicht von mir gelaufen.
+**Nicht gebaut:** kein Stopp-Knopf, keine Sperre gegen parallel gestartete Einzel-Läufe, keine eigene Ansicht (Briefe und Entwürfe landen in den üblichen Ordnern).
+
+## 2026-10-10 — feat(auto): Auto-Entwurf-Ablauf (Scrape bis Gmail-Entwurf)
+
+**Was:** Kevin will einen Knopf für: scrapen → bei neuen Jobs alle nochmal per Regex filtern → die neuesten 10 passenden (nicht brutal) mit Mailadresse → Anschreiben → Gmail-Entwurf. Abweichung vom Wortlaut: die Adresse steht nach dem Filter fast nie am Job (sie wird sonst erst im Anschreiben-Lauf gesucht), "ohne Mail rausfiltern" ergäbe also fast immer 0 Jobs — darum wird sie für die neuesten Kandidaten vorher gesucht, bis 10 beisammen sind. `lib/auto-entwurf.ts` mit injizierten Schritten, 5 Tests (nichts Neues → Stopp, neueste 10 ohne brutal, Adresssuche + Speichern, Such-Obergrenze, Entwurf nur für fertige Briefe / ein Gmail-Fehler stoppt die anderen nicht).
+**Nicht gebaut:** kein Stopp-Knopf, keine Sperre gegen parallel laufende Einzel-Läufe, kein Zeitplan. Zusätzlich (nicht verlangt): höchstens 30 Adresssuchen pro Lauf, damit firmenabc.at nicht hunderte Anfragen bekommt.
+
+## 2026-10-10 — feat(filter): Vorschaukarte beim Hover über einen Grid-Punkt
+
+**Was:** Im Filter-Grid zeigte ein Punkt nur den nativen Browser-Tooltip ("Titel — Firma — Ergebnis"). Jetzt erscheint beim Hover eine Karte mit Stellenbezeichnung, Firma, Dienstort und Lohn ("nicht angegeben", wenn das Portal keinen liefert — nur karriere.at und devjobs.at haben ein Gehaltsfeld). Die Daten reisen als `preview` im SSE-Item mit (`scripts/routes/filter.ts`), die Karte sitzt in `ui/components/grid.tsx` und ersetzt nur dort den nativen Tooltip, wo ein `preview` mitkommt. In einer Projektkopie mit Regex-Filter im Browser geprüft.
+**Nicht gebaut:** keine Karte im Scrape- oder Anschreiben-Grid, kein Nachladen beim Hover.
+
+## 2026-10-10 — feat(anschreiben): Lauf-Ansicht zeigt fertige Briefe mit Dauer und Versuchen
+
+**Was:** Kevin wollte in der Anschreiben-Ansicht sehen, was fertig ist, wie lange jeder Brief gebraucht hat und wie viele Versuche (x/3). Unter dem Lade-Grid steht jetzt eine Liste: oben der Brief, der gerade entsteht, mit mitlaufender Uhr (`current.startedAt` im Status), darunter jeder fertige/fehlgeschlagene Brief mit Dauer der Generierung (ohne Mailadressen-Suche) und Versuchen; Klick öffnet den Job samt Brief. Dafür meldet `generateAnschreiben` den Beginn jedes Versuchs (`onAttempt`), der Runner misst und schickt `title/company/durationMs/attempts/maxAttempts` im SSE-Item mit. Gegen einen Mock-LLM in einer Projektkopie im Browser durchgespielt (1/3 und 2/3 Versuche, Uhr, Klick).
+**Nicht gebaut:** keine Briefvorschau in der Liste selbst, keine Speicherung der Zeiten über den Lauf hinaus (wie das Grid: nach Neuladen der Seite weg).
+
+## 2026-10-10 — fix(ui): Anschreiben-Ladebalken unter dem richtigen Ordner
+
+**Was:** Der Fortschrittsbalken eines laufenden Anschreiben-Laufs stand in der Sidebar hinter "Nachfassen" und sah aus wie Nachfass-Fortschritt. Jetzt direkt unter "Anschreiben", wie bei Scrape/Filter.
+**Nicht gebaut:** —
+
+## 2026-10-10 — feat(ui): Tschobbo als Favicon
+
+**Was:** Der Browser-Tab der UI hatte kein Icon. `ui/favicon.png` (64×64) ist das erste Frame aus `tschobbo-sheet.png` (Frontansicht, transparent) — das große Maskottchen-Bild wäre bei 16–32 px nicht erkennbar. Ausgeliefert über die bestehende `TSCHOBBO_ASSETS`-Map, eingebunden per `<link rel="icon">`.
+**Nicht gebaut:** kein `/favicon.ico` und keine weiteren Größen (der `<link>` reicht für alle aktuellen Browser).
+
+## 2026-10-10 — fix(health): Health-Checks starten llama-server vorher selbst
+
+**Was:** Nach einem Neustart meldete `npm run dev` "Fehlt: gemma4-26b …", obwohl die GGUFs da waren: `run.ts` und `scripts/check-llm.ts` riefen nur `check()` auf, der bei nicht erreichbarem Server alle Modelle als fehlend meldet. Jetzt erst `ensureReady()` (Autostart wie bei jedem echten Lauf; im Router-Modus lädt das noch kein Modell), Fehler davon als "nicht erreichbar" ausgegeben. Live geprüft: nach Neustart grün; Remote-Host → klare Meldung, `check` mit Exit 1.
+**Nicht gebaut:** kein systemd-Autostart beim Booten, `check()` selbst unverändert (unterscheidet weiterhin nicht).
+
+## 2026-10-10 — fix(anschreiben): drei Zeilen ohne Leerzeile gelten als drei Absätze
+
+**Was:** UI-Lauf (15 Jobs, gemma4-26b-cpu) meldete einzelne Fehlversuche "Absatz-Anzahl ist 1, erwartet 3"; alle Jobs kamen im Retry durch. Server-Log: alle Antworten in voller Länge (200–270 Tokens), also nicht abgeschnitten. Ursache unklar — nicht reproduziert (9/9 Versuche mit sauberen Leerzeilen), Rohtexte der Fehlversuche nicht gespeichert. Vermutung, nicht belegt: gemma trennt Absätze manchmal nur mit einfachem Zeilenumbruch. Workaround: genau 3 Zeilen werden als 3 Absätze akzeptiert und mit Leerzeilen normalisiert; die Fehlermeldung nennt jetzt zusätzlich die Zeilenzahl, damit der nächste Fall zeigt, was wirklich kam.
+**Nicht gebaut:** keine Prompt-Änderung (Ursache nicht belegt), kein Mitschreiben der Rohtexte.
+
+## 2026-10-09 — chore(attachments): neuer Lebenslauf mit Projekt-Abschnitt
+
+**Was:** Der alte Lebenslauf hatte keine Projekte und eine veraltete Website. Neu: Projekte vorne (YourBrand mit Lasttest-Zahlen, JobBot, kev.dev), Kevins drei Belege in der Berufserfahrung, Englisch B2, Website/GitHub aktuell. Vorlage `data/attachments/lebenslauf.html`, PDF per Playwright gerendert (2 feste A4-Seiten). Altes PDF lokal in `data/backup-lebenslauf-2026-09-26/`. Auf Kevins ausdrücklichen Wunsch committet, obwohl Adresse/Telefon/Geburtsdatum drinstehen und das Repo öffentlich ist.
+**Nicht gebaut:** kein Render-Skript im Repo (einmaliger Vorgang).
+
+## 2026-10-09 — chore(profile): Projektstand YourBrand und JobBot aktualisiert
+
+**Was:** Neuer Lebenslauf (lokal in `data/attachments/`, nicht committet — Adresse/Telefon/Geburtsdatum) zeigt den aktuellen Projektstand; die Anschreiben ziehen ihre Belege aus `profile.json`, also dort derselbe Stand: YourBrand mandantenfähig mit Mandanten-Dashboard, Worker-Prozess (Redis/BullMQ), Lasttest-Zahlen aus YourBrands eigener Messung (2026-09-10, 1.000 Testnutzer: ~250 req/s pro Instanz, Login per bcrypt-Worker-Threads ~25 → ~80 req/s; laut YourBrand-Doku untere Schätzung, Devmode, Client auf derselben Maschine); JobBot mit llama.cpp/Gemma 4, rund viermal schneller, Guardrails per Benchmark, ~550 Tests.
+**Nicht gebaut:** kein neuer Lasttest-Lauf (vorhandene, dokumentierte Messung reicht), kev.dev nicht ins Profil (der Prompt nutzt nur die zwei Anker-Projekte).
+
+## 2026-10-09 — fix(mail): Einstieg und Ausstieg der Bewerbungsmail
+
+**Was:** Mit Kevin durchgegangen. Nach "Sehr geehrte Damen und Herren," ging es groß weiter (Brief kommt als eigenständiger Text) — jetzt wird ein Funktionswort am Briefanfang kleingeschrieben (DIN 5008 / ÖNORM A 1080), Substantive/Namen bleiben. Neuer fester Schlusssatz "Meinen Lebenslauf finden Sie im Anhang, meine Projekte auf meiner Website." (der Lebenslauf liegt als PDF bei; die alte Zeile "Lebenslauf: <Website>" zeigte aufs Falsche). Signatur aus dem Profil (Name, Website, GitHub) statt des fest verdrahteten Nachsatzes "Falls Interesse … saos-repo.vercel.app" (falsche Adresse). Nachfass: "wollte höflich nachfragen" → "möchte nachfragen", gleiche Signatur. Profil: Website `https://kev-dev-gamma.vercel.app`, GitHub `https://github.com/Saos-EBB`, JobBot-Projekt nennt llama.cpp statt Ollama.
+**Nicht gebaut:** keine namentliche Anrede (kein Ansprechpartner-Feld am Job), Betreff unverändert (`lib/mail-match.ts` erkennt Antworten daran), keine Telefonnummer (Kevin will keine).
+
+## 2026-10-09 — ollama wipe -> llama setup
+
+**Was:** Kevin: "scheiß auf ollama, ersetz es durch llama überall". Ollama war nicht mehr installiert und hielt nur noch den Default fest. Entfernt: `lib/llm/ollama.ts` samt Tests, `OLLAMA_HOST`/`JOBBOT_MODEL_WRITER`/`JOBBOT_MODEL_FILTER`, `settings.filterModel`, `settings.inference.numCtx`, `ChatRequest.numCtx/providerOptions` und die `num_thread`-Abstufung pro Retry (Kontext/Threads stehen im Preset; Retry hat nur noch Timeouts). `JOBBOT_LLM_PROVIDER` ist jetzt standardmäßig `llamacpp`. Test-Mocks (`mockChat`/`mockChatSequence`) antworten wie `llama-server` (JSON bzw. SSE bei `stream:true`); die Autostart-Tests für den gemeinsamen Server-Ablauf ("down → start → warten", "start bringt nichts → wirft") von `ensureOllama` auf `ensureLlamaServer` übertragen. 549 Tests grün, `npm run check` live grün. Doku (CLAUDE.md, AGENTS.md, README/README.en, howToUse, CONTEXT, Architektur) auf llama.cpp umgeschrieben.
+**Nicht gebaut:** `LlmProvider`-Schnittstelle bleibt trotz nur einer Implementierung (Abbau wäre eigener Umbau), historische Doku (Build-Log, errors, Handoffs, review.html) unverändert, keine Behandlung von leerem `JOBBOT_LLM_PROVIDER=` (wirft klar "Unbekannter LLM-Provider").
+
+## 2026-10-09 — chore(llm): Writer-Default für llama.cpp auf gemma4-26b-cpu
+
+**Was:** Kevins Wahl nach dem Bench: CPU statt iGPU, weil konstant ~9,5 tok/s — das iGPU-Preset brach beim 3. Brief auf 4 tok/s ein und belegt ~14 GB RAM (GTT) unsichtbar im RSS. Überschreibbar per `JOBBOT_LLAMACPP_MODEL`.
+**Nicht gebaut:** Filter-Default unverändert (Kevin plant ein eigenes lokales Filter-Modell; Filter läuft standardmäßig per Regex), iGPU-Presets bleiben in `config/llama-models.ini`.
+
+## 2026-10-09 — feat(anschreiben): Quereinstieg mit echten Stationen und rotem Faden "jeder Beruf ist Handwerk"
+
+**Was:** Der Hintergrund-Satz war in jedem Brief dieselbe Behauptung ("Erfahrung in verschiedenen Berufen … schnell einarbeiten"), der rote Faden kam nie vor. Kevins echte Stationen stehen jetzt in `profile.json` → `quereinstieg.hintergrund` (2.000 m² Spachteln, 100 Rollläden, 500 Klienten in der Verwaltung von Flüchtlingsunterkünften — je an einem Tag; Handwerk = Probleme zerlegen, wiederkehrende Lösungen abwandeln; Umgang mit Menschen). Prompt: genau EIN passender Beleg mit Zahl, erzählen statt Fähigkeit behaupten, mit NICHT/SO-Gegenbeispiel. 3×3 auf gemma4-26b-cpu, alle OK ohne Retry. Ohne Gegenbeispiel standen in 5/9 Briefen zwei Belege nebeneinander ("Ob beim Spachteln … oder …"); mit Gegenbeispiel 0/9, aber das Modell wählt 9/9 die 500 Klienten (Baustelle/Rollläden nie), und "strukturiert" taucht 4× wieder auf. Bewusst so genommen: eine Firma sieht nur ihren Brief, die Gleichheit über Briefe hinweg sieht niemand.
+**Nicht gebaut:** keine Zuordnung Station↔Stellentyp im Code, kein neues Profil-Feld (ein String reicht).
+
+## 2026-10-09 — feat(anschreiben): Prompt opt1 + Ersatzliste für überstrapazierte Wörter + Quereinstieg als Stärke
+
+**Was:** Sieger der Prompt-Matrix (opt1: Lücke in einem nüchternen Satz) plus Kevins Wunsch: überstrapazierte Wörter nicht verbieten, sondern mit Ersatz versehen ("fundiert" → sagen, was gebaut wurde; "reizt mich" → "An … interessiert mich …"; "freue mich" → "Ich möchte …"), und der Quereinstieg nicht als "Als Quereinsteiger …"-Entschuldigung, sondern als Stärke aus dem Hintergrund (viele Berufe, schnell in neue Konzepte hineindenken, roter Faden) — steht jetzt in `profile.json` → `quereinstieg.hintergrund`. gemma4-26b-cpu, 3×3 Briefe: alle OK ohne Retry; "fundiert/reizt/freue/Als Quereinsteiger" 0× (opt1: 8/4/3/9), Lücke 9/9 nüchtern. Neue Wiederholung: der Hintergrund-Satz klingt in fast allen Briefen gleich ("Erfahrung in verschiedenen Berufen … schnell in neue Konzepte einarbeiten"), der "rote Faden" taucht nie auf.
+**Nicht gebaut:** keine Wort-Prüfung in `parseAnschreibenResponse`, keine Liste früherer Berufe (unbekannt; Prompt verbietet Erfinden), Filter unverändert (eigenes lokales Modell später).
+
+## 2026-10-09 — chore(docs): Prompt-Matrix auf gemma4-26b-cpu (4 Varianten × 3 Läufe)
+
+**Was:** Modellwahl steht (gemma4 auf CPU, gleichmäßig ~9,5–10 tok/s). Getestet wurde nur noch der Prompt: original (main), opt1 (original + nüchterne Lücken-Regel mit Beispielsatz), v2 (Verbotsliste + Stilbeispiele), v3 (v2 + Projekte nur in Absatz 2). Je 9 Briefe, alle OK. Ergebnis: opt1 benennt die Lücke in 9/9 nüchtern ("C# und .NET habe ich bisher noch nicht eingesetzt; …") statt "Da ich bisher … freue mich darauf" (original 9/9), 0 Retries, schnellste Variante; die alten Einstiegsfloskeln ("Als Quereinsteiger" 9×, "fundiert" 8×) bleiben. v2/v3 tilgen die verbotenen Floskeln, erzeugen aber ein neues Muster ("X erfordert ein tiefes Verständnis, wie ich …" 9× bzw. 7×), weniger "ich", konstruierte Verbindungen (Consent-Flow → Cloud-Migration) und in v3 eine erfundene Behauptung ("Dokumentation gehört zum Standard meiner Projektabschlüsse"). Verbotslisten verschieben bei gemma die Floskel nur. Einmal `fetch failed` beim ersten Brief (original r1), im 2. Versuch OK.
+**Nicht gebaut:** kein Prompt-Umschalter im Code (Varianten per Datei-Tausch im Scratch-Skript), keine automatische Floskel-Prüfung in `parseAnschreibenResponse`.
+
+## 2026-10-09 — chore(docs): Mistral-Baseline auf llama.cpp gemessen
+
+**Was:** Baseline zum gemma4-Lauf, gleicher (Original-)Prompt, gleiche 3 Jobs. Mistral Small 3.2 (unsloth Q4_K_M): 6/6 OK, je 1 Retry wegen Verbotswort "motiviert". Gesamtzeit iGPU 610,9 s, CPU 771,6 s — gemma4 ~170 s, also 3,6–4,5× schneller. Ausgabe ~2 tok/s (gemma4 9–11). Qualität schwächer als gemma4: mehr Floskeln ("spannende Herausforderung", "Leidenschaft", "kontinuierlich weiterentwickeln"), Selbstlob ("unter Beweis stellte"), Grammatikfehler ("ein modulare Plattform"), eine erfundene Behauptung (YourBrand → "Zusammenarbeit mit verschiedenen Teams", obwohl allein gebaut), im brutal-Brief (iGPU) Azure-Lücke nicht benannt. Erster Versuch brach ab: Mistral im iGPU-Speicher (~14 GB GTT, unsichtbar im RSS) plus ~14 GB andere Programme → RAM voll, Claude Code beendete den Lauf; mit freiem RAM einzeln pro Variante problemlos.
+**Nicht gebaut:** kein RAM-Check vor dem Laden im Bench (einmaliger Engpass durch Fremdprogramme).
+
+## 2026-10-09 — delete(handoffs): dshTryout gestrichen
+
+**Was:** Kevin streicht den dsh-Tryout: ein Agent-Harness bringt für einen einzelnen Prompt → Brief nichts, und die DeepSeek-API hieße Profil- und Jobdaten in eine fremde Cloud. Handoff 03 gelöscht, Verweise in 01/02 und in der Architektur entfernt; Vergleich läuft nur noch llama.cpp (gemma4) gegen die Mistral-Baseline.
+**Nicht gebaut:** alte Build-Log-Einträge bleiben unverändert (Verlauf), `openai-compat.ts` bleibt generisch.
+
+## 2026-10-09 — chore(docs): gemma4-26B auf llama.cpp gemessen (iGPU vs. CPU)
+
+**Was:** Erster echter Lauf mit dem Zielmodell (gemma-4-26B QAT Q4_0, sha256 geprüft). Bench mit 3 Jobs: 6/6 Briefe (je 3 auf Vulkan/iGPU und CPU) bestehen die Prüfung im ersten Versuch, Gesamtzeit iGPU 168,7 s, CPU 169,6 s (inkl. Modell-Laden). Laut Server-Log: iGPU ~85 tok/s Prompt, ~11 tok/s Ausgabe (beim 3. Brief eingebrochen auf 4 tok/s), CPU ~45 tok/s Prompt, ~9,5 tok/s Ausgabe — die iGPU bringt hier kaum etwas. Vulkan-Log warnt `failed to fit params to free device memory` (ngl=99 fest gesetzt), lief trotzdem. Filter-Urteil (JSON) mit gemma4: 3/3 parsebar und plausibel (10–28 s), der `null`-Befund mit Qwen3-0.6B war also Modellqualität. `generateAnschreiben` 3/3 bis Status `generated` (30–36 s). Mistral-Baseline steht noch aus (Download läuft).
+**Nicht gebaut:** keine Preset-Änderung (CPU/iGPU nur gemessen, Entscheidung nach Mistral-Vergleich), keine automatische Qualitätsbewertung der Briefe.
+
+## 2026-10-09 — feat(llm): llama.cpp-Provider (llama-server im Router-Modus)
+
+**Was:** Tryout 02 (nicht mergen, bevor der Bench-Vergleich steht). `JOBBOT_LLM_PROVIDER=llamacpp`: ein `llama-server` im Router-Modus, Modelle per Preset-Name aus `config/llama-models.ini`, `--models-max 1` (30 GB RAM, nie zwei große Modelle), Schlaf nach 5 min Leerlauf. CPU vs. Vulkan auf der Vega-iGPU ist nur ein anderer Preset-Name (`gemma4-26b` / `gemma4-26b-cpu`). llama.cpp b11524 (offizieller Vulkan-Build, sha256 geprüft) nach `~/.local/opt/llama.cpp/`, ohne sudo — Fedoras `llama-cpp` (b6153, Aug 2025, HIP) ist zu alt für Gemma 4. Mit Qwen3-0.6B real verifiziert: Autostart, Router-Modellliste, SSE-Stream, `generateAnschreiben` bis Status `generated`, Bench, JSON-Modus, `think:false` (98 ms statt 4,4 s). Filter-Urteil mit 0.6B → `null`, weil das Modell `"Ja"` statt `"ja"` schreibt (Modellqualität, Mapping korrekt) — Nachtest mit gemma4 offen.
+**Nicht gebaut:** keine Groß-/Kleinschreibungs-Toleranz in `parseJudgment` (würde Prüfung für ein Mini-Modell aufweichen), kein systemd-Dienst für llama-server (Autostart über Skript reicht), keine Übergabe von `numCtx`/Threads pro Request (Preset-Sache).
+
+## 2026-10-09 — refactor(llm): Server-Autostart aus ensureOllama in lib/llm/local-server.ts
+
+**Was:** llama.cpp braucht denselben Ablauf wie Ollama (läuft? → nur lokal starten → warten → klare Meldung). Statt ihn zu kopieren, steckt er in `ensureLocalServer()`; Ollama liefert nur Probe-URL und Startfunktion. Meldungstexte unverändert (Tests prüfen sie).
+**Nicht gebaut:** —
+
+## 2026-10-09 — docs(handoffs): Handoffs für llmProvider, llamaTryout, dshTryout
+
+**Was:** Kevin will weg von Ollama und Backends vergleichen. Drei Handoff-Prompts in `docs/handoffs/` (01 Schnittstelle, 02 llama.cpp, 03 DeepSeek Harness/dsh + DeepSeek-API als Kontrollgruppe), jeweils mit "kein Merge, bevor es funktioniert" und fixem Prompt für einen fairen Vergleich.
+**Nicht gebaut:** keine Branches für 02/03 im selben Schritt angelegt.
+
+## 2026-10-09 — feat(bench): Anschreiben-Bench provider-neutral für den Backend-Vergleich
+
+**Was:** Der alte Bench sprach nur Ollama und zeigte auf drei Job-Dateien, die es nicht mehr gab. Jetzt `--provider/--models/--jobs/--label`, dieselbe Request-Form wie `generateAnschreiben()`, Jobs über den 8-stelligen Dateinamens-Hash (überlebt fit-Ordnerwechsel), alle Läufe in einer Tabelle `data/anschreiben/test/bench/results.md`. Entladen zwischen Modellen über `LlmProvider.unload` (Ollama: `keep_alive:0` per API, weil das Binary nicht im PATH liegt).
+**Nicht gebaut:** keine automatische Qualitätsbewertung der Briefe (Spalten halluziniert?/Lücke ehrlich? aus dem alten Bench entfallen — Vergleich liest Kevin selbst), keine RAM-Messung.
+
+## 2026-10-09 — refactor(llm): neutrale LlmProvider-Schnittstelle, Ollama als erstes Backend
+
+**Was:** Voraussetzung, um Ollama gegen llama.cpp/DeepSeek tauschen zu können: `chat()` war zwar der einzige Client, aber Request (`num_thread`, `num_ctx`, `format`), Streaming (NDJSON) und Autostart (`ensureOllama` an 4 Aufrufstellen) waren Ollama-spezifisch. Jetzt `lib/llm/` mit `LlmProvider` + neutralem `ChatRequest`, Auswahl über `JOBBOT_LLM_PROVIDER`; der Host-Parameter heißt in der Filter-/Anschreiben-Kette `host` statt `ollama`. Nebenbei: `run.ts` zeigte `config.modelFilter` an, der Filter zieht aber `settings.filterModel` — jetzt dieselbe Quelle (`resolveModels()`). Echter Ollama-Lauf nicht möglich: Ollama ist auf dem System nicht mehr installiert (nur die Modelle unter `/usr/share/ollama` liegen noch), verifiziert über die bestehenden + neuen Tests (557 grün).
+**Nicht gebaut:** keine Modell-Config pro Provider in `settings.json` (jeder Provider liest seine eigenen env-Variablen), kein Fallback bei unbekanntem Provider-Namen (wirft absichtlich).
+
 ## 2026-08-06 — refactor(ui): status-poll nur solange läuft statt dauerhaft alle 1.5s
 
 **Was:** Kevin fragte, warum `/api/scrape/status`, `/api/filter/status`, `/api/anschreiben/status` dauerhaft alle 1.5s gefeuert werden, auch im Leerlauf. Poll-`setInterval` durch selbst-planenden `setTimeout` ersetzt — läuft weiter nur solange einer der drei Status `running` ist, hört danach auf. `runScrapeNow`/`runFilterNow`/`runAnschreibenNow` wecken die Schleife über einen neuen Ref (`pollRunsNow`) sofort nach dem Start-POST, statt auf den nächsten Tick zu warten (sonst würde der Übergang zu `running` erst bis zu 1.5s später bemerkt — oder nie, wenn die Schleife wegen vorherigem Leerlauf schon gestoppt hatte).

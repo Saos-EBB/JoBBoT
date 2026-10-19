@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { loadSources } from '../../lib/sources.ts';
 import { adapterRegistry, buildScrapeSetup } from '../../lib/scrape-setup.ts';
 import { runScrape } from '../../lib/scrape-runner.ts';
+import { desktopNotify } from '../../lib/desktop-notify.ts';
 import { createSseChannel, attachSseClient, type GridUnitEvent } from './sse-channel.ts';
 import { respondJson, readJsonBody } from './http.ts';
 import { createRunState } from './run-state.ts';
@@ -107,6 +108,12 @@ export async function handleScrapeRoutes(req: IncomingMessage, res: ServerRespon
       });
       return { result: { newTotal, skipTotal, offlineTotal, backTotal, perSource } };
     });
+    // OS-Benachrichtigung, sobald der Lauf durch ist — feuert auch, wenn der Browser
+    // längst zu ist (der Lauf lief die ganze Zeit hier im Server-Prozess).
+    const snap = scrapeRun.get();
+    desktopNotify('JoBBoT — Scrape fertig', snap.status === 'error'
+      ? `Fehlgeschlagen: ${snap.error ?? ''}`
+      : `${snap.result?.newTotal ?? 0} neu, ${snap.result?.skipTotal ?? 0} dedup`);
     return true;
   }
 

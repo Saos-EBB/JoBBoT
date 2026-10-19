@@ -14,6 +14,7 @@ import { handleScrapeRoutes } from './routes/scrape.ts';
 import { handleFilterRoutes } from './routes/filter.ts';
 import { handleAnschreibenRoutes } from './routes/anschreiben.ts';
 import { handleGmailRoutes } from './routes/gmail.ts';
+import { handleNachweisRoutes } from './routes/nachweis.ts';
 
 function portFromArgs(): string | undefined {
   const flag = process.argv.find(a => a === '--port' || a.startsWith('--port='));
@@ -31,6 +32,8 @@ const ctx: Ctx = { storage: new JsonStore(), profile: loadProfile() };
 // kein Verzeichnis-Traversal möglich.
 const TSCHOBBO_ASSETS = new Map<string, { path: string; type: string }>([
   ['/tschobbo-sheet.png', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo-sheet.png'), type: 'image/png' }],
+  // Erstes Frame aus tschobbo-sheet.png, auf 64×64 zugeschnitten.
+  ['/favicon.png', { path: join(import.meta.dirname, '..', 'ui', 'favicon.png'), type: 'image/png' }],
   ['/tschobbo-blobs.png', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo-blobs.png'), type: 'image/png' }],
   ['/tschobbo.js', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo.js'), type: 'text/javascript; charset=utf-8' }],
   ['/tschobbo-session.js', { path: join(import.meta.dirname, '..', 'ui', 'tschobbo-session.js'), type: 'text/javascript; charset=utf-8' }],
@@ -51,6 +54,7 @@ const routeHandlers: RouteHandler[] = [
   handleFilterRoutes,
   handleAnschreibenRoutes,
   handleGmailRoutes,
+  handleNachweisRoutes,
 ];
 
 const server = createServer(async (req, res) => {
@@ -58,7 +62,7 @@ const server = createServer(async (req, res) => {
 
   if (req.method === 'GET' && url.pathname === '/') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end('<!doctype html><html><head><meta charset="utf-8"><title>JoBBoT</title></head>'
+    res.end('<!doctype html><html><head><meta charset="utf-8"><title>JoBBoT</title><link rel="icon" type="image/png" href="/favicon.png"></head>'
       + '<body><div id="root"></div><script type="module" src="/app.js"></script>'
       + '<script type="module" src="/tschobbo.js"></script></body></html>');
     return;

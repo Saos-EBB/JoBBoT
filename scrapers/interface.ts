@@ -44,6 +44,11 @@ export interface Job extends ScrapedJob {
   // den Bewerbungsstatus nicht, sie ist nur eine zusätzliche Information dazu. Gesetzt
   // über das generische storage.update(), wie job.email.
   replyReceivedAt?: string | null;
+  // Art der Antwort, vom Gmail-Sync aus dem Mailtext erkannt (lib/reply-kind.ts):
+  // Art der Antwort (lib/reply-kind.ts). Wie replyReceivedAt nur Zusatzinfo — der Status
+  // bleibt "gesendet". Bei mehreren Antworten zählt die aussagekräftigste
+  // (Absage > Zusage > Datenschutz/Plattform > Antwort > Eingang).
+  replyKind?: 'absage' | 'zusage' | 'datenschutz' | 'plattform' | 'eingang' | 'antwort' | null;
   // Jeder Nachfass zu dieser Bewerbung, ältester zuerst. Trägt sowohl die Uhr für den
   // nächsten fälligen Nachfass (lib/followup.ts rechnet ab dem letzten Eintrag, sonst ab
   // sentAt) als auch die Historie fürs UI. 'draft' zählt bewusst mit: ein angelegter

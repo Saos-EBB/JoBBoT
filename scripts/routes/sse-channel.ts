@@ -9,7 +9,14 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 // hängt die Zeile an (siehe ui/app.tsx LoadGrid). Kein Snapshot beim (Re-)Connect —
 // Einzelnutzer-Lokaltool, ein mittendrin verbundener Client sieht nur ab da (siehe
 // scrapeRun/filterRun/anschreibenRun: ein Server-Neustart verliert genauso).
-export interface GridSquare { id: string; tooltip: string; state: 'done' | 'error' | 'excluded' | 'matched' | 'offstack' | 'brutal'; url?: string }
+export interface GridSquare {
+  id: string; tooltip: string; state: 'done' | 'error' | 'excluded' | 'matched' | 'offstack' | 'brutal'; url?: string;
+  // Nur Anschreiben-Items (lib/anschreiben-runner.ts): für die Liste fertiger Briefe.
+  title?: string; company?: string; durationMs?: number; attempts?: number; maxAttempts?: number;
+  // Nur Filter-Items: Inhalt der Vorschaukarte beim Hover.
+  preview?: GridPreview;
+}
+export interface GridPreview { title: string; company: string; location?: string | null; salary?: string | null }
 export interface GridUnitEvent { section: string; sectionLabel: string; row: string; items: GridSquare[] }
 
 export function createSseChannel<T>() {

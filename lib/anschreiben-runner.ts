@@ -3,10 +3,11 @@ import { readFile } from 'node:fs/promises';
 import type { Job } from '../scrapers/interface.ts';
 import type { Storage } from '../storage/json-store.ts';
 import type { ProfileData } from './profile.ts';
-import { generateAnschreiben, type GenerateAnschreibenOptions } from './anschreiben.ts';
+import { generateAnschreiben, ANSCHREIBEN_MAX_VERSUCHE, type GenerateAnschreibenOptions } from './anschreiben.ts';
 import { findEmail, FIRMENABC_USER_AGENT, type FindEmailJob } from './find-email.ts';
 import { sleep } from './fetch-page.ts';
 import { config } from '../config.ts';
+import { getProvider } from './llm/index.ts';
 
 // Seam für den Browser: runAnschreiben selbst weiß nichts von Playwright, nur dass es
 // einen Finder mit find()/close() bekommt. Zwei Adapter rechtfertigen ihn — der echte
@@ -16,7 +17,7 @@ export interface EmailFinder {
   close(): Promise<void>;
 }
 
-async function createBrowserEmailFinder(): Promise<EmailFinder> {
+export async function createBrowserEmailFinder(): Promise<EmailFinder> {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ userAgent: FIRMENABC_USER_AGENT });
   return {
@@ -32,6 +33,14 @@ export interface AnschreibenGridItem {
   id: string;
   tooltip: string;
   state: 'done' | 'error';
+  // Für die Liste fertiger Briefe in der Anschreiben-Ansicht: Dauer nur der
+  // Generierung (ohne Mailadressen-Suche) und wie viele Versuche sie brauchte.
+  title: string;
+  company: string;
+  durationMs: number;
+  attempts: number;
+  // Mitgeschickt statt in der UI importiert: lib/anschreiben.ts zieht node:fs mit.
+  maxAttempts: number;
 }
 
 export interface AnschreibenOutcome {
@@ -54,8 +63,8 @@ export interface RunAnschreibenOptions {
   onItemDone?: (item: AnschreibenGridItem) => void;
   signal?: AbortSignal;
   // Testbare Seams: ohne Angabe der echte Browser bzw. das echte generateAnschreiben()
-  // (Ollama) — Tests spritzen hier Fakes ein, um Schleife/Zähler/Abort ohne Browser
-  // oder Ollama zu prüfen.
+  // (LLM) — Tests spritzen hier Fakes ein, um Schleife/Zähler/Abort ohne Browser
+  // oder LLM zu prüfen.
   emailFinder?: EmailFinder;
   generate?: (job: Job, storage: Storage, profile: ProfileData, options: GenerateAnschreibenOptions) => Promise<string | null>;
 }
@@ -65,7 +74,7 @@ export interface RunAnschreibenOptions {
 // wiederverwenden kann statt ihn zu duplizieren.
 export async function runAnschreiben(options: RunAnschreibenOptions): Promise<AnschreibenOutcome> {
   const {
-    jobs, storage, profile, model = config.modelWriter, onProgress, onItemDone, signal,
+    jobs, storage, profile, model = getProvider().resolveModels().writer, onProgress, onItemDone, signal,
     generate = generateAnschreiben,
   } = options;
   let generated = 0;
@@ -84,7 +93,10 @@ export async function runAnschreiben(options: RunAnschreibenOptions): Promise<An
       const job = jobs[i];
       processed++;
       onProgress?.(i, jobs.length, job.title);
-      const path = await generate(job, storage, profile, { model, signal });
+      let attempts = 0;
+      const t0 = Date.now();
+      const path = await generate(job, storage, profile, { model, signal, onAttempt: n => { attempts = n; } });
+      const timing = { title: job.title, company: job.company, durationMs: Date.now() - t0, attempts, maxAttempts: ANSCHREIBEN_MAX_VERSUCHE };
       if (path) {
         generated++;
         let hasMail = job.email != null;
@@ -100,16 +112,17 @@ export async function runAnschreiben(options: RunAnschreibenOptions): Promise<An
 
         if (hasMail) mailGenerated++;
 
-        // Grobe Länge statt exakter Tokenzahl (die kennt nur Ollama) — Wortzahl aus der
+        // Grobe Länge statt exakter Tokenzahl (die kennt nur das LLM) — Wortzahl aus der
         // gerade gespeicherten Datei reicht für die Tooltip-Kurzinfo.
         const wordCount = (await readFile(path, 'utf8').catch(() => '')).trim().split(/\s+/).filter(Boolean).length;
         onItemDone?.({
           id: job.id,
           tooltip: `${job.title} — ${job.company} — ${model} — ~${wordCount} Wörter — gespeichert`,
           state: 'done',
+          ...timing,
         });
       } else {
-        onItemDone?.({ id: job.id, tooltip: `${job.title} — ${job.company} — fehlgeschlagen`, state: 'error' });
+        onItemDone?.({ id: job.id, tooltip: `${job.title} — ${job.company} — fehlgeschlagen`, state: 'error', ...timing });
       }
 
       if (i < jobs.length - 1 && !signal?.aborted) await sleep(1000);

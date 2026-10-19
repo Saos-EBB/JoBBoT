@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // Spiegelt GridUnitEvent aus scripts/ui-server.ts — ein SSE-Event pro abgeschlossener
 // Grid-Zeile (Seite/Batch/Anschreiben-Item), siehe LoadGrid weiter unten.
@@ -14,7 +14,16 @@ export type LoadGridSquare = {
   tooltip: string;
   state: 'done' | 'error' | 'excluded' | 'matched' | 'offstack' | 'brutal';
   url?: string;
+  // Nur Anschreiben-Items: für die Liste fertiger Briefe (siehe lib/anschreiben-runner.ts).
+  title?: string;
+  company?: string;
+  durationMs?: number;
+  attempts?: number;
+  maxAttempts?: number;
+  // Nur Filter-Items: ersetzt den nativen title-Tooltip durch eine Vorschaukarte.
+  preview?: GridPreview;
 };
+export type GridPreview = { title: string; company: string; location?: string | null; salary?: string | null };
 export type LoadGridRow = { key: string; squares: LoadGridSquare[] };
 export type LoadGridSection = { key: string; label: string; rows: LoadGridRow[] };
 
@@ -27,8 +36,10 @@ export const POP_DURATION_MS = 350;
 // Wurfziele), werden aber unsichtbar + nicht klickbar — nur die Scrape-Section
 // nutzt das, seit Tschobbo dort Klumpen statt Quadraten zeigt (siehe ui/tschobbo.js).
 export function LoadGrid({ sections, ghost }: { sections: LoadGridSection[]; ghost?: boolean }) {
+  const [karte, setKarte] = useState<{ p: GridPreview; x: number; y: number } | null>(null);
   return (
     <div className="loadgrid">
+      {karte && <VorschauKarte {...karte} />}
       {sections.map(s => (
         <div className="loadgrid__section" key={s.key}>
           <div className="loadgrid__head">{s.label}</div>
@@ -49,7 +60,12 @@ export function LoadGrid({ sections, ghost }: { sections: LoadGridSection[]; gho
                   <span
                     key={sq.id}
                     className={'loadgrid__sq loadgrid__sq--' + sq.state + (sq.url ? ' loadgrid__sq--clickable' : '') + (ghost ? ' loadgrid__sq--ghost' : '')}
-                    title={sq.tooltip}
+                    title={sq.preview ? undefined : sq.tooltip}
+                    onMouseEnter={sq.preview ? e => {
+                      const r = e.currentTarget.getBoundingClientRect();
+                      setKarte({ p: sq.preview!, x: r.left, y: r.bottom });
+                    } : undefined}
+                    onMouseLeave={sq.preview ? () => setKarte(null) : undefined}
                     onClick={sq.url ? () => window.open(sq.url, '_blank', 'noopener,noreferrer') : undefined}
                     style={{ '--pop-delay': `${i * step}ms`, '--reveal-delay': `${revealDelay}ms` } as React.CSSProperties}
                   />
@@ -59,6 +75,31 @@ export function LoadGrid({ sections, ghost }: { sections: LoadGridSection[]; gho
           })}
         </div>
       ))}
+    </div>
+  );
+}
+
+// Vorschaukarte für einen Filter-Punkt: fest positioniert unter dem Punkt, am rechten
+// Rand nach links geklappt, damit sie nicht aus dem Fenster ragt.
+const KARTE_BREITE = 280;
+function VorschauKarte({ p, x, y }: { p: GridPreview; x: number; y: number }) {
+  const left = Math.min(x, window.innerWidth - KARTE_BREITE - 12);
+  const zeile = (label: string, wert: string | null | undefined) => (
+    <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+      <span style={{ color: 'var(--dim)', width: 64, flexShrink: 0 }}>{label}</span>
+      <span style={{ color: wert ? 'var(--text)' : 'var(--dim)' }}>{wert || 'nicht angegeben'}</span>
+    </div>
+  );
+  return (
+    <div style={{
+      position: 'fixed', left, top: y + 6, width: KARTE_BREITE, zIndex: 50, pointerEvents: 'none',
+      background: 'var(--raised)', border: '1px solid var(--line)', borderRadius: 8,
+      padding: '10px 12px', fontSize: 12.5, boxShadow: '0 8px 24px rgba(0,0,0,.35)',
+    }}>
+      <div style={{ fontWeight: 600, color: 'var(--text)' }}>{p.title}</div>
+      {zeile('Firma', p.company)}
+      {zeile('Dienstort', p.location)}
+      {zeile('Lohn', p.salary)}
     </div>
   );
 }

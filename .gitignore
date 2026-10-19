@@ -30,6 +30,9 @@ config/*.json.bak
 # React-Bau und überbrückt dafür prefers-reduced-motion. Werkzeug, kein Projektinhalt.
 ui/tschobbo-test.html
 
+# JEV-Urteile pro Antwort-Mail (lib/reply-kind-jev.ts) — Postfach-Inhalt, nicht ins Repo.
+data/reply-kinds.json
+
 # Echte Logs (Bewerbungen, Firmen, Kontaktadressen) bleiben lokal.
 # Format-Beispiele: data/*.example.md
 data/mail-log.md

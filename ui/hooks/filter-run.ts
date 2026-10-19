@@ -3,6 +3,7 @@ import { useGridStream, type LoadGridSection } from '../components/grid.tsx';
 import type { FilterRunStatus } from './run-status-poll.ts';
 import type { FilterMode } from '../../lib/settings.ts';
 import type { SettingsResponse } from '../../scripts/routes/filter.ts';
+import { konfliktMeldung } from './run-conflict.ts';
 
 // status/wake kommen aus useRunStatusPoll (gemeinsamer Poll-Tick für alle drei Läufe).
 export function useFilterRun(
@@ -32,10 +33,10 @@ export function useFilterRun(
     if ((status.status === 'done' || status.status === 'error') && status.runId && status.runId !== lastSeenRunId.current) {
       lastSeenRunId.current = status.runId;
       refetchJobs();
-      say(
-        status.status === 'error' ? `Filter fehlgeschlagen: ${status.error}` : `Filter: ${status.result?.matched ?? 0} Match, ${status.result?.offstack ?? 0} Offstack, ${status.result?.brutal ?? 0} Brutal`,
-        status.status === 'error' ? 'err' : 'ok'
-      );
+      const msg = status.status === 'error'
+        ? `Filter fehlgeschlagen: ${status.error}`
+        : `Filter: ${status.result?.matched ?? 0} Match, ${status.result?.offstack ?? 0} Offstack, ${status.result?.brutal ?? 0} Brutal`;
+      say(msg, status.status === 'error' ? 'err' : 'ok');
     }
   }, [status, refetchJobs, say]);
 
@@ -48,7 +49,7 @@ export function useFilterRun(
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: filterMode, scope: filterScope }),
       });
-      if (res.status === 409) say('Filter läuft bereits', 'err');
+      if (res.status === 409) say(konfliktMeldung('filter'), 'err');
       wake();
     } finally {
       setFilterStarting(false);

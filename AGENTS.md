@@ -7,9 +7,11 @@ and `README.md` (full docs) for anything not covered here.
 ## 1. Prerequisites — check before doing anything
 
 - Node >= 20: `node -v`
-- Ollama installed and running: `curl -s $OLLAMA_HOST/api/tags` (default
-  `OLLAMA_HOST=http://localhost:11434`) — or just run `npm run check`, it
-  does exactly this plus verifies the configured models are pulled.
+- llama.cpp `llama-server` (router mode) at `~/.local/opt/llama.cpp/current/`,
+  GGUF models in `~/.local/share/llama-models` (see `config/llama-models.ini`
+  for preset names and files). You don't start it by hand: `ensureReady()`
+  launches `scripts/llama-server.sh` on demand (log: `data/llama-server.log`).
+  `npm run check` verifies the server answers and the configured presets exist.
 - `config/profile.json` exists. It's gitignored — if missing, copy it:
   `cp config/profile.example.json config/profile.json` and fill in real
   name/education/skills/projects. Without it, `npm run anschreiben` throws.
@@ -24,60 +26,40 @@ npm install
 npx playwright install chromium   # only if you'll run AMS/DevJobs.at scrapers
 ```
 
-Pull the models `config.ts` currently defaults to (check that file for the
-authoritative current tags — they get retuned as better local models show
-up; don't hardcode what's written here):
-
-```bash
-ollama pull <JOBBOT_MODEL_FILTER default from config.ts>
-ollama pull <JOBBOT_MODEL_WRITER default from config.ts>
-```
-
-If `npm run check` reports a model as missing, you (the coding agent) can
-run the `ollama pull` yourself — it's a local, reversible, non-destructive
-download, no need to ask first.
+Models are preset names from `config/llama-models.ini` (defaults in `config.ts`:
+`JOBBOT_LLAMACPP_MODEL`, `JOBBOT_LLAMACPP_NIMBLE_MODEL`). If `npm run check`
+reports a preset as missing, the GGUF file it points to isn't in
+`~/.local/share/llama-models` — download the file named in the preset (verify
+its sha256) rather than renaming presets. Ask before multi-GB downloads.
 
 ## 3. Health checks (run before AND after making changes)
 
 ```bash
-npm run check       # Ollama reachable + configured models present
+npm run check       # llama-server reachable + configured presets present
 npm run smoke       # storage/JsonStore end-to-end lifecycle
 npm run typecheck
 npm test
 ```
 
-## 4. LLM inference settings — read this before calling Ollama, it will save you hours
+## 4. LLM inference settings — read this before calling the LLM, it will save you hours
 
-This was benchmarked directly on this repo's dev machine (CPU-only, no usable
-GPU under Ollama — an integrated GPU is present but unsupported). Full raw
-data: `data/anschreiben/test/AnschreibenTestLog.md`.
+Benchmarked on this repo's dev machine (Ryzen with Vega iGPU, 30 GB RAM shared
+with the iGPU). History in `docs/build-log.md`.
 
-- **Reasoning models default to hidden "thinking" tokens that are
-  catastrophic on CPU.** A single cover-letter generation went from ~2
-  minutes to 41+ minutes because of this. Always pass `think: false` in the
-  `/api/chat` request body when calling a reasoning-capable model
-  (qwen3.x family). Non-reasoning models (gemma3, mistral) silently ignore
-  the flag — that's expected, not an error, don't retry on it.
-- Recommended generation options for this repo's use case (filter/cover
-  letter text): `num_ctx: 4096`, `temperature: 0.3`. Leave `top_k` /
-  `presence_penalty` at Ollama defaults unless you're deliberately tuning
-  one axis at a time.
-- **Never let two models >8GB sit loaded simultaneously.** This machine has
-  ~25GB usable RAM. Ollama's default `keep_alive` is 5 minutes, so a
-  second large model loading while the first is still resident can trigger
-  a kernel OOM-kill of the *Ollama server process itself* (not just the
-  request) — this actually happened during benchmarking. If you're
-  switching models in a script, call `ollama stop <model>` after you're
-  done with it before loading the next (see `scripts/one-off/anschreiben-model-bench.ts`
-  for the pattern).
-- Benchmarked model behavior (4 models × 3 fixed jobs, `think:false` +
-  `ctx4096` + `temp0.3` on all): qwen3.5:9b is fastest (~115s/job) but
-  fabricated tech/skills not in the candidate's profile in 2/3 test jobs.
-  gemma3:12b and mistral-small3.2 are 2-4x slower (~270-290s/job, up to
-  474s worst case) but were more honest about naming skill gaps instead of
-  inventing proximity. qwen3:30b (MoE, 18GB) timed out (>10min) on every
-  single test job even with `think:false` — avoid it here, it's not usable
-  interactively on this hardware regardless of the thinking-mode fix.
+- **Use `gemma4-26b-cpu` (the writer default).** gemma-4-26B is MoE: ~9.5 tok/s
+  steady on CPU, ~4x faster than the dense Mistral Small 3.2 baseline (~2 tok/s)
+  and more honest about skill gaps. The Vulkan/iGPU preset (`gemma4-26b`) is
+  not faster overall and had throughput drops.
+- **Never two big models in memory.** The router runs with `--models-max 1`.
+  iGPU presets allocate ~14 GB of system RAM as GTT, which does *not* show up
+  in process RSS — with a browser and dev servers open that filled RAM once.
+  Unload between models (`LlmProvider.unload`).
+- Pass `think: false` for reasoning-capable models (mapped to
+  `chat_template_kwargs.enable_thinking`); hidden thinking is catastrophic on
+  CPU. Temperatures live in `config/settings.json` (`inference`); context size
+  and threads live in the preset, not per request.
+- Prompt changes: banning phrases makes gemma swap in new stock phrases. One
+  concrete "NICHT: … / SO: …" example pair works far better than word lists.
 
 ## 5. Pipeline order
 

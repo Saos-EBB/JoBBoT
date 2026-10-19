@@ -1,31 +1,52 @@
 import { config } from '../config.ts';
 import { loadJsonConfig } from './load-json-config.ts';
 
-export type FilterMode = 'llm' | 'regex';
+export const FILTER_MODES = ['regex', 'nimble'] as const;
+export type FilterMode = typeof FILTER_MODES[number];
 
-// Ollama-Inferenz-Parameter, an EINER Stelle konfigurierbar (config/settings.json)
+export function isFilterMode(v: unknown): v is FilterMode {
+  return (FILTER_MODES as readonly unknown[]).includes(v);
+}
+
+// LLM-Inferenz-Parameter (backend-neutral, siehe lib/llm/types.ts), an EINER Stelle konfigurierbar (config/settings.json)
 // statt an den Call-Sites verstreut. think:false unterdrückt den versteckten
-// Reasoning-Anteil bei qwen3-Modellen (bei gemma/mistral wirkungslos); numCtx ist das
-// Kontextfenster; die zwei Temperaturen trennen determiniertes Filtern (0) vom etwas
-// freieren Schreiben.
+// Reasoning-Anteil bei Modellen, die das können; writerTemperature gilt fürs Anschreiben
+// (der JEV-Filter fragt fest mit 0). Modell und Kontextfenster
+// stehen nicht hier, sondern im llama.cpp-Preset (config/llama-models.ini).
 export interface InferenceSettings {
   think: boolean;
-  numCtx: number;
-  filterTemperature: number;
   writerTemperature: number;
+}
+
+// filterMode "nimble" (lib/filter-nimble.ts): welche Stellen überhaupt in Frage kommen.
+// Geht wörtlich in die Frage ans Modell — hier tunen statt im Code.
+export interface NimbleSettings {
+  // Support-Rollen: nie brutal wegen Berufserfahrung, höchstens offstack.
+  supportJobs: string[];
+  // Alle anderen gewollten Bereiche.
+  wantedJobs: string[];
 }
 
 export interface Settings {
   filterMode: FilterMode;
-  filterModel: string;
   inference: InferenceSettings;
+  nimble: NimbleSettings;
 }
 
 const INFERENCE_DEFAULTS: InferenceSettings = {
   think: false,
-  numCtx: 4096,
-  filterTemperature: 0,
   writerTemperature: 0.3,
+};
+
+const NIMBLE_DEFAULTS: NimbleSettings = {
+  supportJobs: [
+    'IT-Support, Helpdesk, Service Desk, technischer Support, Application Support, Applikationsbetreuung, Application Management, Ticketmanagement, 1st/2nd/3rd Level',
+  ],
+  wantedJobs: [
+    'alles mit Coding: Softwareentwicklung, Programmierung, Web, App, Embedded, SPS/Automatisierung, Test/QA, Low-Code',
+    'alles mit Technik/IT: IT-Techniker, Systemtechnik, Field Service, Systemadministration, Netzwerk, Cloud, DevOps, OT, IT-Security, Daten, KI, Digitalisierung, ERP/SAP, IT-Consulting',
+    'Lehre, Praktikum, Trainee oder Werkstudent in einem dieser Bereiche oder im Support',
+  ],
 };
 
 export function loadSettings(configDir: string = config.configDir): Settings {
@@ -34,7 +55,7 @@ export function loadSettings(configDir: string = config.configDir): Settings {
   });
   return {
     filterMode: parsed.filterMode ?? 'regex',
-    filterModel: parsed.filterModel ?? 'mistral-small3.2:latest',
     inference: { ...INFERENCE_DEFAULTS, ...(parsed.inference ?? {}) },
+    nimble: { ...NIMBLE_DEFAULTS, ...(parsed.nimble ?? {}) },
   };
 }

@@ -3,6 +3,7 @@ import { useGridStream, type LoadGridSection } from '../components/grid.tsx';
 import type { AnschreibenRunStatus } from './run-status-poll.ts';
 import type { Fit } from '../../scrapers/interface.ts';
 import type { FolderId } from '../../lib/folders.ts';
+import { konfliktMeldung } from './run-conflict.ts';
 
 // status/wake kommen aus useRunStatusPoll (gemeinsamer Poll-Tick für alle drei Läufe).
 // setHighlightFolders ist der Kern-State aus app.tsx, hier nur geschrieben (per Setter
@@ -15,6 +16,7 @@ export function useAnschreibenRun(
   wake: () => void,
   say: (msg: string, kind?: 'ok' | 'err') => void,
   refetchJobs: () => void,
+  refreshJob: (id: string) => void,
   setHighlightFolders: (fn: (prev: Set<FolderId>) => Set<FolderId>) => void,
   onStarted: () => void,
 ) {
@@ -32,20 +34,23 @@ export function useAnschreibenRun(
   const lastSeenRunId = useRef<string | null>(null);
 
   // SSE statt Polling fürs Lade-Grid — ein Event pro fertigem (oder fehlgeschlagenem)
-  // Anschreiben, angehängt an anschreibenSections.
-  useGridStream('/api/anschreiben/stream', setAnschreibenSections);
+  // Anschreiben, angehängt an anschreibenSections. onEvent lädt zusätzlich jeden fertigen
+  // Job einzeln nach, damit sein Brief sofort im Ordner steht statt erst am Batch-Ende.
+  useGridStream('/api/anschreiben/stream', setAnschreibenSections, event => {
+    for (const item of event.items ?? []) {
+      if (item.state === 'done') refreshJob(item.id);
+    }
+  });
 
   useEffect(() => {
     if (!status) return;
     if ((status.status === 'done' || status.status === 'error' || status.status === 'stopped') && status.runId && status.runId !== lastSeenRunId.current) {
       lastSeenRunId.current = status.runId;
       refetchJobs();
-      say(
-        status.status === 'error' ? `Anschreiben fehlgeschlagen: ${status.error}`
+      const msg = status.status === 'error' ? `Anschreiben fehlgeschlagen: ${status.error}`
         : status.status === 'stopped' ? `Anschreiben abgebrochen: ${status.result?.generated ?? 0} generiert, ${status.result?.emailsFound ?? 0} E-Mails gefunden`
-        : `Anschreiben: ${status.result?.generated ?? 0} generiert, ${status.result?.skipped ?? 0} übersprungen, ${status.result?.emailsFound ?? 0} E-Mails gefunden`,
-        status.status === 'error' ? 'err' : 'ok'
-      );
+        : `Anschreiben: ${status.result?.generated ?? 0} generiert, ${status.result?.skipped ?? 0} übersprungen, ${status.result?.emailsFound ?? 0} E-Mails gefunden`;
+      say(msg, status.status === 'error' ? 'err' : 'ok');
       // Nur den Entwürfe-Ordner markieren, der wirklich einen neuen Job bekommen
       // hat — mailGenerated/nomailGenerated sind die Aufschlüsselung von `generated`
       // nach Mail-Status am Ende des Laufs (siehe lib/anschreiben-runner.ts).
@@ -73,7 +78,7 @@ export function useAnschreibenRun(
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jobIds }),
       });
-      if (res.status === 409) say('Anschreiben-Lauf läuft bereits', 'err');
+      if (res.status === 409) say(konfliktMeldung('anschreiben'), 'err');
       else onStarted();
       wake();
     } finally {

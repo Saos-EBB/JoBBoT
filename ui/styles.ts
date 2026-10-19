@@ -22,6 +22,9 @@ export const CSS = `
   display:grid;
   grid-template-columns:clamp(200px, 16vw, 236px) clamp(320px, 26vw, 430px) minmax(0, 1fr);
   background:var(--ink); color:var(--text);
+  /* Native Bedienelemente (Scrollbalken, Checkboxen, Inputs) dunkel zeichnen — ohne
+     das malte der Browser z. B. neben der Jobliste einen weißen Standard-Scrollbalken. */
+  color-scheme:dark;
   font-family:var(--sans); font-size:13px; line-height:1.45;
   -webkit-font-smoothing:antialiased;
 }
@@ -116,7 +119,18 @@ export const CSS = `
 .jb .modebtn:hover { border-color:var(--dim); color:var(--text); }
 .jb .modebtn--on { background:var(--text); color:var(--ink); border-color:var(--text); font-weight:600; }
 
-.sb__keys { margin-top:auto; padding:14px 16px; border-top:1px solid var(--line-soft); display:flex; flex-direction:column; gap:5px; }
+.sb__keys { padding:14px 16px; border-top:1px solid var(--line-soft); display:flex; flex-direction:column; gap:5px; }
+/* Unterer Teil der Seitenleiste (Pipeline + Tastatur-Hinweise + Tschobbo-Schalter):
+   sticky am unteren Rand des scrollenden .sb, margin-top:auto schiebt ihn bei kurzer
+   Liste nach unten. Bei sehr niedrigen Fenstern scrollt er notfalls selbst, statt die
+   Ordnerliste ganz zu verdrängen. */
+.sb__dock {
+  position:sticky; bottom:0; z-index:1; margin-top:auto; padding-top:8px;
+  background:var(--slate); border-top:1px solid var(--line-soft);
+  max-height:75%; overflow-y:auto; flex:none;
+}
+/* Tastatur-Hinweise sind Komfort — auf niedrigen Fenstern machen sie Platz. */
+@media (max-height:820px) { .sb__keys { display:none; } }
 .key { display:flex; justify-content:space-between; font-size:11px; color:var(--dim); }
 .key kbd {
   font-family:var(--mono); font-size:10px; background:var(--panel);
@@ -214,6 +228,12 @@ export const CSS = `
 .tag--err { border-color:rgba(229,72,77,.4); color:var(--err); }
 .tag--roh { border-style:dotted; border-color:rgba(232,176,75,.45); color:var(--fit-offstack); }
 .tag--reply { border-color:rgba(53,208,165,.4); color:var(--ok); }
+/* Antwort-Art aus dem Gmail-Sync (lib/reply-kind.ts) */
+.tag--absage { border-color:rgba(229,72,77,.45); color:var(--err); }
+.tag--eingang { color:var(--dim); }
+.tag--zusage { border-color:rgba(53,208,165,.6); color:var(--ok); font-weight:600; }
+/* Antwort will etwas von dir (Datenschutz zustimmen, über Portal bewerben) */
+.tag--todo { border-color:rgba(232,176,75,.55); color:var(--fit-offstack); }
 
 .empty { padding:56px 24px; text-align:center; color:var(--dim); }
 .empty__h { color:var(--muted); font-weight:500; margin-bottom:5px; font-size:13px; }

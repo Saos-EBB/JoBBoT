@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { loadSettings, type FilterMode } from '../../lib/settings.ts';
 import { runFilter } from '../../lib/filter-runner.ts';
 import { createBatcher } from '../../lib/grid-batch.ts';
+import { desktopNotify } from '../../lib/desktop-notify.ts';
 import { createSseChannel, attachSseClient, type GridSquare, type GridUnitEvent } from './sse-channel.ts';
 import { respondJson, readJsonBody } from './http.ts';
 import { createRunState } from './run-state.ts';
@@ -71,6 +72,7 @@ export async function handleFilterRoutes(req: IncomingMessage, res: ServerRespon
             tooltip: `${d.job.title} — ${d.job.company} — ${ergebnis}`,
             state: d.status === 'matched' ? 'matched' : d.status === 'uncertain' ? 'offstack' : 'brutal',
             url: d.job.url,
+            preview: { title: d.job.title, company: d.job.company, location: d.job.location, salary: d.job.salary },
           };
           if (d.status === 'matched') filterBatchers.matched.push(square);
           else if (d.status === 'uncertain') filterBatchers.uncertain.push(square);
@@ -82,6 +84,10 @@ export async function handleFilterRoutes(req: IncomingMessage, res: ServerRespon
       filterBatchers.filtered_out.flush();
       return { result: { matched, offstack, brutal } };
     });
+    const snap = filterRun.get();
+    desktopNotify('JoBBoT — Filter fertig', snap.status === 'error'
+      ? `Fehlgeschlagen: ${snap.error ?? ''}`
+      : `${snap.result?.matched ?? 0} Match, ${snap.result?.offstack ?? 0} Offstack, ${snap.result?.brutal ?? 0} Brutal`);
     return true;
   }
 

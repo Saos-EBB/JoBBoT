@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Architektur-Review — Durchlauf 1 (abgeschlossen)</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --muted: #666;
+    --border: #ddd;
+    --head-bg: #f4f4f5;
+    --risk-low: #d9f2d9;
+    --risk-low-fg: #1e5b1e;
+    --risk-mid: #fdf3c7;
+    --risk-mid-fg: #7a5c00;
+    --risk-high: #fbdada;
+    --risk-high-fg: #8a1c1c;
+    --status-open: #eef0f2;
+    --status-open-fg: #444;
+    --status-done: #d9f2d9;
+    --status-done-fg: #1e5b1e;
+    --status-deferred: #eee;
+    --status-deferred-fg: #555;
+    --rueckfrage: #e6ddfb;
+    --rueckfrage-fg: #4a2e8f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    margin: 0;
+    padding: 24px;
+    line-height: 1.4;
+  }
+  header {
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 16px;
+  }
+  h1 { font-size: 1.4rem; margin: 0 0 8px 0; }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .meta strong { color: var(--fg); }
+  .cat-summary {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .cat-pill {
+    background: var(--head-bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+  .table-wrap {
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.87rem;
+    min-width: 900px;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--head-bg);
+    cursor: pointer;
+    user-select: none;
+    position: sticky;
+    top: 0;
+    white-space: nowrap;
+  }
+  th:hover { background: #e8e8ea; }
+  th .arrow { font-size: 0.75em; color: var(--muted); margin-left: 4px; }
+  td.loc {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: nowrap;
+    font-size: 0.85em;
+  }
+  td.cat { white-space: nowrap; text-transform: capitalize; }
+  td.effort { text-align: center; white-space: nowrap; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.82em;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .risk-niedrig { background: var(--risk-low); color: var(--risk-low-fg); }
+  .risk-mittel { background: var(--risk-mid); color: var(--risk-mid-fg); }
+  .risk-hoch { background: var(--risk-high); color: var(--risk-high-fg); }
+  .status-offen { background: var(--status-open); color: var(--status-open-fg); }
+  .status-erledigt { background: var(--status-done); color: var(--status-done-fg); }
+  .status-zurückgestellt { background: var(--status-deferred); color: var(--status-deferred-fg); }
+  .rueckfrage-tag {
+    display: inline-block;
+    background: var(--rueckfrage);
+    color: var(--rueckfrage-fg);
+    font-weight: 700;
+    font-size: 0.78em;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+  }
+  footer {
+    margin-top: 16px;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1b1e;
+      --fg: #e7e7ea;
+      --muted: #a0a0a8;
+      --border: #3a3a40;
+      --head-bg: #2a2a2f;
+      --risk-low: #163a1c;
+      --risk-low-fg: #8fe3a0;
+      --risk-mid: #3a3113;
+      --risk-mid-fg: #f0d27a;
+      --risk-high: #3d1a1a;
+      --risk-high-fg: #f2a3a3;
+      --status-open: #2c2c32;
+      --status-open-fg: #cfcfd6;
+      --status-done: #163a1c;
+      --status-done-fg: #8fe3a0;
+      --status-deferred: #2c2c32;
+      --status-deferred-fg: #b0b0b8;
+      --rueckfrage: #322a4d;
+      --rueckfrage-fg: #c8b6f5;
+    }
+    th:hover { background: #34343b; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Architektur-Review &amp; Refactor — JoBBoT</h1>
+  <div class="meta">
+    <span><strong>Datum:</strong> 2026-09-11</span>
+    <span><strong>Durchlauf:</strong> 1 (abgeschlossen)</span>
+    <span><strong>Findings gesamt:</strong> 13</span>
+    <span><strong>Erledigt:</strong> 11</span>
+    <span><strong>Zurückgestellt:</strong> 2</span>
+  </div>
+  <div class="cat-summary">
+    <span class="cat-pill">dead-code: 2</span>
+    <span class="cat-pill">duplication: 3</span>
+    <span class="cat-pill">naming: 2</span>
+    <span class="cat-pill">yagni: 1</span>
+    <span class="cat-pill">docs: 2</span>
+    <span class="cat-pill">structure: 3</span>
+  </div>
+</header>
+
+<div class="table-wrap">
+<table id="findings">
+  <thead>
+    <tr>
+      <th data-type="text">Kategorie</th>
+      <th data-type="text">Datei:Zeile</th>
+      <th data-type="text">Problem</th>
+      <th data-type="text">Vorgeschlagener Fix</th>
+      <th data-type="effort">Aufwand</th>
+      <th data-type="risk">Risiko</th>
+      <th data-type="text">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="cat">dead-code</td>
+      <td class="loc">lib/filter-llm.ts:123</td>
+      <td><code>export const llmStrategy</code> ist nirgends importiert; <code>resolveStrategy</code> nutzt bereits <code>createLlmStrategy()</code> direkt.</td>
+      <td>Ungenutzten Export entfernen.</td>
+      <td class="effort">S</td>
+      <td><span class="badge risk-niedrig">niedrig</span></td>
+      <td><span class="badge status-erledigt">erledigt</span></td>
+    </tr>
+    <tr>
+      <td class="cat">dead-code</td>
+      <td class="loc">lib/anschreiben.ts:3</td>
+      <td><code>import { join } from 'node:path'</code> wird nie aufgerufen (alle <code>.join(...)</code>-Stellen sind Array/String.join).</td>
+      <td>Import-Zeile entfernen.</td>
+      <td class="effort">S</td>
+      <td><span class="badge risk-niedrig">niedrig</span></td>
+      <td><span class="badge status-erledigt">erledigt</span></td>
+    </tr>
+    <tr>
+      <td class="cat">duplication</td>
+      <td class="loc">lib/filter-report.ts:37</td>
+      <td>Zeitstempel-Formatierung <code>new Date().toISOString().slice(0,16).replace('T',' ')</code> ist 5× dupliziert (filter-report.ts, anschreiben.ts ×2, mail/gmail.ts, scripts/run-anschreiben.ts).</td>
+      <td>Kleinen Helper (z.B. <code>logTimestamp()</code>) extrahieren und überall importieren.</td>
+      <td class="effort">S</td>
+      <td><span class="badge risk-niedrig">niedrig</span></td>
+      <td><span class="badge status-erledigt">erledigt</span> — <code>lib/log-timestamp.ts</code></td>
+    </tr>
+    <tr>
+      <td class="cat">duplication</td>
+      <td class="loc">scrapers/ams.ts:126 (+ karriere-at.ts:105, linkedin.ts:95, devjobs-at.ts:175)</td>
+      <td>Log-Format <code>"[quelle] X Treffer, Y nach Location-Gate"</code> ist wortgleich dupliziert — beim Umsetzen zeigte sich eine 4. Stelle (devjobs-at.ts), die der ursprüngliche Scan übersehen hatte.</td>
+      <td>Gemeinsamen Helper <code>logLocationGate(name, all, kept)</code> in lib/ extrahieren.</td>
+      <td class="effort">S</td>
+      <td><span class="badge risk-niedrig">niedrig</span></td>
+      <td><span class="badge status-erledigt">erledigt</span> — <code>lib/scrape-log.ts</code>, alle 4 Stellen</td>
+    </tr>
+    <tr>
+      <td class="cat">naming</td>
+      <td class="loc">lib/scrape-runner.ts:221</td>
+      <td>Parameter <code>o: OfflinePassOptions</code> in <code>archiviereOffline</code> ist ein kryptisches Einzelzeichen, ca. 10× im Funktionskörper referenziert.</td>
+      <td>Umbenennen zu <code>options</code>.</td>
+      <td class="effort">S</td>
+      <td><span class="badge risk-niedrig">niedrig</span></td>
+      <td><span class="badge status-erledigt">erledigt</span></td>
+    </tr>
+    <tr>
+      <td class="cat">yagni</td>
+      <td class="loc">scrapers/interface.ts:41</td>
+      <td>Job.<code>error</code>-Feld ist deklariert, kein Code schreibt hinein. Korrektur beim Umsetzen: <code>ui/app.tsx</code> (Zeile ~3106/3189 im alten Stand) liest es aktiv und zeigt es in einer eigenen Fehlerbox mit Fallback-Text — der ursprüngliche Report hatte nur Schreibzugriffe geprüft. Kein isoliertes totes Feld, sondern fertig gebautes UI-Feature, das auf die schreibende Seite (Gmail-Versand-Arbeit) wartet.</td>
+      <td>Unangetastet lassen — Entfernen würde in fertige UI-Funktionalität eingreifen, nicht in totes Gepäck.</td>
+      <td class="effort">S</td>
+      <td><span class="badge risk-niedrig">niedrig</span></td>
+      <td><span class="badge status-zurückgestellt">zurückgestellt</span></td>
+    </tr>
+    <tr>
+      <td class="cat">docs</td>
+      <td class="loc">CLAUDE.md:23,42</td>
+      <td>CLAUDE.md beschrieb das Projekt als "early build-out (scraping recon phase)" mit "actual inference is not yet wired up" — tatsächlich existieren 5 fertige Scraper, ein 850-Zeilen ui-server.ts mit Gmail-Versand, und echte Ollama-Inferenz.</td>
+      <td>Vollständig aktualisiert (Entscheidung: nicht auf docs/architecture.md verweisen).</td>
+      <td class="effort">S</td>
+      <td><span class="badge risk-niedrig">niedrig</span></td>
+      <td><span class="badge status-erledigt">erledigt</span></td>
+    </tr>
+    <tr>
+      <td class="cat">docs</td>
+      <td class="loc">CLAUDE.md:20 (vs. scrapers/interface.ts JobStatus)</td>
+      <td>CLAUDE.md beschrieb den Job-Status-Lifecycle als <code>new → filtered_out | matched → generated → reviewed → drafted → sent</code>; die echte <code>JobStatus</code>-Union lautet <code>new/triaged/generated/freigegeben/postausgang/gesendet/geloescht/fehler/offline</code>.</td>
+      <td>Lifecycle-Beschreibung an den echten Type angepasst.</td>
+      <td class="effort">S</td>
+      <td><span class="badge risk-niedrig">niedrig</span></td>
+      <td><span class="badge status-erledigt">erledigt</span></td>
+    </tr>
+    <tr>
+      <td class="cat">structure</td>
+      <td class="loc">scripts/one-off/*.ts</td>
+      <td>Aktiv genutzte CLI-Einstiegspunkte (run-scrape, run-filter, ui-server) liegen im selben flachen Verzeichnis wie Einmal-Skripte (repair-status, repair-anschreiben, migrate-descriptions) und ein Vergleichs-Tool (anschreiben-model-bench).</td>
+      <td>Unterordner <code>scripts/one-off/</code> für die nicht-wiederkehrenden Skripte einführen (nur Verschieben, keine Logikänderung).</td>
+      <td class="effort">S</td>
+      <td><span class="badge risk-niedrig">niedrig</span></td>
+      <td><span class="badge status-erledigt">erledigt</span> — relative Importe + Doku-Referenzen (README, AGENTS.md) nachgezogen</td>
+    </tr>
+    <tr>
+      <td class="cat">naming</td>
+      <td class="loc">lib/filter.ts:8 (vs. lib/filter-types.ts)</td>
+      <td><code>FilterDecision</code> (mit <code>job</code>-Feld) und <code>Decision</code> (ohne <code>job</code>) waren unter fast gleichem Namen leicht zu verwechseln.</td>
+      <td><code>FilterDecision</code> → <code>TriagedDecision</code> umbenannt, alle Importe (6 Dateien) nachgezogen.</td>
+      <td class="effort">M</td>
+      <td><span class="badge risk-niedrig">niedrig</span></td>
+      <td><span class="badge status-erledigt">erledigt</span></td>
+    </tr>
+    <tr>
+      <td class="cat">duplication</td>
+      <td class="loc">scrapers/ams.ts:85 (+ karriere-at.ts:89, linkedin.ts:73, jobs-at.ts:142)</td>
+      <td>"Dedupe-by-url"-Schleife (Map anlegen, push falls <code>!has</code>) wiederholt sich mit kleinen Abweichungen in 4 Scrapern.</td>
+      <td>Entscheidung: belassen — YAGNI gewinnt, unterschiedlicher Kontrollfluss (Browser vs. Fetch, Pagination vs. Query-Schleife) macht eine gemeinsame Abstraktion eher komplizierter.</td>
+      <td class="effort">M</td>
+      <td><span class="badge risk-mittel">mittel</span></td>
+      <td><span class="badge status-zurückgestellt">zurückgestellt</span></td>
+    </tr>
+    <tr>
+      <td class="cat">structure</td>
+      <td class="loc">ui/app.tsx:1-3319</td>
+      <td>Eine einzige 3319-Zeilen-Datei enthielt alle UI-Komponenten (LoadGrid, CalendarView, PortalBlock, RohAnsicht, Haupt-App, State/Handlers, ~600 Zeilen CSS).</td>
+      <td>Aufgeteilt in <code>ui/styles.ts</code> (CSS) und <code>ui/components/{grid,calendar,settings}.tsx</code>. Die Haupt-App (<code>JobbotUI</code>, jetzt ~2000 Zeilen in app.tsx) blieb bewusst ungeteilt — zu eng mit App-weitem State verzahnt, um ohne Browser-Verifikation risikofrei weiter zu splitten.</td>
+      <td class="effort">L</td>
+      <td><span class="badge risk-mittel">mittel</span></td>
+      <td><span class="badge status-erledigt">erledigt</span> — teilweise, siehe Fix-Notiz</td>
+    </tr>
+    <tr>
+      <td class="cat">structure</td>
+      <td class="loc">scripts/ui-server.ts:1-850</td>
+      <td>Ein einzelner Request-Handler mit sequenziellen if-Blöcken deckte Jobs, Kalender, Attachment, CC, Config, Scrape, Filter, Anschreiben, Gmail-Sync und Mail-Versand ab.</td>
+      <td>In <code>scripts/routes/{jobs,calendar,attachment,cc,config,duplicates,scrape,filter,anschreiben,gmail}.ts</code> aufgeteilt, ui-server.ts ist jetzt nur noch Dispatcher + statische Routen. Verifiziert per manuellem Serverstart + curl-Abgleich aller Endpunkte (keine automatisierten Tests vorhanden).</td>
+      <td class="effort">L</td>
+      <td><span class="badge risk-mittel">mittel</span></td>
+      <td><span class="badge status-erledigt">erledigt</span></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<footer>
+  Durchlauf 1 abgeschlossen: 11 von 13 Findings umgesetzt (je ein Commit, Tests/Typecheck grün nach jedem), 2 bewusst zurückgestellt (Job.error ist kein Dead Code, sondern wartendes UI-Feature; Dedupe-Duplikation bleibt YAGNI-bedingt bestehen). Nächster Durchlauf startet mit einer frischen Analyse auf diesem Stand.
+</footer>
+
+<header style="margin-top:40px; border-top: 3px double var(--border); padding-top: 24px;">
+  <h1>Durchlauf 2 (abgeschlossen) — ui/app.tsx Zustands-Monolith</h1>
+  <div class="meta">
+    <span><strong>Datum:</strong> 2026-09-12</span>
+    <span><strong>Status:</strong> Alle 9 Hooks umgesetzt, 18 Commits</span>
+    <span><strong>Datei:</strong> ui/app.tsx: 2247 → 1724 Zeilen (-23%)</span>
+  </div>
+</header>
+
+<section style="margin-top:16px;">
+  <p style="max-width: 900px; margin-bottom: 16px;">
+    Der letzte Umbau hat <code>grid.tsx</code> und <code>calendar.tsx</code> als echte tiefe Module aus app.tsx gezogen — <code>settings.tsx</code> aber nur die Render-Bäume, nicht das Feature: State und Fetch/Save-Logik für Config, Scrape, Filter, Anschreiben, Duplikate, Mail-Sync und Attachment/CC sitzen weiterhin flach in <b>einer</b> Komponenten-Closure, 36 <code>useState</code>/<code>useRef</code> tief, unterschieden nur durch Namenskonvention (<code>cfg*</code>, <code>scrape*</code>, …). Kein Modul-Interface trennt sie — ein Bug in der Config-Logik kann sich nicht anders verhalten als ein Bug im Scrape-Effekt, weil beide dieselbe Funktion sind.
+  </p>
+
+  <div style="background: var(--rueckfrage); color: var(--rueckfrage-fg); border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; max-width: 900px;">
+    <strong>Design-Entscheidung, wie geplant umgesetzt:</strong> <code>scrapeStatus</code>/<code>filterStatus</code>/<code>anschreibenStatus</code> werden weiterhin gemeinsam gepollt — <code>useRunStatusPoll()</code> hält den einen <code>tick()</code>-Effekt (ein <code>Promise.all</code>, ein Timer, ein <code>wake()</code>) als reine Datenquelle, ohne Toast/Refetch. Keine Verdreifachung der Requests, keine Verhaltensänderung. <code>useScrapeRun</code>/<code>useFilterRun</code>/<code>useAnschreibenRun</code> lesen nur davon und besitzen je ihren eigenen <code>lastSeenRunId</code>-Merker für ihre Toast-/Refetch-/highlightFolders-Reaktion.
+  </div>
+
+  <h2 style="border:none; padding:0; font-size:1.1rem; margin-bottom:10px;">Bleibt in app.tsx (Kern)</h2>
+  <p style="max-width: 900px; margin-bottom: 20px;">
+    <code>jobs</code>/<code>setJobs</code>/<code>refetchJobs</code>, <code>folder</code>/<code>fit</code>/<code>q</code> (Listenfilter), <code>sel</code>/<code>tab</code>/<code>detailOpen</code>/<code>drawerOpen</code> (Detail-Chrome), <code>toast</code>/<code>say</code>, <code>view</code>/<code>viewRef</code>, <code>selectedJobIds</code>, <code>highlightFolders</code>, <code>calendarEvents</code>, plus die abgeleiteten Memos (<code>counts</code>, <code>list</code>, <code>selectable</code>, <code>briefbar</code>, <code>faellig</code>) und die Job-Mutations-Aktionen (<code>patch</code>, <code>move</code>, <code>saveFit</code>, <code>runBulk</code>, <code>saveBrief</code>, <code>saveEmail</code>, <code>toggleSelect</code>, <code>regenerate</code>). Das ist die Job-Listen-Domäne, auf die jeder Feature-Hook angewiesen ist (<code>jobs</code> für <code>faellig</code>/<code>briefbar</code>) oder die er über injizierte <code>refetchJobs</code>/<code>say</code> zurückmeldet — kein Hook greift auf einen anderen Hook zu, nur auf diesen gemeinsamen Kern.
+  </p>
+
+  <h2 style="border:none; padding:0; font-size:1.1rem; margin-bottom:10px;">Neue Hooks, in Umsetzungsreihenfolge</h2>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Hook</th><th>Übernimmt</th><th>Aufwand</th><th>Risiko</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td class="loc">useAttachment</td>
+        <td><code>attachment</code>, <code>uploadAttachment</code>, <code>removeAttachment</code></td>
+        <td class="effort">S</td>
+        <td><span class="badge risk-niedrig">niedrig</span></td>
+        <td><span class="badge status-erledigt">erledigt</span></td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td class="loc">useCcAddress</td>
+        <td><code>cc</code>, <code>ccInput</code>, <code>saveCcNow</code>, <code>removeCc</code></td>
+        <td class="effort">S</td>
+        <td><span class="badge risk-niedrig">niedrig</span></td>
+        <td><span class="badge status-erledigt">erledigt</span></td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td class="loc">useDuplicates</td>
+        <td><code>duplicateGroups</code>, <code>duplicatesLoading</code>, <code>selectedDupKeys</code>, <code>merging</code>, <code>loadDuplicates</code>, <code>mergeDuplicates</code></td>
+        <td class="effort">M</td>
+        <td><span class="badge risk-niedrig">niedrig</span></td>
+        <td><span class="badge status-erledigt">erledigt</span></td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td class="loc">useSettingsConfig</td>
+        <td><code>schema</code>, <code>sources</code>, <code>umkreis</code>, <code>cfgBackup</code>, <code>cfgDirty</code>, <code>cfgErrors</code>, <code>cfgBusy</code>, <code>rohOffen</code>, <code>saveConfig</code>, <code>restoreConfig</code>, <code>repariereAnfrage</code></td>
+        <td class="effort">M</td>
+        <td><span class="badge risk-niedrig">niedrig</span></td>
+        <td><span class="badge status-erledigt">erledigt</span></td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td class="loc">useRunStatusPoll</td>
+        <td>Der bestehende gemeinsame <code>tick()</code>-Poll (Scrape/Filter/Anschreiben-Status per <code>Promise.all</code>), <code>wake()</code> statt <code>pollRunsNow.current()</code> — reine Datenquelle, keine Toasts/Refetch drin</td>
+        <td class="effort">M</td>
+        <td><span class="badge risk-mittel">mittel</span></td>
+        <td><span class="badge status-erledigt">erledigt</span></td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td class="loc">useScrapeRun</td>
+        <td><code>scrapeSources</code>, <code>selectedSources</code>, <code>scrapeStarting</code>, <code>scrapeSections</code> (<code>useGridStream</code>), <code>runScrapeNow</code>; Toast + <code>refetchJobs</code> bei Lauf-Ende; Tschobbo-Event bleibt am Call-Ort (<code>viewRef</code>-Check)</td>
+        <td class="effort">M</td>
+        <td><span class="badge risk-mittel">mittel</span></td>
+        <td><span class="badge status-erledigt">erledigt</span></td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td class="loc">useFilterRun</td>
+        <td><code>filterMode</code>, <code>filterScope</code>, <code>filterStarting</code>, <code>filterSections</code>, <code>runFilterNow</code>; Toast + <code>refetchJobs</code> bei Lauf-Ende</td>
+        <td class="effort">M</td>
+        <td><span class="badge risk-mittel">mittel</span></td>
+        <td><span class="badge status-erledigt">erledigt</span></td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td class="loc">useAnschreibenRun</td>
+        <td><code>anschreibenFits</code>, <code>anschreibenLimit</code>, <code>anschreibenStarting</code>, <code>anschreibenSections</code>, <code>runAnschreibenNow</code>, <code>stopAnschreibenNow</code>; Toast + <code>refetchJobs</code> + <code>highlightFolders</code>-Update bei Lauf-Ende (per injiziertem Setter, kein Reach-in auf Kern-State)</td>
+        <td class="effort">L</td>
+        <td><span class="badge risk-mittel">mittel</span></td>
+        <td><span class="badge status-erledigt">erledigt</span></td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td class="loc">useMailSync</td>
+        <td><code>replyOnly</code>, <code>repliesFetching</code>, <code>gmailSyncing</code>, <code>followUpSelection</code>, <code>followUpBusy</code>, <code>fetchReplies</code>, <code>syncGmail</code>, <code>runFollowUps</code>, <code>createDraft</code>, <code>sendDirect</code></td>
+        <td class="effort">L</td>
+        <td><span class="badge risk-mittel">mittel</span></td>
+        <td><span class="badge status-erledigt">erledigt</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2 style="border:none; padding:0; font-size:1.1rem; margin: 20px 0 10px;">Reihenfolge-Begründung</h2>
+  <p style="max-width: 900px;">
+    1-2 sind die kleinsten, komplett isolierten Hooks (kein Poll, keine SSE, keine Cross-Feature-Abhängigkeit) — billige Bestätigung, dass das Muster (State+Effekt+Handler raus, <code>say</code>/<code>refetchJobs</code> als Parameter rein) trägt, bevor es auf die größeren Kandidaten trifft. 3-4 sind self-contained mittlerer Größe. 5-8 hängen am gemeinsamen Poll-Loop und müssen deshalb zusammen geplant werden (5 zuerst als reine Datenquelle, dann 6-8 als Konsumenten). 9 zuletzt: am wenigsten isoliert, greift direkt auf einzelne Jobs zu (<code>createDraft</code>/<code>sendDirect</code>) statt nur auf einen Feature-eigenen State.
+  </p>
+  <p style="max-width: 900px; margin-top: 10px;">
+    <b>Verifikation pro Schritt:</b> <code>npm run typecheck</code> + <code>npm run build:ui</code> nach jedem Hook, <code>npm test</code> (383/383) am Ende jedes der vier großen Abschnitte. <b>Kein Browser-Klick-Durchlauf</b> — dafür fehlt hier der Zugriff auf einen echten Browser; für app.tsx existiert auch kein automatisierter Test (schon in Durchlauf 1 so). Die Prüfung war also rein statisch: Typen, Build, und Zeile-für-Zeile-Abgleich mit dem Originalcode beim Verschieben. Ein echter Klick-Durchlauf steht noch aus.
+  </p>
+</section>
+
+<header style="margin-top:40px; border-top: 3px double var(--border); padding-top: 24px;">
+  <h1>Durchlauf 3 (abgeschlossen) — Tschobbo: Klumpen-Bugs &amp; Architektur</h1>
+  <div class="meta">
+    <span><strong>Datum:</strong> 2026-09-13</span>
+    <span><strong>Auslöser:</strong> Kevin: "tschobbos blobs sind buggy"</span>
+    <span><strong>Umfang:</strong> <code>ui/tschobbo.js</code> (608 Zeilen) + Anbindung in <code>ui/app.tsx</code>, <code>ui/components/grid.tsx</code>, <code>ui/hooks/scrape-run.ts</code></span>
+    <span><strong>Status:</strong> Analyse + Umsetzung, 5 Commits, <code>npm test</code> 506/506</span>
+  </div>
+</header>
+
+<section style="margin-top:16px;">
+  <p style="max-width: 900px; margin-bottom: 16px;">
+    <b>Nachtrag:</b> ursprünglich als reiner Lese-Durchlauf ohne Live-Repro angelegt (Text unten unverändert stehen gelassen). Auf Wunsch dann umgesetzt: Befund 1 wurde per Playwright gegen <code>ui/tschobbo-test.html</code> mit eingespeister Fake-Grid-Struktur bestätigt (ein Klumpen, dessen Flug per <code>tschobbo:view</code>-Abbruch mitten im Flug invalidiert wurde, klebte danach nachweislich nicht mehr). Befund 2 wurde <b>nicht</b> per echtem 5s-Timing-Race live nachgestellt (zu unzuverlässig im Headless-Browser) — der Fix beruht dort auf derselben, jetzt unit-getesteten <code>isCurrent()</code>-Mechanik plus dem neuen echten <code>scrapeStatus</code>-Signal. Details siehe Befund-Tabelle unten (Status-Spalte) und die 5 Commits ab <code>e526b12</code>.
+  </p>
+  <p style="max-width: 900px; margin-bottom: 16px;">
+    <b>Wichtig vorweg (Original-Text der Analyse):</b> Das hier ist ein reiner Lese-Durchlauf durch <code>ui/tschobbo.js</code> und die drei Stellen, die es aus <code>ui/app.tsx</code> heraus ansteuern (<code>tschobbo:unit</code>/<code>tschobbo:view</code>/<code>tschobbo:replay</code>, siehe <code>ui/hooks/scrape-run.ts:35</code> und <code>ui/app.tsx:279-288</code>) — kein Server lief, kein Browser wurde geöffnet, nichts wurde per Playwright reproduziert. Die drei bereits dokumentierten Bugs in <code>docs/errors.md</code> haben ein gemeinsames Muster: ein asynchroner Vorgang (Interval, Fixed-Position, Timer) lief weiter, nachdem sich der Zustand, auf den er sich bezog, schon geändert hatte (falsche Zeile im DOM, gescrollter Container, überholtes Intervall). Die folgenden zwei Befunde sind exakt dasselbe Muster, nur an Stellen, die beim letzten Umbau (Durchlauf 2, reine <code>app.tsx</code>-Hooks) nicht angefasst wurden. Sie sind die wahrscheinlichste Erklärung für "buggy blobs", aber ohne Live-Repro <b>Verdacht, kein bestätigter Fund</b> — vor einem Fix sollte das im Browser (Reduced-Motion-Emulation aus, siehe <code>docs/build-log.md</code> 2026-08-05) nachgestellt werden.
+  </p>
+
+  <h2 style="border:none; padding:0; font-size:1.1rem; margin-bottom:10px;">Befunde</h2>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th data-type="text">Kategorie</th>
+        <th data-type="text">Datei:Zeile</th>
+        <th data-type="text">Problem</th>
+        <th data-type="text">Vorgeschlagener Fix</th>
+        <th data-type="effort">Aufwand</th>
+        <th data-type="risk">Risiko</th>
+        <th data-type="text">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="cat">bug (verdacht)</td>
+        <td class="loc">tschobbo.js:290-344 (spawnFly, fall)</td>
+        <td>Der Flug (<code>spawnFly</code>) und der Fall (<code>fall</code>) eines einzelnen Klumpens laufen als freie <code>requestAnimationFrame</code>-Ketten, deren IDs nirgends gespeichert werden. <code>clearTimers()</code> kennt nur <code>setTimeout</code>/<code>setInterval</code>-IDs (<code>timers[]</code>, <code>frameTimer</code>, <code>silenceTimer</code>) — ein bereits losgelassener Klumpen fliegt/fällt unbeirrt weiter, auch wenn zwischenzeitlich die Ansicht wechselt (<code>onViewChange</code>), Tschobbo deaktiviert wird (<code>disable()</code>) oder eine neue Scrape-Session beginnt. Landet er danach per <code>stick()</code> auf einem inzwischen aus dem DOM entfernten Quadrat oder per <code>addGlob()</code> im (schon für die nächste Session neu positionierten) Haufen, passiert das lautlos — kein Fehler in der Konsole, nur ein falsch oder gar nicht sichtbarer Klumpen. Deckt sich mit dem Muster aller drei Einträge in <code>docs/errors.md</code>.</td>
+        <td>Einen Generation-/Session-Zähler einführen (z.B. <code>let gen = 0</code>, bei jedem Session-Wechsel — neue Scrape-Session, <code>onViewChange</code>, <code>disable()</code>, <code>destroy()</code> — hochgezählt). <code>spawnFly</code>/<code>fall</code> erhalten den Wert bei Erzeugung und prüfen ihn in jedem Frame; bei Mismatch: Element entfernen, kein <code>stick()</code>/<code>addGlob()</code>.</td>
+        <td class="effort">M</td>
+        <td><span class="badge risk-hoch">hoch</span></td>
+        <td><span class="badge status-erledigt">erledigt</span> — <code>createScrapeSession()</code> (<code>ui/tschobbo-session.js</code>) + Guard in <code>spawnFly</code>/<code>fall</code> (<code>ui/tschobbo-blobs.js</code>); per Playwright bestätigt: ein mitten im Flug per <code>tschobbo:view</code> abgebrochener Klumpen klebt danach nicht mehr</td>
+      </tr>
+      <tr>
+        <td class="cat">bug (verdacht)</td>
+        <td class="loc">tschobbo.js:456-474 (endScrape, returnToIdle, resetSilenceTimer)</td>
+        <td>Session-Ende wird ausschließlich über 5s Event-Stille erkannt (<code>SCRAPE_SILENCE_MS</code>), unabhängig vom echten <code>scrapeStatus</code> aus <code>useRunStatusPoll</code>/<code>useScrapeRun</code>. <code>scrape-runner.ts</code> läuft standardmäßig mit <code>maxConcurrent = 2</code> — bei einer langsamen Seite oder einer Lücke zwischen zwei Quellen kann eine <i>echte, laufende</i> Session 5s ohne Event bleiben. Tschobbo hüpft dann (<code>endScrape</code>) und geht über <code>hop().then(hop).then(returnToIdle)</code> zurück in den Idle-Zyklus, während der Scraper weiterläuft. Trifft danach ein reales Folge-Event ein, behandelt <code>onGridUnit</code> es als neue "firstEvent"-Session (fährt erneut an), aber die alte, noch nicht aufgelöste <code>returnToIdle</code>-Kette prüft beim Fertigwerden nicht erneut, ob <code>mode</code> inzwischen wieder <code>'scrape'</code> ist — sie setzt <code>busy = false</code> und ruft <code>startIdle()</code>, mitten in der frisch begonnenen Session.</td>
+        <td>Dieselbe Generation-Prüfung wie oben auch am Ende der <code>hop</code>-Kette (vor <code>busy = false; startIdle()</code> erneut <code>mode === 'scrape'</code>/Generation abgleichen). Zusätzlich Sessionende primär am echten <code>scrapeStatus.status === 'done'</code> festmachen (ein Event von <code>ui/app.tsx</code> nach <code>ui/tschobbo.js</code> durchreichen) — die 5s-Stille bleibt nur als Fallback für Fälle ohne Statuspoll.</td>
+        <td class="effort">M</td>
+        <td><span class="badge risk-hoch">hoch</span></td>
+        <td><span class="badge status-erledigt">erledigt</span> — <code>returnToIdle(gen)</code>/<code>parkForScrape()</code> prüfen <code>session.isCurrent(gen)</code> (Commit <code>a467591</code>); <code>tschobbo:scrape-done</code> aus <code>ui/hooks/scrape-run.ts</code> (Commit <code>815bcaf</code>). <b>Nicht live per echtem 5s-Race nachgestellt</b> — Guard-Mechanik ist unit-getestet (<code>test/tschobbo-session.test.ts</code>), das exakte Timing-Fenster war im Headless-Browser nicht zuverlässig reproduzierbar</td>
+      </tr>
+      <tr>
+        <td class="cat">bug (verdacht, Folge)</td>
+        <td class="loc">tschobbo.js:348-364 (addGlob), :193-194 (pileCount/stuckBlobs)</td>
+        <td>Direkte Folge des ersten Befunds: ein Klumpen, der erst nach Session-Ende landet, zählt trotzdem für <code>pileCount</code>/<code>GLOB_CAP</code> bzw. hängt in <code>stuckBlobs</code> der <i>nächsten</i> Session. Haufen-Füllstand und Kleb-Liste können dadurch nicht mehr zur tatsächlichen Trefferzahl der laufenden Session passen.</td>
+        <td>Entfällt automatisch mit dem Generation-Guard aus Befund 1 — kein eigener Fix nötig.</td>
+        <td class="effort">S</td>
+        <td><span class="badge risk-mittel">mittel</span></td>
+        <td><span class="badge status-erledigt">erledigt</span> — mit Befund 1 miterledigt, keine eigene Änderung nötig</td>
+      </tr>
+      <tr>
+        <td class="cat">structure</td>
+        <td class="loc">tschobbo.js:1-608</td>
+        <td>Eine einzige Closure (<code>initTschobbo()</code>) trägt fünf Verantwortlichkeiten ohne innere Grenzen: State-Machine (<code>mode</code>/<code>busy</code>/<code>replaying</code>/<code>atFront</code> als lose, gegenseitig nicht validierte Booleans/Strings statt eines Zustands), DOM-Aufbau/Mount (<code>buildDom</code>, <code>mountToggle</code>), Klumpen-Physik (Flug/Fall/Haufen), Event-Wiring (drei <code>window</code>-Listener) und Toggle/<code>localStorage</code>. Kein Teil ist isoliert aufrufbar oder testbar — <code>test/</code> enthält keine einzige Tschobbo-Datei, alle drei bisherigen Bugs wurden ausschließlich per Playwright/Live-Test im Browser gefunden.</td>
+        <td>Aufteilen entlang der Verantwortlichkeiten, z.B. <code>ui/tschobbo/session.js</code> (State-Machine + Generation-Counter, reines Objekt/Funktionen ohne DOM-Zugriff — dadurch mit <code>node:test</code> ohne Browser testbar), <code>ui/tschobbo/blobs.js</code> (Flug/Fall/Haufen-Physik, nimmt Koordinaten + Callback statt selbst globalen State zu halten), <code>ui/tschobbo.js</code> bleibt Mount + Event-Wiring + Zusammenschalten der beiden.</td>
+        <td class="effort">L</td>
+        <td><span class="badge risk-mittel">mittel</span></td>
+        <td><span class="badge status-erledigt">erledigt</span> — flach statt Unterordner umgesetzt (<code>ui/tschobbo-session.js</code>, <code>ui/tschobbo-blobs.js</code>, Precedent: das frühere <code>tschobbo-arms.js</code>), sonst wie vorgeschlagen; 6 neue Unit-Tests für den Session-Kern</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2 style="border:none; padding:0; font-size:1.1rem; margin: 20px 0 10px;">Restrukturierungsvorschlag im Detail — umgesetzt</h2>
+  <p style="max-width: 900px; margin-bottom: 16px;">
+    Kein Rewrite — das Modul funktioniert im Kern (Idle/Drift/Toggle/Reduced-Motion-Historie sind sauber), und "kein Build-Schritt, reines ES-Modul" ist eine bewusste, in <code>docs/architecture.md</code> festgehaltene Entscheidung, die erhalten bleiben sollte (Rückbau bleibt "Dateien + Hook-Zeile löschen"). Umgesetzt wie vorgeschlagen, mit einer Abweichung: flache Geschwister-Dateien statt Unterordner (<code>ui/tschobbo-session.js</code>/<code>ui/tschobbo-blobs.js</code> statt <code>ui/tschobbo/session.js</code>/<code>ui/tschobbo/blobs.js</code>) — <code>scripts/ui-server.ts</code> hat ohnehin nur eine flache Whitelist statt eines echten Static-Handlers, und passt damit zum früheren Precedent <code>tschobbo-arms.js</code>:
+  </p>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Modul</th><th>Übernimmt</th><th>Aufwand</th><th>Risiko</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td class="loc">ui/tschobbo-session.js</td>
+        <td>Statt einer vollen State-Machine mit vier benannten Zuständen: <code>createScrapeSession()</code> mit <code>generation</code>-Zähler + <code>active</code>-Flag, drei Methoden (<code>begin()</code>/<code>finish()</code>/<code>abort()</code>) und <code>isCurrent(gen)</code>. Reines Objekt, kein DOM-Zugriff — der Teil, der bisher nur live im Browser prüfbar war, hat jetzt 6 <code>node:test</code>-Fälle (<code>test/tschobbo-session.test.ts</code>).</td>
+        <td class="effort">M</td>
+        <td><span class="badge risk-mittel">mittel</span></td>
+        <td><span class="badge status-erledigt">erledigt</span> — Commit <code>e526b12</code></td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td class="loc">ui/tschobbo-blobs.js</td>
+        <td><code>spawnFly</code>/<code>stick</code>/<code>fall</code>/<code>addGlob</code>/<code>positionPile</code>/<code>clearPile</code>/<code>clearStuck</code> plus <code>stuckBlobs</code>/<code>pileCount</code>, hinter einer <code>createBlobField({layer, pile, session})</code>-Factory mit einer einzigen Aufrufer-Methode <code>throwBlob(...)</code>. Jede rAF-Schrittfunktion prüft <code>session.isCurrent(gen)</code> vor <code>appendChild</code>/<code>addGlob</code> (Fix Befund 1+3). Kennt keinen <code>mode</code>/<code>busy</code>.</td>
+        <td class="effort">M</td>
+        <td><span class="badge risk-mittel">mittel</span></td>
+        <td><span class="badge status-erledigt">erledigt</span> — Commit <code>8ccdf60</code>; Server-Whitelist in <code>scripts/ui-server.ts</code> (Commit <code>222b1da</code>)</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td class="loc">ui/tschobbo.js (verbleibt)</td>
+        <td>DOM-Aufbau (<code>buildDom</code>, <code>mountToggle</code>), jetzt vier <code>window</code>-Event-Handler (neu: <code>onScrapeDone</code>), Toggle/<code>localStorage</code> — ruft (1) und (2) auf, hält selbst keine Session-Logik mehr. <code>parkForScrape</code>/<code>returnToIdle</code>/<code>endScrape</code> fassen ihre Generation beim Start jeder async Kette und prüfen sie am Ende erneut (Fix Befund 2).</td>
+        <td class="effort">S</td>
+        <td><span class="badge risk-niedrig">niedrig</span></td>
+        <td><span class="badge status-erledigt">erledigt</span> — Commit <code>a467591</code></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="max-width: 900px; margin-top: 16px;">
+    <b>Zusätzlich zum ursprünglichen Vorschlag:</b> <code>ui/hooks/scrape-run.ts</code> feuert jetzt <code>tschobbo:scrape-done</code> aus dem bestehenden Once-per-Run-Guard im <code>scrapeStatus</code>-Effekt (Commit <code>815bcaf</code>) — der zweite Teil von Befund 2 (5s-Stille als einziges Endesignal) war mit dem Generation-Guard allein nicht behoben, nur seine Folgen abgesichert.
+  </p>
+  <p style="max-width: 900px; margin-top: 10px;">
+    <b>Verifikation:</b> <code>npm run typecheck</code> + <code>npm test</code> (506/506) grün. Playwright gegen <code>ui/tschobbo-test.html</code> mit eingespeister Fake-Grid-Struktur: normaler Wurf (matched klebt, excluded fällt in den Haufen) unverändert; ein Klumpen, der nachweislich noch mitten im Flug war (Sanity-Check: <code>fly</code>-Element im DOM vorhanden), klebt nach einem <code>tschobbo:view</code>-Abbruch weder sofort noch 1s später — Befund 1 damit live bestätigt.
+  </p>
+  <p style="max-width: 900px; margin-top: 10px;">
+    <b>Weiterhin offen:</b> Das exakte 5s-Timing-Race aus Befund 2 (Stille-Timeout kollidiert mit einer neu startenden Session mitten in der Hüpf-Animation) wurde nicht live nachgestellt — dafür bräuchte es ein präzises Mehr-Sekunden-Timing im Headless-Browser, das sich als zu unzuverlässig erwies. Die Fix-Mechanik selbst (<code>isCurrent()</code> nach <code>begin()</code>/<code>finish()</code>/<code>abort()</code>) ist über die Session-Unit-Tests direkt geprüft, aber der volle Zeitablauf im echten Browser steht noch aus.
+  </p>
+</section>
+
+<script>
+(function () {
+  var table = document.getElementById('findings');
+  var tbody = table.tBodies[0];
+  var headers = table.tHead.rows[0].cells;
+  var riskOrder = { 'niedrig': 0, 'mittel': 1, 'hoch': 2 };
+  var effortOrder = { 'S': 0, 'M': 1, 'L': 2 };
+  var sortState = {};
+
+  function cellValue(row, idx, type) {
+    var cell = row.cells[idx];
+    if (type === 'risk') {
+      var badge = cell.querySelector('.badge');
+      var key = badge ? badge.textContent.trim() : cell.textContent.trim();
+      return riskOrder.hasOwnProperty(key) ? riskOrder[key] : 99;
+    }
+    if (type === 'effort') {
+      var key = cell.textContent.trim();
+      return effortOrder.hasOwnProperty(key) ? effortOrder[key] : 99;
+    }
+    return cell.textContent.trim().toLowerCase();
+  }
+
+  Array.prototype.forEach.call(headers, function (th, idx) {
+    th.addEventListener('click', function () {
+      var type = th.getAttribute('data-type') || 'text';
+      var asc = !sortState[idx];
+      Object.keys(sortState).forEach(function (k) { sortState[k] = false; });
+      sortState[idx] = asc;
+
+      Array.prototype.forEach.call(headers, function (h) {
+        h.querySelectorAll('.arrow').forEach(function (a) { a.remove(); });
+      });
+      var arrow = document.createElement('span');
+      arrow.className = 'arrow';
+      arrow.textContent = asc ? '▲' : '▼';
+      th.appendChild(arrow);
+
+      var rows = Array.prototype.slice.call(tbody.rows);
+      rows.sort(function (a, b) {
+        var va = cellValue(a, idx, type);
+        var vb = cellValue(b, idx, type);
+        if (va < vb) return asc ? -1 : 1;
+        if (va > vb) return asc ? 1 : -1;
+        return 0;
+      });
+      rows.forEach(function (r) { tbody.appendChild(r); });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

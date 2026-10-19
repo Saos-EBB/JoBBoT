@@ -17,12 +17,12 @@ function withFakeEventSource(): () => void {
 
 test('lädt den Filtermodus aus /api/settings beim Mount', async (t) => {
   t.after(withFakeEventSource());
-  t.after(withFetch((async () => ({ json: async () => ({ filterMode: 'llm' }) } as Response)) as typeof fetch));
+  t.after(withFetch((async () => ({ json: async () => ({ filterMode: 'nimble' }) } as Response)) as typeof fetch));
 
   const { result, unmount } = renderHook(({ status }) => useFilterRun(status, () => {}, () => {}, () => {}), { status: null });
   await act(async () => { await flushAsync(); });
 
-  assert.equal(result.current.filterMode, 'llm');
+  assert.equal(result.current.filterMode, 'nimble');
   unmount();
 });
 
@@ -73,9 +73,9 @@ test('status "error": err-Toast mit der Fehlermeldung', async (t) => {
   );
   await act(async () => { await flushAsync(); });
 
-  rerender({ status: { status: 'error', runId: 'run-err', error: 'Ollama nicht erreichbar' } });
+  rerender({ status: { status: 'error', runId: 'run-err', error: 'llama-server nicht erreichbar' } });
 
-  assert.deepEqual(said, [['Filter fehlgeschlagen: Ollama nicht erreichbar', 'err']]);
+  assert.deepEqual(said, [['Filter fehlgeschlagen: llama-server nicht erreichbar', 'err']]);
   unmount();
 });
 

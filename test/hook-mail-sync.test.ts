@@ -30,19 +30,32 @@ function setup() {
 }
 
 test('fetchReplies: Erfolg mit Treffern löst refetchJobs aus', async (t) => {
-  t.after(withFetch((async () => ({ ok: true, json: async () => ({ checked: 5, matched: 2 }) } as Response)) as typeof fetch));
+  t.after(withFetch((async () => ({ ok: true, json: async () => ({ checked: 5, matched: 2, ambiguous: [] }) } as Response)) as typeof fetch));
   const { said, result, refetchedRef, unmount } = setup();
 
   await act(async () => { await result.current.fetchReplies(); });
 
-  assert.deepEqual(said, [['Antworten-Abruf: 2 von 5 Mails zugeordnet', 'ok']]);
+  assert.deepEqual(said, [['Antworten-Abruf: 2 von 5 zugeordnet', 'ok']]);
   assert.equal(refetchedRef(), true);
   assert.equal(result.current.repliesFetching, false);
   unmount();
 });
 
+test('fetchReplies: mehrdeutige Antworten landen in ambiguousReplies + im Toast', async (t) => {
+  const ambiguous = [{ reply: { from: 'x@acme.at', subject: 'Ihre Bewerbung', date: '2026-07-10T00:00:00.000Z' }, candidates: [{ id: 'a', title: 'Junior', company: 'Acme' }, { id: 'b', title: 'Senior', company: 'Acme' }] }];
+  t.after(withFetch((async () => ({ ok: true, json: async () => ({ checked: 4, matched: 0, ambiguous }) } as Response)) as typeof fetch));
+  const { said, result, unmount } = setup();
+
+  await act(async () => { await result.current.fetchReplies(); });
+
+  assert.deepEqual(said, [['Antworten-Abruf: 0 von 4 zugeordnet, 1 zum manuellen Zuordnen', 'ok']]);
+  assert.equal(result.current.ambiguousReplies.length, 1);
+  assert.equal(result.current.ambiguousReplies[0].candidates.length, 2);
+  unmount();
+});
+
 test('fetchReplies: ohne Treffer kein refetchJobs', async (t) => {
-  t.after(withFetch((async () => ({ ok: true, json: async () => ({ checked: 3, matched: 0 }) } as Response)) as typeof fetch));
+  t.after(withFetch((async () => ({ ok: true, json: async () => ({ checked: 3, matched: 0, ambiguous: [] }) } as Response)) as typeof fetch));
   const { result, refetchedRef, unmount } = setup();
 
   await act(async () => { await result.current.fetchReplies(); });
@@ -136,13 +149,33 @@ test('createDraft: bei Erfolg patcht Status auf postausgang und schließt das De
   unmount();
 });
 
-test('sendDirect: bei Fehlschlag ein err-Toast, kein Patch', async (t) => {
-  t.after(withFetch((async () => ({ ok: false, json: async () => ({ error: 'SMTP down' }) } as Response)) as typeof fetch));
+test('createDraft: bei Fehlschlag ein err-Toast, kein Patch', async (t) => {
+  t.after(withFetch((async () => ({ ok: false, json: async () => ({ error: 'IMAP down' }) } as Response)) as typeof fetch));
   const { said, patched, result, unmount } = setup();
 
-  await act(async () => { await result.current.sendDirect('j1'); });
+  await act(async () => { await result.current.createDraft('j1', 'firma@example.com'); });
 
   assert.deepEqual(patched, []);
-  assert.deepEqual(said, [['SMTP down', 'err']]);
+  assert.deepEqual(said, [['IMAP down', 'err']]);
+  unmount();
+});
+
+test('createDraft: schneller Mehrfachklick feuert nur EINEN Request', async (t) => {
+  let calls = 0;
+  let release!: () => void;
+  const gate = new Promise<void>(r => { release = r; });
+  t.after(withFetch((async () => { calls++; await gate; return { ok: true } as Response; }) as typeof fetch));
+  const { result, unmount } = setup();
+
+  let alle!: Promise<unknown>;
+  await act(async () => {
+    alle = Promise.all([1, 2, 3, 4, 5].map(() => result.current.createDraft('j1', 'firma@example.com')));
+  });
+  assert.equal(calls, 1);
+  assert.equal(result.current.sendingIds.has('j1'), true);
+
+  await act(async () => { release(); await alle; });
+  assert.equal(calls, 1);
+  assert.equal(result.current.sendingIds.has('j1'), false);
   unmount();
 });

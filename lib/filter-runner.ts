@@ -4,6 +4,7 @@ import { filterJob } from './filter.ts';
 import type { TriagedDecision } from './filter.ts';
 import { writeFilterReport } from './filter-report.ts';
 import { loadSettings } from './settings.ts';
+import { getProvider } from './llm/index.ts';
 import type { FilterMode } from './settings.ts';
 
 // Das Geschwister zu lib/scrape-runner.ts und lib/anschreiben-runner.ts: die eine
@@ -25,14 +26,15 @@ export interface RunFilterOptions {
   scope?: FilterScope;
   // Ohne Angabe entscheidet config/settings.json.
   mode?: FilterMode;
-  ollama?: string;
+  // Basis-URL des LLM-Backends; ungesetzt → Default des aktiven Providers.
+  host?: string;
   // Vor dem Urteil — das CLI startet damit seinen Spinner, die UI setzt ihren
-  // Fortschrittszustand, bevor der (im llm-Modus langsame) Aufruf beginnt.
+  // Fortschrittszustand, bevor der (im JEV-Modus langsame) Aufruf beginnt.
   onProgress?: (i: number, total: number, job: Job) => void;
   // Nach dem Urteil: eine Zeile im Terminal bzw. ein Quadrat im Lade-Grid.
   onDecision?: (decision: TriagedDecision, i: number, total: number) => void;
   // Injizierbar wie checkOnline in lib/scrape-runner.ts, damit Tests den Lauf ohne
-  // Ollama und ohne Regel-Dateien durchspielen können. Was filterJob() selbst
+  // LLM und ohne Regel-Dateien durchspielen können. Was filterJob() selbst
   // entscheidet, deckt test/filter.test.ts ab — hier geht es um die Schleife.
   filter?: (job: Job) => Promise<TriagedDecision>;
   writeReport?: (decisions: TriagedDecision[], mode: FilterMode) => void;
@@ -50,7 +52,7 @@ export interface FilterOutcome {
 
 export async function runFilter(options: RunFilterOptions): Promise<FilterOutcome> {
   const {
-    storage, scope = 'new', ollama, onProgress, onDecision,
+    storage, scope = 'new', host, onProgress, onDecision,
     writeReport = (decisions, mode) => writeFilterReport(decisions, undefined, mode),
   } = options;
 
@@ -58,7 +60,12 @@ export async function runFilter(options: RunFilterOptions): Promise<FilterOutcom
   // config/settings.json neu, und eine Änderung mitten im Lauf beurteilte die zweite
   // Hälfte anders als die erste.
   const mode = options.mode ?? loadSettings().filterMode;
-  const filter = options.filter ?? (job => filterJob(job, storage, ollama, mode));
+  const filter = options.filter ?? (job => filterJob(job, storage, host, mode));
+
+  // Nur im JEV-Modus (nimble) und nur mit dem echten Filter (Tests injizieren `filter`). Ohne das
+  // wertet der Filter einen nicht erreichbaren Server als "kein Urteil" und der Lauf
+  // sortiert still alles als offstack ein, statt zu scheitern.
+  if (mode !== 'regex' && !options.filter) await getProvider().ensureReady(host);
 
   const jobs = await storage.list(scope === 'all' ? undefined : { status: 'new' });
 

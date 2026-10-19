@@ -1,5 +1,5 @@
 import { readFile, appendFile } from 'node:fs/promises';
-import { ImapFlow } from 'imapflow';
+import { ImapFlow, type MessageStructureObject } from 'imapflow';
 import nodemailer from 'nodemailer';
 import MailComposer from 'nodemailer/lib/mail-composer/index.js';
 import type { Job } from '../scrapers/interface.ts';
@@ -42,21 +42,42 @@ async function withImapClient<T>(fn: (client: ImapFlow) => Promise<T>): Promise<
   }
 }
 
+// Nach "Sehr geehrte Damen und Herren," geht es klein weiter (DIN 5008 / ÖNORM A 1080).
+// Der Brief kommt vom LLM aber als eigenständiger Text mit großem Satzanfang. Nur
+// Funktionswörter werden kleingeschrieben — ein Substantiv oder Firmenname am Anfang
+// bliebe sonst falsch klein.
+const KLEIN_NACH_ANREDE = /^(Die|Der|Das|Den|Dem|Des|Ein|Eine|Einen|Einem|Einer|Mit|Als|An|Auf|Bei|Für|In|Im|Seit|Nach|Durch|Um|Von|Vom|Zu|Zur|Zum|Über|Unter|Gerade|Schon|Bereits|Nachdem|Da|Weil|Wenn|Ob|Besonders|Gerne|Gern|Meine|Mein|Meinem|Meinen|Meiner)\b/;
+
+function kleinNachAnrede(text: string): string {
+  return text.replace(KLEIN_NACH_ANREDE, w => w.toLowerCase());
+}
+
+// Signatur aus dem Profil; Platzhalter ("TODO …") bleiben draußen.
+function signatur(profile: ProfileData): string {
+  const links = [profile.links?.website, profile.links?.github].filter((l): l is string => !!l && !l.startsWith('TODO'));
+  return [profile.name, ...links].join('\n');
+}
+
 export async function composeEmail(job: Job, profile: ProfileData): Promise<ComposedEmail> {
   if (!job.email) throw new Error(`Job ${job.id} hat keine E-Mail-Adresse`);
 
   const letterPath = await findAnschreiben(job);
   if (!letterPath) throw new Error(`Job ${job.id} hat kein Anschreiben in ${config.anschreibenDir}`);
-  const body = (await readFile(letterPath, 'utf8')).trim();
-
-  const cvLink = profile.links?.website && !profile.links.website.startsWith('TODO')
-    ? `\n\nLebenslauf: ${profile.links.website}`
-    : '';
+  const body = kleinNachAnrede((await readFile(letterPath, 'utf8')).trim());
 
   return {
     to: job.email,
     subject: `Bewerbung als ${job.title} bei ${job.company}`,
-    text: `Sehr geehrte Damen und Herren,\n\n${body}\n\nMit freundlichen Grüßen\n${profile.name}${cvLink}\n\nFalls Interesse an meinen Projekten besteht: saos-repo.vercel.app`,
+    text: [
+      'Sehr geehrte Damen und Herren,',
+      '',
+      body,
+      '',
+      'Meinen Lebenslauf finden Sie im Anhang, meine Projekte auf meiner Website.',
+      '',
+      'Mit freundlichen Grüßen',
+      signatur(profile),
+    ].join('\n'),
   };
 }
 
@@ -82,12 +103,12 @@ export async function composeFollowUp(job: Job, profile: ProfileData): Promise<C
     text: [
       'Sehr geehrte Damen und Herren,',
       '',
-      `ich habe mich${datum} bei Ihnen als ${job.title} beworben und wollte höflich nachfragen, ob meine Unterlagen angekommen sind und wie der aktuelle Stand ist.`,
+      `ich habe mich${datum} bei Ihnen als ${job.title} beworben und möchte nachfragen, ob meine Unterlagen angekommen sind und wie der aktuelle Stand ist.`,
       '',
       'Über eine kurze Rückmeldung würde ich mich freuen.',
       '',
       'Mit freundlichen Grüßen',
-      profile.name,
+      signatur(profile),
     ].join('\n'),
   };
 }
@@ -138,6 +159,9 @@ export interface InboxReply {
   from: string;
   subject: string;
   date: Date;
+  // IMAP-UID in der INBOX — damit der Text nur für zugeordnete Antworten nachgeladen
+  // wird (fetchReplyTexts), nicht für das ganze Postfach.
+  uid?: number;
 }
 
 export interface SentMail {
@@ -147,14 +171,23 @@ export interface SentMail {
   labels: string[];
 }
 
-// Gmail-Labels, mit denen du eine gesendete Mail als Bewerbung markierst. Der Sync
-// zieht ausschließlich so markierte Mails — das ist die verlässlichste Quelle dafür,
-// was überhaupt eine Bewerbung war: job.email geht bei Re-Scrapes verloren und der
-// Betreff ändert sich, wenn ein Inserat neu eingelesen wird, aber dein Label bleibt.
+// Was im Gesendet-Ordner eine Bewerbung ist — automatisch, ohne Handarbeit in Gmail:
+//  - "Bewerbung" im Betreff (der Bot schreibt "Bewerbung als <Titel> bei <Firma>"),
+//    aber keine Antwort/Weiterleitung (Re:/AW:/WG:/Fwd:): die gehören zu einer
+//    bestehenden Bewerbung und stünden sonst als zweite im Kalender und Nachweis;
+//  - oder eins der Labels, auch als Unterlabel ("Bewerbungen/Beworben").
+// Bis Oktober 2026 zählte NUR das Label, exakt verglichen — das Unterlabel
+// "Bewerbungen/Beworben" passte nie, der Sync erkannte keine einzige Bewerbung.
 export const BEWERBUNGS_LABELS = ['Bewerbung', 'Beworben'];
 
+const ANTWORT_PRAEFIX = /^\s*(re|aw|wg|fw|fwd)\s*:/i;
+
 export function istBewerbung(mail: SentMail): boolean {
-  return mail.labels.some(l => BEWERBUNGS_LABELS.some(b => l.toLowerCase() === b.toLowerCase()));
+  const label = mail.labels.some(l => {
+    const name = l.toLowerCase().split('/').pop()!;
+    return BEWERBUNGS_LABELS.some(b => name === b.toLowerCase());
+  });
+  return label || (/bewerbung/i.test(mail.subject) && !ANTWORT_PRAEFIX.test(mail.subject));
 }
 
 // Gmail lokalisiert den Gesendet-Ordner ("[Gmail]/Sent Mail" vs. "[Gmail]/Gesendet"),
@@ -193,12 +226,55 @@ export async function fetchInboxReplies(since: Date): Promise<InboxReply[]> {
   return withImapClient(async client => {
     await client.mailboxOpen('INBOX', { readOnly: true });
     const replies: InboxReply[] = [];
-    for await (const msg of client.fetch({ since }, { envelope: true })) {
+    for await (const msg of client.fetch({ since }, { envelope: true, uid: true })) {
       const from = msg.envelope?.from?.[0]?.address;
       if (!from) continue;
-      replies.push({ from, subject: msg.envelope?.subject ?? '', date: msg.envelope?.date ?? new Date() });
+      replies.push({ from, subject: msg.envelope?.subject ?? '', date: msg.envelope?.date ?? new Date(), uid: msg.uid });
     }
     return replies;
+  });
+}
+
+// Erster Text-Teil einer Mail: text/plain bevorzugt, sonst text/html (Anhänge
+// übersprungen). Einteilige Mails haben keine part-Nummer, dort ist der Body Teil "1".
+function textTeil(node: MessageStructureObject | undefined, typ: string): string | null {
+  if (!node) return null;
+  if (node.childNodes?.length) {
+    for (const kind of node.childNodes) {
+      const treffer = textTeil(kind, typ);
+      if (treffer) return treffer;
+    }
+    return null;
+  }
+  return node.type === typ && node.disposition !== 'attachment' ? node.part ?? '1' : null;
+}
+
+// Mailtexte zu INBOX-UIDs, read-only wie fetchInboxReplies. Text-Teile liefert imapflow
+// bereits dekodiert und nach UTF-8 gewandelt. HTML bleibt HTML (der Aufrufer reduziert).
+// Eine Mail, deren Text nicht lesbar ist, fehlt einfach in der Map.
+export async function fetchReplyTexts(uids: number[]): Promise<Map<number, { text: string; html: boolean }>> {
+  const texte = new Map<number, { text: string; html: boolean }>();
+  if (uids.length === 0) return texte;
+  return withImapClient(async client => {
+    await client.mailboxOpen('INBOX', { readOnly: true });
+    const strukturen: { uid: number; bs?: MessageStructureObject }[] = [];
+    for await (const msg of client.fetch(uids.join(','), { bodyStructure: true, uid: true }, { uid: true })) {
+      strukturen.push({ uid: msg.uid, bs: msg.bodyStructure });
+    }
+    for (const { uid, bs } of strukturen) {
+      const plain = textTeil(bs, 'text/plain');
+      const part = plain ?? textTeil(bs, 'text/html');
+      if (!part) continue;
+      try {
+        const { content } = await client.download(String(uid), part, { uid: true, maxBytes: 200_000 });
+        const chunks: Buffer[] = [];
+        for await (const c of content) chunks.push(c as Buffer);
+        texte.set(uid, { text: Buffer.concat(chunks).toString('utf8'), html: !plain });
+      } catch {
+        // Einzelne kaputte Mail soll den Sync nicht kippen.
+      }
+    }
+    return texte;
   });
 }
 

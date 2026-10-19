@@ -1,5 +1,5 @@
 import type { Job } from '../scrapers/interface.ts';
-import type { FilterJudgment } from './filter-llm.ts';
+import type { FilterJudgment } from './filter-judgment.ts';
 
 export interface Decision {
   status: 'matched' | 'uncertain' | 'filtered_out';

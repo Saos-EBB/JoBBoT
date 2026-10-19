@@ -47,7 +47,10 @@ function extractYearThreshold(sentence: string): { n: number; text: string } | n
 // entschärft den Treffer. Recall-sicher: im Zweifel NICHT disqualifizieren.
 export function checkExperience(text: string, cfg: ExperienceRules): ExpResult {
   const lower = text.toLowerCase();
-  const sentences = lower.split(/[.!?;\n]+/).map(s => s.trim()).filter(Boolean);
+  // Aufzählungspunkte (" - ", " • ") trennen wie Satzenden: stripHtml() macht aus einer
+  // <li>-Liste eine Zeile, und dann entschärfte ein "idealerweise" irgendwo in der Liste
+  // auch ein "mehrjährige Berufserfahrung" drei Punkte davor.
+  const sentences = lower.split(/[.!?;\n]+|\s[-–•·]\s/).map(s => s.trim()).filter(Boolean);
 
   for (const sentence of sentences) {
     const guarded = hasAny(sentence, cfg.optionalMarkers) || hasAny(sentence, cfg.negationMarkers);

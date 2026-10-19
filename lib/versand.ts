@@ -63,7 +63,30 @@ function statusPatch(art: VersandArt, weg: VersandWeg, job: Job, jetzt: Date): P
   return { status: 'postausgang' };
 }
 
+// Läuft für einen Job schon ein Versand, kommt der zweite Aufruf (Doppelklick, zweiter
+// Tab, Retry) sofort mit Fehler zurück, statt eine zweite Mail rauszuschicken. Der
+// Status wird erst NACH dem Zustellen gesetzt — ohne diese Sperre sähen beide Aufrufe
+// noch "freigegeben". Prozessweit reicht: der Server ist ein einzelner lokaler Prozess.
+const imVersand = new Set<string>();
+
 export async function versende(o: VersandOptions): Promise<Job> {
+  const schluessel = `${o.job.id}/${o.art}`;
+  if (imVersand.has(schluessel)) throw new Error('Versand für diesen Job läuft bereits');
+  imVersand.add(schluessel);
+  try {
+    return await versendeUngesperrt(o);
+  } finally {
+    imVersand.delete(schluessel);
+  }
+}
+
+async function versendeUngesperrt(o: VersandOptions): Promise<Job> {
+  // Status frisch lesen: o.job kann aus einem Request stammen, der vor dem Ende eines
+  // parallelen Versands geladen wurde. Eine Bewerbung geht nur ein Mal raus.
+  if (o.art === 'bewerbung' && o.weg === 'senden') {
+    const aktuell = await o.storage.get(o.job.id);
+    if (aktuell?.status === 'gesendet') throw new Error('Bewerbung wurde bereits gesendet');
+  }
   const transport = o.transport ?? standardTransport();
   const jetzt = (o.now ?? (() => new Date()))();
 

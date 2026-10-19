@@ -52,20 +52,19 @@ test('resolveStrategy: mode "regex" → regexStrategy (name "regex")', () => {
   assert.equal(strategy.name, 'regex');
 });
 
-test('resolveStrategy: mode "llm" → llmStrategy (name "llm")', () => {
-  const strategy = resolveStrategy('llm');
-  assert.equal(strategy.name, 'llm');
+test('resolveStrategy: mode "nimble" → Nimble-Strategie', () => {
+  assert.equal(resolveStrategy('nimble').name, 'nimble');
 });
 
 test('resolveStrategy: ungültiger Modus → Fehler listet gültige Werte', () => {
   assert.throws(
     // @ts-expect-error absichtlich ungültiger Wert
     () => resolveStrategy('yolo'),
-    /llm, regex/,
+    /regex, nimble/,
   );
 });
 
-test('regex-Modus: judgeJob/Ollama wird NICHT aufgerufen (Spy)', async () => {
+test('regex-Modus: LLM wird NICHT aufgerufen (Spy)', async () => {
   let called = false;
   const originalFetch = globalThis.fetch;
   globalThis.fetch = (async () => { called = true; throw new Error('sollte nicht aufgerufen werden'); }) as typeof fetch;

@@ -1,8 +1,7 @@
 import type { Job, JobStatus } from '../scrapers/interface.ts';
 import type { Storage } from '../storage/json-store.ts';
-import { config } from '../config.ts';
 import { decide } from './filter-decide.ts';
-import type { FilterJudgment } from './filter-llm.ts';
+import type { FilterJudgment } from './filter-judgment.ts';
 import type { FilterMode } from './settings.ts';
 
 export interface TriagedDecision {
@@ -37,8 +36,8 @@ const TRIAGIERBAR = new Set<JobStatus>(['new', 'triaged']);
 
 // filtered_out wird NICHT gelöscht (kein storage.delete): verlustfrei und re-runnbar.
 // Ein abgelehnter Job bleibt als Datei erhalten, nur fit ändert sich (auf "brutal").
-export async function filterJob(job: Job, storage: Storage, ollama = config.ollamaHost, mode?: FilterMode): Promise<TriagedDecision> {
-  const result = await decide(job, { ollama, mode });
+export async function filterJob(job: Job, storage: Storage, host?: string, mode?: FilterMode): Promise<TriagedDecision> {
+  const result = await decide(job, { host, mode });
 
   // Der Status wird am AKTUELLEN Diskstand entschieden, nicht am (womöglich veralteten)
   // `job` aus der Liste des Aufrufers — sonst spulte ein Lauf, der vor dem Anschreiben

@@ -7,7 +7,7 @@ function hasAny(text: string, terms: string[]): boolean {
   return terms.some(t => text.includes(t));
 }
 
-// Deterministisch, offline (kein Ollama). Titel-Seniorität + isLehre laufen bereits
+// Deterministisch, offline (kein LLM). Titel-Seniorität + isLehre laufen bereits
 // gemeinsam vor der Strategie (siehe filter-decide.ts). Regex kann eine IT-Rolle nicht
 // sauber erkennen → im Regex-Modus KEINE IT-Rolle-Ablehnung; neutrale/Non-Dev-Rollen
 // landen bewusst in "uncertain", der Mensch culled (grober als der llm-Modus).

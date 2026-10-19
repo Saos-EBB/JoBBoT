@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Job } from '../../scrapers/interface.ts';
 import type { CalendarEvent } from '../components/calendar.tsx';
 import { HISTORY_START } from '../../lib/calendar.ts';
 import type { RepliesFetchResponse } from '../../scripts/routes/gmail.ts';
-import type { GmailSyncResult } from '../../lib/gmail-sync.ts';
+import type { GmailSyncResult, AmbiguousReplyView } from '../../lib/gmail-sync.ts';
 import type { ErrorResponse } from '../../scripts/routes/http.ts';
 
 // patch/setDetailOpen sind Kern-State aus app.tsx (die lokale jobs-Liste bzw. die
@@ -19,10 +19,27 @@ export function useMailSync(
   const [replyOnly, setReplyOnly] = useState(false);
   const [repliesFetching, setRepliesFetching] = useState(false);
   const [gmailSyncing, setGmailSyncing] = useState(false);
+  // Antworten, die zu einer Firma passen, aber nicht eindeutig einem Job — der Nutzer
+  // ordnet sie manuell zu (siehe classifyReplies ambiguous). Kommt aus fetchReplies().
+  const [ambiguousReplies, setAmbiguousReplies] = useState<AmbiguousReplyView[]>([]);
   // Eigene Auswahl statt selectedJobIds: die hängt am Ordner und wird bei jedem
   // Ordnerwechsel geleert — der Nachfass-Tab ist kein Ordner.
   const [followUpSelection, setFollowUpSelection] = useState<Set<string>>(new Set());
   const [followUpBusy, setFollowUpBusy] = useState(false);
+  // Ids mit laufendem Entwurf/Versand. Ref statt State: setState wirkt erst beim
+  // nächsten Render, ein schneller Doppelklick liefe sonst durch. sendingIds spiegelt
+  // das nur für die UI (Button disabled).
+  const inFlight = useRef(new Set<string>());
+  const [sendingIds, setSendingIds] = useState<Set<string>>(new Set());
+  async function einmalig(id: string, fn: () => Promise<void>) {
+    if (inFlight.current.has(id)) return;
+    inFlight.current.add(id);
+    setSendingIds(new Set(inFlight.current));
+    try { await fn(); } finally {
+      inFlight.current.delete(id);
+      setSendingIds(new Set(inFlight.current));
+    }
+  }
 
   async function fetchReplies() {
     setRepliesFetching(true);
@@ -31,13 +48,40 @@ export function useMailSync(
       const data = await res.json() as RepliesFetchResponse | ErrorResponse;
       if (!res.ok) { say(`Antworten-Abruf fehlgeschlagen: ${(data as ErrorResponse).error}`, 'err'); return; }
       const ok = data as RepliesFetchResponse;
-      say(`Antworten-Abruf: ${ok.matched} von ${ok.checked} Mails zugeordnet`, 'ok');
-      if (ok.matched > 0) refetchJobs();
+      const ambiguous = ok.ambiguous ?? [];
+      setAmbiguousReplies(ambiguous);
+      say(
+        `Antworten-Abruf: ${ok.matched} von ${ok.checked} zugeordnet`
+        + (ok.absagen ? `, ${ok.absagen} neue Absage(n)` : '')
+        + (ok.ohneArt ? `, ${ok.ohneArt} ohne Einstufung (JEV nicht erreichbar?)` : '')
+        + (ambiguous.length ? `, ${ambiguous.length} zum manuellen Zuordnen` : ''),
+        'ok',
+      );
+      if (ok.matched > 0 || ok.artGesetzt > 0) refetchJobs();
     } catch (err) {
       say(`Antworten-Abruf fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`, 'err');
     } finally {
       setRepliesFetching(false);
     }
+  }
+
+  // Legt eine mehrdeutige Antwort auf EINEN gewählten Job (setzt dessen replyReceivedAt
+  // serverseitig). Danach fällt der Eintrag aus der Liste und die Jobs werden neu geladen,
+  // damit der zugeordnete Job nicht mehr als "nachfassen" auftaucht.
+  async function assignReply(item: AmbiguousReplyView, jobId: string) {
+    const res = await fetch('/api/mail/replies/assign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jobId, date: item.reply.date }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null) as ErrorResponse | null;
+      say(body?.error ?? 'Zuordnen fehlgeschlagen', 'err');
+      return;
+    }
+    setAmbiguousReplies(prev => prev.filter(a => a !== item));
+    refetchJobs();
+    say('Antwort zugeordnet');
   }
 
   // Trägt sentAt/replyReceivedAt nach, die im Job-JSON fehlen — read-only gegenüber
@@ -55,11 +99,14 @@ export function useMailSync(
       // Zuordnung nichts fand — drei völlig verschiedene Ursachen.
       say(
         `Gmail-Sync ab ${ok.seit ?? HISTORY_START}: ${ok.sentGescannt} gesendet gelesen, `
+        + (ok.postausgangGesendet ? `${ok.postausgangGesendet} aus dem Postausgang abgeschickt, ` : '')
         + `${ok.markiert} als Bewerbung markiert → ${ok.sentGefuellt} Jobs verknüpft, `
-        + `${ok.ohneJob} nur Mail · ${ok.replyGefuellt} Antworten`,
+        + `${ok.ohneJob} nur Mail · ${ok.replyGefuellt} Antworten`
+        + (ok.absagen ? `, ${ok.absagen} neue Absage(n)` : '')
+        + (ok.ohneArt ? `, ${ok.ohneArt} ohne Einstufung (JEV nicht erreichbar?)` : ''),
         'ok'
       );
-      if (ok.sentGefuellt > 0 || ok.replyGefuellt > 0) {
+      if (ok.sentGefuellt > 0 || ok.replyGefuellt > 0 || ok.postausgangGesendet > 0 || ok.artGesetzt > 0) {
         refetchJobs();
         fetch('/api/calendar').then(r => r.json()).then(setCalendarEvents);
       }
@@ -105,7 +152,7 @@ export function useMailSync(
   // (POST /api/jobs/:id/draft), nicht bloß den Status umbiegen — sonst würde die UI
   // "postausgang" behaupten, ohne dass in Gmail je ein Entwurf liegt. Status kommt
   // hier von der Server-Antwort, nicht optimistisch gesetzt.
-  async function createDraft(id: string, email: string) {
+  const createDraft = (id: string, email: string) => einmalig(id, async () => {
     const res = await fetch(`/api/jobs/${id}/draft`, { method: 'POST' });
     if (res.ok) {
       patch(id, { status: 'postausgang' });
@@ -115,28 +162,12 @@ export function useMailSync(
       const body = await res.json().catch(() => null) as ErrorResponse | null;
       say(body?.error ?? 'Entwurf fehlgeschlagen', 'err');
     }
-  }
-
-  // "Direkt senden" ist die zweite Gabel neben "Entwurf erzeugen": SMTP-Versand ohne
-  // Zwischenstopp in Gmail-Entwürfen (POST /api/jobs/:id/send). Getrennter Button statt
-  // Parameter am bestehenden, weil beide Pfade zu unterschiedlichen Status-Endpunkten
-  // führen (postausgang vs. gesendet) und das im UI sichtbar zwei bewusste Aktionen
-  // sind, keine Variante derselben.
-  async function sendDirect(id: string) {
-    const res = await fetch(`/api/jobs/${id}/send`, { method: 'POST' });
-    if (res.ok) {
-      patch(id, { status: 'gesendet' });
-      say('Gesendet');
-      setDetailOpen(false);
-    } else {
-      const body = await res.json().catch(() => null) as ErrorResponse | null;
-      say(body?.error ?? 'Versand fehlgeschlagen', 'err');
-    }
-  }
+  });
 
   return {
     replyOnly, setReplyOnly, repliesFetching, gmailSyncing,
     followUpSelection, setFollowUpSelection, followUpBusy,
-    fetchReplies, syncGmail, runFollowUps, createDraft, sendDirect,
+    ambiguousReplies, assignReply,
+    fetchReplies, syncGmail, runFollowUps, createDraft, sendingIds,
   };
 }
