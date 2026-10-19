@@ -13,6 +13,23 @@ one grabbing listings, filtering them, typing the cover letter, and filing
 the application, all at once — the goal is for the pipeline to feel less like
 dead script output and more like something is actually working for you.
 
+## What it does
+
+- **Scrapes** five Austrian job portals (karriere.at, devjobs.at, LinkedIn,
+  AMS, jobs.at), filtered to your area.
+- **Filters** by regex (offline, no model) or by **JEV**, a small local
+  classifier (Bespoke Nimble 9B): does the job fit your wanted areas, does it
+  ask for more experience than you have?
+- **Cover letters** are written by a local LLM (Gemma 4 26B via llama.cpp)
+  from the posting and your profile; you read and edit them in the UI.
+- **Gmail draft** with one click; you send it yourself, from Gmail.
+- **Tracking:** Gmail sync detects sent applications and matches replies, JEV
+  sorts them (rejection, offer, accept privacy policy, apply via portal,
+  acknowledgement). Plus follow-ups, a calendar and a printable application
+  record for the AMS (Austrian employment service).
+
+Everything runs on your machine. No account, no cloud, no automatic sending.
+
 ## Setup
 
 ```bash
@@ -158,7 +175,7 @@ a real, editable draft in Gmail, you send it from there). It goes through a Gmai
 4. `npm run ui` — loads `.env` automatically (`--env-file-if-exists`, needs
    Node ≥21.7).
 
-If `.env` is missing, the UI still runs — only draft/send fail with a clear
+If `.env` is missing, the UI still runs — only Gmail actions fail with a clear
 error message instead of the page not loading at all.
 
 ## UI & Server
@@ -171,7 +188,7 @@ framework) that does two things at once:
   after every change to `ui/app.tsx` — there's no hot reload.
 - **JSON API** the SPA talks to via `fetch`: `/api/jobs`, `/api/jobs/:id`
   (change status/fit), `/api/jobs/:id/brief` (edit the cover letter),
-  `/api/jobs/:id/draft` / `/api/jobs/:id/send` (Gmail), `/api/attachment`
+  `/api/jobs/:id/draft` (Gmail draft), `/api/attachment`
   (résumé upload), `/api/duplicates` (duplicate report, GET, synchronous),
   `/api/duplicates/merge` (merge a duplicate group), `/api/calendar`
   (calendar events, GET, synchronous), `/api/mail/replies/fetch` (scan the
@@ -192,7 +209,8 @@ The interface has three width bands:
 - **from 2000px** the cover letter and the posting sit side by side instead of
   behind tabs.
 
-The most recently selected folder is remembered in `localStorage` and survives
+The Pipeline group is pinned to the bottom of the sidebar; only the folder
+list above it scrolls. The most recently selected folder is remembered in `localStorage` and survives
 a reload. Before, every F5 landed hard on "With mail → Drafts"; anyone sitting
 in "Without mail → Drafts" ended up in the identically named but empty
 neighbouring folder — it looked as if the drafts had vanished.
@@ -342,9 +360,9 @@ filter in the history.
 
 The "Gmail sync" button at the top right of the Calendar tab backfills data
 missing from the job JSON (`POST /api/gmail-sync`): the Sent folder supplies
-`sentAt`, the inbox `replyReceivedAt`. Meant for applications that went out
-before these fields existed, or by hand past the bot — live sends write their
-own `sentAt` anyway.
+`sentAt`, the inbox `replyReceivedAt`. Meant for applications
+you send from Gmail — including the drafts the bot created — and ones that
+went out by hand past the bot.
 
 Scanning starts at `HISTORY_START` (`lib/calendar.ts`, currently `2026-07-01`)
 — the same starting point the calendar displays from.
@@ -411,7 +429,7 @@ print-ready page (A4 landscape) with name, period, number of applications,
 how many got a reply/rejection, and a table **No. · Date · Company · Position ·
 Location · Channel (email to …) · Source (linked) · Reply (kind + date)**. It
 contains every job with `sentAt` or status `gesendet` (including later
-deleted ones) plus the job-less application mails labelled in Gmail; undated
+deleted ones) plus the job-less application mails from the Gmail sync; undated
 legacy entries come last. A period (`?von=&bis=`) can be picked at the top;
 "Drucken / als PDF sichern" uses the browser's print dialog, and the form is
 hidden in print (`lib/nachweis.ts`).
@@ -497,12 +515,13 @@ Status names are German in the data model (`freigegeben` = reviewed,
 the actual verdict lives in a separate `fit` field (`matched`/`offstack`/
 `brutal`, still manually overridable in the UI), not in the status anymore.
 `anschreiben` sets `generated`. `freigegeben` is set manually in the UI —
-only then does the UI unlock draft/send. `postausgang` (Gmail draft created,
-send not yet confirmed) and `gesendet` are set by the UI itself, only on an
-actually successful Gmail call (no status change on failure — those land on
-`fehler` instead). `geloescht` is reachable from most states (a trash bin,
-not a file delete). There is still no auto-send without the explicit
-"confirm sent" click.
+only then does the UI unlock the Gmail draft. `postausgang` (Gmail draft
+created) is set by the UI only on an actually successful Gmail call (no status
+change on failure — those land on `fehler` instead). `gesendet` is set by the
+Gmail sync once the draft shows up in your Sent folder, or by you via "Als
+beworben markieren" (applied via the portal). `geloescht` is reachable from
+most states (a trash bin, not a file delete). The bot never sends an
+application by itself.
 
 **The pipeline only moves forward.** A re-triage (`--scope=all`) re-decides the
 `fit` verdict but only sets the status for jobs still in triage. It used to do
