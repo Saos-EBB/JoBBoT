@@ -37,3 +37,6 @@ data/reply-kinds.json
 # Format-Beispiele: data/*.example.md
 data/mail-log.md
 data/filter-log.md
+CLAUDE.md
+AGENTS.md
+.scratch/
